@@ -7,126 +7,123 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100vh;
-            /* BEYAZ ARKA PLAN VE HAFİF GRİ GEÇİŞ */
-            background: linear-gradient(to bottom, #ffffff, #f3f4f6);
-            color: #1f2937; /* Koyu gri metin rengi */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0; padding: 0; overflow: hidden; height: 100vh;
+            background: #0f172a; /* Koyu gece mavisi taban */
         }
 
-        /* --- AYDINLIK MOD İÇİN GLASSMOPHISM (Buzlu Cam) --- */
+        /* --- HAREKETLİ ARKA PLAN (Işık Patlamaları) --- */
+        .ambient-light-container {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0; pointer-events: none; overflow: hidden;
+        }
+        .light-blob {
+            position: absolute; border-radius: 50%;
+            filter: blur(60px); mix-blend-mode: screen;
+            will-change: transform, opacity;
+        }
+        .blob-blue {
+            background: radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0) 70%);
+            width: 80vw; height: 80vw; top: -30%; left: -30%; opacity: 0.7;
+            animation: explodeBlue 18s infinite ease-in-out;
+        }
+        .blob-purple {
+            background: radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(168, 85, 247, 0) 70%);
+            width: 70vw; height: 70vw; bottom: -20%; right: -20%; opacity: 0.6;
+            animation: explodePurple 22s infinite ease-in-out reverse;
+        }
+        .blob-cyan {
+            background: radial-gradient(circle, rgba(34, 211, 238, 1) 0%, rgba(34, 211, 238, 0) 70%);
+            width: 50vw; height: 50vw; top: 40%; right: 10%; opacity: 0.5;
+            animation: explodeCyan 15s infinite ease-in-out;
+        }
+        @keyframes explodeBlue { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; } 50% { transform: translate(10vw, 10vh) scale(1.3); opacity: 1; } }
+        @keyframes explodePurple { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; } 50% { transform: translate(-15vw, -10vh) scale(1.2); opacity: 0.9; } }
+        @keyframes explodeCyan { 0%, 100% { transform: translate(0, 0) scale(0.8); opacity: 0.4; } 30% { transform: translate(-10vw, 5vh) scale(1.4) rotate(45deg); opacity: 0.8; } 70% { transform: translate(5vw, 15vh) scale(0.9) rotate(-20deg); opacity: 0.5; } }
+
+        /* --- KOYU GLASSMOPHISM KART --- */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.7); /* Yarı saydam beyaz */
-            backdrop-filter: blur(25px) saturate(180%); /* Bulanıklık ve canlılık */
-            -webkit-backdrop-filter: blur(25px) saturate(180%);
-            border: 1px solid rgba(209, 213, 219, 0.3); /* Çok ince gri kenarlık */
-            box-shadow: 
-                0 4px 6px -1px rgba(0, 0, 0, 0.05), 
-                0 10px 15px -3px rgba(0, 0, 0, 0.05),
-                inset 0 0 20px rgba(255, 255, 255, 0.5); /* İç parlama */
+            background: rgba(255, 255, 255, 0.07); 
+            backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
         }
-
-        /* Logo Kutusu İçin Ekstra Efekt */
-        .logo-glass {
-             background: rgba(255, 255, 255, 0.85);
-             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
-             border: 1px solid rgba(255, 255, 255, 0.9);
-        }
-
-        /* Teknoloji Hapları */
         .tech-pill {
-            background: rgba(255, 255, 255, 0.6);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            color: #374151;
-            transition: all 0.3s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;
         }
-        .tech-pill:hover { 
-            background: rgba(255, 255, 255, 0.95); 
-            transform: translateY(-2px); 
-            box-shadow: 0 8px 15px rgba(0,0,0,0.05); 
-            border-color: rgba(0,0,0,0.1);
-        }
-        
-        /* Butonlar */
-        .ios-btn { 
-            background: rgba(255, 255, 255, 0.6); 
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            color: #111827;
-            transition: all 0.3s ease; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
-        }
-        .ios-btn:hover { 
-            background: rgba(255, 255, 255, 1); 
-            border-color: rgba(0,0,0,0.1);
-            transform: scale(1.02); 
-            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.06);
-        }
+        .tech-pill:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .ios-btn { background: rgba(255, 255, 255, 0.12); transition: all 0.3s ease; }
+        .ios-btn:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.03); }
         
         /* Yanıp Sönen Yeşil Nokta */
         .status-dot {
-            height: 8px; width: 8px; background-color: #22c55e; border-radius: 50%; display: inline-block;
-            box-shadow: 0 0 10px #22c55e; animation: pulse 2s infinite;
+            height: 8px; width: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block;
+            box-shadow: 0 0 15px #4ade80; animation: pulse 2s infinite;
         }
-        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
     </style>
 </head>
-<body class="flex items-center justify-center h-screen w-screen relative">
+<body class="flex items-center justify-center h-screen w-screen relative bg-gray-900">
+
+    <div class="ambient-light-container">
+        <div class="light-blob blob-blue"></div>
+        <div class="light-blob blob-purple"></div>
+        <div class="light-blob blob-cyan"></div>
+    </div>
 
     <main class="relative z-10 w-full max-w-sm p-4 mx-auto">
         
-        <div class="glass-panel rounded-[40px] p-8 text-center relative overflow-hidden">
+        <div class="glass-panel rounded-[40px] p-8 text-center text-white relative overflow-hidden shadow-2xl">
             
-            <div class="w-28 h-28 mx-auto mb-6 rounded-[28px] logo-glass flex items-center justify-center relative transition-transform hover:scale-105 duration-500 p-4">
-                <img src="https://i.hizliresim.com/a6mkiqx.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-sm">
+            <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+
+            <div class="w-32 h-32 mx-auto mb-6 flex items-center justify-center relative transition-transform hover:scale-105 duration-500 p-2">
+                <img src="https://i.hizliresim.com/a6mkiqx.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
             </div>
 
-            <h1 class="text-3xl font-bold tracking-tight mb-1 text-gray-900">Codemso</h1>
+            <h1 class="text-3xl font-bold tracking-tight mb-1 drop-shadow-md">Codemso</h1>
             <div class="flex items-center justify-center gap-2 mb-6">
                 <div class="status-dot"></div>
-                <span class="text-xs font-bold text-green-600 tracking-wide uppercase">Projeye Hazır</span>
+                <span class="text-xs font-medium text-green-300 tracking-wide uppercase drop-shadow-sm">Projeye Hazır</span>
             </div>
 
-            <p class="text-gray-600 font-medium leading-relaxed mb-8 text-[15px]">
-                iOS ve Android dünyasında estetik ve performansı birleştiren native mobil uygulamalar geliştiriyorum.
+            <p class="text-white/80 font-light leading-relaxed mb-6 text-sm drop-shadow-sm">
+                iOS ve Android için native performans, modern arayüzler. Fikrinizi App Store ve Play Store'a taşıyorum.
             </p>
 
             <div class="flex flex-wrap justify-center gap-2 mb-8">
-                <span class="tech-pill px-3.5 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm" title="Swift"><i class="fa-brands fa-swift text-[#F05138] mr-1.5 text-sm"></i> Swift</span>
-                <span class="tech-pill px-3.5 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm" title="Kotlin"><i class="fa-brands fa-android text-[#3DDC84] mr-1.5 text-sm"></i> Kotlin</span>
-                <span class="tech-pill px-3.5 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm" title="Flutter"><i class="fa-solid fa-layer-group text-[#02569B] mr-1.5 text-sm"></i> Flutter</span>
-                <span class="tech-pill px-3.5 py-1.5 rounded-full text-xs font-medium backdrop-blur-sm" title="React Native"><i class="fa-brands fa-react text-[#61DAFB] mr-1.5 text-sm"></i> React</span>
+                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="Swift"><i class="fa-brands fa-swift text-orange-400 mr-1"></i> Swift</span>
+                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="Kotlin"><i class="fa-brands fa-android text-green-400 mr-1"></i> Kotlin</span>
+                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="Flutter"><i class="fa-solid fa-layer-group text-cyan-400 mr-1"></i> Flutter</span>
+                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="React Native"><i class="fa-brands fa-react text-blue-400 mr-1"></i> React</span>
             </div>
 
             <div class="space-y-3">
                 <div class="grid grid-cols-2 gap-3">
-                    <a href="mailto:info@codemso.com" class="ios-btn py-3.5 rounded-2xl backdrop-blur-md text-sm font-semibold flex items-center justify-center gap-2">
-                        <i class="fa-regular fa-envelope text-gray-700"></i> E-Posta
+                    <a href="mailto:info@codemso.com" class="ios-btn py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-regular fa-envelope"></i> E-Posta
                     </a>
-                    <a href="https://wa.me/905000000000" target="_blank" class="ios-btn py-3.5 rounded-2xl backdrop-blur-md text-sm font-semibold flex items-center justify-center gap-2 bg-green-50/50 text-green-700 border-green-100 hover:bg-green-100 hover:border-green-200">
-                        <i class="fa-brands fa-whatsapp text-lg"></i> WhatsApp
+                    <a href="https://wa.me/905000000000" target="_blank" class="ios-btn py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 bg-green-500/20 hover:bg-green-500/30 shadow-md">
+                        <i class="fa-brands fa-whatsapp text-lg text-green-400"></i> WhatsApp
                     </a>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3">
-                    <a href="#" class="ios-btn w-full py-3.5 rounded-2xl backdrop-blur-md text-sm font-semibold flex items-center justify-center gap-2">
-                        <i class="fa-brands fa-github text-lg text-gray-700"></i> GitHub
+                    <a href="#" class="ios-btn w-full py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-brands fa-github text-lg"></i> GitHub
                     </a>
-                    <a href="#" class="ios-btn w-full py-3.5 rounded-2xl backdrop-blur-md text-sm font-semibold flex items-center justify-center gap-2">
-                        <i class="fa-brands fa-linkedin text-lg text-gray-700"></i> LinkedIn
+                    <a href="#" class="ios-btn w-full py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 shadow-md">
+                        <i class="fa-brands fa-linkedin text-lg"></i> LinkedIn
                     </a>
                 </div>
             </div>
 
         </div>
 
-        <p class="text-center text-gray-400 text-[11px] mt-8 font-semibold tracking-widest uppercase">
+        <p class="text-center text-white/30 text-[10px] mt-6 tracking-widest uppercase drop-shadow-sm">
             © 2024 Codemso.
         </p>
     </main>
