@@ -1,141 +1,189 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Codemso | Mobile App Developer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codemso | Engineering</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            height: 100vh;
-            background: #0f172a;
+            font-family: 'Inter', sans-serif;
+            background-color: #09090b; /* Zinc 950 */
+            color: #e4e4e7; /* Zinc 200 */
         }
 
-        /* --- ARKA PLAN ANİMASYONU --- */
-        .ambient-light-container {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 0; pointer-events: none; overflow: hidden;
+        /* Noise Texture - Premium His */
+        .bg-noise {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
         }
-        .light-blob {
-            position: absolute; border-radius: 50%;
-            filter: blur(80px); opacity: 0.6; mix-blend-mode: screen;
-        }
-        .blob-blue {
-            background: radial-gradient(circle, rgba(37, 99, 235, 1) 0%, rgba(37, 99, 235, 0) 70%);
-            width: 70vw; height: 70vw; top: -20%; left: -20%;
-            animation: moveBlue 25s infinite alternate ease-in-out;
-        }
-        .blob-purple {
-            background: radial-gradient(circle, rgba(147, 51, 234, 1) 0%, rgba(147, 51, 234, 0) 70%);
-            width: 60vw; height: 60vw; bottom: -10%; right: -10%;
-            animation: movePurple 30s infinite alternate ease-in-out;
-        }
-        .blob-cyan {
-            background: radial-gradient(circle, rgba(6, 182, 212, 1) 0%, rgba(6, 182, 212, 0) 70%);
-            width: 40vw; height: 40vw; top: 30%; right: 10%; opacity: 0.4;
-            animation: moveCyan 35s infinite alternate ease-in-out;
-        }
-        @keyframes moveBlue { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10vw, 15vh) scale(1.1); } }
-        @keyframes movePurple { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-15vw, -10vh) scale(1.2); } }
-        @keyframes moveCyan { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-10vw, 10vh) rotate(45deg); } }
 
-        /* --- GLASSMOPHISM --- */
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(40px);
-            -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5);
+        /* Bento Kart Yapısı */
+        .bento-card {
+            background-color: #18181b; /* Zinc 900 */
+            border: 1px solid #27272a; /* Zinc 800 */
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
-        .tech-pill {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s;
-        }
-        .tech-pill:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
         
-        .ios-btn { background: rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
-        .ios-btn:hover { background: rgba(255, 255, 255, 0.25); transform: scale(1.02); }
-        .z-content { z-index: 10; }
-        
-        /* Yanıp Sönen Yeşil Nokta */
-        .status-dot {
-            height: 8px; width: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block;
-            box-shadow: 0 0 10px #4ade80; animation: pulse 2s infinite;
+        .bento-card:hover {
+            border-color: #3f3f46; /* Zinc 700 */
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
         }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* İkonlar için Grid */
+        .stack-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+        }
+
+        .icon-box {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 1rem;
+            background: #09090b;
+            border-radius: 0.5rem;
+            border: 1px solid #27272a;
+            color: #71717a;
+            transition: 0.2s;
+        }
+        .icon-box:hover { color: #fff; border-color: #52525b; }
+        
+        /* Butonlar */
+        .action-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; padding: 0.875rem;
+            background: #fff; color: #000;
+            font-weight: 600; font-size: 0.875rem;
+            border-radius: 0.5rem;
+            transition: 0.2s;
+        }
+        .action-btn:hover { background: #e4e4e7; }
+        
+        .secondary-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; padding: 0.875rem;
+            background: transparent; color: #fff;
+            border: 1px solid #3f3f46;
+            font-weight: 500; font-size: 0.875rem;
+            border-radius: 0.5rem;
+            transition: 0.2s;
+        }
+        .secondary-btn:hover { background: #27272a; border-color: #71717a; }
+
+        .status-badge {
+            display: inline-flex; items-center; gap: 0.5rem;
+            padding: 0.25rem 0.75rem;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            font-size: 0.75rem; font-weight: 500;
+            border-radius: 9999px;
+        }
     </style>
 </head>
-<body class="flex items-center justify-center h-screen w-screen relative bg-gray-900">
+<body class="min-h-screen flex items-center justify-center p-4 md:p-8 relative">
 
-    <div class="ambient-light-container">
-        <div class="light-blob blob-blue"></div>
-        <div class="light-blob blob-purple"></div>
-        <div class="light-blob blob-cyan"></div>
-    </div>
+    <div class="bg-noise"></div>
 
-    <main class="relative z-content w-full max-w-sm p-4 mx-auto">
+    <main class="relative z-10 w-full max-w-5xl grid grid-cols-1 md:grid-cols-12 gap-4">
         
-        <div class="glass-panel rounded-[40px] p-8 text-center text-white relative overflow-hidden">
+        <div class="bento-card col-span-1 md:col-span-8 p-8 md:p-12 rounded-3xl flex flex-col justify-between min-h-[300px]">
+            <div>
+                <div class="flex justify-between items-start mb-6">
+                    <div class="w-16 h-16 rounded-2xl bg-white text-black flex items-center justify-center text-3xl">
+                        <i class="fa-solid fa-code"></i>
+                    </div>
+                    <div class="status-badge">
+                        <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+                        Available for work
+                    </div>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
+                    Codemso.
+                </h1>
+                <p class="text-zinc-400 text-lg max-w-xl leading-relaxed">
+                    Yüksek performanslı mobil mimariler inşa ediyoruz. iOS ve Android ekosisteminde ölçeklenebilir, güvenli ve modern çözümler.
+                </p>
+            </div>
             
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-
-            <div class="w-24 h-24 mx-auto mb-6 rounded-[24px] glass-panel flex items-center justify-center shadow-2xl border border-white/10 relative">
-                <div class="flex items-center gap-3 text-3xl text-white/90">
-                    <i class="fa-brands fa-apple"></i>
-                    <div class="w-px h-6 bg-white/20"></div> <i class="fa-brands fa-android"></i>
-                </div>
+            <div class="mt-8 flex flex-wrap gap-4">
+                <a href="mailto:info@codemso.com" class="action-btn w-auto px-8">
+                    Projeyi Başlat
+                </a>
+                <a href="https://github.com/mehmetsalihok" target="_blank" class="secondary-btn w-auto px-8 gap-2">
+                    <i class="fa-brands fa-github"></i> GitHub
+                </a>
             </div>
-
-            <h1 class="text-3xl font-bold tracking-tight mb-1">Codemso</h1>
-            <div class="flex items-center justify-center gap-2 mb-6">
-                <div class="status-dot"></div>
-                <span class="text-xs font-medium text-green-300 tracking-wide uppercase">Projeye Hazır</span>
-            </div>
-
-            <p class="text-white/70 font-light leading-relaxed mb-6 text-sm">
-                iOS ve Android için native performans, modern arayüzler. Fikrinizi App Store ve Play Store'a taşıyorum.
-            </p>
-
-            <div class="flex flex-wrap justify-center gap-2 mb-8">
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/80" title="Swift"><i class="fa-brands fa-swift text-orange-400 mr-1"></i> Swift</span>
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/80" title="Kotlin"><i class="fa-brands fa-android text-green-400 mr-1"></i> Kotlin</span>
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/80" title="Flutter"><i class="fa-solid fa-layer-group text-cyan-400 mr-1"></i> Flutter</span>
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/80" title="React Native"><i class="fa-brands fa-react text-blue-400 mr-1"></i> React</span>
-            </div>
-
-            <div class="space-y-3">
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="mailto:info@codemso.com" class="ios-btn py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2">
-                        <i class="fa-regular fa-envelope"></i> E-Posta
-                    </a>
-                    <a href="https://wa.me/905000000000" target="_blank" class="ios-btn py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 bg-green-500/10 hover:bg-green-500/20">
-                        <i class="fa-brands fa-whatsapp text-lg"></i> WhatsApp
-                    </a>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="#" class="ios-btn w-full py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2">
-                        <i class="fa-brands fa-github text-lg"></i> GitHub
-                    </a>
-                    <a href="#" class="ios-btn w-full py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2">
-                        <i class="fa-brands fa-linkedin text-lg"></i> LinkedIn
-                    </a>
-                </div>
-            </div>
-
         </div>
 
-        <p class="text-center text-white/20 text-[10px] mt-6 tracking-widest uppercase">
-            Designed by Codemso
-        </p>
+        <div class="bento-card col-span-1 md:col-span-4 p-8 rounded-3xl flex flex-col justify-center gap-4">
+            <h3 class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Bağlantı</h3>
+            <a href="#" class="flex items-center justify-between p-4 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-zinc-600 transition group">
+                <div class="flex items-center gap-3">
+                    <i class="fa-brands fa-linkedin text-xl text-zinc-400 group-hover:text-white transition"></i>
+                    <span class="font-medium text-sm">LinkedIn</span>
+                </div>
+                <i class="fa-solid fa-arrow-right -rotate-45 text-zinc-600 group-hover:text-white transition"></i>
+            </a>
+            <a href="#" class="flex items-center justify-between p-4 rounded-xl bg-zinc-950 border border-zinc-800 hover:border-zinc-600 transition group">
+                <div class="flex items-center gap-3">
+                    <i class="fa-brands fa-whatsapp text-xl text-zinc-400 group-hover:text-white transition"></i>
+                    <span class="font-medium text-sm">WhatsApp</span>
+                </div>
+                <i class="fa-solid fa-arrow-right -rotate-45 text-zinc-600 group-hover:text-white transition"></i>
+            </a>
+        </div>
+
+        <div class="bento-card col-span-1 md:col-span-5 p-8 rounded-3xl">
+            <h3 class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-6">Teknoloji Yığını</h3>
+            <div class="stack-grid">
+                <div class="icon-box" title="Swift">
+                    <i class="fa-brands fa-swift text-2xl mb-2"></i>
+                    <span class="text-[10px] font-mono">Swift</span>
+                </div>
+                <div class="icon-box" title="Kotlin">
+                    <i class="fa-brands fa-android text-2xl mb-2"></i>
+                    <span class="text-[10px] font-mono">Kotlin</span>
+                </div>
+                <div class="icon-box" title="Flutter">
+                    <i class="fa-solid fa-paper-plane text-2xl mb-2"></i>
+                    <span class="text-[10px] font-mono">Flutter</span>
+                </div>
+                <div class="icon-box" title="React Native">
+                    <i class="fa-brands fa-react text-2xl mb-2"></i>
+                    <span class="text-[10px] font-mono">React</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bento-card col-span-1 md:col-span-7 p-8 rounded-3xl flex flex-col justify-center">
+            <h3 class="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-6">Uzmanlık Alanları</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="space-y-1">
+                    <div class="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-2">
+                        <i class="fa-brands fa-app-store-ios text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">Native iOS</h4>
+                    <p class="text-xs text-zinc-500 leading-relaxed">Swift ve SwiftUI ile yüksek performanslı Apple ekosistem uygulamaları.</p>
+                </div>
+                <div class="space-y-1">
+                    <div class="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center mb-2">
+                        <i class="fa-brands fa-google-play text-white"></i>
+                    </div>
+                    <h4 class="font-bold text-sm text-white">Native Android</h4>
+                    <p class="text-xs text-zinc-500 leading-relaxed">Kotlin ve Jetpack Compose ile modern Android deneyimleri.</p>
+                </div>
+            </div>
+        </div>
+
     </main>
 
 </body>
