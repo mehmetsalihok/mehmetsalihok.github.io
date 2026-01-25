@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Codemso | Mobile App Developer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -15,67 +15,130 @@
             padding: 0;
             overflow: hidden; /* Kaydırmayı engeller */
             height: 100vh;
-            background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop') no-repeat center center fixed;
-            background-size: cover;
+            background: #0f172a; /* Koyu taban rengi */
         }
 
-        /* iOS Glassmorphism Efekti */
+        /* --- HAREKETLİ ARKA PLAN ANİMASYONU --- */
+        .ambient-light-container {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 0; /* En arkada duracak */
+            overflow: hidden;
+            pointer-events: none; /* Tıklamaları engellemesin */
+        }
+
+        .light-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px); /* Işık patlaması efekti için yüksek bulanıklık */
+            opacity: 0.5;
+            mix-blend-mode: screen; /* Renklerin ışık gibi karışmasını sağlar */
+        }
+
+        /* Mavi Işık Topu */
+        .blob-blue {
+            background: radial-gradient(circle, rgba(37, 99, 235, 1) 0%, rgba(37, 99, 235, 0) 70%);
+            width: 70vw; height: 70vw;
+            top: -20%; left: -20%;
+            animation: moveBlue 25s infinite alternate ease-in-out;
+        }
+
+        /* Mor Işık Topu */
+        .blob-purple {
+            background: radial-gradient(circle, rgba(147, 51, 234, 1) 0%, rgba(147, 51, 234, 0) 70%);
+            width: 60vw; height: 60vw;
+            bottom: -10%; right: -10%;
+            animation: movePurple 30s infinite alternate ease-in-out;
+        }
+        
+        /* Camgöbeği Işık Topu (Vurgu) */
+        .blob-cyan {
+            background: radial-gradient(circle, rgba(6, 182, 212, 1) 0%, rgba(6, 182, 212, 0) 70%);
+            width: 40vw; height: 40vw;
+            top: 30%; right: 10%;
+            opacity: 0.3;
+            animation: moveCyan 35s infinite alternate ease-in-out;
+        }
+
+        @keyframes moveBlue {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(10vw, 15vh) scale(1.1); }
+        }
+        @keyframes movePurple {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(-15vw, -10vh) scale(1.2); }
+        }
+         @keyframes moveCyan {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(-10vw, 10vh) rotate(45deg); }
+        }
+        /* --------------------------------------- */
+
+
+        /* iOS Glassmorphism Efekti (Güncellendi) */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            /* Arka planı daha şeffaf yaptık ki ışıklar daha iyi görünsün */
+            background: rgba(255, 255, 255, 0.08); 
+            backdrop-filter: blur(35px); /* Bulanıklığı artırdık */
+            -webkit-backdrop-filter: blur(35px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
         }
 
         .ios-btn {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.15);
             transition: all 0.3s ease;
         }
         .ios-btn:hover {
-            background: rgba(255, 255, 255, 0.4);
+            background: rgba(255, 255, 255, 0.3);
             transform: scale(1.02);
         }
+        
+        .z-content { z-index: 10; } /* İçeriği öne çıkarmak için */
     </style>
 </head>
-<body class="flex items-center justify-center h-screen w-screen relative">
+<body class="flex items-center justify-center h-screen w-screen relative bg-gray-900">
 
-    <div class="absolute inset-0 bg-black/20 z-0"></div>
+    <div class="ambient-light-container">
+        <div class="light-blob blob-blue"></div>
+        <div class="light-blob blob-purple"></div>
+        <div class="light-blob blob-cyan"></div>
+    </div>
 
-    <main class="relative z-10 w-full max-w-md p-6 mx-4">
+    <main class="relative z-content w-full max-w-md p-6 mx-4">
         
-        <div class="glass-panel rounded-[30px] p-8 text-center text-white">
+        <div class="glass-panel rounded-[35px] p-8 text-center text-white border-t-1 border-white/20">
             
-            <div class="w-24 h-24 mx-auto mb-6 rounded-full glass-panel flex items-center justify-center overflow-hidden shadow-lg">
-                <i class="fa-brands fa-apple text-4xl text-white"></i> 
-                </div>
+            <div class="w-28 h-28 mx-auto mb-6 rounded-[28px] glass-panel flex items-center justify-center overflow-hidden shadow-2xl border border-white/10">
+                <i class="fa-brands fa-apple text-5xl text-white/90"></i> 
+            </div>
 
-            <h1 class="text-3xl font-semibold tracking-tight mb-1">Codemso</h1>
-            <p class="text-white/80 text-sm font-light tracking-wide mb-8 uppercase">Mobile App Developer</p>
+            <h1 class="text-3xl font-semibold tracking-tight mb-2">Codemso</h1>
+            <p class="text-cyan-300/80 text-sm font-medium tracking-wider mb-8 uppercase">Mobile App Developer</p>
 
-            <p class="text-white/90 font-light leading-relaxed mb-8 text-sm">
-                iOS ve Android dünyasında estetik ve performansı birleştiriyorum. Minimalist kod, maksimum deneyim.
+            <p class="text-white/80 font-light leading-relaxed mb-8 text-[15px]">
+                iOS ve Android ekosisteminde estetik, performans ve kullanıcı deneyimini birleştiren modern uygulamalar geliştiriyorum.
             </p>
 
             <div class="space-y-3">
-                <a href="mailto:info@codemso.com" class="ios-btn block w-full py-3 rounded-xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2">
-                    <i class="fa-regular fa-envelope"></i> İletişime Geç
+                <a href="mailto:info@codemso.com" class="ios-btn block w-full py-3.5 rounded-2xl backdrop-blur-md border border-white/10 text-[15px] font-medium flex items-center justify-center gap-2 shadow-sm">
+                    <i class="fa-regular fa-envelope text-lg"></i> İletişime Geç
                 </a>
                 
                 <div class="grid grid-cols-2 gap-3">
-                    <a href="#" class="ios-btn w-full py-3 rounded-xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2">
-                        <i class="fa-brands fa-github"></i> GitHub
+                    <a href="#" class="ios-btn w-full py-3.5 rounded-2xl backdrop-blur-md border border-white/10 text-[15px] font-medium flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-brands fa-github text-lg"></i> GitHub
                     </a>
-                    <a href="#" class="ios-btn w-full py-3 rounded-xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2">
-                        <i class="fa-brands fa-linkedin"></i> LinkedIn
+                    <a href="#" class="ios-btn w-full py-3.5 rounded-2xl backdrop-blur-md border border-white/10 text-[15px] font-medium flex items-center justify-center gap-2 shadow-sm">
+                        <i class="fa-brands fa-linkedin text-lg"></i> LinkedIn
                     </a>
                 </div>
             </div>
 
         </div>
 
-        <p class="text-center text-white/40 text-xs mt-6 font-light">
-            © 2024 Codemso Design.
+        <p class="text-center text-white/30 text-xs mt-8 font-light tracking-wider">
+            © 2024 CODEMSO.
         </p>
     </main>
 
