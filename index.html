@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Codemso | Yazılım Çözümleri</title>
+    <meta name="description" content="Codemso, modern yazılım çözümleri ve dijital dönüşüm hizmetleri sunan teknoloji ortağınız.">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .hero-bg { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <nav class="fixed w-full z-20 top-0 start-0 bg-white/90 backdrop-blur border-b border-gray-200">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <a href="#" class="flex items-center space-x-3 rtl:space-x-reverse">
+                <span class="self-center text-2xl font-bold whitespace-nowrap text-blue-900">Codemso</span>
+            </a>
+            <div class="hidden w-full md:block md:w-auto">
+                <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0">
+                    <li><a href="#hizmetler" class="block py-2 px-3 text-gray-900 hover:text-blue-700 md:p-0">Hizmetler</a></li>
+                    <li><a href="#hakkimizda" class="block py-2 px-3 text-gray-900 hover:text-blue-700 md:p-0">Hakkımızda</a></li>
+                    <li><a href="mailto:info@codemso.com" class="block py-2 px-3 text-blue-700 font-bold md:p-0">İletişim</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero-bg text-white h-screen flex items-center justify-center text-center px-4">
+        <div class="max-w-3xl">
+            <h1 class="mb-4 text-4xl font-extrabold tracking-tight leading-none md:text-5xl lg:text-6xl">
+                Geleceği Kodluyoruz
+            </h1>
+            <p class="mb-8 text-lg font-normal text-gray-300 lg:text-xl sm:px-16 lg:px-48">
+                Codemso, işletmeniz için ölçeklenebilir ve modern yazılım mimarileri inşa eder.
+            </p>
+            <a href="mailto:info@codemso.com" class="inline-flex justify-center items-center py-3 px-5 text-base font-medium text-center text-white rounded-lg bg-blue-700 hover:bg-blue-800 transition">
+                Teklif Alın
+            </a>
+        </div>
+    </section>
+
+    <section id="hizmetler" class="py-20 bg-white">
+        <div class="max-w-screen-xl mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12 text-gray-900">Neler Yapıyoruz?</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="p-6 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-lg transition">
+                    <h3 class="text-xl font-bold mb-2 text-blue-900">Özel Yazılım</h3>
+                    <p class="text-gray-600">İhtiyacınıza özel web ve masaüstü yazılım çözümleri.</p>
+                </div>
+                <div class="p-6 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-lg transition">
+                    <h3 class="text-xl font-bold mb-2 text-blue-900">Mobil Uygulama</h3>
+                    <p class="text-gray-600">iOS ve Android platformları için native çözümler.</p>
+                </div>
+                <div class="p-6 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-lg transition">
+                    <h3 class="text-xl font-bold mb-2 text-blue-900">Danışmanlık</h3>
+                    <p class="text-gray-600">Teknik mimari ve dijital dönüşüm danışmanlığı.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="bg-gray-900 text-white py-8 text-center">
+        <p class="text-sm">© 2024 Codemso. Tüm hakları saklıdır.</p>
+    </footer>
+
+</body>
+</html>
