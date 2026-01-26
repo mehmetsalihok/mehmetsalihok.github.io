@@ -13,16 +13,20 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
-        /* KAYDIRMAYI ENGELLE VE TAM EKRAN YAP */
-        body, html {
-            height: 100%; width: 100%; margin: 0; padding: 0;
-            overflow: hidden; /* Scroll YOK */
+        body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0; padding: 0;
             background: #0f172a;
+            /* ÖNEMLİ: İçerik sığmazsa kaydır, sığarsa ortala */
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
         }
 
-        /* --- ARKA PLAN (Aynı) --- */
-        .ambient-light-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; }
+        /* --- ARKA PLAN (SABİT) --- */
+        .ambient-light-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; overflow: hidden; }
         .light-blob { position: absolute; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; will-change: transform, opacity; }
         
         .blob-blue { background: radial-gradient(circle, rgba(59, 130, 246, 0.9) 0%, rgba(59, 130, 246, 0) 70%); width: 80vw; height: 80vw; top: -30%; left: -30%; opacity: 0.6; animation: explodeBlue 25s infinite ease-in-out; }
@@ -33,32 +37,31 @@
         @keyframes explodePurple { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; } 50% { transform: translate(-8vw, -5vh) scale(1.1); opacity: 0.7; } }
         @keyframes explodeCyan { 0%, 100% { transform: translate(0, 0) scale(0.9); opacity: 0.3; } 50% { transform: translate(-5vw, 5vh) scale(1.2) rotate(45deg); opacity: 0.6; } }
 
-        /* --- GLASS KART (Esnek Yapı) --- */
+        /* --- GLASS KART --- */
         .glass-panel {
             background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.25), inset 0 0 30px rgba(255, 255, 255, 0.02);
-            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            box-shadow: 
+                0 20px 40px -15px rgba(0, 0, 0, 0.25),
+                inset 0 0 30px rgba(255, 255, 255, 0.02);
         }
 
-        /* --- LOGO ANİMASYONU --- */
+        /* --- ANİMASYONLAR --- */
         @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         .animate-float { animation: floatLogo 7s ease-in-out infinite; }
 
-        /* --- BAŞLIK (DÜZELTİLDİ: SİYAH GÖRÜNME SORUNU GİDERİLDİ) --- */
-        /* Artık gradient yok, saf beyaz ve parlak gölge var */
+        /* KRİSTAL BEYAZ METİN (Android Sorununu Çözer) */
         .text-crystal {
             color: #ffffff;
-            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.2);
+            text-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
         }
 
         /* --- İKONLAR --- */
-        .tech-icon-clean { display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255, 255, 255, 0.5); transition: all 0.4s ease; cursor: default; }
+        .tech-icon-clean { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: rgba(255, 255, 255, 0.5); transition: all 0.4s ease; cursor: default; }
         .tech-icon-clean:hover { color: #ffffff; transform: translateY(-4px); text-shadow: 0 0 20px rgba(255,255,255,0.4); }
-        /* İkon boyutları ekran küçülünce otomatik ayarlanacak (vmin kullanıldı) */
-        .tech-icon-clean i { font-size: 1.5rem; } 
-        .tech-icon-clean span { font-size: 0.6rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+        .tech-icon-clean i { font-size: 1.7rem; }
+        .tech-icon-clean span { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
 
         .status-dot { height: 6px; width: 6px; background-color: #4ade80; border-radius: 50%; display: inline-block; box-shadow: 0 0 12px #4ade80; animation: pulse 3s infinite; }
         @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 0.4; } 100% { opacity: 0.8; } }
@@ -68,7 +71,7 @@
         .lang-separator { color: rgba(255,255,255,0.2); margin: 0 4px; }
     </style>
 </head>
-<body class="flex items-center justify-center p-4">
+<body class="w-full">
 
     <div class="ambient-light-container">
         <div class="light-blob blob-blue"></div>
@@ -76,67 +79,63 @@
         <div class="light-blob blob-cyan"></div>
     </div>
 
-    <main class="relative z-10 w-full max-w-md h-full max-h-[90vh] flex flex-col">
+    <main class="relative z-10 w-full max-w-md p-4 py-10 mx-auto flex flex-col justify-center">
         
-        <div class="glass-panel w-full h-full rounded-[2.5rem] p-6 text-center text-white relative overflow-hidden">
+        <div class="glass-panel w-full rounded-[3rem] p-8 pb-10 text-center text-white relative overflow-hidden">
             
-            <div class="w-full relative flex justify-end items-center mb-2 min-h-[20px]">
-                <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-                <div class="flex items-center z-20">
-                    <span id="btn-tr" class="lang-switch active" onclick="setLang('tr')">TR</span>
-                    <span class="lang-separator">/</span>
-                    <span id="btn-en" class="lang-switch" onclick="setLang('en')">EN</span>
+            <div class="absolute top-8 right-8 z-20 flex items-center">
+                <span id="btn-tr" class="lang-switch active" onclick="setLang('tr')">TR</span>
+                <span class="lang-separator">/</span>
+                <span id="btn-en" class="lang-switch" onclick="setLang('en')">EN</span>
+            </div>
+
+            <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+
+            <div class="w-32 h-32 md:w-36 md:h-36 mx-auto mb-2 flex items-center justify-center relative p-2 animate-float">
+                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]">
+            </div>
+
+            <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-crystal">Codemso</h1>
+            
+            <div class="flex items-center justify-center gap-2 mb-8 opacity-90">
+                <div class="status-dot"></div>
+                <span id="status-text" class="text-[10px] font-semibold text-green-400 tracking-[0.2em] uppercase">
+                    Sistem Aktif
+                </span>
+            </div>
+
+            <p id="desc-text" class="text-zinc-300 font-normal leading-7 mb-12 text-[15px] px-4 min-h-[80px]">
+                Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı ve ölçeklenebilir <span class="text-white font-medium">native mobil deneyimlere</span> dönüştürüyoruz.
+            </p>
+
+            <div class="flex justify-center items-center gap-8 mb-12 px-2">
+                <div class="tech-icon-clean" title="Swift">
+                    <i class="fa-brands fa-swift"></i>
+                    <span>Swift</span>
+                </div>
+                <div class="tech-icon-clean" title="Kotlin">
+                    <i class="fa-brands fa-android"></i>
+                    <span>Kotlin</span>
+                </div>
+                <div class="tech-icon-clean" title="Flutter">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Flutter</span>
+                </div>
+                <div class="tech-icon-clean" title="React Native">
+                    <i class="fa-brands fa-react"></i>
+                    <span>React</span>
                 </div>
             </div>
 
-            <div class="flex-1 flex flex-col items-center justify-center w-full">
-                
-                <div class="relative p-2 animate-float shrink-0 max-h-[20vh] flex items-center">
-                    <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="w-auto h-auto max-h-[140px] object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]">
-                </div>
-
-                <h1 class="text-3xl font-bold tracking-tight mb-1 text-crystal shrink-0">Codemso</h1>
-                
-                <div class="flex items-center justify-center gap-2 mb-4 opacity-90 shrink-0">
-                    <div class="status-dot"></div>
-                    <span id="status-text" class="text-[10px] font-semibold text-green-400 tracking-[0.2em] uppercase">
-                        Sistem Aktif
-                    </span>
-                </div>
-
-                <p id="desc-text" class="text-zinc-300 font-normal leading-tight mb-6 text-sm px-2 shrink">
-                    Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı <span class="text-white font-medium">native mobil deneyimlere</span> dönüştürüyoruz.
-                </p>
-
-                <div class="flex justify-center items-center gap-6 mb-6 px-1 shrink-0 w-full">
-                    <div class="tech-icon-clean" title="Swift">
-                        <i class="fa-brands fa-swift"></i>
-                        <span>Swift</span>
-                    </div>
-                    <div class="tech-icon-clean" title="Kotlin">
-                        <i class="fa-brands fa-android"></i>
-                        <span>Kotlin</span>
-                    </div>
-                    <div class="tech-icon-clean" title="Flutter">
-                        <i class="fa-solid fa-layer-group"></i>
-                        <span>Flutter</span>
-                    </div>
-                    <div class="tech-icon-clean" title="React Native">
-                        <i class="fa-brands fa-react"></i>
-                        <span>React</span>
-                    </div>
-                </div>
-
-                <div class="shrink-0 mb-4">
-                    <a href="mailto:info@codemso.com" class="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors duration-300 text-sm tracking-wide group">
-                        <span class="w-6 h-[1px] bg-zinc-600 group-hover:bg-white transition-colors"></span>
-                        info@codemso.com
-                        <span class="w-6 h-[1px] bg-zinc-600 group-hover:bg-white transition-colors"></span>
-                    </a>
-                </div>
+            <div class="mb-4">
+                <a href="mailto:info@codemso.com" class="inline-flex items-center gap-2 text-zinc-400 hover:text-white transition-colors duration-300 text-sm tracking-wide group">
+                    <span class="w-8 h-[1px] bg-zinc-600 group-hover:bg-white transition-colors"></span>
+                    info@codemso.com
+                    <span class="w-8 h-[1px] bg-zinc-600 group-hover:bg-white transition-colors"></span>
+                </a>
             </div>
 
-            <p class="text-center text-white/20 text-[9px] tracking-[0.2em] font-medium lowercase shrink-0">
+            <p class="text-center text-white/10 text-[10px] mt-6 tracking-[0.2em] font-medium lowercase">
                 © 2026 codemso.com
             </p>
 
@@ -147,11 +146,11 @@
         const translations = {
             tr: {
                 status: "Sistem Aktif",
-                desc: "Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı <span class='text-white font-medium'>native mobil deneyimlere</span> dönüştürüyoruz."
+                desc: "Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı ve ölçeklenebilir <span class='text-white font-medium'>native mobil deneyimlere</span> dönüştürüyoruz."
             },
             en: {
                 status: "System Online",
-                desc: "Transforming innovative ideas into high-performance <span class='text-white font-medium'>native mobile experiences</span> living in iOS and Android ecosystems."
+                desc: "Transforming innovative ideas into high-performance, scalable <span class='text-white font-medium'>native mobile experiences</span> living in iOS and Android ecosystems."
             }
         };
 
