@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Codemso | Mobile App Developer</title>
+    
+    <link rel="icon" href="https://i.hizliresim.com/49omvfc.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://i.hizliresim.com/49omvfc.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -28,12 +32,11 @@
         @keyframes explodePurple { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; } 50% { transform: translate(-8vw, -5vh) scale(1.1); opacity: 0.7; } }
         @keyframes explodeCyan { 0%, 100% { transform: translate(0, 0) scale(0.9); opacity: 0.3; } 50% { transform: translate(-5vw, 5vh) scale(1.2) rotate(45deg); opacity: 0.6; } }
 
-        /* --- GLASS KART (GÖLGE HAFİFLETİLDİ) --- */
+        /* --- GLASS KART (GÖLGE HAFİF) --- */
         .glass-panel {
             background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
-            border: 1px solid rgba(255, 255, 255, 0.1); /* Kenarlık biraz daha belirginleştirildi */
-            /* GÖLGE AYARI: Opaklık 0.7'den 0.25'e düşürüldü ve içe doğru hafif bir parlama eklendi */
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 
                 0 20px 40px -15px rgba(0, 0, 0, 0.25),
                 inset 0 0 30px rgba(255, 255, 255, 0.02);
@@ -154,11 +157,9 @@
         };
 
         function setLang(lang) {
-            // Metinleri değiştir
             document.getElementById('status-text').innerText = translations[lang].status;
             document.getElementById('desc-text').innerHTML = translations[lang].desc;
 
-            // Buton rengini değiştir
             if (lang === 'tr') {
                 document.getElementById('btn-tr').classList.add('active');
                 document.getElementById('btn-en').classList.remove('active');
