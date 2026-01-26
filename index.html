@@ -15,12 +15,13 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0; padding: 0; overflow: hidden; height: 100vh;
-            /* FAVORİ RENGİN (Gece Mavisi) */
+            margin: 0; padding: 0;
             background: #0f172a;
+            /* ÖNEMLİ: Masaüstünde gizle, Mobilde gerekirse kaydır */
+            overflow-x: hidden;
         }
 
-        /* --- ARKA PLAN IŞIKLARI --- */
+        /* --- ARKA PLAN (SABİT) --- */
         .ambient-light-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; overflow: hidden; }
         .light-blob { position: absolute; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; will-change: transform, opacity; }
         
@@ -32,7 +33,7 @@
         @keyframes explodePurple { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; } 50% { transform: translate(-8vw, -5vh) scale(1.1); opacity: 0.7; } }
         @keyframes explodeCyan { 0%, 100% { transform: translate(0, 0) scale(0.9); opacity: 0.3; } 50% { transform: translate(-5vw, 5vh) scale(1.2) rotate(45deg); opacity: 0.6; } }
 
-        /* --- GLASS KART (GÖLGE HAFİF) --- */
+        /* --- GLASS KART --- */
         .glass-panel {
             background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
@@ -55,25 +56,20 @@
         @keyframes shimmer { to { background-position: 200% center; } }
 
         /* --- İKONLAR --- */
-        .tech-icon-clean { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; color: rgba(255, 255, 255, 0.5); transition: all 0.4s ease; cursor: default; }
+        .tech-icon-clean { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: rgba(255, 255, 255, 0.5); transition: all 0.4s ease; cursor: default; }
         .tech-icon-clean:hover { color: #ffffff; transform: translateY(-4px); text-shadow: 0 0 20px rgba(255,255,255,0.4); }
-        .tech-icon-clean i { font-size: 1.8rem; }
-        .tech-icon-clean span { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+        .tech-icon-clean i { font-size: 1.6rem; } /* Mobilde ikonları hafif küçülttük */
+        .tech-icon-clean span { font-size: 0.65rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
 
         .status-dot { height: 6px; width: 6px; background-color: #4ade80; border-radius: 50%; display: inline-block; box-shadow: 0 0 12px #4ade80; animation: pulse 3s infinite; }
         @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 0.4; } 100% { opacity: 0.8; } }
 
-        /* --- DİL DEĞİŞTİRİCİ STİLİ --- */
-        .lang-switch {
-            font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em;
-            color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s;
-        }
+        .lang-switch { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.3s; }
         .lang-switch.active { color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.6); }
-        .lang-switch:hover { color: #fff; }
         .lang-separator { color: rgba(255,255,255,0.2); margin: 0 4px; }
     </style>
 </head>
-<body class="flex items-center justify-center h-screen w-screen relative">
+<body class="min-h-screen w-full relative overflow-y-auto md:overflow-hidden flex items-center justify-center">
 
     <div class="ambient-light-container">
         <div class="light-blob blob-blue"></div>
@@ -81,11 +77,11 @@
         <div class="light-blob blob-cyan"></div>
     </div>
 
-    <main class="relative z-10 w-full max-w-md p-4 mx-auto">
+    <main class="relative z-10 w-full max-w-md p-4 py-12 md:py-4 mx-auto flex flex-col items-center justify-center min-h-screen md:min-h-0">
         
-        <div class="glass-panel rounded-[3rem] p-8 pb-10 text-center text-white relative overflow-hidden">
+        <div class="glass-panel rounded-[3rem] p-6 md:p-8 pb-8 text-center text-white relative overflow-hidden w-full">
             
-            <div class="absolute top-8 right-8 z-20 flex items-center">
+            <div class="absolute top-6 right-6 z-20 flex items-center">
                 <span id="btn-tr" class="lang-switch active" onclick="setLang('tr')">TR</span>
                 <span class="lang-separator">/</span>
                 <span id="btn-en" class="lang-switch" onclick="setLang('en')">EN</span>
@@ -93,24 +89,24 @@
 
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
-            <div class="w-36 h-36 mx-auto mb-2 flex items-center justify-center relative p-2 animate-float">
+            <div class="w-28 h-28 md:w-36 md:h-36 mx-auto mb-2 flex items-center justify-center relative p-2 animate-float">
                 <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]">
             </div>
 
-            <h1 class="text-4xl font-bold tracking-tight mb-3 text-shimmer">Codemso</h1>
+            <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-shimmer">Codemso</h1>
             
-            <div class="flex items-center justify-center gap-2 mb-8 opacity-90">
+            <div class="flex items-center justify-center gap-2 mb-6 opacity-90">
                 <div class="status-dot"></div>
                 <span id="status-text" class="text-[10px] font-semibold text-green-400 tracking-[0.2em] uppercase">
                     Sistem Aktif
                 </span>
             </div>
 
-            <p id="desc-text" class="text-zinc-300 font-normal leading-7 mb-12 text-[15px] px-4 min-h-[80px]">
+            <p id="desc-text" class="text-zinc-300 font-normal leading-6 md:leading-7 mb-8 md:mb-12 text-sm md:text-[15px] px-2 min-h-[70px]">
                 Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı ve ölçeklenebilir <span class="text-white font-medium">native mobil deneyimlere</span> dönüştürüyoruz.
             </p>
 
-            <div class="flex justify-center items-center gap-10 mb-14 px-2">
+            <div class="flex justify-center items-center gap-6 md:gap-10 mb-10 md:mb-14 px-1">
                 <div class="tech-icon-clean" title="Swift">
                     <i class="fa-brands fa-swift"></i>
                     <span>Swift</span>
@@ -139,7 +135,7 @@
 
         </div>
 
-        <p class="text-center text-white/10 text-[10px] mt-8 tracking-[0.2em] font-medium lowercase">
+        <p class="text-center text-white/10 text-[10px] mt-6 md:mt-8 tracking-[0.2em] font-medium lowercase">
             © 2026 codemso.com
         </p>
     </main>
@@ -159,7 +155,6 @@
         function setLang(lang) {
             document.getElementById('status-text').innerText = translations[lang].status;
             document.getElementById('desc-text').innerHTML = translations[lang].desc;
-
             if (lang === 'tr') {
                 document.getElementById('btn-tr').classList.add('active');
                 document.getElementById('btn-en').classList.remove('active');
