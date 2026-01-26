@@ -49,11 +49,6 @@
         .tech-icon-clean { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; color: rgba(255, 255, 255, 0.5); transition: all 0.4s ease; cursor: default; }
         .tech-icon-clean:hover { color: #ffffff; transform: translateY(-4px); text-shadow: 0 0 20px rgba(255,255,255,0.4); }
         .tech-icon-clean i { font-size: 1.8rem; }
-        
-        /* ÖZEL SVG STİLİ (Görünmeyen ikon sorunu için) */
-        .custom-svg { width: 1.6rem; height: 1.8rem; fill: currentColor; transition: all 0.4s ease; }
-        .tech-icon-clean:hover .custom-svg { filter: drop-shadow(0 0 5px rgba(255,255,255,0.8)); }
-
         .tech-icon-clean span { font-size: 0.7rem; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
 
         .status-dot { height: 6px; width: 6px; background-color: #4ade80; border-radius: 50%; display: inline-block; box-shadow: 0 0 12px #4ade80; animation: pulse 3s infinite; }
@@ -75,7 +70,7 @@
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
             <div class="w-36 h-36 mx-auto mb-2 flex items-center justify-center relative p-2 animate-float">
-                <img src="https://i.hizliresim.com/a6mkiqx.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]">
+                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]">
             </div>
 
             <h1 class="text-4xl font-bold tracking-tight mb-3 text-shimmer">Codemso</h1>
@@ -99,9 +94,7 @@
                     <span>Kotlin</span>
                 </div>
                 <div class="tech-icon-clean" title="Flutter">
-                    <svg class="custom-svg" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M414.4 0L304 110.4 193.6 0H414.4z M0 193.6L110.4 304 0 414.4V193.6z M193.6 414.4l110.4-110.4L414.4 414.4H193.6z" />
-                    </svg>
+                    <i class="fa-solid fa-layer-group"></i>
                     <span>Flutter</span>
                 </div>
                 <div class="tech-icon-clean" title="React Native">
