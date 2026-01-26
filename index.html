@@ -148,9 +148,9 @@
 
             <div class="mt-8 flex flex-col items-center gap-4">
                 <div class="flex gap-4 text-[10px] tracking-wider font-medium text-zinc-500 uppercase">
-                    <a href="privacy.html" class="hover:text-white transition-colors">Gizlilik</a>
+                    <a href="privacy.html" id="link-privacy" class="hover:text-white transition-colors">Gizlilik</a>
                     <span class="text-zinc-700">|</span>
-                    <a href="terms.html" class="hover:text-white transition-colors">Kullanım</a>
+                    <a href="terms.html" id="link-terms" class="hover:text-white transition-colors">Kullanım</a>
                 </div>
                 <p class="text-center text-white/10 text-[10px] tracking-[0.2em] font-medium lowercase">
                     © 2026 codemso.com
@@ -164,17 +164,26 @@
         const translations = {
             tr: {
                 status: "Sistem Aktif",
-                desc: "Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı ve ölçeklenebilir <span class='text-white font-medium'>native mobil deneyimlere</span> dönüştürüyoruz."
+                desc: "Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı ve ölçeklenebilir <span class='text-white font-medium'>native mobil deneyimlere</span> dönüştürüyoruz.",
+                privacy: "Gizlilik",  // Yeni Eklendi
+                terms: "Kullanım"     // Yeni Eklendi
             },
             en: {
                 status: "System Online",
-                desc: "Transforming innovative ideas into high-performance, scalable <span class='text-white font-medium'>native mobile experiences</span> living in iOS and Android ecosystems."
+                desc: "Transforming innovative ideas into high-performance, scalable <span class='text-white font-medium'>native mobile experiences</span> living in iOS and Android ecosystems.",
+                privacy: "Privacy",   // Yeni Eklendi
+                terms: "Terms"        // Yeni Eklendi
             }
         };
 
         function setLang(lang) {
             document.getElementById('status-text').innerText = translations[lang].status;
             document.getElementById('desc-text').innerHTML = translations[lang].desc;
+            
+            // Link çevirileri eklendi
+            document.getElementById('link-privacy').innerText = translations[lang].privacy;
+            document.getElementById('link-terms').innerText = translations[lang].terms;
+
             if (lang === 'tr') {
                 document.getElementById('btn-tr').classList.add('active');
                 document.getElementById('btn-en').classList.remove('active');
