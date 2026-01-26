@@ -48,8 +48,6 @@
 
         /* --- YENİ OPTİMİZE EDİLMİŞ GÜMÜŞ PARLAMA --- */
         .text-shimmer {
-            /* Taban rengi Gümüş (Slate-400), Parlama Beyaz (#fff) */
-            /* 110 derece açı ile keskin bir ışık bandı */
             background: linear-gradient(
                 110deg, 
                 #94a3b8 40%, 
@@ -57,13 +55,9 @@
                 #94a3b8 60%
             );
             background-size: 200% auto;
-            
-            /* Kırpma İşlemi */
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            
-            /* Animasyon */
             animation: shine 3.5s linear infinite;
         }
 
@@ -152,9 +146,16 @@
                 </a>
             </div>
 
-            <p class="text-center text-white/10 text-[10px] mt-6 tracking-[0.2em] font-medium lowercase">
-                © 2026 codemso.com
-            </p>
+            <div class="mt-8 flex flex-col items-center gap-4">
+                <div class="flex gap-4 text-[10px] tracking-wider font-medium text-zinc-500 uppercase">
+                    <a href="privacy.html" class="hover:text-white transition-colors">Gizlilik</a>
+                    <span class="text-zinc-700">|</span>
+                    <a href="terms.html" class="hover:text-white transition-colors">Kullanım</a>
+                </div>
+                <p class="text-center text-white/10 text-[10px] tracking-[0.2em] font-medium lowercase">
+                    © 2026 codemso.com
+                </p>
+            </div>
 
         </div>
     </main>
