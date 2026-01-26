@@ -24,14 +24,12 @@
             overflow-x: hidden;
         }
 
-        /* --- ARKA PLAN (SABİT) --- */
+        /* --- ARKA PLAN --- */
         .ambient-light-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; overflow: hidden; }
         .light-blob { position: absolute; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; will-change: transform, opacity; }
-        
         .blob-blue { background: radial-gradient(circle, rgba(59, 130, 246, 0.9) 0%, rgba(59, 130, 246, 0) 70%); width: 80vw; height: 80vw; top: -30%; left: -30%; opacity: 0.6; animation: explodeBlue 25s infinite ease-in-out; }
         .blob-purple { background: radial-gradient(circle, rgba(168, 85, 247, 0.9) 0%, rgba(168, 85, 247, 0) 70%); width: 70vw; height: 70vw; bottom: -20%; right: -20%; opacity: 0.5; animation: explodePurple 28s infinite ease-in-out reverse; }
         .blob-cyan { background: radial-gradient(circle, rgba(34, 211, 238, 0.9) 0%, rgba(34, 211, 238, 0) 70%); width: 50vw; height: 50vw; top: 40%; right: 10%; opacity: 0.4; animation: explodeCyan 20s infinite ease-in-out; }
-        
         @keyframes explodeBlue { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; } 50% { transform: translate(5vw, 5vh) scale(1.2); opacity: 0.8; } }
         @keyframes explodePurple { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; } 50% { transform: translate(-8vw, -5vh) scale(1.1); opacity: 0.7; } }
         @keyframes explodeCyan { 0%, 100% { transform: translate(0, 0) scale(0.9); opacity: 0.3; } 50% { transform: translate(-5vw, 5vh) scale(1.2) rotate(45deg); opacity: 0.6; } }
@@ -41,20 +39,27 @@
             background: rgba(255, 255, 255, 0.03); 
             backdrop-filter: blur(50px); -webkit-backdrop-filter: blur(50px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 
-                0 20px 40px -15px rgba(0, 0, 0, 0.25),
-                inset 0 0 30px rgba(255, 255, 255, 0.02);
+            box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.25), inset 0 0 30px rgba(255, 255, 255, 0.02);
         }
 
         /* --- ANİMASYONLAR --- */
         @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         .animate-float { animation: floatLogo 7s ease-in-out infinite; }
 
-        /* KRİSTAL BEYAZ METİN */
-        .text-crystal {
-            color: #ffffff;
-            text-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
+        /* --- METALİK PARLAMA EFEKTİ (GERİ GELDİ) --- */
+        .text-shimmer {
+            /* Beyazdan Gümüş/Griye geçiş yapan gradyan */
+            background: linear-gradient(to right, #ffffff 20%, #cbd5e1 50%, #ffffff 80%);
+            background-size: 200% auto;
+            color: transparent;
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; /* Android uyumluluğu için */
+            animation: shimmer 3s linear infinite;
+            /* Okunabilirliği artırmak için hafif dış parlama */
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
         }
+        @keyframes shimmer { to { background-position: 200% center; } }
 
         /* --- İKONLAR --- */
         .tech-icon-clean { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: rgba(255, 255, 255, 0.5); transition: all 0.4s ease; cursor: default; }
@@ -95,7 +100,7 @@
                 <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="relative z-10 w-full h-full object-contain">
             </div>
 
-            <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-crystal">Codemso</h1>
+            <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-shimmer">Codemso</h1>
             
             <div class="flex items-center justify-center gap-2 mb-8 opacity-90">
                 <div class="status-dot"></div>
