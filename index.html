@@ -17,7 +17,6 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0; padding: 0;
             background: #0f172a;
-            /* ÖNEMLİ: İçerik sığmazsa kaydır, sığarsa ortala */
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -51,7 +50,7 @@
         @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         .animate-float { animation: floatLogo 7s ease-in-out infinite; }
 
-        /* KRİSTAL BEYAZ METİN (Android Sorununu Çözer) */
+        /* KRİSTAL BEYAZ METİN */
         .text-crystal {
             color: #ffffff;
             text-shadow: 0 0 25px rgba(255, 255, 255, 0.5);
@@ -92,7 +91,8 @@
             <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
             <div class="w-32 h-32 md:w-36 md:h-36 mx-auto mb-2 flex items-center justify-center relative p-2 animate-float">
-                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_25px_rgba(255,255,255,0.15)]">
+                <div class="absolute inset-0 bg-white/20 blur-3xl rounded-full scale-50"></div>
+                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="relative z-10 w-full h-full object-contain">
             </div>
 
             <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 text-crystal">Codemso</h1>
