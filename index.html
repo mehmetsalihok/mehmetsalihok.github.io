@@ -7,62 +7,66 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0; padding: 0; overflow: hidden; height: 100vh;
-            background: #0f172a; /* Koyu gece mavisi taban */
+            background: #0f172a;
         }
 
-        /* --- HAREKETLİ ARKA PLAN (Işık Patlamaları) --- */
-        .ambient-light-container {
-            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 0; pointer-events: none; overflow: hidden;
-        }
-        .light-blob {
-            position: absolute; border-radius: 50%;
-            filter: blur(60px); mix-blend-mode: screen;
-            will-change: transform, opacity;
-        }
-        .blob-blue {
-            background: radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0) 70%);
-            width: 80vw; height: 80vw; top: -30%; left: -30%; opacity: 0.7;
-            animation: explodeBlue 18s infinite ease-in-out;
-        }
-        .blob-purple {
-            background: radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(168, 85, 247, 0) 70%);
-            width: 70vw; height: 70vw; bottom: -20%; right: -20%; opacity: 0.6;
-            animation: explodePurple 22s infinite ease-in-out reverse;
-        }
-        .blob-cyan {
-            background: radial-gradient(circle, rgba(34, 211, 238, 1) 0%, rgba(34, 211, 238, 0) 70%);
-            width: 50vw; height: 50vw; top: 40%; right: 10%; opacity: 0.5;
-            animation: explodeCyan 15s infinite ease-in-out;
-        }
+        /* --- ARKA PLAN IŞIKLARI (Aynı kaldı) --- */
+        .ambient-light-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .light-blob { position: absolute; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; will-change: transform, opacity; }
+        .blob-blue { background: radial-gradient(circle, rgba(59, 130, 246, 1) 0%, rgba(59, 130, 246, 0) 70%); width: 80vw; height: 80vw; top: -30%; left: -30%; opacity: 0.7; animation: explodeBlue 18s infinite ease-in-out; }
+        .blob-purple { background: radial-gradient(circle, rgba(168, 85, 247, 1) 0%, rgba(168, 85, 247, 0) 70%); width: 70vw; height: 70vw; bottom: -20%; right: -20%; opacity: 0.6; animation: explodePurple 22s infinite ease-in-out reverse; }
+        .blob-cyan { background: radial-gradient(circle, rgba(34, 211, 238, 1) 0%, rgba(34, 211, 238, 0) 70%); width: 50vw; height: 50vw; top: 40%; right: 10%; opacity: 0.5; animation: explodeCyan 15s infinite ease-in-out; }
         @keyframes explodeBlue { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.6; } 50% { transform: translate(10vw, 10vh) scale(1.3); opacity: 1; } }
         @keyframes explodePurple { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; } 50% { transform: translate(-15vw, -10vh) scale(1.2); opacity: 0.9; } }
         @keyframes explodeCyan { 0%, 100% { transform: translate(0, 0) scale(0.8); opacity: 0.4; } 30% { transform: translate(-10vw, 5vh) scale(1.4) rotate(45deg); opacity: 0.8; } 70% { transform: translate(5vw, 15vh) scale(0.9) rotate(-20deg); opacity: 0.5; } }
 
-        /* --- KOYU GLASSMOPHISM KART --- */
+        /* --- GLASSMOPHISM KART --- */
         .glass-panel {
-            background: rgba(255, 255, 255, 0.07); 
+            background: rgba(255, 255, 255, 0.05); 
             backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
         }
-        .tech-pill {
-            background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s;
+
+        /* --- YENİ: LOGO VE YAZI ANİMASYONLARI --- */
+        /* Logonun havada süzülmesi */
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
         }
-        .tech-pill:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
-        .ios-btn { background: rgba(255, 255, 255, 0.12); transition: all 0.3s ease; }
-        .ios-btn:hover { background: rgba(255, 255, 255, 0.3); transform: scale(1.03); }
+        .animate-float { animation: floatLogo 6s ease-in-out infinite; }
+
+        /* Başlık yazısının parlaması (Shimmer Effect) */
+        .text-shimmer {
+            background: linear-gradient(to right, #ffffff 20%, #a5b4fc 50%, #ffffff 80%);
+            background-size: 200% auto;
+            color: transparent;
+            background-clip: text;
+            -webkit-background-clip: text;
+            animation: shimmer 4s linear infinite;
+        }
+        @keyframes shimmer { to { background-position: 200% center; } }
+
+        /* --- YENİ: TEMİZ BEYAZ İKONLAR --- */
+        .tech-icon-clean {
+            display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+            color: rgba(255, 255, 255, 0.6); /* Başlangıçta hafif sönük */
+            transition: all 0.4s ease;
+        }
+        .tech-icon-clean:hover {
+            color: #ffffff; /* Üzerine gelince tam beyaz */
+            transform: translateY(-3px) scale(1.05);
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+        }
+        .tech-icon-clean i { font-size: 1.75rem; } /* İkon boyutu büyütüldü */
+        .tech-icon-clean span { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.05em; }
         
-        /* Yanıp Sönen Yeşil Nokta */
-        .status-dot {
-            height: 8px; width: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block;
-            box-shadow: 0 0 15px #4ade80; animation: pulse 2s infinite;
-        }
+        .status-dot { height: 8px; width: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block; box-shadow: 0 0 15px #4ade80; animation: pulse 2s infinite; }
         @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.6; transform: scale(1.2); } 100% { opacity: 1; transform: scale(1); } }
     </style>
 </head>
@@ -76,55 +80,54 @@
 
     <main class="relative z-10 w-full max-w-sm p-4 mx-auto">
         
-        <div class="glass-panel rounded-[40px] p-8 text-center text-white relative overflow-hidden shadow-2xl">
+        <div class="glass-panel rounded-[40px] p-8 pb-10 text-center text-white relative overflow-hidden shadow-2xl">
             
-            <div class="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+            <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
 
-            <div class="w-32 h-32 mx-auto mb-6 flex items-center justify-center relative transition-transform hover:scale-105 duration-500 p-2">
-                <img src="https://i.hizliresim.com/a6mkiqx.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+            <div class="w-36 h-36 mx-auto mb-4 flex items-center justify-center relative p-2 animate-float">
+                <img src="https://i.hizliresim.com/a6mkiqx.png" alt="Codemso Logo" class="w-full h-full object-contain drop-shadow-[0_0_20px_rgba(255,255,255,0.2)]">
             </div>
 
-            <h1 class="text-3xl font-bold tracking-tight mb-1 drop-shadow-md">Codemso</h1>
-            <div class="flex items-center justify-center gap-2 mb-6">
+            <h1 class="text-4xl font-bold tracking-tight mb-2 text-shimmer">Codemso</h1>
+            <div class="flex items-center justify-center gap-2 mb-8">
                 <div class="status-dot"></div>
-                <span class="text-xs font-medium text-green-300 tracking-wide uppercase drop-shadow-sm">Projeye Hazır</span>
+                <span class="text-[11px] font-semibold text-green-300 tracking-widest uppercase drop-shadow-sm">Projeye Hazır</span>
             </div>
 
-            <p class="text-white/80 font-light leading-relaxed mb-6 text-sm drop-shadow-sm">
-                iOS ve Android için native performans, modern arayüzler. Fikrinizi App Store ve Play Store'a taşıyorum.
+            <p class="text-white/70 font-light leading-relaxed mb-10 text-[15px] px-2">
+                Fikirlerinizi, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı native uygulamalara dönüştürüyorum.
             </p>
 
-            <div class="flex flex-wrap justify-center gap-2 mb-8">
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="Swift"><i class="fa-brands fa-swift text-orange-400 mr-1"></i> Swift</span>
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="Kotlin"><i class="fa-brands fa-android text-green-400 mr-1"></i> Kotlin</span>
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="Flutter"><i class="fa-solid fa-layer-group text-cyan-400 mr-1"></i> Flutter</span>
-                <span class="tech-pill px-3 py-1 rounded-full text-xs text-white/90 backdrop-blur-sm" title="React Native"><i class="fa-brands fa-react text-blue-400 mr-1"></i> React</span>
+            <div class="flex justify-center items-center gap-8 mb-12 px-4">
+                <div class="tech-icon-clean" title="Swift">
+                    <i class="fa-brands fa-swift"></i>
+                    <span>Swift</span>
+                </div>
+                <div class="tech-icon-clean" title="Kotlin">
+                    <i class="fa-brands fa-android"></i>
+                    <span>Kotlin</span>
+                </div>
+                <div class="tech-icon-clean" title="Flutter">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Flutter</span>
+                </div>
+                <div class="tech-icon-clean" title="React Native">
+                    <i class="fa-brands fa-react"></i>
+                    <span>React</span>
+                </div>
             </div>
 
-            <div class="space-y-3">
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="mailto:info@codemso.com" class="ios-btn py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 shadow-md">
-                        <i class="fa-regular fa-envelope"></i> E-Posta
-                    </a>
-                    <a href="https://wa.me/905000000000" target="_blank" class="ios-btn py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 bg-green-500/20 hover:bg-green-500/30 shadow-md">
-                        <i class="fa-brands fa-whatsapp text-lg text-green-400"></i> WhatsApp
-                    </a>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-3">
-                    <a href="#" class="ios-btn w-full py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 shadow-md">
-                        <i class="fa-brands fa-github text-lg"></i> GitHub
-                    </a>
-                    <a href="#" class="ios-btn w-full py-3 rounded-2xl backdrop-blur-md border border-white/10 text-sm font-medium flex items-center justify-center gap-2 shadow-md">
-                        <i class="fa-brands fa-linkedin text-lg"></i> LinkedIn
-                    </a>
-                </div>
+            <div class="mt-auto">
+                <a href="mailto:info@codemso.com" class="text-white/60 hover:text-white tracking-wider text-sm transition-colors duration-300 flex items-center justify-center gap-2 group">
+                    <i class="fa-regular fa-envelope group-hover:animate-bounce"></i>
+                    info@codemso.com
+                </a>
             </div>
 
         </div>
 
-        <p class="text-center text-white/30 text-[10px] mt-6 tracking-widest uppercase drop-shadow-sm">
-            © 2024 Codemso.
+        <p class="text-center text-white/20 text-[10px] mt-6 tracking-widest uppercase drop-shadow-sm">
+            © 2024 Codemso Mobile Engineering.
         </p>
     </main>
 
