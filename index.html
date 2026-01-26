@@ -17,6 +17,7 @@
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             margin: 0; padding: 0;
             background: #0f172a;
+            /* Mobilde klavye açılsa bile bozulmasın, esnek olsun */
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -24,7 +25,7 @@
             overflow-x: hidden;
         }
 
-        /* --- ARKA PLAN --- */
+        /* --- ARKA PLAN (SABİT) --- */
         .ambient-light-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; overflow: hidden; }
         .light-blob { position: absolute; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; will-change: transform, opacity; }
         .blob-blue { background: radial-gradient(circle, rgba(59, 130, 246, 0.9) 0%, rgba(59, 130, 246, 0) 70%); width: 80vw; height: 80vw; top: -30%; left: -30%; opacity: 0.6; animation: explodeBlue 25s infinite ease-in-out; }
@@ -42,24 +43,21 @@
             box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.25), inset 0 0 30px rgba(255, 255, 255, 0.02);
         }
 
-        /* --- ANİMASYONLAR --- */
+        /* --- LOGO ANİMASYONU --- */
         @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         .animate-float { animation: floatLogo 7s ease-in-out infinite; }
 
-        /* --- METALİK PARLAMA EFEKTİ (GERİ GELDİ) --- */
-        .text-shimmer {
-            /* Beyazdan Gümüş/Griye geçiş yapan gradyan */
-            background: linear-gradient(to right, #ffffff 20%, #cbd5e1 50%, #ffffff 80%);
-            background-size: 200% auto;
-            color: transparent;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent; /* Android uyumluluğu için */
-            animation: shimmer 3s linear infinite;
-            /* Okunabilirliği artırmak için hafif dış parlama */
-            filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+        /* --- YENİ STABİL METALİK PARLAMA (MOBİL DOSTU) --- */
+        /* Clip-text yerine Color animasyonu kullanıyoruz */
+        @keyframes metallicGlow {
+            0% { color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+            50% { color: #cbd5e1; text-shadow: 0 0 25px rgba(255,255,255,0.5); } /* Gümüş Griye dönüyor */
+            100% { color: #ffffff; text-shadow: 0 0 10px rgba(255,255,255,0.1); }
         }
-        @keyframes shimmer { to { background-position: 200% center; } }
+        .text-shimmer {
+            animation: metallicGlow 4s ease-in-out infinite;
+            /* Önemli: Android'de siyah olmaması için transform kullanmıyoruz */
+        }
 
         /* --- İKONLAR --- */
         .tech-icon-clean { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; color: rgba(255, 255, 255, 0.5); transition: all 0.4s ease; cursor: default; }
@@ -83,7 +81,7 @@
         <div class="light-blob blob-cyan"></div>
     </div>
 
-    <main class="relative z-10 w-full max-w-md p-4 py-10 mx-auto flex flex-col justify-center">
+    <main class="relative z-10 w-full max-w-md p-4 py-8 mx-auto flex flex-col justify-center">
         
         <div class="glass-panel w-full rounded-[3rem] p-8 pb-10 text-center text-white relative overflow-hidden">
             
