@@ -46,25 +46,25 @@
         @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         .animate-float { animation: floatLogo 7s ease-in-out infinite; }
 
-        /* --- PLATINUM BEYAZ PARLAMA (MOBİL İÇİN AYARLANDI) --- */
+        /* --- YENİ OPTİMİZE EDİLMİŞ GÜMÜŞ PARLAMA --- */
         .text-shimmer {
-            /* Taban rengi: #e2e8f0 (Çok açık gri / Neredeyse Beyaz) */
-            /* Işık rengi: #ffffff (Tam Beyaz) */
+            /* Taban rengi Gümüş (Slate-400), Parlama Beyaz (#fff) */
+            /* 110 derece açı ile keskin bir ışık bandı */
             background: linear-gradient(
                 110deg, 
-                #e2e8f0 45%, 
+                #94a3b8 40%, 
                 #ffffff 50%, 
-                #e2e8f0 55%
+                #94a3b8 60%
             );
             background-size: 200% auto;
             
+            /* Kırpma İşlemi */
             background-clip: text;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             
+            /* Animasyon */
             animation: shine 3.5s linear infinite;
-            /* Ekstra okunaklılık için hafif beyaz gölge */
-            filter: drop-shadow(0 0 1px rgba(255,255,255,0.5));
         }
 
         @keyframes shine {
