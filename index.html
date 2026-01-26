@@ -24,7 +24,7 @@
             overflow-x: hidden;
         }
 
-        /* --- ARKA PLAN (SABİT) --- */
+        /* --- ARKA PLAN --- */
         .ambient-light-container { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 0; pointer-events: none; overflow: hidden; }
         .light-blob { position: absolute; border-radius: 50%; filter: blur(60px); mix-blend-mode: screen; will-change: transform, opacity; }
         .blob-blue { background: radial-gradient(circle, rgba(59, 130, 246, 0.9) 0%, rgba(59, 130, 246, 0) 70%); width: 80vw; height: 80vw; top: -30%; left: -30%; opacity: 0.6; animation: explodeBlue 25s infinite ease-in-out; }
@@ -46,26 +46,28 @@
         @keyframes floatLogo { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
         .animate-float { animation: floatLogo 7s ease-in-out infinite; }
 
-        /* --- YENİ: HARFLERİN İÇİNDEN GEÇEN GRİ IŞILTI --- */
+        /* --- YENİ OPTİMİZE EDİLMİŞ GÜMÜŞ PARLAMA --- */
         .text-shimmer {
-            /* Gradyan: Beyaz -> Açık Gri -> Beyaz */
-            background: linear-gradient(to right, #ffffff 0%, #cbd5e1 50%, #ffffff 100%);
+            /* Taban rengi Gümüş (Slate-400), Parlama Beyaz (#fff) */
+            /* 110 derece açı ile keskin bir ışık bandı */
+            background: linear-gradient(
+                110deg, 
+                #94a3b8 40%, 
+                #ffffff 50%, 
+                #94a3b8 60%
+            );
             background-size: 200% auto;
             
-            /* Arka planı sadece metnin içine hapset */
-            color: #ffffff; /* Fallback rengi */
+            /* Kırpma İşlemi */
             background-clip: text;
-            -webkit-background-clip: text; /* Safari/Chrome/Android için kritik */
-            
-            /* Metnin içini şeffaf yap ki arka plan görünsün */
-            -webkit-text-fill-color: transparent; 
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             
             /* Animasyon */
-            animation: shimmerPass 3s linear infinite;
+            animation: shine 3.5s linear infinite;
         }
 
-        /* Işıltının geçiş animasyonu */
-        @keyframes shimmerPass {
+        @keyframes shine {
             to {
                 background-position: 200% center;
             }
