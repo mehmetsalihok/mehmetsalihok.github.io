@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Use | Vakt-i Ezan</title>
+    
+    <link rel="icon" href="https://i.hizliresim.com/49omvfc.png" type="image/png">
+    <link rel="apple-touch-icon" href="https://i.hizliresim.com/49omvfc.png">
+
+    <style>
+        :root {
+            --primary-color: #E65100; /* Terms için Turuncu tema (Farklılık olsun) veya #009688 (Teal) yapabilirsin */
+            --text-color: #334155;
+            --bg-color: #fff7ed; /* Hafif turuncu/krem arka plan */
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            position: relative;
+        }
+
+        /* DİL DEĞİŞTİRME BUTONLARI */
+        .lang-switcher {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #94a3b8;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .lang-btn {
+            transition: color 0.3s;
+        }
+
+        .lang-btn:hover {
+            color: var(--primary-color);
+        }
+
+        .lang-btn.active {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+
+        .separator {
+            margin: 0 5px;
+            color: #cbd5e1;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 15px;
+            margin-top: 0;
+        }
+
+        h2 {
+            color: #1e293b;
+            font-size: 1.4rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        ul {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+            color: #64748b;
+            text-align: center;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+                padding-top: 60px;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .lang-switcher {
+                top: 15px;
+                right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="lang-switcher">
+            <span id="btn-en" class="lang-btn active" onclick="switchLang('en')">EN</span>
+            <span class="separator">|</span>
+            <span id="btn-tr" class="lang-btn" onclick="switchLang('tr')">TR</span>
+        </div>
+
+        <div id="content-en">
+            <h1>Terms of Use</h1>
+            <p><strong>Last Updated:</strong> January 29, 2026</p>
+
+            <p>Please read these Terms of Use ("Terms") carefully before using the <strong>"Vakt-i Ezan"</strong> mobile application operated by <strong>Codemso</strong>.</p>
+            <p>By downloading or using the app, these terms will automatically apply to you.</p>
+
+            <h2>1. Accuracy of Calculations</h2>
+            <p>Vakt-i Ezan provides prayer times and Qibla direction based on astronomical formulas and location data. However:</p>
+            <ul>
+                <li>Due to differences in calculation methods (e.g., Diyanet, Muslim World League), there may be variations of <strong>1-2 minutes</strong> in prayer times.</li>
+                <li>The Qibla compass accuracy depends on your device's magnetic sensors. Electronic interference (metal objects, magnets) may affect accuracy.</li>
+                <li>Users are advised to add a "precautionary time" (Temkin) or verify with local calendars if strict precision is required.</li>
+            </ul>
+
+            <h2>2. Intellectual Property</h2>
+            <p>The application, including all visual interfaces, graphics, design, code, and the <strong>Codemso</strong> brand, is the property of Codemso and is protected by copyright laws. You may not copy, modify, or distribute the app's content without prior written permission.</p>
+
+            <h2>3. Disclaimer of Warranty</h2>
+            <p>The Service is provided on an "AS IS" and "AS AVAILABLE" basis. While we strive to ensure the app works correctly:</p>
+            <ul>
+                <li>We do not guarantee that the app will function uninterrupted or error-free on every device.</li>
+                <li>Codemso is not liable for any religious invalidity resulting from incorrect prayer times or Qibla direction due to technical glitches or user settings.</li>
+            </ul>
+
+            <h2>4. Changes to This Agreement</h2>
+            <p>We reserve the right to modify these Terms at any time. We will notify users of any significant changes by updating the "Last Updated" date at the top of this page.</p>
+
+            <h2>5. Contact Us</h2>
+            <p>If you have any questions about these Terms, please contact us:</p>
+            <p>📧 <a href="mailto:info@codemso.com">info@codemso.com</a></p>
+
+            <div class="footer">
+                &copy; 2026 <strong>Codemso</strong>. All rights reserved.
+            </div>
+        </div>
+
+        <div id="content-tr" style="display: none;">
+            <h1>Kullanım Koşulları</h1>
+            <p><strong>Son Güncelleme:</strong> 29 Ocak 2026</p>
+
+            <p>Lütfen <strong>Codemso</strong> tarafından sunulan <strong>"Vakt-i Ezan"</strong> mobil uygulamasını kullanmadan önce bu Kullanım Koşullarını dikkatlice okuyunuz.</p>
+            <p>Uygulamayı indirerek veya kullanarak, bu koşulları kabul etmiş sayılırsınız.</p>
+
+            <h2>1. Hesaplama ve Doğruluk</h2>
+            <p>Vakt-i Ezan, namaz vakitlerini ve Kıble yönünü astronomik formüllere ve konum verilerine dayanarak sunar. Ancak:</p>
+            <ul>
+                <li>Farklı hesaplama yöntemleri (Diyanet, Dünya İslam Birliği vb.) nedeniyle vakitlerde <strong>1-2 dakikalık</strong> farklılıklar oluşabilir.</li>
+                <li>Kıble pusulasının doğruluğu tamamen cihazınızın manyetik sensör kalitesine bağlıdır. Elektronik parazitler (metal eşyalar, mıknatıslar) doğruluğu etkileyebilir.</li>
+                <li>Kullanıcıların gerektiğinde "Temkin süresi" eklemeleri veya yerel takvimlerle karşılaştırma yapmaları tavsiye edilir.</li>
+            </ul>
+
+            <h2>2. Fikri Mülkiyet</h2>
+            <p>Uygulamanın tasarımı, görsel arayüzleri, kodları ve <strong>Codemso</strong> markası Codemso'ya aittir ve telif hakkı yasalarıyla korunmaktadır. Uygulama içeriğini izinsiz kopyalamak, değiştirmek veya ticari amaçla kullanmak yasaktır.</p>
+
+            <h2>3. Sorumluluk Reddi</h2>
+            <p>Bu hizmet "OLDUĞU GİBİ" sunulmaktadır. Uygulamanın hatasız çalışması için çaba göstersek de:</p>
+            <ul>
+                <li>Uygulamanın her cihazda kesintisiz veya hatasız çalışacağını garanti etmeyiz.</li>
+                <li>Teknik aksaklıklar veya yanlış kullanıcı ayarları nedeniyle oluşabilecek yanlış namaz vakti veya Kıble gösteriminden doğan durumlardan Codemso sorumlu tutulamaz.</li>
+            </ul>
+
+            <h2>4. Değişiklikler</h2>
+            <p>Codemso, bu kullanım koşullarını dilediği zaman güncelleme hakkını saklı tutar. Önemli değişiklikler yapıldığında bu sayfanın üst kısmındaki tarih güncellenecektir.</p>
+
+            <h2>5. İletişim</h2>
+            <p>Bu koşullarla ilgili sorularınız için bizimle iletişime geçebilirsiniz:</p>
+            <p>📧 <a href="mailto:info@codemso.com">info@codemso.com</a></p>
+
+            <div class="footer">
+                &copy; 2026 <strong>Codemso</strong>. Tüm hakları saklıdır.
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        function switchLang(lang) {
+            const enContent = document.getElementById('content-en');
+            const trContent = document.getElementById('content-tr');
+            const btnEn = document.getElementById('btn-en');
+            const btnTr = document.getElementById('btn-tr');
+
+            if (lang === 'en') {
+                enContent.style.display = 'block';
+                trContent.style.display = 'none';
+                btnEn.classList.add('active');
+                btnTr.classList.remove('active');
+                document.title = "Terms of Use | Vakt-i Ezan";
+            } else {
+                enContent.style.display = 'none';
+                trContent.style.display = 'block';
+                btnTr.classList.add('active');
+                btnEn.classList.remove('active');
+                document.title = "Kullanım Koşulları | Vakt-i Ezan";
+            }
+        }
+    </script>
+
+</body>
+</html>
