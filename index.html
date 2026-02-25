@@ -14,147 +14,136 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
         
         :root {
-            --bg-space: #020617;
+            --bg-space: #020617; /* Çok derin gece mavisi/siyah */
             --accent-blue: #3b82f6;
             --accent-cyan: #06b6d4;
-            --accent-purple: #8b5cf6;
+            --tech-glow: rgba(6, 182, 212, 0.15);
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-space);
             height: 100vh; width: 100vw;
-            overflow: hidden;
+            overflow: hidden; /* Kaydırma yok */
             display: flex; flex-direction: column;
+            position: relative;
         }
 
-        /* --- ARKA PLAN: 3D EFEKTLİ DÜNYA --- */
-        #globe-container {
+        /* --- YENİ ARKA PLAN: GENİŞ DİJİTAL AĞ HARİTASI --- */
+        #global-network-bg {
+            position: absolute; inset: 0; z-index: 0;
+            overflow: hidden;
+            background: radial-gradient(ellipse at bottom, #0c1222 0%, var(--bg-space) 80%);
+        }
+
+        /* Noktalı Dünya Düzlemi */
+        .dotted-map-plane {
             position: absolute;
-            inset: 0;
-            z-index: 0;
-            perspective: 1200px;
-            pointer-events: none; /* Etkileşimi engelle */
-            display: flex; align-items: center; justify-content: center;
-            opacity: 0.6;
+            inset: -50%; /* Ekranın dışına taşır */
+            width: 200%; height: 200%;
+            background-image: radial-gradient(circle, rgba(59, 130, 246, 0.15) 1px, transparent 1px);
+            background-size: 30px 30px; /* Nokta sıklığı */
+            /* Perspektif ve eğim vererek genişlik hissi yarat */
+            transform: perspective(1000px) rotateX(60deg) scale(1.5);
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+            animation: panPlane 120s linear infinite;
         }
-        .globe-wrapper {
-            width: 600px; height: 600px;
-            transform-style: preserve-3d;
-            animation: rotateGlobe 60s linear infinite;
+        @keyframes panPlane {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 1000px; } /* Yavaşça bize doğru aksın */
         }
-        @media (max-width: 768px) { .globe-wrapper { width: 400px; height: 400px; } }
-        @keyframes rotateGlobe { from { transform: rotateY(0deg) rotateX(15deg); } to { transform: rotateY(360deg) rotateX(15deg); } }
-        
-        .globe-grid {
-            position: absolute; inset: 0;
+
+        /* Uçuşan Veri Paketleri (JS ile eklenecek) */
+        .data-packet {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: var(--accent-cyan);
             border-radius: 50%;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            box-shadow: 0 0 50px rgba(59, 130, 246, 0.1) inset, 0 0 20px rgba(59, 130, 246, 0.2);
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 40%, var(--bg-space) 70%),
-                repeating-linear-gradient(transparent 0%, transparent 2%, rgba(59, 130, 246, 0.1) 2.5%, transparent 3%),
-                repeating-linear-gradient(90deg, transparent 0%, transparent 2%, rgba(59, 130, 246, 0.1) 2.5%, transparent 3%);
+            box-shadow: 0 0 10px var(--accent-cyan), 0 0 20px var(--accent-blue);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .data-packet::after { /* Kuyruk efekti */
+            content: ''; position: absolute; top: 50%; right: 0;
+            width: 40px; height: 1px;
+            background: linear-gradient(to left, var(--accent-cyan), transparent);
+            transform: translateY(-50%);
         }
 
-        /* Uçuşan Veri Çizgileri Efekti (JavaScript ile eklenecek) */
-        .data-arc {
-            position: absolute; top: 50%; left: 50%;
-            height: 2px; background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
-            opacity: 0; transform-origin: left center;
-            animation: flyData 4s ease-in-out infinite;
-        }
-        @keyframes flyData { 0% { opacity: 0; transform: translateX(0) scaleX(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateX(200px) scaleX(1); } }
-
-        /* --- ANA KART (CAM EFEKTİ) --- */
-        .glass-panel-v2 {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
+        /* --- ANA KART (CAM EFEKTİ V3) --- */
+        .glass-panel-v3 {
+            background: rgba(10, 16, 31, 0.65); /* Biraz daha koyu ve mavi tonlu */
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.1);
         }
 
-        /* --- PARLAYAN LOGO VE METİN --- */
-        .animate-pulse-slow { animation: pulseLogo 4s ease-in-out infinite; }
-        @keyframes pulseLogo { 0%, 100% { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4)); transform: scale(1); } 50% { filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.7)); transform: scale(1.05); } }
-
-        .cyber-text {
-            background: linear-gradient(to bottom, #ffffff 40%, var(--accent-blue));
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        /* --- ALTTA KAYAN BANT (MARQUEE) --- */
+        /* --- LOGO VE METİN EFEKTLERİ --- */
+        .cyber-text-grad { background: linear-gradient(to bottom right, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* --- ALT KAYAN BANT (MARQUEE) --- */
         .marquee-container {
-            position: absolute; bottom: 2rem; left: 0; width: 100%;
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 90px;
             overflow: hidden; white-space: nowrap;
-            mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+            display: flex; align-items: center;
+            background: linear-gradient(to top, var(--bg-space) 20%, transparent);
+            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
             z-index: 10;
+            border-top: 1px solid rgba(255,255,255,0.02);
         }
-        .marquee-content {
-            display: inline-flex; gap: 2rem;
-            animation: marquee 25s linear infinite;
-        }
-        .marquee-content:hover { animation-play-state: paused; } /* Mouse gelince dursun */
+        .marquee-content { display: inline-flex; gap: 3rem; animation: marquee 40s linear infinite; padding-left: 1.5rem; }
+        .marquee-content:hover { animation-play-state: paused; }
         @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-        .tech-tag {
-            display: inline-flex; align-items: center; gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 99px;
-            color: rgba(255, 255, 255, 0.6); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
-            transition: all 0.3s;
+        .tech-item {
+            display: inline-flex; flex-direction: column; align-items: center; gap: 0.5rem;
+            color: #64748b; transition: all 0.3s ease; cursor: default;
         }
-        .tech-tag i { color: var(--accent-blue); font-size: 1rem; }
-        .tech-tag:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--accent-blue); color: #fff; }
+        .tech-item i { font-size: 1.4rem; transition: all 0.3s; }
+        .tech-item span { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; letter-spacing: 0.05em; opacity: 0.7; }
+        .tech-item:hover { color: #e2e8f0; transform: translateY(-3px); }
+        .tech-item:hover i { color: var(--accent-cyan); filter: drop-shadow(0 0 8px var(--accent-cyan)); }
 
         /* --- DİL BUTONLARI --- */
-        .lang-btn { font-size: 0.7rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; }
-        .lang-btn.active { color: var(--accent-cyan); text-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
+        .lang-switch-container { background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); }
+        .lang-btn { font-size: 0.7rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; padding: 4px 10px; border-radius: 6px; }
+        .lang-btn.active { color: #fff; background: rgba(255,255,255,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="globe-container">
-        <div class="globe-wrapper relative flex items-center justify-center">
-            <div class="globe-grid"></div>
-            </div>
-    </div>
+    <div id="global-network-bg">
+        <div class="dotted-map-plane"></div>
+        </div>
 
-    <main class="relative z-20 flex-grow flex items-center justify-center px-4 pb-20">
-        <div class="glass-panel-v2 relative w-full max-w-md rounded-2xl p-8 text-center border-t border-blue-500/20">
+    <main class="relative z-20 flex-grow flex items-center justify-center px-4 pb-24 h-full">
+        <div class="glass-panel-v3 relative w-full max-w-[28rem] rounded-3xl p-8 text-center">
             
-            <div class="absolute top-4 right-5 flex gap-2">
+            <div class="absolute top-5 right-5 lang-switch-container flex gap-1">
                 <button id="btn-tr" class="lang-btn active" onclick="setLang('tr')">TR</button>
-                <span class="text-slate-700">/</span>
                 <button id="btn-en" class="lang-btn" onclick="setLang('en')">EN</button>
             </div>
 
-            <div class="w-24 h-24 mx-auto mb-6 animate-pulse-slow">
-                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="w-full h-full object-contain">
+            <div class="w-24 h-24 mx-auto mb-6 relative mt-4">
+                <div class="absolute inset-0 bg-blue-500/20 blur-3xl rounded-full scale-75 animate-pulse"></div>
+                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="relative z-10 w-full h-full object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.3)]">
             </div>
 
-            <h1 class="text-4xl font-bold cyber-text mb-3 tracking-tight">Codemso</h1>
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/30 border border-blue-800/30 mb-8">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                </span>
-                <span id="status-text" class="text-[0.65rem] font-semibold text-cyan-300 tracking-wider uppercase">GLOBAL AĞ ÇEVRİMİÇİ</span>
-            </div>
-
-            <p id="desc-text" class="text-slate-300 leading-relaxed text-sm mb-8">
-                Sınırları aşan mobil deneyimler tasarlıyoruz. Fikirlerinizi, <span class="text-blue-400 font-medium">iOS ve Android</span> ekosistemlerinde yaşayan evrensel ürünlere dönüştürüyoruz.
+            <h1 class="text-[2.5rem] font-bold cyber-text-grad mb-3 tracking-tight leading-tight">Codemso</h1>
+            
+            <p id="slogan-text" class="text-blue-200/80 text-sm font-medium tracking-wider uppercase mb-8">
+                Evrensel Mobil Çözümler
             </p>
 
-            <a href="mailto:info@codemso.com" class="group relative inline-flex items-center justify-center px-8 py-3 font-medium tracking-wide text-white transition-all duration-300 bg-blue-600 rounded-xl hover:bg-blue-500 focus:ring-4 focus:ring-blue-500/30 overflow-hidden w-full sm:w-auto">
-                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-                <span class="relative flex items-center gap-2">
-                    <i class="fa-regular fa-envelope"></i>
-                    <span id="btn-contact">Projeyi Başlat</span>
-                </span>
+            <p id="desc-text" class="text-slate-400 leading-7 text-[0.9rem] mb-10 px-2">
+                Fikirlerinizi, sınır tanımayan, iOS ve Android ekosistemlerinde yaşayan yüksek performanslı <span class="text-slate-200 font-medium">global mobil deneyimlere</span> dönüştürüyoruz.
+            </p>
+
+            <a href="mailto:info@codemso.com" class="group relative inline-flex items-center justify-center gap-3 px-8 py-3.5 font-medium text-white transition-all duration-300 bg-[#1e293b] rounded-xl hover:bg-[#334155] border border-white/5 w-full hover:border-blue-400/30 hover:shadow-[0_0_20px_rgba(59,130,246,0.2)]">
+                <i class="fa-solid fa-paper-plane text-blue-400 group-hover:translate-x-1 transition-transform"></i>
+                <span id="btn-contact">Projeyi Başlat</span>
             </a>
 
         </div>
@@ -162,19 +151,14 @@
 
     <div class="marquee-container">
         <div class="marquee-content">
-            <div class="flex gap-2 items-center tech-group">
-                <div class="tech-tag"><i class="fa-brands fa-swift"></i>Swift</div>
-                <div class="tech-tag"><i class="fa-brands fa-android"></i>Kotlin</div>
-                <div class="tech-tag"><i class="fa-brands fa-react"></i>React Native</div>
-                <div class="tech-tag"><i class="fa-brands fa-flutter"></i>Flutter</div>
-                <span class="text-slate-800 text-xl mx-2">•</span>
-                <div class="tech-tag"><i class="fa-brands fa-node-js"></i>Node.js</div>
-                <div class="tech-tag"><i class="fa-brands fa-python"></i>Python</div>
-                <div class="tech-tag"><i class="fa-solid fa-database"></i>GraphQL</div>
-                <div class="tech-tag"><i class="fa-brands fa-aws"></i>AWS Cloud</div>
-                <span class="text-slate-800 text-xl mx-2">•</span>
-                <div class="tech-tag"><i class="fa-brands fa-docker"></i>Docker</div>
-                <div class="tech-tag"><i class="fa-solid fa-code-branch"></i>CI/CD Git</div>
+            <div class="flex gap-12 items-center tech-group">
+                <div class="tech-item" title="Swift"><i class="fa-brands fa-swift"></i><span>SWIFT</span></div>
+                <div class="tech-item" title="Kotlin"><i class="fa-brands fa-android"></i><span>KOTLIN</span></div>
+                <div class="tech-item" title="Flutter"><i class="fa-brands fa-flutter"></i><span>FLUTTER</span></div>
+                <div class="tech-item" title="React Native"><i class="fa-brands fa-react"></i><span>REACT</span></div>
+                <div class="w-[1px] h-8 bg-white/10 mx-4"></div> <div class="tech-item" title="Cloud Connect"><i class="fa-solid fa-cloud"></i><span>CLOUD</span></div>
+                <div class="tech-item" title="Global Scale"><i class="fa-solid fa-globe"></i><span>GLOBAL</span></div>
+                <div class="tech-item" title="Security"><i class="fa-solid fa-shield-halved"></i><span>SECURE</span></div>
             </div>
         </div>
     </div>
@@ -184,54 +168,76 @@
         // --- DİL ÇEVİRİLERİ ---
         const translations = {
             tr: {
-                status: "GLOBAL AĞ ÇEVRİMİÇİ",
-                desc: "Sınırları aşan mobil deneyimler tasarlıyoruz. Fikirlerinizi, <span class='text-blue-400 font-medium'>iOS ve Android</span> ekosistemlerinde yaşayan evrensel ürünlere dönüştürüyoruz.",
+                slogan: "Evrensel Mobil Çözümler",
+                desc: "Fikirlerinizi, sınır tanımayan, iOS ve Android ekosistemlerinde yaşayan yüksek performanslı <span class='text-slate-200 font-medium'>global mobil deneyimlere</span> dönüştürüyoruz.",
                 btn: "Projeyi Başlat"
             },
             en: {
-                status: "GLOBAL NETWORK ONLINE",
-                desc: "We design mobile experiences that transcend borders. Transforming your ideas into universal products living in <span class='text-blue-400 font-medium'>iOS and Android</span> ecosystems.",
+                slogan: "Universal Mobile Solutions",
+                desc: "Transforming ideas into high-performance <span class='text-slate-200 font-medium'>global mobile experiences</span> that live boundary-free in iOS and Android ecosystems.",
                 btn: "Start Project"
             }
         };
 
         function setLang(lang) {
-            document.getElementById('status-text').innerHTML = translations[lang].status;
+            document.getElementById('slogan-text').innerText = translations[lang].slogan;
             document.getElementById('desc-text').innerHTML = translations[lang].desc;
             document.getElementById('btn-contact').innerText = translations[lang].btn;
-
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('btn-' + lang).classList.add('active');
         }
 
-        // --- MARQUEE ÇOĞALTMA (SONSUZ DÖNGÜ İÇİN) ---
+        // --- MARQUEE ÇOĞALTMA ---
         const marqueeContent = document.querySelector('.marquee-content');
         const techGroup = marqueeContent.querySelector('.tech-group');
-        // İçeriği 2 kez daha klonla ki kesintisiz dönsün
-        marqueeContent.appendChild(techGroup.cloneNode(true));
-        marqueeContent.appendChild(techGroup.cloneNode(true));
+        for(let i=0; i<3; i++) { marqueeContent.appendChild(techGroup.cloneNode(true)); }
 
-        // --- ARKA PLAN VERİ ÇİZGİLERİ EFEKTİ ---
-        const globeWrapper = document.querySelector('.globe-wrapper');
-        function createDataArc() {
-            const arc = document.createElement('div');
-            arc.classList.add('data-arc');
-            // Rastgele bir açı ve pozisyon ver
-            const angle = Math.random() * 360;
-            const top = Math.random() * 80 + 10; // %10 ile %90 arası yükseklik
+        // --- GELİŞMİŞ VERİ PAKETİ ANİMASYONU ---
+        const bgContainer = document.getElementById('global-network-bg');
+        
+        function createDataPacket() {
+            const packet = document.createElement('div');
+            packet.classList.add('data-packet');
             
-            arc.style.transform = `rotate(${angle}deg) translateX(-50%)`;
-            arc.style.top = `${top}%`;
-            // Rastgele bir genişlik ver (çizgi uzunluğu)
-            arc.style.width = `${Math.random() * 150 + 50}px`;
+            // Rastgele başlangıç pozisyonları (ekranın dışından başlasınlar)
+            const startSide = Math.random() > 0.5 ? 'left' : 'right';
+            const startY = Math.random() * window.innerHeight;
             
-            globeWrapper.appendChild(arc);
+            packet.style.top = `${startY}px`;
+            if (startSide === 'left') {
+                packet.style.left = '-20px';
+                packet.style.transform = 'rotate(0deg)'; // Sağa git
+            } else {
+                packet.style.right = '-20px';
+                packet.style.transform = 'rotate(180deg)'; // Sola git
+            }
             
-            // Animasyon bitince elemanı sil
-            setTimeout(() => { arc.remove(); }, 4000);
+            bgContainer.appendChild(packet);
+
+            // Hareketi başlat
+            const duration = Math.random() * 4000 + 3000; // 3-7 saniye arası
+            const targetX = window.innerWidth + 50;
+
+            packet.animate([
+                { opacity: 0, transform: `translateX(0) scale(0.5)` },
+                { opacity: 1, transform: `translateX(${startSide === 'left' ? targetX/2 : -targetX/2}px) scale(1)`, offset: 0.5 },
+                { opacity: 0, transform: `translateX(${startSide === 'left' ? targetX : -targetX}px) scale(0.5)` }
+            ], {
+                duration: duration,
+                easing: 'cubic-bezier(0.4, 0.0, 0.2, 1)',
+                fill: 'forwards'
+            });
+
+            // Temizlik
+            setTimeout(() => { packet.remove(); }, duration + 100);
         }
-        // Her 800ms'de yeni bir çizgi fırlat
-        setInterval(createDataArc, 800);
+
+        // Düzenli aralıklarla paket gönder
+        setInterval(createDataPacket, 1200);
+        // Başlangıçta birkaç tane hemen gönder
+        setTimeout(createDataPacket, 500);
+        setTimeout(createDataPacket, 1000);
+
     </script>
 
 </body>
