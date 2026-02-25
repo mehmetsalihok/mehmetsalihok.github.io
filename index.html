@@ -3,258 +3,235 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Codemso | Mobile App Developer</title>
+    <title>Codemso | Global Mobile Solutions</title>
     
     <link rel="icon" href="https://i.hizliresim.com/49omvfc.png" type="image/png">
     <link rel="apple-touch-icon" href="https://i.hizliresim.com/49omvfc.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
         
-        /* --- TEMEL AYARLAR (KAYDIRMA YOK) --- */
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            margin: 0; padding: 0;
-            background-color: #050505; /* Çok derin siyah */
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden; /* Scroll iptal */
+        :root {
+            --bg-space: #020617;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
         }
 
-        /* --- PROFESYONEL ARKA PLAN (GRID & HAFİF IŞIK) --- */
-        .bg-grid {
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-space);
+            height: 100vh; width: 100vw;
+            overflow: hidden;
+            display: flex; flex-direction: column;
+        }
+
+        /* --- ARKA PLAN: 3D EFEKTLİ DÜNYA --- */
+        #globe-container {
             position: absolute;
             inset: 0;
-            background-size: 50px 50px;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-            mask-image: radial-gradient(circle at center, black 20%, transparent 80%);
-            -webkit-mask-image: radial-gradient(circle at center, black 20%, transparent 80%);
             z-index: 0;
+            perspective: 1200px;
+            pointer-events: none; /* Etkileşimi engelle */
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0.6;
         }
-
-        .core-glow {
-            position: absolute;
-            width: 40vw;
-            height: 40vw;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border-radius: 50%;
-            z-index: 0;
-            animation: pulse-glow 8s infinite alternate ease-in-out;
+        .globe-wrapper {
+            width: 600px; height: 600px;
+            transform-style: preserve-3d;
+            animation: rotateGlobe 60s linear infinite;
         }
-
-        @keyframes pulse-glow {
-            0% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.9); }
-            100% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-        }
-
-        /* --- PREMIUM DARK GLASS KART --- */
-        .glass-panel {
-            background: rgba(20, 20, 22, 0.6); 
-            backdrop-filter: blur(24px); 
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.8), 
-                        inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        /* --- LOGO ANİMASYONU --- */
-        @keyframes floatLogo { 
-            0%, 100% { transform: translateY(0px); filter: drop-shadow(0 0 15px rgba(255,255,255,0.05)); } 
-            50% { transform: translateY(-6px); filter: drop-shadow(0 10px 25px rgba(255,255,255,0.1)); } 
-        }
-        .animate-float { animation: floatLogo 6s ease-in-out infinite; }
-
-        /* --- METALİK METİN PARLAMASI --- */
-        .text-shimmer {
-            background: linear-gradient(
-                to right, 
-                #71717a 20%, 
-                #ffffff 50%, 
-                #71717a 80%
-            );
-            background-size: 200% auto;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: shine 4s linear infinite;
-        }
-
-        @keyframes shine { to { background-position: 200% center; } }
-
-        /* --- DOCK STİLİ İKONLAR --- */
-        .tech-dock {
-            display: inline-flex;
-            align-items: center;
-            gap: 1.5rem;
-            padding: 0.75rem 1.5rem;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 100px;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        .tech-icon-clean { 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            color: #52525b; 
-            transition: all 0.3s ease; 
-            cursor: default; 
-            position: relative;
-        }
-        .tech-icon-clean:hover { 
-            color: #e4e4e7; 
-            transform: translateY(-4px) scale(1.1); 
-        }
-        .tech-icon-clean i { font-size: 1.5rem; }
+        @media (max-width: 768px) { .globe-wrapper { width: 400px; height: 400px; } }
+        @keyframes rotateGlobe { from { transform: rotateY(0deg) rotateX(15deg); } to { transform: rotateY(360deg) rotateX(15deg); } }
         
-        /* İkonların altına hover durumunda gelen ince nokta */
-        .tech-icon-clean::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            width: 4px;
-            height: 4px;
-            background: #e4e4e7;
+        .globe-grid {
+            position: absolute; inset: 0;
             border-radius: 50%;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            box-shadow: 0 0 8px #fff;
-        }
-        .tech-icon-clean:hover::after { opacity: 1; }
-
-        /* --- DURUM GÖSTERGESİ --- */
-        .status-dot { 
-            height: 6px; width: 6px; 
-            background-color: #10b981; 
-            border-radius: 50%; 
-            display: inline-block; 
-            box-shadow: 0 0 8px #10b981; 
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            box-shadow: 0 0 50px rgba(59, 130, 246, 0.1) inset, 0 0 20px rgba(59, 130, 246, 0.2);
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(0,0,0,0) 40%, var(--bg-space) 70%),
+                repeating-linear-gradient(transparent 0%, transparent 2%, rgba(59, 130, 246, 0.1) 2.5%, transparent 3%),
+                repeating-linear-gradient(90deg, transparent 0%, transparent 2%, rgba(59, 130, 246, 0.1) 2.5%, transparent 3%);
         }
 
-        /* --- DİL SEÇİMİ --- */
-        .lang-switch { 
-            font-size: 0.65rem; font-weight: 600; letter-spacing: 0.1em; 
-            color: #52525b; cursor: pointer; transition: all 0.3s; 
-            padding: 4px 8px; border-radius: 4px;
+        /* Uçuşan Veri Çizgileri Efekti (JavaScript ile eklenecek) */
+        .data-arc {
+            position: absolute; top: 50%; left: 50%;
+            height: 2px; background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            opacity: 0; transform-origin: left center;
+            animation: flyData 4s ease-in-out infinite;
         }
-        .lang-switch.active { 
-            color: #fff; 
-            background: rgba(255,255,255,0.05);
+        @keyframes flyData { 0% { opacity: 0; transform: translateX(0) scaleX(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateX(200px) scaleX(1); } }
+
+        /* --- ANA KART (CAM EFEKTİ) --- */
+        .glass-panel-v2 {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
         }
+
+        /* --- PARLAYAN LOGO VE METİN --- */
+        .animate-pulse-slow { animation: pulseLogo 4s ease-in-out infinite; }
+        @keyframes pulseLogo { 0%, 100% { filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4)); transform: scale(1); } 50% { filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.7)); transform: scale(1.05); } }
+
+        .cyber-text {
+            background: linear-gradient(to bottom, #ffffff 40%, var(--accent-blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+
+        /* --- ALTTA KAYAN BANT (MARQUEE) --- */
+        .marquee-container {
+            position: absolute; bottom: 2rem; left: 0; width: 100%;
+            overflow: hidden; white-space: nowrap;
+            mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+            -webkit-mask-image: linear-gradient(to right, transparent, black 20%, black 80%, transparent);
+            z-index: 10;
+        }
+        .marquee-content {
+            display: inline-flex; gap: 2rem;
+            animation: marquee 25s linear infinite;
+        }
+        .marquee-content:hover { animation-play-state: paused; } /* Mouse gelince dursun */
+        @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        .tech-tag {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 99px;
+            color: rgba(255, 255, 255, 0.6); font-family: 'JetBrains Mono', monospace; font-size: 0.75rem;
+            transition: all 0.3s;
+        }
+        .tech-tag i { color: var(--accent-blue); font-size: 1rem; }
+        .tech-tag:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--accent-blue); color: #fff; }
+
+        /* --- DİL BUTONLARI --- */
+        .lang-btn { font-size: 0.7rem; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.2s; }
+        .lang-btn.active { color: var(--accent-cyan); text-shadow: 0 0 10px rgba(6, 182, 212, 0.5); }
     </style>
 </head>
 <body>
 
-    <div class="bg-grid"></div>
-    <div class="core-glow"></div>
+    <div id="globe-container">
+        <div class="globe-wrapper relative flex items-center justify-center">
+            <div class="globe-grid"></div>
+            </div>
+    </div>
 
-    <main class="relative z-10 w-full max-w-[26rem] px-4 mx-auto flex flex-col justify-center items-center h-full">
-        
-        <div class="glass-panel w-full rounded-3xl p-8 text-center text-white relative overflow-hidden flex flex-col items-center">
+    <main class="relative z-20 flex-grow flex items-center justify-center px-4 pb-20">
+        <div class="glass-panel-v2 relative w-full max-w-md rounded-2xl p-8 text-center border-t border-blue-500/20">
             
-            <div class="absolute top-6 right-6 z-20 flex items-center gap-1 bg-black/40 p-1 rounded-md border border-white/5">
-                <span id="btn-tr" class="lang-switch active" onclick="setLang('tr')">TR</span>
-                <span id="btn-en" class="lang-switch" onclick="setLang('en')">EN</span>
+            <div class="absolute top-4 right-5 flex gap-2">
+                <button id="btn-tr" class="lang-btn active" onclick="setLang('tr')">TR</button>
+                <span class="text-slate-700">/</span>
+                <button id="btn-en" class="lang-btn" onclick="setLang('en')">EN</button>
             </div>
 
-            <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
-
-            <div class="w-28 h-28 mx-auto mt-4 mb-4 flex items-center justify-center relative animate-float">
-                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="relative z-10 w-full h-full object-contain">
+            <div class="w-24 h-24 mx-auto mb-6 animate-pulse-slow">
+                <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="w-full h-full object-contain">
             </div>
 
-            <h1 class="text-3xl font-bold tracking-tight mb-2 text-shimmer">Codemso</h1>
-            
-            <div class="flex items-center justify-center gap-2 mb-8 bg-black/30 px-3 py-1.5 rounded-full border border-white/5">
-                <div class="status-dot"></div>
-                <span id="status-text" class="text-[9px] font-semibold text-zinc-300 tracking-[0.2em] uppercase">
-                    Sistem Aktif
+            <h1 class="text-4xl font-bold cyber-text mb-3 tracking-tight">Codemso</h1>
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-950/30 border border-blue-800/30 mb-8">
+                <span class="relative flex h-2 w-2">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
                 </span>
+                <span id="status-text" class="text-[0.65rem] font-semibold text-cyan-300 tracking-wider uppercase">GLOBAL AĞ ÇEVRİMİÇİ</span>
             </div>
 
-            <p id="desc-text" class="text-zinc-400 font-light leading-relaxed mb-10 text-[14px] px-2 min-h-[70px]">
-                Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı ve ölçeklenebilir <span class="text-zinc-200 font-medium">native mobil deneyimlere</span> dönüştürüyoruz.
+            <p id="desc-text" class="text-slate-300 leading-relaxed text-sm mb-8">
+                Sınırları aşan mobil deneyimler tasarlıyoruz. Fikirlerinizi, <span class="text-blue-400 font-medium">iOS ve Android</span> ekosistemlerinde yaşayan evrensel ürünlere dönüştürüyoruz.
             </p>
 
-            <div class="tech-dock mb-10">
-                <div class="tech-icon-clean" title="Swift">
-                    <i class="fa-brands fa-swift"></i>
-                </div>
-                <div class="tech-icon-clean" title="Kotlin">
-                    <i class="fa-brands fa-android"></i>
-                </div>
-                <div class="tech-icon-clean" title="Flutter">
-                    <i class="fa-solid fa-layer-group"></i>
-                </div>
-                <div class="tech-icon-clean" title="React Native">
-                    <i class="fa-brands fa-react"></i>
-                </div>
-            </div>
-
-            <div class="mb-6 w-full">
-                <a href="mailto:info@codemso.com" class="flex items-center justify-center gap-3 text-zinc-500 hover:text-zinc-200 transition-colors duration-300 text-[13px] tracking-widest group">
-                    <span class="w-6 h-[1px] bg-zinc-800 group-hover:bg-zinc-400 transition-colors"></span>
-                    info@codemso.com
-                    <span class="w-6 h-[1px] bg-zinc-800 group-hover:bg-zinc-400 transition-colors"></span>
-                </a>
-            </div>
-
-            <div class="mt-4 flex flex-col items-center gap-3 w-full border-t border-white/5 pt-6">
-                <div class="flex gap-4 text-[9px] tracking-[0.15em] font-medium text-zinc-600 uppercase">
-                    <a href="privacy.html" id="link-privacy" class="hover:text-zinc-300 transition-colors">Gizlilik</a>
-                    <span class="text-zinc-800">|</span>
-                    <a href="terms.html" id="link-terms" class="hover:text-zinc-300 transition-colors">Kullanım</a>
-                </div>
-                <p class="text-center text-zinc-700 text-[9px] tracking-[0.2em] font-medium">
-                    © 2026 CODEMSO
-                </p>
-            </div>
+            <a href="mailto:info@codemso.com" class="group relative inline-flex items-center justify-center px-8 py-3 font-medium tracking-wide text-white transition-all duration-300 bg-blue-600 rounded-xl hover:bg-blue-500 focus:ring-4 focus:ring-blue-500/30 overflow-hidden w-full sm:w-auto">
+                <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-blue-600 to-cyan-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
+                <span class="relative flex items-center gap-2">
+                    <i class="fa-regular fa-envelope"></i>
+                    <span id="btn-contact">Projeyi Başlat</span>
+                </span>
+            </a>
 
         </div>
     </main>
 
+    <div class="marquee-container">
+        <div class="marquee-content">
+            <div class="flex gap-2 items-center tech-group">
+                <div class="tech-tag"><i class="fa-brands fa-swift"></i>Swift</div>
+                <div class="tech-tag"><i class="fa-brands fa-android"></i>Kotlin</div>
+                <div class="tech-tag"><i class="fa-brands fa-react"></i>React Native</div>
+                <div class="tech-tag"><i class="fa-brands fa-flutter"></i>Flutter</div>
+                <span class="text-slate-800 text-xl mx-2">•</span>
+                <div class="tech-tag"><i class="fa-brands fa-node-js"></i>Node.js</div>
+                <div class="tech-tag"><i class="fa-brands fa-python"></i>Python</div>
+                <div class="tech-tag"><i class="fa-solid fa-database"></i>GraphQL</div>
+                <div class="tech-tag"><i class="fa-brands fa-aws"></i>AWS Cloud</div>
+                <span class="text-slate-800 text-xl mx-2">•</span>
+                <div class="tech-tag"><i class="fa-brands fa-docker"></i>Docker</div>
+                <div class="tech-tag"><i class="fa-solid fa-code-branch"></i>CI/CD Git</div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
+        // --- DİL ÇEVİRİLERİ ---
         const translations = {
             tr: {
-                status: "Sistem Aktif",
-                desc: "Yenilikçi fikirleri, iOS ve Android ekosistemlerinde yaşayan, yüksek performanslı ve ölçeklenebilir <span class='text-zinc-200 font-medium'>native mobil deneyimlere</span> dönüştürüyoruz.",
-                privacy: "Gizlilik",
-                terms: "Kullanım"
+                status: "GLOBAL AĞ ÇEVRİMİÇİ",
+                desc: "Sınırları aşan mobil deneyimler tasarlıyoruz. Fikirlerinizi, <span class='text-blue-400 font-medium'>iOS ve Android</span> ekosistemlerinde yaşayan evrensel ürünlere dönüştürüyoruz.",
+                btn: "Projeyi Başlat"
             },
             en: {
-                status: "System Online",
-                desc: "Transforming innovative ideas into high-performance, scalable <span class='text-zinc-200 font-medium'>native mobile experiences</span> living in iOS and Android ecosystems.",
-                privacy: "Privacy",
-                terms: "Terms"
+                status: "GLOBAL NETWORK ONLINE",
+                desc: "We design mobile experiences that transcend borders. Transforming your ideas into universal products living in <span class='text-blue-400 font-medium'>iOS and Android</span> ecosystems.",
+                btn: "Start Project"
             }
         };
 
         function setLang(lang) {
-            document.getElementById('status-text').innerText = translations[lang].status;
+            document.getElementById('status-text').innerHTML = translations[lang].status;
             document.getElementById('desc-text').innerHTML = translations[lang].desc;
-            
-            document.getElementById('link-privacy').innerText = translations[lang].privacy;
-            document.getElementById('link-terms').innerText = translations[lang].terms;
+            document.getElementById('btn-contact').innerText = translations[lang].btn;
 
-            if (lang === 'tr') {
-                document.getElementById('btn-tr').classList.add('active');
-                document.getElementById('btn-en').classList.remove('active');
-            } else {
-                document.getElementById('btn-en').classList.add('active');
-                document.getElementById('btn-tr').classList.remove('active');
-            }
+            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btn-' + lang).classList.add('active');
         }
+
+        // --- MARQUEE ÇOĞALTMA (SONSUZ DÖNGÜ İÇİN) ---
+        const marqueeContent = document.querySelector('.marquee-content');
+        const techGroup = marqueeContent.querySelector('.tech-group');
+        // İçeriği 2 kez daha klonla ki kesintisiz dönsün
+        marqueeContent.appendChild(techGroup.cloneNode(true));
+        marqueeContent.appendChild(techGroup.cloneNode(true));
+
+        // --- ARKA PLAN VERİ ÇİZGİLERİ EFEKTİ ---
+        const globeWrapper = document.querySelector('.globe-wrapper');
+        function createDataArc() {
+            const arc = document.createElement('div');
+            arc.classList.add('data-arc');
+            // Rastgele bir açı ve pozisyon ver
+            const angle = Math.random() * 360;
+            const top = Math.random() * 80 + 10; // %10 ile %90 arası yükseklik
+            
+            arc.style.transform = `rotate(${angle}deg) translateX(-50%)`;
+            arc.style.top = `${top}%`;
+            // Rastgele bir genişlik ver (çizgi uzunluğu)
+            arc.style.width = `${Math.random() * 150 + 50}px`;
+            
+            globeWrapper.appendChild(arc);
+            
+            // Animasyon bitince elemanı sil
+            setTimeout(() => { arc.remove(); }, 4000);
+        }
+        // Her 800ms'de yeni bir çizgi fırlat
+        setInterval(createDataArc, 800);
     </script>
 
 </body>
