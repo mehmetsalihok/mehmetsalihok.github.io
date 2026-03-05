@@ -10,7 +10,7 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f8fafc; /* Göz yormayan çok açık gri/mavi tonu */
+            background-color: #f8fafc; /* Göz yormayan açık ton */
             color: #0f172a;
             height: 100vh; /* Ekranın %100'ünü kaplar */
             display: flex;
@@ -63,13 +63,16 @@
         }
         
         .store-buttons img {
-            height: 52px;
+            height: 60px; /* Rozetlerin yüksekliği - biraz daha büyük yaptık */
             width: auto;
-            transition: transform 0.2s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            cursor: pointer;
+            border-radius: 12px;
         }
         
         .store-buttons img:hover {
-            transform: scale(1.05); /* Üzerine gelince hafif büyüme efekti */
+            transform: scale(1.03); /* Üzerine gelince hafif büyüme efekti */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
         }
         
         /* Alt Bilgi (Footer) - Ekranın en altında sabit durur */
@@ -104,13 +107,17 @@
         }
 
         /* Çok küçük ekranlı telefonlar için butonları alt alta alma ayarı */
-        @media (max-width: 400px) {
+        @media (max-width: 430px) {
             .store-buttons {
                 flex-direction: column;
                 gap: 15px;
             }
+            .store-buttons img {
+                height: 55px; /* Alt alta iken biraz daha küçük */
+            }
             h1 { font-size: 28px; }
             .app-icon { width: 120px; height: 120px; margin-bottom: 20px; }
+            p { font-size: 16px; margin-bottom: 30px; }
         }
     </style>
 </head>
@@ -120,15 +127,15 @@
         <img src="app-icon.png" alt="Ehliyet Cepte İkonu" class="app-icon" onerror="this.style.display='none'">
         
         <h1>Ehliyet Cepte</h1>
-        <p>Sınava hazırlığın en kolay yolu. Çıkmış soruları çöz, denemelerle kendini test et ve ilk seferde geç.</p>
+        <p>Ehliyet sınavına hazırlanmanın en kolay yolu. Hemen indir, çıkmış sorularla çalışmaya başla!</p>
         
         <div class="store-buttons">
-            <a href="SENIN_APP_STORE_LINKIN" target="_blank" rel="noopener noreferrer">
-                <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=250x83&amp;releaseDate=1276560000" alt="App Store'dan İndirin">
+            <a href="SENIN_APP_STORE_LINKIN_BURAYA" target="_blank" rel="noopener noreferrer">
+                <img src="image_2.png" alt="App Store'dan İndirin">
             </a>
             
-            <a href="SENIN_PLAY_STORE_LINKIN" target="_blank" rel="noopener noreferrer">
-                <img src="en_badge_web_generic.png" alt="Google Play'den Alın">
+            <a href="SENIN_PLAY_STORE_LINKIN_BURAYA" target="_blank" rel="noopener noreferrer">
+                <img src="image_3.png" alt="Google Play'den Alın">
             </a>
         </div>
     </div>
