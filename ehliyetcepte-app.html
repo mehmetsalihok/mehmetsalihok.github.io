@@ -29,20 +29,19 @@
             text-align: center;
         }
         
-        /* Uygulama İkonu - Linkteki görsel ve yumuşak köşeler */
+        /* Uygulama İkonu - Köşeleri yazılımla yumuşatıyoruz */
         .app-icon {
-            width: 150px; /* Biraz daha büyük ve belirgin */
+            width: 150px;
             height: 150px;
-            /* Köşeleri yumuşatma - İstediğin estetik */
-            border-radius: 35px; /* iOS tarzı yumuşak köşe */
+            border-radius: 35px; /* Sadece ana ikon için yumuşatma */
             box-shadow: 0 15px 40px rgba(0,0,0,0.1);
             margin-bottom: 35px;
             object-fit: cover;
-            border: 1px solid #e2e8f0; /* Hafif bir sınır */
+            border: 1px solid #e2e8f0;
         }
         
         h1 {
-            font-size: 36px;
+            font-size: 32px;
             font-weight: 800;
             margin-bottom: 15px;
             letter-spacing: -0.5px;
@@ -50,11 +49,11 @@
         }
         
         p {
-            font-size: 18px;
+            font-size: 17px;
             color: #64748b;
             max-width: 450px;
             margin-bottom: 45px;
-            line-height: 1.6;
+            line-height: 1.5;
         }
         
         /* Mağaza Butonları */
@@ -65,19 +64,17 @@
             align-items: center;
         }
         
-        /* Butonların köşelerini yumuşatma */
+        /* Butonlar - Kendinden yumuşak olduğu için işlem yapmıyoruz */
         .store-buttons img {
-            height: 65px; /* Rozetlerin yüksekliği - biraz daha büyük yaptık */
+            height: 65px; 
             width: auto;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.2s ease;
             cursor: pointer;
-            /* Köşeleri yumuşatma */
-            border-radius: 15px; /* Buton köşelerini yumuşat */
+            /* border-radius sildik, resmin orjinali kullanılacak */
         }
         
         .store-buttons img:hover {
-            transform: translateY(-5px) scale(1.03); /* Üzerine gelince hafif büyüme ve yukarı kalkma efekti */
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            transform: scale(1.05); /* Sadece büyüme efekti */
         }
         
         /* Alt Bilgi (Footer) - Ekranın en altında sabit durur */
@@ -90,13 +87,13 @@
         .footer-links {
             display: flex;
             justify-content: center;
-            gap: 30px;
-            margin-bottom: 12px;
+            gap: 25px;
+            margin-bottom: 10px;
         }
         
         .footer-links a {
-            color: #64748b;
-            font-size: 15px;
+            color: #94a3b8;
+            font-size: 14px;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.2s;
@@ -107,22 +104,21 @@
         }
         
         .copyright {
-            font-size: 14px;
-            color: #94a3b8;
+            font-size: 13px;
+            color: #cbd5e1;
         }
 
-        /* Mobil arayüze uyum (Responsive) */
+        /* Mobil uyumluluk */
         @media (max-width: 450px) {
             .store-buttons {
                 flex-direction: column;
                 gap: 15px;
             }
             .store-buttons img {
-                height: 60px; /* Alt alta iken biraz daha küçük */
+                height: 55px; 
             }
-            h1 { font-size: 30px; }
+            h1 { font-size: 28px; }
             .app-icon { width: 130px; height: 130px; margin-bottom: 25px; }
-            p { font-size: 17px; margin-bottom: 35px; }
         }
     </style>
 </head>
