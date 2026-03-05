@@ -27,7 +27,7 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* Arka plandaki yumuşak, premium parlama (Apple tarzı) */
+        /* Arka plandaki yumuşak, premium parlama */
         .ambient-glow {
             position: absolute;
             top: 50%;
@@ -53,10 +53,7 @@
         .delay-300 { animation-delay: 300ms; }
 
         @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Temiz Dil Seçici */
@@ -121,7 +118,7 @@
             display: inline-flex;
             gap: 4rem;
             padding-left: 4rem;
-            animation: marquee 60s linear infinite; /* Çok yavaş ve zarif */
+            animation: marquee 60s linear infinite;
         }
 
         @keyframes marquee {
@@ -133,14 +130,11 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            color: #52525b; /* Daha sönük gri, dikkati dağıtmaz */
+            color: #52525b;
             transition: color 0.3s;
         }
 
-        .tech-item:hover {
-            color: #e4e4e7;
-        }
-
+        .tech-item:hover { color: #e4e4e7; }
         .tech-item i { font-size: 1.25rem; }
         .tech-item span { font-size: 0.8rem; font-weight: 500; letter-spacing: 0.05em; }
     </style>
@@ -149,14 +143,14 @@
 
     <div class="ambient-glow"></div>
 
-    <header class="w-full p-6 flex justify-end absolute top-0 z-20 fade-in-up">
+    <div class="absolute top-6 right-6 z-50 fade-in-up">
         <div class="lang-switch">
             <button id="btn-tr" class="lang-btn active" onclick="setLang('tr')">TR</button>
             <button id="btn-en" class="lang-btn" onclick="setLang('en')">EN</button>
         </div>
-    </header>
+    </div>
 
-    <main class="relative z-10 flex-grow flex flex-col items-center justify-center px-6 pb-20">
+    <main class="relative z-10 flex-grow flex flex-col items-center justify-center px-6 pb-20 mt-10">
         
         <div class="relative w-28 h-28 mb-8 fade-in-up">
             <div class="absolute inset-0 bg-blue-500/10 blur-2xl rounded-full scale-150"></div>
@@ -188,7 +182,14 @@
             <div class="flex gap-16 items-center tech-group">
                 <div class="tech-item"><i class="fa-brands fa-swift"></i><span>SWIFT</span></div>
                 <div class="tech-item"><i class="fa-brands fa-android"></i><span>KOTLIN</span></div>
-                <div class="tech-item"><i class="fa-brands fa-flutter"></i><span>FLUTTER</span></div>
+                
+                <div class="tech-item">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M14.314 0L2.3 12 6 15.7 21.684.013h-7.357zm.014 11.072L7.857 17.53l3.67 3.67 9.03-9.028h-6.229zM21.684 24h-7.37L11.54 21.23l3.67-3.67L21.684 24z"/>
+                    </svg>
+                    <span>FLUTTER</span>
+                </div>
+
                 <div class="tech-item"><i class="fa-brands fa-react"></i><span>REACT NATIVE</span></div>
                 <div class="w-1 h-1 rounded-full bg-zinc-700 mx-4"></div> <div class="tech-item"><i class="fa-solid fa-cloud"></i><span>CLOUD</span></div>
                 <div class="tech-item"><i class="fa-solid fa-globe"></i><span>GLOBAL</span></div>
@@ -198,7 +199,6 @@
     </div>
 
     <script>
-        // Dil Verileri
         const translations = {
             tr: {
                 slogan: "Evrensel Mobil Çözümler",
@@ -212,22 +212,17 @@
             }
         };
 
-        // Dil Değiştirme Fonksiyonu
         function setLang(lang) {
-            // Metinleri güncelle
             document.getElementById('slogan-text').innerText = translations[lang].slogan;
             document.getElementById('desc-text').innerHTML = translations[lang].desc;
             document.getElementById('btn-contact').innerText = translations[lang].btn;
             
-            // Buton stillerini güncelle
             document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
             document.getElementById('btn-' + lang).classList.add('active');
         }
 
-        // Marquee (Kayan Bant) İçeriğini Kesintisiz Akması İçin Çoğalt
         const marqueeContent = document.getElementById('marquee-content');
         const techGroup = marqueeContent.querySelector('.tech-group');
-        // İçeriği 3 kez kopyalayarak sürekli döngü sağlıyoruz
         for(let i = 0; i < 3; i++) { 
             marqueeContent.appendChild(techGroup.cloneNode(true)); 
         }
