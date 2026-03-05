@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ehliyet Cepte - İndir</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background: #ffffff;
+            padding: 40px 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            max-width: 450px;
+            width: 90%;
+        }
+        .app-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 24px; /* iOS tarzı yumuşak köşeler */
+            margin-bottom: 20px;
+            object-fit: cover;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin: 0 0 10px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+        p {
+            color: #6c757d;
+            margin-bottom: 30px;
+            font-size: 16px;
+            line-height: 1.5;
+        }
+        .store-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .store-buttons img {
+            height: 48px; /* İki butonun da aynı boyda görünmesini sağlar */
+            width: auto;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .store-buttons img:hover {
+            transform: scale(1.05); /* Üzerine gelince hafif büyüme efekti */
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img src="app-icon.png" alt="Ehliyet Cepte İkonu" class="app-icon" onerror="this.style.display='none'">
+    
+    <h1>Ehliyet Cepte</h1>
+    <p>Ehliyet sınavına hazırlanmanın en kolay yolu. Hemen indir, çıkmış sorularla çalışmaya başla!</p>
+    
+    <div class="store-buttons">
+        <a href="SENIN_APP_STORE_LINKIN_BURAYA" target="_blank" rel="noopener noreferrer">
+            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=250x83&amp;releaseDate=1276560000" alt="App Store'dan İndirin">
+        </a>
+        
+        <a href="SENIN_PLAY_STORE_LINKIN_BURAYA" target="_blank" rel="noopener noreferrer">
+            <img src="en_badge_web_generic.png" alt="Google Play'den Alın">
+        </a>
+    </div>
+</div>
+
+</body>
+</html>
