@@ -2,108 +2,143 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ehliyet Cepte - Sınavı İlk Seferde Geçin!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ehliyet Cepte - İndir</title>
     <style>
-        /* Modern CSS Kurulumu */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; color: #333; line-height: 1.6; background-color: #fcfcfc; }
-        a { text-decoration: none; color: inherit; }
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+        /* Modern ve Temiz CSS Kurulumu */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
-        /* Üst Menü */
-        header { padding: 30px 0; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-size: 26px; font-weight: 800; color: #1e293b; letter-spacing: -0.5px; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f8fafc; /* Göz yormayan çok açık gri/mavi tonu */
+            color: #0f172a;
+            height: 100vh; /* Ekranın %100'ünü kaplar */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Aşağı yukarı kaydırmayı tamamen engeller */
+        }
         
-        /* Ana Tanıtım Alanı (Hero) */
-        .hero { display: flex; align-items: center; justify-content: space-between; padding: 60px 0 100px; gap: 40px; flex-wrap: wrap; }
-        .hero-text { flex: 1; min-width: 320px; }
-        .hero-text h1 { font-size: 46px; color: #0f172a; margin-bottom: 20px; line-height: 1.15; font-weight: 800; }
-        .hero-text p { font-size: 18px; color: #64748b; margin-bottom: 35px; max-width: 500px; }
-        .store-buttons { display: flex; gap: 15px; flex-wrap: wrap; }
-        .store-buttons img { height: 52px; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; border-radius: 8px; }
-        .store-buttons img:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        /* Ana İçerik Alanı (Tam ortalanmış) */
+        .main-content {
+            flex: 1; /* Kalan tüm boşluğu doldurur */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
         
-        /* Sağ Taraftaki Telefon Görseli */
-        .hero-image { flex: 1; text-align: center; min-width: 320px; position: relative; }
-        .hero-image img { max-width: 100%; height: auto; max-height: 550px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+        /* Uygulama İkonu */
+        .app-icon {
+            width: 140px;
+            height: 140px;
+            border-radius: 30px; /* iOS tarzı yumuşak köşe */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            object-fit: cover;
+        }
         
-        /* Özellikler Alanı */
-        .features { background-color: #ffffff; padding: 80px 0; text-align: center; border-top: 1px solid #f1f5f9; }
-        .features h2 { font-size: 36px; margin-bottom: 50px; color: #0f172a; font-weight: 700; }
-        .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 40px; }
-        .feature-card { padding: 40px 30px; border-radius: 16px; background: #f8fafc; transition: all 0.3s ease; border: 1px solid #f1f5f9; }
-        .feature-card:hover { transform: translateY(-5px); background: #ffffff; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1); border-color: #e2e8f0; }
-        .feature-icon { font-size: 40px; margin-bottom: 20px; }
-        .feature-card h3 { font-size: 22px; margin-bottom: 15px; color: #1e293b; }
-        .feature-card p { font-size: 16px; color: #64748b; }
+        h1 {
+            font-size: 34px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+        }
         
-        /* Alt Bilgi (Footer) */
-        footer { padding: 50px 0 30px; text-align: center; background-color: #0f172a; color: #94a3b8; }
-        .footer-links { margin-bottom: 30px; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
-        .footer-links a { color: #cbd5e1; font-size: 15px; transition: color 0.2s; }
-        .footer-links a:hover { color: #ffffff; text-decoration: underline; }
-        .copyright { font-size: 14px; }
+        p {
+            font-size: 17px;
+            color: #64748b;
+            max-width: 420px;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+        
+        /* Mağaza Butonları */
+        .store-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .store-buttons img {
+            height: 52px;
+            width: auto;
+            transition: transform 0.2s ease;
+        }
+        
+        .store-buttons img:hover {
+            transform: scale(1.05); /* Üzerine gelince hafif büyüme efekti */
+        }
+        
+        /* Alt Bilgi (Footer) - Ekranın en altında sabit durur */
+        footer {
+            padding: 25px 20px;
+            text-align: center;
+            background-color: transparent;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 10px;
+        }
+        
+        .footer-links a {
+            color: #64748b;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .footer-links a:hover {
+            color: #0f172a;
+        }
+        
+        .copyright {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        /* Çok küçük ekranlı telefonlar için butonları alt alta alma ayarı */
+        @media (max-width: 400px) {
+            .store-buttons {
+                flex-direction: column;
+                gap: 15px;
+            }
+            h1 { font-size: 28px; }
+            .app-icon { width: 120px; height: 120px; margin-bottom: 20px; }
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <div class="logo">Ehliyet Cepte</div>
-        </header>
-
-        <section class="hero">
-            <div class="hero-text">
-                <h1>Ehliyet Sınavını İlk Seferde Geçin!</h1>
-                <p>Çıkmış sorular, detaylı konu anlatımları ve gerçekçi deneme sınavları ile ehliyet sınavına hazırlanmak artık çok kolay. Hemen indir, hedefine ulaş.</p>
-                <div class="store-buttons">
-                    <a href="SENIN_APP_STORE_LINKIN" target="_blank">
-                        <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=250x83&amp;releaseDate=1276560000" alt="App Store'dan İndir">
-                    </a>
-                    <a href="SENIN_PLAY_STORE_LINKIN" target="_blank">
-                        <img src="en_badge_web_generic.png" alt="Google Play'den İndir">
-                    </a>
-                </div>
-            </div>
-            <div class="hero-image">
-                <img src="app-mockup.png" alt="Ehliyet Cepte Uygulama Ekranı" onerror="this.style.display='none'">
-            </div>
-        </section>
+    <div class="main-content">
+        <img src="app-icon.png" alt="Ehliyet Cepte İkonu" class="app-icon" onerror="this.style.display='none'">
+        
+        <h1>Ehliyet Cepte</h1>
+        <p>Sınava hazırlığın en kolay yolu. Çıkmış soruları çöz, denemelerle kendini test et ve ilk seferde geç.</p>
+        
+        <div class="store-buttons">
+            <a href="SENIN_APP_STORE_LINKIN" target="_blank" rel="noopener noreferrer">
+                <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/tr-tr?size=250x83&amp;releaseDate=1276560000" alt="App Store'dan İndirin">
+            </a>
+            
+            <a href="SENIN_PLAY_STORE_LINKIN" target="_blank" rel="noopener noreferrer">
+                <img src="en_badge_web_generic.png" alt="Google Play'den Alın">
+            </a>
+        </div>
     </div>
 
-    <section class="features">
-        <div class="container">
-            <h2>Neden Ehliyet Cepte?</h2>
-            <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📝</div>
-                    <h3>Çıkmış Sorular</h3>
-                    <p>Geçmiş yıllara ait MEB ehliyet sınavı sorularını çözerek sınav mantığını kavrayın ve bolca pratik yapın.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📚</div>
-                    <h3>Konu Anlatımları</h3>
-                    <p>Trafik, motor, ilk yardım ve trafik adabı konularını sıkılmadan, akılda kalıcı özetlerle öğrenin.</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎯</div>
-                    <h3>Deneme Sınavları</h3>
-                    <p>Gerçek sınav formatında, süreli olarak hazırlanan denemelerle kendinizi test edin ve eksiklerinizi anında görün.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <footer>
-        <div class="container">
-            <div class="footer-links">
-                <a href="ehliyet-privacy.html">Gizlilik Politikası</a>
-                <a href="ehliyet-terms.html">Kullanım Koşulları</a>
-                <a href="mailto:iletisim@senindomainin.com">İletişim</a>
-            </div>
-            <p class="copyright">&copy; 2026 Ehliyet Cepte. Tüm hakları saklıdır.</p>
+        <div class="footer-links">
+            <a href="ehliyet-privacy.html">Gizlilik Politikası</a>
+            <a href="ehliyet-terms.html">Kullanım Koşulları</a>
         </div>
+        <div class="copyright">&copy; 2026 Ehliyet Cepte. Tüm hakları saklıdır.</div>
     </footer>
 
 </body>
