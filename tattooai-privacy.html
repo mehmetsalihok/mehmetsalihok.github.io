@@ -3,176 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Legal & Privacy Policy | Tattoo AI</title>
+    <title>Privacy Policy & Terms | Tattoo AI</title>
     
     <style>
         :root {
-            --primary-black: #0f172a;
-            --legal-blue: #1e40af;
-            --danger-red: #991b1b;
-            --bg-gray: #f8fafc;
-            --text-dark: #1e293b;
-            --text-light: #64748b;
-            --border: #cbd5e1;
+            --primary-dark: #1e293b;
+            --accent-blue: #3b82f6;
+            --bg-light: #f8fafc;
+            --text-main: #334155;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
-            line-height: 1.6;
-            color: var(--text-dark);
-            background-color: var(--bg-gray);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--text-main);
+            background-color: var(--bg-light);
             margin: 0;
             padding: 40px 20px;
         }
 
-        .legal-container {
+        .container {
             max-width: 900px;
             margin: 0 auto;
             background: white;
-            padding: 50px;
-            border-radius: 4px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            border-top: 8px solid var(--primary-black);
+            padding: 45px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
 
         .lang-nav {
             display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
+            gap: 15px;
+            margin-bottom: 35px;
             justify-content: center;
         }
 
         .lang-nav a {
             text-decoration: none;
-            color: var(--text-light);
+            color: var(--accent-blue);
             font-size: 14px;
             font-weight: 600;
-            padding: 5px 15px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
+            padding: 8px 20px;
+            border: 1px solid var(--accent-blue);
+            border-radius: 25px;
+            transition: all 0.2s;
         }
 
-        .lang-nav a:hover { background: #f1f5f9; }
+        .lang-nav a:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
 
-        h1 { font-size: 28px; text-transform: uppercase; letter-spacing: 1px; text-align: center; margin-bottom: 40px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-        h2 { font-size: 18px; color: var(--primary-black); border-left: 4px solid var(--primary-black); padding-left: 15px; margin-top: 40px; text-transform: uppercase; }
-        h3 { font-size: 16px; margin-top: 20px; color: var(--legal-blue); }
+        h1 { font-size: 26px; color: var(--primary-dark); text-align: center; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+        h2 { font-size: 18px; color: var(--primary-dark); margin-top: 40px; margin-bottom: 15px; }
+        
+        p, li { font-size: 15px; color: var(--text-main); }
+        ul { padding-left: 20px; margin-bottom: 20px; }
+        li { margin-bottom: 8px; }
 
-        p, li { font-size: 15px; color: #475569; text-align: justify; }
+        .info-box {
+            background-color: #f0f9ff;
+            border-left: 4px solid var(--accent-blue);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
 
-        .legal-warning {
-            background-color: #fef2f2;
-            border: 1px solid #fee2e2;
+        .info-box strong { color: #0369a1; }
+
+        .safety-box {
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
             padding: 20px;
             margin: 20px 0;
-            border-radius: 4px;
+            border-radius: 8px;
         }
 
-        .legal-warning p { color: var(--danger-red); font-weight: 600; margin: 0; }
+        .safety-box p { margin-top: 0; }
 
-        .api-notice {
-            background-color: #f0f9ff;
-            border: 1px solid #e0f2fe;
-            padding: 15px;
-            margin: 20px 0;
-            font-style: italic;
+        .section-divider { 
+            height: 1px; 
+            background: var(--border-color); 
+            margin: 60px 0; 
         }
 
-        .section-divider { height: 2px; background: #e2e8f0; margin: 60px 0; position: relative; }
-        .section-divider::after { content: "TR / EN BOUNDARY"; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: white; padding: 0 15px; font-size: 10px; color: #cbd5e1; }
+        .footer { 
+            margin-top: 50px; 
+            text-align: center; 
+            font-size: 13px; 
+            color: var(--text-muted); 
+            border-top: 1px solid var(--border-color); 
+            padding-top: 20px; 
+        }
 
-        .footer { margin-top: 60px; text-align: center; font-size: 12px; color: var(--text-light); border-top: 1px solid #eee; padding-top: 20px; }
-
-        @media (max-width: 600px) { .legal-container { padding: 25px; } h1 { font-size: 22px; } }
+        @media (max-width: 600px) { .container { padding: 25px; } h1 { font-size: 22px; } }
     </style>
 </head>
 <body>
 
-    <div class="legal-container">
+    <div class="container">
         <div class="lang-nav">
-            <a href="#en">ENGLISH VERSION</a>
-            <a href="#tr">TÜRKÇE METİN</a>
+            <a href="#en">English</a>
+            <a href="#tr">Türkçe</a>
         </div>
 
         <div id="en">
             <h1>Privacy Policy & Terms of Service</h1>
-            <p><strong>Effective Date:</strong> April 27, 2026</p>
+            <p><strong>Last Updated:</strong> April 27, 2026</p>
+            <p>Welcome to Tattoo AI! We are committed to providing you with a safe and inspiring experience while protecting your privacy.</p>
 
-            <h2>1. BIOMETRIC DATA & TRUEDEPTH API (Apple Guideline 2.1)</h2>
-            <p>Tattoo AI utilizes Apple's <strong>TrueDepth API</strong> technology to provide an Augmented Reality (AR) tattoo preview experience. We take your biometric privacy seriously:</p>
-            <ul>
-                <li><strong>Data Collection:</strong> The App uses the TrueDepth camera to capture facial mapping and depth data strictly for AR anchoring purposes.</li>
-                <li><strong>Use of Data:</strong> This data is processed in real-time to track facial movements and place virtual tattoo designs accurately.</li>
-                <li><strong>No Storage/No Sharing:</strong> We do not store Face Data on any server or local disk. The data is processed 100% on-device and is instantly purged when the session ends. No face data is shared with third parties.</li>
-            </ul>
-
-            <h2>2. AI CONTENT GENERATION & THIRD-PARTY API DISCLOSURE</h2>
-            <div class="api-notice">
-                <strong>Notice:</strong> Tattoo generation features in this App are powered by high-performance third-party Artificial Intelligence (AI) Service Providers and APIs. 
-            </div>
-            <p>By using the App, you acknowledge that the images are generated by automated AI algorithms. Codemso does not claim ownership of the individual stylistic choices made by the AI and acts as an interface for these generative services.</p>
-
-            <h2>3. PROHIBITED CONTENT & CONDUCT</h2>
-            <div class="legal-warning">
-                <p>STRICT PROHIBITION: The use of this App to generate, view, or share any of the following content is strictly prohibited and will result in a permanent ban:</p>
-                <ul style="color: var(--danger-red); margin-top: 10px;">
-                    <li>Sexually explicit or obscene content (NSFW).</li>
-                    <li>Hate speech, harassment, or promotion of discrimination.</li>
-                    <li>Graphic violence, self-harm, or illegal acts.</li>
-                    <li>Infringement of intellectual property rights.</li>
+            <h2>1. TrueDepth API and Face Data Usage (Guideline 2.1)</h2>
+            <div class="info-box">
+                <p>To provide our Augmented Reality (AR) tattoo preview feature, our App utilizes Apple's <strong>TrueDepth API</strong>. We highly value your biometric privacy:</p>
+                <ul>
+                    <li><strong>Data Collection:</strong> We use the TrueDepth camera solely to capture temporary facial mapping and depth data for accurate AR placement.</li>
+                    <li><strong>Usage:</strong> This data is processed in real-time to track movements and place virtual designs seamlessly.</li>
+                    <li><strong>Zero Retention:</strong> Face Data is processed 100% on your device. <strong>It is never stored locally, never sent to our servers, and never shared with third parties.</strong> The data is immediately discarded once the AR session ends.</li>
                 </ul>
             </div>
-            <p>We implement automated filters to block such content. However, users remain legally responsible for the prompts they provide to the AI.</p>
 
-            <h2>4. LEGAL DISCLAIMER & HEALTH WARNING</h2>
-            <p>Tattoo AI is for <strong>visualization purposes only</strong>. The generated images are digital simulations. We strongly advise users to consult with a professional, licensed tattoo artist before getting a permanent tattoo. Codemso is not responsible for any physical, psychological, or financial consequences resulting from real-world tattoo applications based on App designs.</p>
+            <h2>2. AI Service Providers</h2>
+            <p>The tattoo generation features in this App are powered by advanced third-party Artificial Intelligence (AI) APIs. By using the App, you understand that the designs are generated dynamically by these AI services, and Codemso simply acts as an interface to deliver this creative experience.</p>
 
-            <h2>5. CONTACT</h2>
-            <p>For legal inquiries: <strong>info@codemso.com</strong></p>
+            <h2>3. Content Safety Guidelines</h2>
+            <div class="safety-box">
+                <p>To maintain a positive and safe environment for all users, our AI systems are equipped with safety filters. <strong>The application is restricted from generating the following types of content:</strong></p>
+                <ul>
+                    <li>Sexually explicit or inappropriate material (NSFW).</li>
+                    <li>Hate speech, harassment, or discriminatory imagery.</li>
+                    <li>Graphic violence, self-harm, or illegal acts.</li>
+                </ul>
+                <p>We kindly ask our users to use text prompts responsibly to support a creative and inspiring community.</p>
+            </div>
+
+            <h2>4. General Disclaimer</h2>
+            <p>Tattoo AI is designed for visualization and inspiration purposes only. The generated images are digital simulations. We strongly recommend consulting with a professional, licensed tattoo artist to discuss the feasibility and safety of a design before getting a real tattoo. Codemso is not responsible for real-world tattoo applications based on these digital simulations.</p>
+
+            <h2>5. Contact Us</h2>
+            <p>If you have any questions or feedback, please reach out to us at: <strong>info@codemso.com</strong></p>
         </div>
 
         <div class="section-divider"></div>
 
         <div id="tr">
-            <h1>GİZLİLİK POLİTİKASI VE KULLANIM KOŞULLARI</h1>
-            <p><strong>Yürürlük Tarihi:</strong> 27 Nisan 2026</p>
+            <h1>Gizlilik Politikası ve Kullanım Koşulları</h1>
+            <p><strong>Son Güncelleme:</strong> 27 Nisan 2026</p>
+            <p>Tattoo AI'a hoş geldiniz! Gizliliğinizi korurken size güvenli ve ilham verici bir deneyim sunmaya kararlıyız.</p>
 
-            <h2>1. BİYOMETRİK VERİ VE TRUEDEPTH API (Apple Guideline 2.1)</h2>
-            <p>Tattoo AI, Artırılmış Gerçeklik (AR) dövme önizleme deneyimi sunmak için Apple'ın <strong>TrueDepth API</strong> teknolojisini kullanır. Biyometrik gizliliğiniz tarafımızca korunmaktadır:</p>
-            <ul>
-                <li><strong>Veri Toplama:</strong> Uygulama, yüz haritalama ve derinlik verilerini yalnızca AR sabitleme amacıyla TrueDepth kamerasını kullanarak yakalar.</li>
-                <li><strong>Veri Kullanımı:</strong> Bu veriler, yüz hareketlerini izlemek ve sanal dövme tasarımlarını doğru şekilde yerleştirmek için gerçek zamanlı olarak işlenir.</li>
-                <li><strong>Saklama ve Paylaşım Yok:</strong> Yüz Verilerini herhangi bir sunucuda veya yerel diskte saklamıyoruz. Veriler %100 cihaz üzerinde işlenir ve oturum sona erdiğinde anında silinir. Hiçbir yüz verisi üçüncü taraflarla paylaşılmaz.</li>
-            </ul>
-
-            <h2>2. YAPAY ZEKA İÇERİK ÜRETİMİ VE 3. PARTİ API BİLDİRİMİ</h2>
-            <div class="api-notice">
-                <strong>Bilgilendirme:</strong> Bu uygulamadaki dövme oluşturma özellikleri, yüksek performanslı üçüncü taraf Yapay Zeka (AI) Servis Sağlayıcıları ve API'leri tarafından desteklenmektedir.
-            </div>
-            <p>Uygulamayı kullanarak, görsellerin otomatik AI algoritmaları tarafından oluşturulduğunu kabul etmiş sayılırsınız. Codemso, AI tarafından yapılan bireysel üslup seçimleri üzerinde mülkiyet iddiasında bulunmaz ve bu üretken hizmetler için bir arayüz görevi görür.</p>
-
-            <h2>3. YASAKLANMIŞ İÇERİK VE DAVRANIŞLAR</h2>
-            <div class="legal-warning">
-                <p>KESİN YASAK: Bu uygulamanın aşağıdaki içerikleri üretmek, görüntülemek veya paylaşmak için kullanılması kesinlikle yasaktır ve kalıcı engelleme ile sonuçlanacaktır:</p>
-                <ul style="color: var(--danger-red); margin-top: 10px;">
-                    <li>Müstehcen veya cinsel içerikli materyaller (NSFW).</li>
-                    <li>Nefret söylemi, taciz veya ayrımcılığın teşvik edilmesi.</li>
-                    <li>Ağır şiddet, kendine zarar verme veya yasa dışı eylemler.</li>
-                    <li>Fikri mülkiyet haklarının ihlali.</li>
+            <h2>1. TrueDepth API ve Yüz Verileri Kullanımı</h2>
+            <div class="info-box">
+                <p>Artırılmış Gerçeklik (AR) dövme önizleme özelliğimizi sunabilmek için uygulamamız Apple'ın <strong>TrueDepth API</strong> teknolojisini kullanır. Biyometrik gizliliğinize büyük önem veriyoruz:</p>
+                <ul>
+                    <li><strong>Veri Toplama:</strong> TrueDepth kamerasını yalnızca AR yerleşimini doğru yapmak için anlık yüz haritalama ve derinlik verilerini yakalamak amacıyla kullanırız.</li>
+                    <li><strong>Kullanım:</strong> Bu veriler, hareketlerinizi izlemek ve sanal tasarımları kusursuz bir şekilde yerleştirmek için gerçek zamanlı olarak işlenir.</li>
+                    <li><strong>Veri Saklama Yoktur:</strong> Yüz Verileri %100 cihazınızda işlenir. <strong>Asla yerel olarak saklanmaz, sunucularımıza gönderilmez ve üçüncü şahıslarla paylaşılmaz.</strong> AR oturumu sona erdiğinde veriler anında silinir.</li>
                 </ul>
             </div>
-            <p>Bu tür içerikleri engellemek için otomatik filtreler uyguluyoruz. Ancak kullanıcılar, yapay zekaya verdikleri komutlardan (prompt) hukuken bizzat sorumludur.</p>
 
-            <h2>4. HUKUKİ SORUMLULUK REDDİ VE SAĞLIK UYARISI</h2>
-            <p>Tattoo AI sadece <strong>görselleştirme amaçlıdır</strong>. Oluşturulan görüntüler dijital simülasyonlardır. Kullanıcıların kalıcı bir dövme yaptırmadan önce profesyonel, lisanslı bir dövme sanatçısına danışmalarını şiddetle tavsiye ederiz. Uygulama tasarımlarına dayanarak yapılan gerçek dünya dövme uygulamalarından doğabilecek fiziksel, psikolojik veya finansal sonuçlardan Codemso sorumlu değildir.</p>
+            <h2>2. Yapay Zeka Servis Sağlayıcıları</h2>
+            <p>Bu uygulamadaki dövme oluşturma özellikleri, gelişmiş üçüncü taraf Yapay Zeka (AI) API'leri tarafından desteklenmektedir. Uygulamayı kullandığınızda, tasarımların bu AI servisleri tarafından dinamik olarak üretildiğini ve Codemso'nun bu yaratıcı deneyimi sunmak için sadece bir aracı arayüz görevi gördüğünü kabul etmiş olursunuz.</p>
 
-            <h2>5. İLETİŞİM</h2>
-            <p>Hukuki sorularınız için: <strong>info@codemso.com</strong></p>
+            <h2>3. İçerik Güvenliği Standartları</h2>
+            <div class="safety-box">
+                <p>Tüm kullanıcılar için olumlu ve güvenli bir ortam sağlamak amacıyla, yapay zeka sistemlerimiz güvenlik filtreleriyle donatılmıştır. <strong>Uygulamamızın aşağıdaki türde içerikleri üretmesi sistem tarafından engellenmektedir:</strong></p>
+                <ul>
+                    <li>Müstehcen veya uygunsuz cinsel içerikler (NSFW).</li>
+                    <li>Nefret söylemi, taciz veya ayrımcı görseller.</li>
+                    <li>Şiddet, kendine zarar verme veya yasa dışı eylemleri içeren tasarımlar.</li>
+                </ul>
+                <p>Yaratıcı ve ilham verici topluluğumuzu desteklemek adına, kullanıcılarımızdan metin komutlarını (prompt) kullanım amacına uygun ve sorumlu bir şekilde girmelerini rica ediyoruz.</p>
+            </div>
+
+            <h2>4. Genel Sorumluluk Reddi (Önemli Hatırlatma)</h2>
+            <p>Tattoo AI yalnızca görselleştirme ve ilham verme amacıyla tasarlanmıştır. Oluşturulan görseller dijital simülasyonlardır. Gerçek bir dövme yaptırmadan önce, tasarımın uygulanabilirliğini ve güvenliğini profesyonel bir dövme sanatçısıyla görüşmenizi önemle tavsiye ederiz. Codemso, bu dijital simülasyonlara dayanarak yapılan gerçek dünya dövme uygulamalarından sorumlu tutulamaz.</p>
+
+            <h2>5. İletişim</h2>
+            <p>Soru, görüş ve geri bildirimleriniz için bize ulaşabilirsiniz: <strong>info@codemso.com</strong></p>
         </div>
 
         <div class="footer">
-            &copy; 2026 Codemso - Mehmet Salih OK. All rights reserved. <br>
-            This document serves as a binding agreement for Tattoo AI users.
+            &copy; 2026 Codemso. Tüm hakları saklıdır. / All rights reserved. <br>
+            Tattoo AI
         </div>
     </div>
 
