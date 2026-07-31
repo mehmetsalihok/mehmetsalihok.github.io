@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CODEMSO 4'lü Kripto Terminali</title>
+  <title>CODEMSO Kripto Terminali & RSI Radar</title>
   <style>
     :root {
       --bg-color: #0b1120;
@@ -47,7 +47,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
-      max-width: 1400px;
+      max-width: 1600px;
       margin: 0 auto;
     }
 
@@ -63,14 +63,29 @@
       gap: 8px;
     }
 
-    /* 4'LÜ IZGARA (2x2 GRID) */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+    /* ANA LAYOUT: SOL KARTLAR + SAĞ SIDEBAR RADAR */
+    .main-layout {
+      display: flex;
+      flex-direction: column;
       gap: 10px;
     }
 
-    @media (min-width: 900px) {
+    @media (min-width: 1100px) {
+      .main-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px; /* Sol Taraf Esnek, Sağ Taraf 340px Radar */
+        align-items: start;
+      }
+    }
+
+    /* 2x2 IZGARA */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 10px;
+    }
+
+    @media (min-width: 768px) and (max-width: 1099px) {
       .dashboard-grid {
         grid-template-columns: 1fr 1fr;
       }
@@ -170,7 +185,6 @@
       border: 1px solid var(--border-color);
     }
 
-    /* HER COINE ÖZEL AYARLAR PANOSU */
     .coin-settings-box {
       background-color: var(--box-bg);
       border: 1px solid var(--border-color);
@@ -204,7 +218,100 @@
       width: 100%;
     }
 
-    /* ACCORDION BAŞLIKLAR */
+    /* SAĞ SIDEBAR RADAR STİLLERİ */
+    .sidebar-card {
+      background-color: var(--card-bg);
+      border-radius: 8px;
+      padding: 10px;
+      border: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      position: sticky;
+      top: 10px;
+    }
+
+    .add-coin-row {
+      display: flex;
+      gap: 4px;
+    }
+
+    .add-coin-row input {
+      flex: 1;
+      padding: 4px 6px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+    }
+
+    .add-btn {
+      background: #0284c7;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.72rem;
+    }
+
+    .watchlist-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.65rem;
+    }
+
+    .watchlist-table th, .watchlist-table td {
+      padding: 4px 4px;
+      border-bottom: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .watchlist-table th {
+      color: var(--text-muted);
+      font-size: 0.58rem;
+      text-transform: uppercase;
+    }
+
+    .alarm-input {
+      width: 32px;
+      padding: 1px 2px;
+      font-size: 0.62rem;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0 2px;
+      font-size: 0.65rem;
+    }
+
+    .action-btn:hover {
+      color: var(--text-color);
+    }
+
+    .alarm-triggered {
+      animation: pulseAlert 1s infinite alternate;
+      font-weight: 900;
+    }
+
+    @keyframes pulseAlert {
+      from { background-color: rgba(239, 68, 68, 0.2); }
+      to { background-color: rgba(239, 68, 68, 0.6); }
+    }
+
     .table-title {
       font-size: 0.68rem;
       font-weight: 700;
@@ -264,8 +371,9 @@
     <!-- GENEL BAŞLIK VE YIL SEÇİMİ -->
     <div class="header-card">
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span class="badge">CODEMSO TERMINAL (4 COIN)</span>
+        <span class="badge">CODEMSO TERMINAL & RADAR</span>
         <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀️ Gündüz Modu</button>
+        <button class="theme-btn" onclick="playTestSound()">🔊 Ses Testi</button>
       </div>
 
       <div style="display: flex; align-items: center; gap: 6px;">
@@ -277,27 +385,72 @@
       </div>
     </div>
 
-    <!-- 4'LÜ COIN TERMINAL IZGARASI -->
-    <div class="dashboard-grid" id="grid-container">
-      <!-- JS İLE DOLDURULACAK -->
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
+      
+      <!-- SOL TARAF: 2x2 ANALİZ IZGARASI -->
+      <div class="dashboard-grid" id="grid-container">
+        <!-- JS DOLDURACAK -->
+      </div>
+
+      <!-- SAĞ TARAF: CANLI RSI RADAR & İZLEME LISTESİ -->
+      <div class="sidebar-card">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-weight: 800; font-size: 0.75rem;">⚡ CANLI RSI RADAR</span>
+          <span style="font-size: 0.6rem; color: var(--text-muted);" id="radar-update-time">Canlı</span>
+        </div>
+
+        <!-- COIN EKLEME ALANI -->
+        <div class="add-coin-row">
+          <input type="text" id="new-radar-coin" placeholder="Örn: PEPEUSDT">
+          <button class="add-btn" onclick="addRadarCoin()">+ Ekle</button>
+        </div>
+
+        <!-- RADAR TABLOSU -->
+        <table class="watchlist-table">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Coin</th>
+              <th>Anlık RSI</th>
+              <th>Min (≤)</th>
+              <th>Max (≥)</th>
+              <th>Sıra</th>
+              <th>Sil</th>
+            </tr>
+          </thead>
+          <tbody id="radar-tbody">
+            <!-- JS DOLDURACAK -->
+          </tbody>
+        </table>
+      </div>
+
     </div>
 
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v2';
+    const STORAGE_KEY = 'codemso_multi_terminal_v3';
     const INTERVAL = '30m';
     const RSI_PERIOD = 8;
 
     let SELECTED_YEAR = '2026';
     let candlesData = [[], [], [], []];
 
-    // Her Coin İçin Varsayılan ve Bağımsız Ayarlar
+    // 4 Ana Analiz Kartı Konfigürasyonu
     let coinsConfig = [
       { symbol: 'ASTERUSDT', buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
       { symbol: 'BTCUSDT',   buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0 },
       { symbol: 'ETHUSDT',   buyRsi: 25, sellRsi: 75, profitTarget: 2.5, monthlyCap: 3.0 },
       { symbol: 'SOLUSDT',   buyRsi: 22, sellRsi: 80, profitTarget: 3.0, monthlyCap: 3.0 }
+    ];
+
+    // Sağ Taraf İzleme Listesi ve Alarmları
+    let radarWatchlist = [
+      { symbol: 'PEPEUSDT', buyAlarm: 20, sellAlarm: 80, currentRsi: null },
+      { symbol: 'AVAXUSDT', buyAlarm: 22, sellAlarm: 80, currentRsi: null },
+      { symbol: 'DOGEUSDT', buyAlarm: 20, sellAlarm: 85, currentRsi: null },
+      { symbol: 'NEARUSDT', buyAlarm: 22, sellAlarm: 78, currentRsi: null },
+      { symbol: 'LINKUSDT', buyAlarm: 25, sellAlarm: 75, currentRsi: null }
     ];
 
     function formatNum(val, dec = 2) {
@@ -316,28 +469,51 @@
       document.getElementById('theme-btn').innerText = isLight ? '🌙 Gece Modu' : '☀️ Gündüz Modu';
     }
 
-    // AYARLARI OKU VE KARTLARI OLUŞTUR
+    // WEBAUDIO API SESLI UYARI MOTORU (BİP SESİ)
+    function playBeepSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880 Hz Ses
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch(e) {}
+    }
+
+    function playTestSound() {
+      playBeepSound();
+    }
+
+    // CONFIG OKU VE KAYDET
     function loadSavedConfig() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
           if (parsed.coinsConfig) coinsConfig = parsed.coinsConfig;
+          if (parsed.radarWatchlist) radarWatchlist = parsed.radarWatchlist;
           if (parsed.year) SELECTED_YEAR = parsed.year;
         } catch(e) {}
       }
       document.getElementById('global-year').value = SELECTED_YEAR;
       renderCardsHTML();
+      renderRadarHTML();
     }
 
     function saveConfig() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         coinsConfig,
+        radarWatchlist,
         year: SELECTED_YEAR
       }));
     }
 
-    // 4 KARTI HTML OLARAK DİNAMİK YAZDIRMA
+    // 4 ANALİZ KARTINI YAZDIRMA
     function renderCardsHTML() {
       const grid = document.getElementById('grid-container');
       grid.innerHTML = '';
@@ -374,7 +550,6 @@
               </div>
             </div>
 
-            <!-- HER COINE ÖZEL AYARLAR PANOSU -->
             <div class="coin-settings-box">
               <div class="coin-setting-item">
                 <label>RSI Al:</label>
@@ -394,7 +569,6 @@
               </div>
             </div>
 
-            <!-- ACCORDION TABLOLAR -->
             <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
               <span>📅 Aylık Performans Tablosu (${SELECTED_YEAR})</span>
               <span>▼</span>
@@ -422,7 +596,111 @@
       });
     }
 
-    // TEK COİNİN AYARINI GÜNCELLEME
+    // SAĞ RADAR TABLOSUNU YAZDIRMA
+    function renderRadarHTML() {
+      const tbody = document.getElementById('radar-tbody');
+      tbody.innerHTML = '';
+
+      radarWatchlist.forEach((item, index) => {
+        let rsiDisplay = item.currentRsi !== null ? formatNum(item.currentRsi, 1) : '--,--';
+        let rsiClass = 'neutral';
+        let alertClass = '';
+
+        if (item.currentRsi !== null) {
+          if (item.currentRsi <= item.buyAlarm) {
+            rsiClass = 'green';
+            alertClass = 'alarm-triggered';
+          } else if (item.currentRsi >= item.sellAlarm) {
+            rsiClass = 'red';
+            alertClass = 'alarm-triggered';
+          }
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = alertClass;
+        tr.innerHTML = `
+          <td style="text-align: left;"><b>${item.symbol.replace('USDT', '')}</b></td>
+          <td class="${rsiClass}"><b>${rsiDisplay}</b></td>
+          <td><input type="number" class="alarm-input" value="${item.buyAlarm}" onchange="updateRadarAlarm(${index}, 'buyAlarm', this.value)"></td>
+          <td><input type="number" class="alarm-input" value="${item.sellAlarm}" onchange="updateRadarAlarm(${index}, 'sellAlarm', this.value)"></td>
+          <td>
+            <button class="action-btn" onclick="moveRadarCoin(${index}, -1)">▲</button>
+            <button class="action-btn" onclick="moveRadarCoin(${index}, 1)">▼</button>
+          </td>
+          <td><button class="action-btn red" onclick="removeRadarCoin(${index})">✖</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // RADAR İŞLEMLERİ: COIN EKLE / SİL / TAŞI
+    function addRadarCoin() {
+      const input = document.getElementById('new-radar-coin');
+      let val = input.value.toUpperCase().trim();
+      if (!val) return;
+      if (!val.endsWith('USDT')) val += 'USDT';
+
+      radarWatchlist.push({ symbol: val, buyAlarm: 20, sellAlarm: 80, currentRsi: null });
+      input.value = '';
+      saveConfig();
+      renderRadarHTML();
+      fetchRadarRSIAll();
+    }
+
+    function removeRadarCoin(index) {
+      radarWatchlist.splice(index, 1);
+      saveConfig();
+      renderRadarHTML();
+    }
+
+    function moveRadarCoin(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= radarWatchlist.length) return;
+      
+      const temp = radarWatchlist[index];
+      radarWatchlist[index] = radarWatchlist[newIndex];
+      radarWatchlist[newIndex] = temp;
+
+      saveConfig();
+      renderRadarHTML();
+    }
+
+    function updateRadarAlarm(index, field, value) {
+      radarWatchlist[index][field] = parseFloat(value) || 0;
+      saveConfig();
+    }
+
+    // CANLI SAĞ RADAR RSI HESAPLAMA MOTORU
+    async function fetchRadarRSIAll() {
+      let alarmTriggeredAny = false;
+
+      for (let item of radarWatchlist) {
+        try {
+          const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${item.symbol}&interval=${INTERVAL}&limit=30`);
+          if (res.ok) {
+            const data = await res.json();
+            const closePrices = data.map(c => parseFloat(c[4]));
+            const rsiVals = calculateRSIHistory(closePrices, RSI_PERIOD);
+            const currentRSI = rsiVals[rsiVals.length - 1];
+
+            item.currentRsi = currentRSI;
+
+            if (currentRSI <= item.buyAlarm || currentRSI >= item.sellAlarm) {
+              alarmTriggeredAny = true;
+            }
+          }
+        } catch(e) {}
+      }
+
+      renderRadarHTML();
+      if (alarmTriggeredAny) {
+        playBeepSound();
+      }
+
+      const now = new Date();
+      document.getElementById('radar-update-time').innerText = now.toLocaleTimeString('tr-TR');
+    }
+
     function updateCoinSetting(slotIndex) {
       let sym = document.getElementById(`coin-symbol-${slotIndex}`).value.toUpperCase().trim();
       if (!sym.endsWith('USDT')) sym += 'USDT';
@@ -450,7 +728,7 @@
       }
     }
 
-    // RSI HESAPLAMA (WILDER'S FORMÜLÜ)
+    // RSI FORMÜLÜ (WILDER'S)
     function calculateRSIHistory(prices, period = 8) {
       if (prices.length <= period) return [];
       let gains = 0, losses = 0;
@@ -480,7 +758,7 @@
       return rsiHistory;
     }
 
-    // BINANCE YILLIK VERİ ÇEKME MOTORU
+    // ANALİZ KARTLARI VERİ ÇEKME MOTORU
     async function loadCoinData(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const loaderEl = document.getElementById(`loader-${slotIndex}`);
@@ -520,7 +798,7 @@
       runBacktestAndRender(slotIndex);
     }
 
-    // SİMÜLASYON MOTORU
+    // SİMÜLASYON
     function runBacktestAndRender(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const candles = candlesData[slotIndex];
@@ -554,7 +832,7 @@
 
         const mStat = monthlyStats[monthKey];
 
-        // 1. AL SİNYALİ
+        // AL
         if (!inPosition && !mStat.capReached) {
           if (prevRsiVal <= coin.buyRsi && rsiVal > coin.buyRsi) {
             inPosition = true;
@@ -562,7 +840,7 @@
           }
         }
 
-        // 2. SAT SİNYALİ
+        // SAT
         else if (inPosition) {
           const targetPrice = entryPrice * (1 + coin.profitTarget / 100);
 
@@ -597,7 +875,6 @@
         }
       }
 
-      // ANLIK KART VERİLERİ
       const currentPrice = closePrices[closePrices.length - 1];
       const currentRSI = rsiValues[rsiValues.length - 1];
 
@@ -650,12 +927,11 @@
         mTable.appendChild(tr);
       });
 
-      // İŞLEM LOGU DOLDUR (Son 5 İşlem)
+      // İŞLEM LOGU DOLDUR
       const tTable = document.getElementById(`table-trades-${slotIndex}`);
       tTable.innerHTML = '';
       trades.slice(-5).reverse().forEach(t => {
         const tr = document.createElement('tr');
-        const d = new Date(t.exitTime).toLocaleString('tr-TR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
         tr.innerHTML = `
           <td>$${t.entryPrice.toFixed(3)}</td>
           <td>$${t.exitPrice.toFixed(3)}</td>
@@ -666,13 +942,14 @@
       });
     }
 
-    // BAŞLANGIÇ
+    // İLK BAŞLANGIÇ
     loadSavedConfig();
     for (let i = 0; i < 4; i++) {
       loadCoinData(i);
     }
+    fetchRadarRSIAll();
 
-    // 5 SANİYEDE BİR CANLI FİYAT DÖNGÜSÜ
+    // DÖNGÜLER: 5s Analiz Kartları Fiyatı, 10s Sağ Radar RSI Taraması
     setInterval(() => {
       coinsConfig.forEach((coin, slotIndex) => {
         if (candlesData[slotIndex] && candlesData[slotIndex].length > 0 && SELECTED_YEAR === '2026') {
@@ -687,6 +964,8 @@
         }
       });
     }, 5000);
+
+    setInterval(fetchRadarRSIAll, 10000);
   </script>
 </body>
 </html>
