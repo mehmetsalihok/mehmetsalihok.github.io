@@ -38,7 +38,7 @@
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
-      padding: 10px;
+      padding: 8px;
       font-size: 0.72rem;
       transition: background-color 0.2s, color 0.2s;
     }
@@ -46,15 +46,15 @@
     .container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-width: 1600px;
+      gap: 8px;
+      max-width: 1650px;
       margin: 0 auto;
     }
 
     .header-card {
       background-color: var(--card-bg);
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 6px 10px;
       border: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
@@ -67,13 +67,13 @@
     .main-layout {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
-    @media (min-width: 1100px) {
+    @media (min-width: 1150px) {
       .main-layout {
         display: grid;
-        grid-template-columns: 1fr 340px; /* Sol Taraf Esnek, Sağ Taraf 340px Radar */
+        grid-template-columns: 1fr 420px; /* Sağ Radar Genişliği */
         align-items: start;
       }
     }
@@ -82,10 +82,10 @@
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 10px;
+      gap: 8px;
     }
 
-    @media (min-width: 768px) and (max-width: 1099px) {
+    @media (min-width: 768px) and (max-width: 1149px) {
       .dashboard-grid {
         grid-template-columns: 1fr 1fr;
       }
@@ -94,12 +94,12 @@
     .card {
       background-color: var(--card-bg);
       border-radius: 8px;
-      padding: 10px;
+      padding: 8px 10px;
       border: 1px solid var(--border-color);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .header-bar {
@@ -130,14 +130,14 @@
     }
 
     .coin-input {
-      padding: 3px 6px;
+      padding: 2px 4px;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background-color: var(--input-bg);
       color: var(--text-color);
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      width: 120px;
+      width: 110px;
       text-transform: uppercase;
     }
 
@@ -148,7 +148,7 @@
     }
 
     .price {
-      font-size: 1.25rem;
+      font-size: 1.2rem;
       font-weight: 800;
     }
 
@@ -160,38 +160,39 @@
 
     .stat-box {
       background-color: var(--box-bg);
-      padding: 4px 6px;
+      padding: 3px 5px;
       border-radius: 4px;
       border: 1px solid var(--border-color);
       text-align: center;
     }
 
     .stat-label {
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       color: var(--text-muted);
       display: block;
       font-weight: 600;
     }
 
     .stat-value {
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 800;
     }
 
     .position-box {
       background-color: var(--box-bg);
-      padding: 6px 8px;
-      border-radius: 6px;
+      padding: 5px 6px;
+      border-radius: 4px;
       border: 1px solid var(--border-color);
     }
 
+    /* COIN AYARLAR PANOSU */
     .coin-settings-box {
       background-color: var(--box-bg);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
-      padding: 6px;
+      border-radius: 4px;
+      padding: 5px;
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 4px;
     }
 
@@ -202,18 +203,18 @@
     }
 
     .coin-setting-item label {
-      font-size: 0.58rem;
+      font-size: 0.56rem;
       color: var(--text-muted);
       font-weight: 600;
     }
 
-    .coin-setting-item input {
-      padding: 2px 4px;
+    .coin-setting-item input, .coin-setting-item select {
+      padding: 2px 3px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
+      border-radius: 3px;
       background-color: var(--card-bg);
       color: var(--text-color);
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 700;
       width: 100%;
     }
@@ -222,13 +223,13 @@
     .sidebar-card {
       background-color: var(--card-bg);
       border-radius: 8px;
-      padding: 10px;
+      padding: 8px;
       border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       position: sticky;
-      top: 10px;
+      top: 8px;
     }
 
     .add-coin-row {
@@ -236,16 +237,14 @@
       gap: 4px;
     }
 
-    .add-coin-row input {
-      flex: 1;
-      padding: 4px 6px;
+    .add-coin-row input, .add-coin-row select {
+      padding: 3px 4px;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
       font-weight: 700;
-      font-size: 0.72rem;
-      text-transform: uppercase;
+      font-size: 0.65rem;
     }
 
     .add-btn {
@@ -253,34 +252,34 @@
       color: #fff;
       border: none;
       border-radius: 4px;
-      padding: 4px 10px;
+      padding: 3px 8px;
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.72rem;
+      font-size: 0.65rem;
     }
 
     .watchlist-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
     }
 
     .watchlist-table th, .watchlist-table td {
-      padding: 4px 4px;
+      padding: 3px 2px;
       border-bottom: 1px solid var(--border-color);
       text-align: center;
     }
 
     .watchlist-table th {
       color: var(--text-muted);
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       text-transform: uppercase;
     }
 
     .alarm-input {
-      width: 32px;
+      width: 28px;
       padding: 1px 2px;
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       border: 1px solid var(--border-color);
       border-radius: 3px;
       background: var(--input-bg);
@@ -289,13 +288,23 @@
       font-weight: 700;
     }
 
+    .select-mini {
+      padding: 1px 2px;
+      font-size: 0.6rem;
+      border: 1px solid var(--border-color);
+      border-radius: 3px;
+      background: var(--input-bg);
+      color: var(--text-color);
+      font-weight: 700;
+    }
+
     .action-btn {
       background: transparent;
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      padding: 0 2px;
-      font-size: 0.65rem;
+      padding: 0 1px;
+      font-size: 0.62rem;
     }
 
     .action-btn:hover {
@@ -303,24 +312,24 @@
     }
 
     .alarm-triggered {
-      animation: pulseAlert 1s infinite alternate;
+      animation: pulseAlert 0.8s infinite alternate;
       font-weight: 900;
     }
 
     @keyframes pulseAlert {
-      from { background-color: rgba(239, 68, 68, 0.2); }
-      to { background-color: rgba(239, 68, 68, 0.6); }
+      from { background-color: rgba(239, 68, 68, 0.15); }
+      to { background-color: rgba(239, 68, 68, 0.55); }
     }
 
     .table-title {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 700;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
       user-select: none;
-      padding: 3px 0;
+      padding: 2px 0;
       border-top: 1px solid var(--border-color);
       margin-top: 2px;
     }
@@ -333,19 +342,19 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.62rem;
+      font-size: 0.6rem;
       text-align: left;
     }
 
     th, td {
-      padding: 2px 4px;
+      padding: 2px 3px;
       border-bottom: 1px solid var(--border-color);
     }
 
     th {
       color: var(--text-muted);
       font-weight: 700;
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       text-transform: uppercase;
     }
 
@@ -358,7 +367,7 @@
     .neutral { color: #eab308; }
 
     .loader {
-      font-size: 0.6rem;
+      font-size: 0.58rem;
       color: #0284c7;
       font-weight: 600;
     }
@@ -377,7 +386,7 @@
       </div>
 
       <div style="display: flex; align-items: center; gap: 6px;">
-        <label style="font-weight:700; font-size:0.68rem; color:var(--text-muted)">Genel Yıl Seçimi:</label>
+        <label style="font-weight:700; font-size:0.65rem; color:var(--text-muted)">Genel Yıl Seçimi:</label>
         <select id="global-year" style="padding: 2px 6px; border-radius:4px; background:var(--input-bg); color:var(--text-color); font-weight:700; border:1px solid var(--border-color);" onchange="changeGlobalYear()">
           <option value="2026">2026</option>
           <option value="2025">2025</option>
@@ -396,13 +405,21 @@
       <!-- SAĞ TARAF: CANLI RSI RADAR & İZLEME LISTESİ -->
       <div class="sidebar-card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-weight: 800; font-size: 0.75rem;">⚡ CANLI RSI RADAR</span>
-          <span style="font-size: 0.6rem; color: var(--text-muted);" id="radar-update-time">Canlı</span>
+          <span style="font-weight: 800; font-size: 0.72rem;">⚡ CANLI RSI RADAR (1s Canlı)</span>
+          <span style="font-size: 0.58rem; color: var(--text-muted);" id="radar-update-time">Canlı</span>
         </div>
 
         <!-- COIN EKLEME ALANI -->
         <div class="add-coin-row">
-          <input type="text" id="new-radar-coin" placeholder="Örn: PEPEUSDT">
+          <input type="text" id="new-radar-coin" placeholder="Örn: DOGE" style="flex:1;">
+          <select id="new-radar-tf" class="select-mini">
+            <option value="5m">5m</option>
+            <option value="15m">15m</option>
+            <option value="30m" selected>30m</option>
+            <option value="1h">1h</option>
+            <option value="4h">4h</option>
+          </select>
+          <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:32px;">
           <button class="add-btn" onclick="addRadarCoin()">+ Ekle</button>
         </div>
 
@@ -411,7 +428,9 @@
           <thead>
             <tr>
               <th style="text-align: left;">Coin</th>
-              <th>Anlık RSI</th>
+              <th>TF</th>
+              <th>RSI Per.</th>
+              <th>RSI</th>
               <th>Min (≤)</th>
               <th>Max (≥)</th>
               <th>Sıra</th>
@@ -429,28 +448,26 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v3';
-    const INTERVAL = '30m';
-    const RSI_PERIOD = 8;
+    const STORAGE_KEY = 'codemso_multi_terminal_v4';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [[], [], [], []];
 
     // 4 Ana Analiz Kartı Konfigürasyonu
     let coinsConfig = [
-      { symbol: 'ASTERUSDT', buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
-      { symbol: 'BTCUSDT',   buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0 },
-      { symbol: 'ETHUSDT',   buyRsi: 25, sellRsi: 75, profitTarget: 2.5, monthlyCap: 3.0 },
-      { symbol: 'SOLUSDT',   buyRsi: 22, sellRsi: 80, profitTarget: 3.0, monthlyCap: 3.0 }
+      { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
+      { symbol: 'BTCUSDT',   interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0 },
+      { symbol: 'ETHUSDT',   interval: '30m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 2.5, monthlyCap: 3.0 },
+      { symbol: 'SOLUSDT',   interval: '30m', rsiLength: 8,  buyRsi: 22, sellRsi: 80, profitTarget: 3.0, monthlyCap: 3.0 }
     ];
 
-    // Sağ Taraf İzleme Listesi ve Alarmları
+    // Sağ Taraf İzleme Listesi (Özel TF ve RSI Periyodu ile)
     let radarWatchlist = [
-      { symbol: 'PEPEUSDT', buyAlarm: 20, sellAlarm: 80, currentRsi: null },
-      { symbol: 'AVAXUSDT', buyAlarm: 22, sellAlarm: 80, currentRsi: null },
-      { symbol: 'DOGEUSDT', buyAlarm: 20, sellAlarm: 85, currentRsi: null },
-      { symbol: 'NEARUSDT', buyAlarm: 22, sellAlarm: 78, currentRsi: null },
-      { symbol: 'LINKUSDT', buyAlarm: 25, sellAlarm: 75, currentRsi: null }
+      { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8,  buyAlarm: 20, sellAlarm: 85, currentRsi: null },
+      { symbol: 'DOGEUSDT',  interval: '15m', rsiLength: 10, buyAlarm: 20, sellAlarm: 85, currentRsi: null },
+      { symbol: 'PEPEUSDT',  interval: '5m',  rsiLength: 8,  buyAlarm: 20, sellAlarm: 80, currentRsi: null },
+      { symbol: 'AVAXUSDT',  interval: '30m', rsiLength: 10, buyAlarm: 22, sellAlarm: 80, currentRsi: null },
+      { symbol: 'NEARUSDT',  interval: '1h',  rsiLength: 14, buyAlarm: 25, sellAlarm: 75, currentRsi: null }
     ];
 
     function formatNum(val, dec = 2) {
@@ -469,7 +486,7 @@
       document.getElementById('theme-btn').innerText = isLight ? '🌙 Gece Modu' : '☀️ Gündüz Modu';
     }
 
-    // WEBAUDIO API SESLI UYARI MOTORU (BİP SESİ)
+    // BİP SESİ SİMÜLASYONU
     function playBeepSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -478,10 +495,10 @@
         osc.connect(gain);
         gain.connect(audioCtx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // 880 Hz Ses
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
         gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.3);
+        osc.stop(audioCtx.currentTime + 0.25);
       } catch(e) {}
     }
 
@@ -528,7 +545,7 @@
 
             <div class="price-row">
               <span class="price" id="price-${i}">--.--</span>
-              <span style="font-size:0.62rem; color:var(--text-muted)">30m | RSI(8)</span>
+              <span style="font-size:0.6rem; color:var(--text-muted)" id="tf-label-${i}">${coin.interval} | RSI(${coin.rsiLength})</span>
             </div>
 
             <div class="grid-2">
@@ -543,7 +560,7 @@
             </div>
 
             <div class="position-box">
-              <div style="display: flex; justify-content: space-between; font-size: 0.65rem;">
+              <div style="display: flex; justify-content: space-between; font-size: 0.62rem;">
                 <span>Giriş: <b id="entry-${i}">-</b></span>
                 <span>Canlı PnL: <b id="live-pnl-${i}">0,00%</b></span>
                 <span>Hedef: <b id="target-${i}" class="green">-</b></span>
@@ -551,6 +568,20 @@
             </div>
 
             <div class="coin-settings-box">
+              <div class="coin-setting-item">
+                <label>TF:</label>
+                <select id="setting-interval-${i}" onchange="updateCoinSetting(${i})">
+                  <option value="5m" ${coin.interval==='5m'?'selected':''}>5m</option>
+                  <option value="15m" ${coin.interval==='15m'?'selected':''}>15m</option>
+                  <option value="30m" ${coin.interval==='30m'?'selected':''}>30m</option>
+                  <option value="1h" ${coin.interval==='1h'?'selected':''}>1h</option>
+                  <option value="4h" ${coin.interval==='4h'?'selected':''}>4h</option>
+                </select>
+              </div>
+              <div class="coin-setting-item">
+                <label>RSI Per.:</label>
+                <input type="number" id="setting-rsiLength-${i}" value="${coin.rsiLength}" onchange="updateCoinSetting(${i})">
+              </div>
               <div class="coin-setting-item">
                 <label>RSI Al:</label>
                 <input type="number" id="setting-buyRsi-${i}" value="${coin.buyRsi}" onchange="updateCoinSetting(${i})">
@@ -620,9 +651,20 @@
         tr.className = alertClass;
         tr.innerHTML = `
           <td style="text-align: left;"><b>${item.symbol.replace('USDT', '')}</b></td>
+          <td>
+            <select class="select-mini" onchange="updateRadarItem(${index}, 'interval', this.value)">
+              <option value="5m" ${item.interval==='5m'?'selected':''}>5m</option>
+              <option value="15m" ${item.interval==='15m'?'selected':''}>15m</option>
+              <option value="30m" ${item.interval==='30m'?'selected':''}>30m</option>
+              <option value="1h" ${item.interval==='1h'?'selected':''}>1h</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" class="alarm-input" value="${item.rsiLength}" onchange="updateRadarItem(${index}, 'rsiLength', this.value)">
+          </td>
           <td class="${rsiClass}"><b>${rsiDisplay}</b></td>
-          <td><input type="number" class="alarm-input" value="${item.buyAlarm}" onchange="updateRadarAlarm(${index}, 'buyAlarm', this.value)"></td>
-          <td><input type="number" class="alarm-input" value="${item.sellAlarm}" onchange="updateRadarAlarm(${index}, 'sellAlarm', this.value)"></td>
+          <td><input type="number" class="alarm-input" value="${item.buyAlarm}" onchange="updateRadarItem(${index}, 'buyAlarm', this.value)"></td>
+          <td><input type="number" class="alarm-input" value="${item.sellAlarm}" onchange="updateRadarItem(${index}, 'sellAlarm', this.value)"></td>
           <td>
             <button class="action-btn" onclick="moveRadarCoin(${index}, -1)">▲</button>
             <button class="action-btn" onclick="moveRadarCoin(${index}, 1)">▼</button>
@@ -636,11 +678,22 @@
     // RADAR İŞLEMLERİ: COIN EKLE / SİL / TAŞI
     function addRadarCoin() {
       const input = document.getElementById('new-radar-coin');
+      const tfSelect = document.getElementById('new-radar-tf');
+      const lenInput = document.getElementById('new-radar-len');
+
       let val = input.value.toUpperCase().trim();
       if (!val) return;
       if (!val.endsWith('USDT')) val += 'USDT';
 
-      radarWatchlist.push({ symbol: val, buyAlarm: 20, sellAlarm: 80, currentRsi: null });
+      radarWatchlist.push({
+        symbol: val,
+        interval: tfSelect.value || '30m',
+        rsiLength: parseInt(lenInput.value) || 8,
+        buyAlarm: 20,
+        sellAlarm: 85,
+        currentRsi: null
+      });
+
       input.value = '';
       saveConfig();
       renderRadarHTML();
@@ -665,22 +718,30 @@
       renderRadarHTML();
     }
 
-    function updateRadarAlarm(index, field, value) {
-      radarWatchlist[index][field] = parseFloat(value) || 0;
+    function updateRadarItem(index, field, value) {
+      if (field === 'rsiLength' || field === 'buyAlarm' || field === 'sellAlarm') {
+        radarWatchlist[index][field] = parseFloat(value) || 0;
+      } else {
+        radarWatchlist[index][field] = value;
+      }
       saveConfig();
+      fetchRadarRSIAll();
     }
 
-    // CANLI SAĞ RADAR RSI HESAPLAMA MOTORU
+    // CANLI SAĞ RADAR RSI HESAPLAMA MOTORU (ÖZEL TF & RSI UZUNLUĞU İLE)
     async function fetchRadarRSIAll() {
       let alarmTriggeredAny = false;
 
       for (let item of radarWatchlist) {
         try {
-          const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${item.symbol}&interval=${INTERVAL}&limit=30`);
+          // Her coin için tanımlanan özel zaman dilimi (interval) ile 50 mum verisi çekiliyor
+          const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${item.symbol}&interval=${item.interval}&limit=50`);
           if (res.ok) {
             const data = await res.json();
             const closePrices = data.map(c => parseFloat(c[4]));
-            const rsiVals = calculateRSIHistory(closePrices, RSI_PERIOD);
+            
+            // Her coin için tanımlanan özel RSI uzunluğu (rsiLength) ile RSI hesaplanıyor
+            const rsiVals = calculateRSIHistory(closePrices, item.rsiLength);
             const currentRSI = rsiVals[rsiVals.length - 1];
 
             item.currentRsi = currentRSI;
@@ -709,11 +770,15 @@
 
       coinsConfig[slotIndex] = {
         symbol: sym,
+        interval: document.getElementById(`setting-interval-${slotIndex}`).value || '30m',
+        rsiLength: parseInt(document.getElementById(`setting-rsiLength-${slotIndex}`).value) || 8,
         buyRsi: parseFloat(document.getElementById(`setting-buyRsi-${slotIndex}`).value) || 20,
         sellRsi: parseFloat(document.getElementById(`setting-sellRsi-${slotIndex}`).value) || 85,
         profitTarget: parseFloat(document.getElementById(`setting-profitTarget-${slotIndex}`).value) || 4.0,
         monthlyCap: parseFloat(document.getElementById(`setting-monthlyCap-${slotIndex}`).value) || 2.5
       };
+
+      document.getElementById(`tf-label-${slotIndex}`).innerText = `${coinsConfig[slotIndex].interval} | RSI(${coinsConfig[slotIndex].rsiLength})`;
 
       saveConfig();
       loadCoinData(slotIndex);
@@ -728,7 +793,7 @@
       }
     }
 
-    // RSI FORMÜLÜ (WILDER'S)
+    // RSI FORMÜLÜ (WILDER'S DİNAMİK PERİYOD)
     function calculateRSIHistory(prices, period = 8) {
       if (prices.length <= period) return [];
       let gains = 0, losses = 0;
@@ -771,7 +836,7 @@
       let startTime = yearStart;
 
       while (startTime < yearEnd) {
-        const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${INTERVAL}&limit=1000&startTime=${startTime}`;
+        const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000&startTime=${startTime}`;
         try {
           const res = await fetch(url);
           if (res.ok) {
@@ -810,7 +875,7 @@
       }
 
       const closePrices = candles.map(c => c.close);
-      const rsiValues = calculateRSIHistory(closePrices, RSI_PERIOD);
+      const rsiValues = calculateRSIHistory(closePrices, coin.rsiLength);
 
       let inPosition = false;
       let entryPrice = 0;
@@ -818,7 +883,7 @@
       const trades = [];
       const monthlyStats = {};
 
-      for (let i = RSI_PERIOD + 1; i < candles.length; i++) {
+      for (let i = coin.rsiLength + 1; i < candles.length; i++) {
         const c = candles[i];
         const rsiVal = rsiValues[i];
         const prevRsiVal = rsiValues[i - 1];
@@ -909,12 +974,10 @@
       // AYLIK TABLO DOLDUR
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
       mTable.innerHTML = '';
-      let totT = 0, totW = 0, totL = 0, totPnl = 0;
 
       Object.keys(monthlyStats).sort().reverse().forEach(mKey => {
         const m = monthlyStats[mKey];
         if (m.trades === 0) return;
-        totT += m.trades; totW += m.win; totL += m.loss; totPnl += m.pnl;
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -942,14 +1005,14 @@
       });
     }
 
-    // İLK BAŞLANGIÇ
+    // BAŞLANGIÇ
     loadSavedConfig();
     for (let i = 0; i < 4; i++) {
       loadCoinData(i);
     }
     fetchRadarRSIAll();
 
-    // DÖNGÜLER: 5s Analiz Kartları Fiyatı, 10s Sağ Radar RSI Taraması
+    // DÖNGÜLER: 1 SANİYELİK CANLI TAZELEME (1000ms)
     setInterval(() => {
       coinsConfig.forEach((coin, slotIndex) => {
         if (candlesData[slotIndex] && candlesData[slotIndex].length > 0 && SELECTED_YEAR === '2026') {
@@ -963,9 +1026,10 @@
             }).catch(e => console.warn(e));
         }
       });
-    }, 5000);
+    }, 1000);
 
-    setInterval(fetchRadarRSIAll, 10000);
+    // Sağ Radar için 1 Saniyede Bir Anlık RSI Taraması
+    setInterval(fetchRadarRSIAll, 1000);
   </script>
 </body>
 </html>
