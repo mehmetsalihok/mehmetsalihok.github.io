@@ -38,8 +38,8 @@
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
-      padding: 12px;
-      font-size: 0.78rem;
+      padding: 10px;
+      font-size: 0.76rem;
       transition: background-color 0.2s, color 0.2s;
     }
 
@@ -53,7 +53,7 @@
     .card {
       background-color: var(--card-bg);
       border-radius: 10px;
-      padding: 12px;
+      padding: 10px 12px;
       border: 1px solid var(--border-color);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
@@ -62,113 +62,114 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .badge {
       display: inline-block;
-      padding: 2px 8px;
-      border-radius: 12px;
+      padding: 2px 6px;
+      border-radius: 10px;
       background-color: var(--badge-bg);
       color: var(--badge-text);
-      font-size: 0.7rem;
+      font-size: 0.65rem; /* Küçültüldü */
       font-weight: 700;
+      letter-spacing: 0.2px;
     }
 
     .theme-btn {
       background: transparent;
       border: 1px solid var(--border-color);
       color: var(--text-color);
-      padding: 2px 8px;
+      padding: 2px 6px;
       border-radius: 6px;
       cursor: pointer;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 600;
     }
 
     /* DİNAMİK AYARLAR PANOSU */
     .settings-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 8px;
-      margin-top: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 6px;
+      margin-top: 4px;
     }
 
     .setting-item {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
     }
 
     .setting-item label {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: var(--text-muted);
       font-weight: 600;
     }
 
     .setting-item input {
-      padding: 4px 6px;
+      padding: 3px 6px;
       border: 1px solid var(--border-color);
       border-radius: 5px;
       background-color: var(--input-bg);
       color: var(--text-color);
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       width: 100%;
     }
 
     .symbol {
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       font-weight: 800;
       margin-bottom: 2px;
     }
 
     .price {
-      font-size: 1.4rem;
+      font-size: 1.3rem;
       font-weight: 800;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
+      gap: 6px;
+      margin-bottom: 6px;
     }
 
     .stat-box {
       background-color: var(--box-bg);
-      padding: 8px;
-      border-radius: 8px;
+      padding: 6px 8px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
       text-align: center;
     }
 
     .stat-label {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: var(--text-muted);
       display: block;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
       font-weight: 600;
     }
 
     .stat-value {
-      font-size: 1.1rem;
+      font-size: 1rem;
       font-weight: 800;
     }
 
     .position-box {
       background-color: var(--box-bg);
-      padding: 10px;
-      border-radius: 8px;
+      padding: 8px 10px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .table-title {
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -178,19 +179,19 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       text-align: left;
     }
 
     th, td {
-      padding: 4px 6px;
+      padding: 3px 5px;
       border-bottom: 1px solid var(--border-color);
     }
 
     th {
       color: var(--text-muted);
       font-weight: 700;
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
     }
 
@@ -203,15 +204,15 @@
     .neutral { color: #eab308; }
 
     .loader {
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       color: #0284c7;
       font-weight: 600;
     }
 
     .update-time {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: var(--text-muted);
-      margin-top: 6px;
+      margin-top: 4px;
     }
   </style>
 </head>
@@ -269,7 +270,7 @@
 
       <!-- CANLI POZİSYON DETAYI -->
       <div class="position-box" id="pos-detail-box">
-        <div style="font-size: 0.75rem; font-weight: 700; margin-bottom: 4px;">Anlık Pozisyon Bilgisi</div>
+        <div style="font-size: 0.7rem; font-weight: 700; margin-bottom: 2px;">Anlık Pozisyon Bilgisi</div>
         <div style="display: flex; justify-content: space-between;">
           <span>Giriş Fiyatı: <b id="entry-price">-</b></span>
           <span>Canlı PnL: <b id="live-pnl">0,00%</b></span>
@@ -330,11 +331,12 @@
     const SYMBOL = 'ASTERUSDT';
     const INTERVAL = '30m';
     const RSI_PERIOD = 8;
+    const STORAGE_KEY = 'codemso_aster_settings';
 
     // Global Hafıza
     let yearlyCandles = [];
     
-    // Dinamik Ayar Değişkenleri (Stop Loss ve Aylık Zarar Kilitleri Kaldırıldı)
+    // Dinamik Ayar Değişkenleri
     let BUY_RSI = 20;
     let SELL_RSI = 85;
     let PROFIT_TARGET = 4.0;
@@ -345,11 +347,43 @@
       return Number(val).toFixed(dec).replace('.', ',');
     }
 
+    // KAYITLI AYARLARI LOCALSTORAGE'DAN YÜKLE
+    function loadSavedSettings() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const s = JSON.parse(saved);
+          if (s.buyRsi !== undefined) document.getElementById('input-buy-rsi').value = s.buyRsi;
+          if (s.sellRsi !== undefined) document.getElementById('input-sell-rsi').value = s.sellRsi;
+          if (s.profitTarget !== undefined) document.getElementById('input-profit-target').value = s.profitTarget;
+          if (s.monthlyCap !== undefined) document.getElementById('input-monthly-cap').value = s.monthlyCap;
+        } catch(e) {
+          console.warn('Ayar okuma hatası:', e);
+        }
+      }
+
+      // Değişkenleri güncelle
+      BUY_RSI = parseFloat(document.getElementById('input-buy-rsi').value) || 20;
+      SELL_RSI = parseFloat(document.getElementById('input-sell-rsi').value) || 85;
+      PROFIT_TARGET = parseFloat(document.getElementById('input-profit-target').value) || 4.0;
+      MONTHLY_CAP = parseFloat(document.getElementById('input-monthly-cap').value) || 2.5;
+    }
+
+    // AYARLARI KAYDET VE SİMÜLASYONU YENİDEN ÇALIŞTIR
     function applySettings() {
       BUY_RSI = parseFloat(document.getElementById('input-buy-rsi').value) || 20;
       SELL_RSI = parseFloat(document.getElementById('input-sell-rsi').value) || 85;
       PROFIT_TARGET = parseFloat(document.getElementById('input-profit-target').value) || 4.0;
       MONTHLY_CAP = parseFloat(document.getElementById('input-monthly-cap').value) || 2.5;
+
+      // LocalStorage'a Kaydet
+      const settingsToSave = {
+        buyRsi: BUY_RSI,
+        sellRsi: SELL_RSI,
+        profitTarget: PROFIT_TARGET,
+        monthlyCap: MONTHLY_CAP
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(settingsToSave));
 
       if (yearlyCandles.length > 0) {
         runBacktestSimulation();
@@ -393,10 +427,10 @@
       return rsiHistory;
     }
 
-    // SADECE 2026 YILI VERİLERİNİ ÇEKME MOTORU
+    // 2026 YILI VERİ ÇEKME MOTORU
     async function load2026Data() {
       const loaderEl = document.getElementById('loading-status');
-      loaderEl.innerText = '2026 Yılı Verileri Çekiliyor...';
+      loaderEl.innerText = '2026 Verileri Yükleniyor...';
 
       const year2026Start = new Date('2026-01-01T00:00:00Z').getTime();
       let allCandles = [];
@@ -437,7 +471,7 @@
       runBacktestSimulation();
     }
 
-    // SIMÜLASYON MOTORU (STOP LOSS'SUZ)
+    // SIMÜLASYON MOTORU
     function runBacktestSimulation() {
       if (!yearlyCandles || yearlyCandles.length === 0) return;
 
@@ -465,7 +499,7 @@
 
         const mStat = monthlyStats[monthKey];
 
-        // 1. AL SİNYALİ (Aylık kâr hedefine ulaşıldıysa yeni işlem açılmaz)
+        // 1. AL SİNYALİ
         if (!inPosition && !mStat.capReached) {
           if (prevRsiVal <= BUY_RSI && rsiVal > BUY_RSI) {
             inPosition = true;
@@ -474,7 +508,7 @@
           }
         }
 
-        // 2. SAT SİNYALİ (Sadece Kâr Hedefi veya RSI Sat)
+        // 2. SAT SİNYALİ
         else if (inPosition) {
           const targetPrice = entryPrice * (1 + PROFIT_TARGET / 100);
 
@@ -483,14 +517,14 @@
           let pnl = 0;
           let reason = '';
 
-          // A) Kar Hedefi (%4 veya belirlenen oran)
+          // A) Kar Hedefi
           if (c.high >= targetPrice) {
             exited = true;
             exitPrice = targetPrice;
             pnl = PROFIT_TARGET;
             reason = `Kâr Hedefi (%${PROFIT_TARGET})`;
           }
-          // B) RSI Sat Limiti (85)
+          // B) RSI Sat Limiti
           else if (rsiVal >= SELL_RSI) {
             exited = true;
             exitPrice = c.close;
@@ -516,7 +550,6 @@
             else curM.loss++;
             curM.pnl += pnl;
 
-            // Aylık Kâr Hedef Kilit Kontrolü
             if (curM.pnl >= MONTHLY_CAP) curM.capReached = true;
           }
         }
@@ -579,7 +612,7 @@
           <td>${m.trades}</td>
           <td class="green">${m.win}</td>
           <td class="red">${m.loss}</td>
-          <td><span style="font-size:0.65rem;">${statusText}</span></td>
+          <td><span style="font-size:0.62rem;">${statusText}</span></td>
           <td class="${pnlClass}"><b>${m.pnl >= 0 ? '+' : ''}${formatNum(m.pnl, 2)}%</b></td>
         `;
         mTableBody.appendChild(tr);
@@ -598,7 +631,7 @@
       `;
       mTableBody.appendChild(totalTr);
 
-      // İŞLEM LOG TABLOSU (Son 12 İşlem)
+      // İŞLEM LOG TABLOSU
       const logBody = document.getElementById('trades-log-body');
       logBody.innerHTML = '';
 
@@ -629,7 +662,8 @@
       btn.innerText = document.body.classList.contains('dark-mode') ? '☀️ Gündüz Modu' : '🌙 Gece Modu';
     }
 
-    // İlk Yükleme
+    // Başlangıç: Önce kayıtlı ayarları yükle, sonra 2026 verilerini çek
+    loadSavedSettings();
     load2026Data();
 
     // 5 Saniyede Bir Anlık Fiyat Güncelleme
