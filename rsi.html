@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ASTR/USDT 30m RSI(8) Takip</title>
+  <!-- Technical Indicators Kütüphanesi -->
+  <script src="https://cdn.jsdelivr.net/npm/technicalindicators@3.1.0/dist/browser.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0f172a;
+      color: #f8fafc;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .card {
+      background-color: #1e293b;
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      border: 1px solid #334155;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background-color: #334155;
+      color: #38bdf8;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+    .symbol {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+    .price {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #f8fafc;
+      margin-bottom: 24px;
+    }
+    .rsi-container {
+      background-color: #0f172a;
+      padding: 16px;
+      border-radius: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #1e293b;
+    }
+    .rsi-title {
+      font-size: 1rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+    .rsi-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+    }
+    .status-text {
+      margin-top: 15px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    /* RSI Renk Sınıfları */
+    .overbought { color: #ef4444; } /* RSI >= 70 (Aşırı Alım) */
+    .oversold { color: #22c55e; }   /* RSI <= 30 (Aşırı Satım) */
+    .neutral { color: #eab308; }    /* Normal Aralık */
+    .update-time {
+      margin-top: 20px;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="badge"> Zaman Dilimi: 30m | RSI Periyodu: 8</div>
+    <div class="symbol">ASTR / USDT</div>
+    <div class="price" id="price">Yükleniyor...</div>
+    
+    <div class="rsi-container">
+      <span class="rsi-title">RSI (8)</span>
+      <span class="rsi-value neutral" id="rsi">-</span>
+    </div>
+    
+    <div class="status-text neutral" id="status">Veri çekiliyor...</div>
+    <div class="update-time" id="last-update"></div>
+  </div>
+
+  <script>
+    const SYMBOL = 'ASTRUSDT';
+    const INTERVAL = '30m'; // 30 Dakikalık Mumlar
+    const RSI_PERIOD = 8;    // 8 Periyotluk RSI
+
+    async function fetchAstrRSI() {
+      try {
+        // Binance API: Son 50 adet 30 dakikalık mumu çekiyoruz
+        const response = await fetch(`https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=50`);
+        const data = await response.json();
+        
+        // Kapanış fiyatlarını sayısal değerlere dönüştür
+        const closePrices = data.map(candle => parseFloat(candle[4]));
+        const currentPrice = closePrices[closePrices.length - 1];
+
+        // 8 Periyotluk RSI Hesaplama
+        const rsiValues = TechnicalIndicators.RSI.calculate({
+          values: closePrices,
+          period: RSI_PERIOD
+        });
+        
+        const currentRSI = rsiValues[rsiValues.length - 1].toFixed(1);
+
+        // UI Güncelleme
+        document.getElementById('price').innerText = `$${currentPrice.toFixed(4)}`;
+        
+        const rsiElement = document.getElementById('rsi');
+        const statusElement = document.getElementById('status');
+        rsiElement.innerText = currentRSI;
+
+        // RSI Durum Kontrolü
+        rsiElement.className = 'rsi-value ';
+        statusElement.className = 'status-text ';
+
+        if (currentRSI >= 70) {
+          rsiElement.classList.add('overbought');
+          statusElement.classList.add('overbought');
+          statusElement.innerText = '⚠️ Aşırı Alım Bölgesinde (RSI ≥ 70)';
+        } else if (currentRSI <= 30) {
+          rsiElement.classList.add('oversold');
+          statusElement.classList.add('oversold');
+          statusElement.innerText = '🟢 Aşırı Satım Bölgesinde (RSI ≤ 30)';
+        } else {
+          rsiElement.classList.add('neutral');
+          statusElement.classList.add('neutral');
+          statusElement.innerText = 'Nötr Bölge (30 - 70 Arası)';
+        }
+
+        // Son Güncelleme Zamanı
+        const now = new Date();
+        document.getElementById('last-update').innerText = `Son Güncelleme: ${now.toLocaleTimeString('tr-TR')}`;
+
+      } catch (error) {
+        console.error('Veri çekme hatası:', error);
+        document.getElementById('status').innerText = 'Veri alınırken hata oluştu!';
+      }
+    }
+
+    // Sayfa açıldığında çalıştır
+    fetchAstrRSI();
+
+    // Her 15 saniyede bir fiyat ve RSI değerini tazele
+    setInterval(fetchAstrRSI, 15000);
+  </script>
+</body>
+</html>
