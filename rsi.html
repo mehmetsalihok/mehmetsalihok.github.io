@@ -146,7 +146,6 @@
       100% { transform: rotate(360deg); }
     }
 
-    /* KONTROL PANELI LAYOUT */
     .container {
       display: flex;
       flex-direction: column;
@@ -523,7 +522,7 @@
     </div>
   </div>
 
-  <!-- ANA TERMINAL (GİRİŞ YAPILINCA AÇILIR) -->
+  <!-- ANA TERMINAL -->
   <div class="container" id="main-app" style="display: none;">
     
     <div class="header-card">
@@ -544,7 +543,7 @@
     </div>
 
     <div class="main-layout">
-      <!-- ANALİZ KARTLARI IZGARASI (DİNAMİK) -->
+      <!-- ANALİZ KARTLARI IZGARASI -->
       <div class="dashboard-grid" id="grid-container"></div>
 
       <!-- SAĞ SIDEBAR RADAR -->
@@ -588,12 +587,11 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v6';
+    const STORAGE_KEY = 'codemso_multi_terminal_v7';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
 
-    // Varsayılan Başlangıç Kartları (Kullanıcı dilediği kadar ekleyip silebilir - Max 8)
     let coinsConfig = [
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
       { symbol: 'BTCUSDT',   interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0 }
@@ -682,7 +680,6 @@
       }));
     }
 
-    // DİNAMİK KART EKLEME / SİLME İŞLEMLERİ
     function addNewCard() {
       if (coinsConfig.length >= 8) {
         alert('Maksimum 8 adet analiz kartı ekleyebilirsiniz!');
@@ -715,20 +712,16 @@
 
       saveConfig();
       renderCardsHTML();
-      for (let i = 0; i < coinsConfig.length; i++) {
-        loadCoinData(i);
-      }
     }
 
     function renderCardsHTML() {
       const grid = document.getElementById('grid-container');
       grid.innerHTML = '';
 
-      // Buton Durumu Güncelle
       const addBtn = document.getElementById('btn-add-card');
       const countLabel = document.getElementById('card-count-label');
-      countLabel.innerText = coinsConfig.length;
-      addBtn.disabled = coinsConfig.length >= 8;
+      if (countLabel) countLabel.innerText = coinsConfig.length;
+      if (addBtn) addBtn.disabled = coinsConfig.length >= 8;
 
       coinsConfig.forEach((coin, i) => {
         const cardHTML = `
@@ -823,6 +816,16 @@
         `;
         grid.innerHTML += cardHTML;
       });
+
+      // HTML BASTIKTAN SONRA MEVCUT YÜKLÜ KARTLARI ANINDA TAZELE
+      for (let i = 0; i < coinsConfig.length; i++) {
+        if (candlesData[i] && candlesData[i].length > 0) {
+          document.getElementById(`loader-${i}`).innerText = '🟢 Canlı';
+          runBacktestAndRender(i);
+        } else {
+          loadCoinData(i);
+        }
+      }
     }
 
     function renderRadarHTML() {
@@ -973,6 +976,7 @@
 
       document.getElementById(`tf-label-${slotIndex}`).innerText = `${coinsConfig[slotIndex].interval} | RSI(${coinsConfig[slotIndex].rsiLength})`;
 
+      candlesData[slotIndex] = []; // Eski coine ait veriyi temizle
       saveConfig();
       loadCoinData(slotIndex);
     }
@@ -980,10 +984,8 @@
     function changeGlobalYear() {
       SELECTED_YEAR = document.getElementById('global-year').value;
       saveConfig();
+      candlesData = [];
       renderCardsHTML();
-      for (let i = 0; i < coinsConfig.length; i++) {
-        loadCoinData(i);
-      }
     }
 
     function calculateRSIHistory(prices, period = 8) {
@@ -1163,57 +1165,56 @@
         targetEl.innerText = '-';
       }
 
-      // AYLIK TABLO DOLDUR VE TOPLAM SATIRI
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
-      mTable.innerHTML = '';
-      let totT = 0, totW = 0, totL = 0, totPnl = 0;
+      if (mTable) {
+        mTable.innerHTML = '';
+        let totT = 0, totW = 0, totL = 0, totPnl = 0;
 
-      Object.keys(monthlyStats).sort().reverse().forEach(mKey => {
-        const m = monthlyStats[mKey];
-        if (m.trades === 0) return;
-        totT += m.trades; totW += m.win; totL += m.loss; totPnl += m.pnl;
+        Object.keys(monthlyStats).sort().reverse().forEach(mKey => {
+          const m = monthlyStats[mKey];
+          if (m.trades === 0) return;
+          totT += m.trades; totW += m.win; totL += m.loss; totPnl += m.pnl;
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><b>${mKey}</b></td>
-          <td>${m.trades}</td>
-          <td class="green">${m.win}</td>
-          <td class="red">${m.loss}</td>
-          <td class="${m.pnl >= 0 ? 'green':'red'}"><b>${m.pnl >= 0 ? '+':''}${formatNum(m.pnl, 2)}%</b></td>
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td><b>${mKey}</b></td>
+            <td>${m.trades}</td>
+            <td class="green">${m.win}</td>
+            <td class="red">${m.loss}</td>
+            <td class="${m.pnl >= 0 ? 'green':'red'}"><b>${m.pnl >= 0 ? '+':''}${formatNum(m.pnl, 2)}%</b></td>
+          `;
+          mTable.appendChild(tr);
+        });
+
+        const totalTr = document.createElement('tr');
+        totalTr.innerHTML = `
+          <td><b>TOPLAM</b></td>
+          <td><b>${totT}</b></td>
+          <td class="green"><b>${totW}</b></td>
+          <td class="red"><b>${totL}</b></td>
+          <td class="${totPnl >= 0 ? 'green':'red'}"><b>${totPnl >= 0 ? '+':''}${formatNum(totPnl, 2)}%</b></td>
         `;
-        mTable.appendChild(tr);
-      });
-
-      // EN ALTA TOPLAM KÂR SATIRI
-      const totalTr = document.createElement('tr');
-      totalTr.innerHTML = `
-        <td><b>TOPLAM</b></td>
-        <td><b>${totT}</b></td>
-        <td class="green"><b>${totW}</b></td>
-        <td class="red"><b>${totL}</b></td>
-        <td class="${totPnl >= 0 ? 'green':'red'}"><b>${totPnl >= 0 ? '+':''}${formatNum(totPnl, 2)}%</b></td>
-      `;
-      mTable.appendChild(totalTr);
+        mTable.appendChild(totalTr);
+      }
 
       const tTable = document.getElementById(`table-trades-${slotIndex}`);
-      tTable.innerHTML = '';
-      trades.slice(-5).reverse().forEach(t => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>$${t.entryPrice.toFixed(3)}</td>
-          <td>$${t.exitPrice.toFixed(3)}</td>
-          <td class="${t.pnl >= 0 ? 'green':'red'}"><b>${t.pnl >= 0 ? '+':''}${formatNum(t.pnl, 2)}%</b></td>
-          <td>${t.reason}</td>
-        `;
-        tTable.appendChild(tr);
-      });
+      if (tTable) {
+        tTable.innerHTML = '';
+        trades.slice(-5).reverse().forEach(t => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>$${t.entryPrice.toFixed(3)}</td>
+            <td>$${t.exitPrice.toFixed(3)}</td>
+            <td class="${t.pnl >= 0 ? 'green':'red'}"><b>${t.pnl >= 0 ? '+':''}${formatNum(t.pnl, 2)}%</b></td>
+            <td>${t.reason}</td>
+          `;
+          tTable.appendChild(tr);
+        });
+      }
     }
 
     function initApp() {
       loadSavedConfig();
-      for (let i = 0; i < coinsConfig.length; i++) {
-        loadCoinData(i);
-      }
       fetchRadarRSIAll();
 
       setInterval(() => {
