@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASTER RSI CODEMSO - 1 Yıllık Canlı Panel & Ayarlar</title>
+  <title>ASTER RSI CODEMSO - 2026 Canlı Panel</title>
   <style>
     :root {
       --bg-color: #f8fafc;
@@ -38,7 +38,7 @@
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
-      padding: 12px; /* Sol/üst sıfıra yakın küçük alan */
+      padding: 12px;
       font-size: 0.78rem;
       transition: background-color 0.2s, color 0.2s;
     }
@@ -91,7 +91,7 @@
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
       gap: 8px;
-      margin-top: 8px;
+      margin-top: 6px;
     }
 
     .setting-item {
@@ -183,7 +183,7 @@
     }
 
     th, td {
-      padding: 4px 6px; /* Daraltılmış kompakt yükseklik */
+      padding: 4px 6px;
       border-bottom: 1px solid var(--border-color);
     }
 
@@ -222,7 +222,7 @@
     <!-- DİNAMİK AYARLAR PANOSU -->
     <div class="card">
       <div class="header-bar">
-        <div class="badge">⚙️ STRATEJİ VE RİSK AYARLARI</div>
+        <div class="badge">⚙️ STRATEJİ AYARLARI (2026)</div>
         <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙 Gece Modu</button>
       </div>
 
@@ -240,16 +240,8 @@
           <input type="number" id="input-profit-target" value="4.0" step="0.1" onchange="applySettings()">
         </div>
         <div class="setting-item">
-          <label>Stop Loss (%):</label>
-          <input type="number" id="input-stop-loss" value="4.0" step="0.1" onchange="applySettings()">
-        </div>
-        <div class="setting-item">
           <label>Aylık Net Kâr Kilidi (%):</label>
           <input type="number" id="input-monthly-cap" value="2.5" step="0.5" onchange="applySettings()">
-        </div>
-        <div class="setting-item">
-          <label>Aylık Max Zarar Kilidi (%):</label>
-          <input type="number" id="input-monthly-loss" value="5.0" step="0.5" onchange="applySettings()">
         </div>
       </div>
     </div>
@@ -258,7 +250,7 @@
     <div class="card">
       <div class="header-bar">
         <div class="badge">ASTER / USDT - 30m (CODEMSO)</div>
-        <div id="loading-status" class="loader">1 Yıllık Veri Yükleniyor...</div>
+        <div id="loading-status" class="loader">2026 Verileri Yükleniyor...</div>
       </div>
 
       <div class="symbol">ASTER / USDT</div>
@@ -283,23 +275,22 @@
           <span>Canlı PnL: <b id="live-pnl">0,00%</b></span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-top: 2px;">
-          <span>Hedef: <b id="target-price" class="green">-</b></span>
-          <span>Stop: <b id="stop-price" class="red">-</b></span>
+          <span>Hedef Kâr: <b id="target-price" class="green">-</b></span>
         </div>
       </div>
 
       <div class="update-time" id="last-update"></div>
     </div>
 
-    <!-- YILLIK/AYLIK OTOMATİK PERFORMANS TABLOSU -->
+    <!-- 2026 PERFORMANS TABLOSU -->
     <div class="card">
       <div class="table-title">
-        <span>📅 1 Yıllık Performans Tablosu (Aylık Bazda)</span>
+        <span>📅 2026 Yılı Performans Tablosu (Aylık Bazda)</span>
       </div>
       <table>
         <thead>
           <tr>
-            <th>Ay / Yıl</th>
+            <th>Ay</th>
             <th>İşlem</th>
             <th>Win</th>
             <th>Loss</th>
@@ -315,7 +306,7 @@
 
     <!-- SON İŞLEMLER LOGI -->
     <div class="card">
-      <div class="table-title">📜 Son Gerçekleşen Otomatik İşlemler</div>
+      <div class="table-title">📜 Son Gerçekleşen İşlemler (2026)</div>
       <table>
         <thead>
           <tr>
@@ -343,27 +334,22 @@
     // Global Hafıza
     let yearlyCandles = [];
     
-    // Dinamik Ayar Değişkenleri
+    // Dinamik Ayar Değişkenleri (Stop Loss ve Aylık Zarar Kilitleri Kaldırıldı)
     let BUY_RSI = 20;
     let SELL_RSI = 85;
     let PROFIT_TARGET = 4.0;
-    let STOP_LOSS_TARGET = 4.0;
     let MONTHLY_CAP = 2.5;
-    let MONTHLY_LOSS_CAP = 5.0;
 
     function formatNum(val, dec = 2) {
       if (val === null || val === undefined || isNaN(val)) return '--,--';
       return Number(val).toFixed(dec).replace('.', ',');
     }
 
-    // Kullanıcı Inputlarından Ayarları Oku
     function applySettings() {
       BUY_RSI = parseFloat(document.getElementById('input-buy-rsi').value) || 20;
       SELL_RSI = parseFloat(document.getElementById('input-sell-rsi').value) || 85;
       PROFIT_TARGET = parseFloat(document.getElementById('input-profit-target').value) || 4.0;
-      STOP_LOSS_TARGET = parseFloat(document.getElementById('input-stop-loss').value) || 4.0;
       MONTHLY_CAP = parseFloat(document.getElementById('input-monthly-cap').value) || 2.5;
-      MONTHLY_LOSS_CAP = parseFloat(document.getElementById('input-monthly-loss').value) || 5.0;
 
       if (yearlyCandles.length > 0) {
         runBacktestSimulation();
@@ -407,24 +393,25 @@
       return rsiHistory;
     }
 
-    // BINANCE 1 YILLIK ARDIŞIK VERİ ÇEKME MOTORU
-    async function loadFullYearData() {
+    // SADECE 2026 YILI VERİLERİNİ ÇEKME MOTORU
+    async function load2026Data() {
       const loaderEl = document.getElementById('loading-status');
-      loaderEl.innerText = '1 Yıllık Veri Çekiliyor...';
+      loaderEl.innerText = '2026 Yılı Verileri Çekiliyor...';
 
+      const year2026Start = new Date('2026-01-01T00:00:00Z').getTime();
       let allCandles = [];
-      let endTime = Date.now();
-      const totalBatches = 17; // 17 x 1000 = ~17.000 mum (Tam 1 Yıl)
+      let startTime = year2026Start;
+      const now = Date.now();
 
-      for (let i = 0; i < totalBatches; i++) {
-        const url = `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=1000&endTime=${endTime}`;
+      while (startTime < now) {
+        const url = `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=1000&startTime=${startTime}`;
         try {
           const res = await fetch(url);
           if (res.ok) {
             const data = await res.json();
-            if (data.length === 0) break;
+            if (!data || data.length === 0) break;
 
-            const parsedCandles = data.map(c => ({
+            const parsed = data.map(c => ({
               time: c[0],
               open: parseFloat(c[1]),
               high: parseFloat(c[2]),
@@ -432,25 +419,25 @@
               close: parseFloat(c[4])
             }));
 
-            allCandles = [...parsedCandles, ...allCandles]; // Geçmişe doğru birleştir
-            endTime = data[0][0] - 1; // Bir sonraki istek için en eski zamanı al
-            
-            loaderEl.innerText = `%${Math.round(((i + 1) / totalBatches) * 100)} Yüklendi...`;
+            allCandles = allCandles.concat(parsed);
+            startTime = data[data.length - 1][0] + 1;
+
+            if (data.length < 1000) break;
           } else {
             break;
           }
         } catch (e) {
-          console.error('Veri çekme hatası:', e);
+          console.error('Veri hatası:', e);
           break;
         }
       }
 
       yearlyCandles = allCandles;
-      loaderEl.innerText = '🟢 1 Yıllık Veri Canlı';
+      loaderEl.innerText = '🟢 2026 Verileri Canlı';
       runBacktestSimulation();
     }
 
-    // PINE SCRIPT MANTIĞI İLE YILLIK BİLEŞİK SIMÜLASYON
+    // SIMÜLASYON MOTORU (STOP LOSS'SUZ)
     function runBacktestSimulation() {
       if (!yearlyCandles || yearlyCandles.length === 0) return;
 
@@ -473,14 +460,13 @@
         const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
 
         if (!monthlyStats[monthKey]) {
-          monthlyStats[monthKey] = { trades: 0, win: 0, loss: 0, pnl: 0, capReached: false, lossLocked: false };
+          monthlyStats[monthKey] = { trades: 0, win: 0, loss: 0, pnl: 0, capReached: false };
         }
 
         const mStat = monthlyStats[monthKey];
-        const isLocked = mStat.capReached || mStat.lossLocked;
 
-        // 1. AL SİNYALİ
-        if (!inPosition && !isLocked) {
+        // 1. AL SİNYALİ (Aylık kâr hedefine ulaşıldıysa yeni işlem açılmaz)
+        if (!inPosition && !mStat.capReached) {
           if (prevRsiVal <= BUY_RSI && rsiVal > BUY_RSI) {
             inPosition = true;
             entryPrice = c.close;
@@ -488,31 +474,23 @@
           }
         }
 
-        // 2. SAT SİNYALİ
+        // 2. SAT SİNYALİ (Sadece Kâr Hedefi veya RSI Sat)
         else if (inPosition) {
           const targetPrice = entryPrice * (1 + PROFIT_TARGET / 100);
-          const stopPrice = entryPrice * (1 - STOP_LOSS_TARGET / 100);
 
           let exited = false;
           let exitPrice = 0;
           let pnl = 0;
           let reason = '';
 
-          // A) Stop Loss
-          if (c.low <= stopPrice) {
-            exited = true;
-            exitPrice = stopPrice;
-            pnl = -STOP_LOSS_TARGET;
-            reason = `Stop Loss (%${STOP_LOSS_TARGET})`;
-          }
-          // B) Kar Hedefi
-          else if (c.high >= targetPrice) {
+          // A) Kar Hedefi (%4 veya belirlenen oran)
+          if (c.high >= targetPrice) {
             exited = true;
             exitPrice = targetPrice;
             pnl = PROFIT_TARGET;
             reason = `Kâr Hedefi (%${PROFIT_TARGET})`;
           }
-          // C) RSI Limiti
+          // B) RSI Sat Limiti (85)
           else if (rsiVal >= SELL_RSI) {
             exited = true;
             exitPrice = c.close;
@@ -529,7 +507,7 @@
             const exitDate = new Date(c.time);
             const exitMonthKey = `${exitDate.getFullYear()}-${String(exitDate.getMonth() + 1).padStart(2, '0')}`;
             if (!monthlyStats[exitMonthKey]) {
-              monthlyStats[exitMonthKey] = { trades: 0, win: 0, loss: 0, pnl: 0, capReached: false, lossLocked: false };
+              monthlyStats[exitMonthKey] = { trades: 0, win: 0, loss: 0, pnl: 0, capReached: false };
             }
 
             const curM = monthlyStats[exitMonthKey];
@@ -538,9 +516,8 @@
             else curM.loss++;
             curM.pnl += pnl;
 
-            // Kilit Kontrolleri
+            // Aylık Kâr Hedef Kilit Kontrolü
             if (curM.pnl >= MONTHLY_CAP) curM.capReached = true;
-            if (curM.pnl <= -MONTHLY_LOSS_CAP) curM.lossLocked = true;
           }
         }
       }
@@ -556,7 +533,6 @@
       const livePnlEl = document.getElementById('live-pnl');
       const entryPriceEl = document.getElementById('entry-price');
       const targetPriceEl = document.getElementById('target-price');
-      const stopPriceEl = document.getElementById('stop-price');
 
       if (inPosition) {
         posStatusEl.innerText = 'İşlemde (LONG)';
@@ -564,10 +540,7 @@
         entryPriceEl.innerText = `$${entryPrice.toFixed(4)}`;
         
         const targetP = entryPrice * (1 + PROFIT_TARGET / 100);
-        const stopP = entryPrice * (1 - STOP_LOSS_TARGET / 100);
-        
         targetPriceEl.innerText = `$${targetP.toFixed(4)}`;
-        stopPriceEl.innerText = `$${stopP.toFixed(4)}`;
 
         const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
         livePnlEl.innerText = `${formatNum(livePnl, 2)}%`;
@@ -579,10 +552,9 @@
         livePnlEl.innerText = '0,00%';
         livePnlEl.className = '';
         targetPriceEl.innerText = '-';
-        stopPriceEl.innerText = '-';
       }
 
-      // AYLIK TABLOYU DOLDUR
+      // 2026 AYLIK TABLOSU
       const mTableBody = document.getElementById('monthly-table-body');
       mTableBody.innerHTML = '';
 
@@ -599,7 +571,6 @@
 
         let statusText = 'Aktif';
         if (m.capReached) statusText = '🎯 Hedef Ulaşıldı';
-        else if (m.lossLocked) statusText = '🔒 Zarar Kilitli';
 
         const tr = document.createElement('tr');
         const pnlClass = m.pnl >= 0 ? 'green' : 'red';
@@ -614,11 +585,11 @@
         mTableBody.appendChild(tr);
       });
 
-      // Yıllık Toplam Satırı
+      // 2026 Toplam Satırı
       const totalTr = document.createElement('tr');
       const totalPnlClass = totalPnl >= 0 ? 'green' : 'red';
       totalTr.innerHTML = `
-        <td><b>YILLIK TOPLAM</b></td>
+        <td><b>2026 TOPLAM</b></td>
         <td><b>${totalTrades}</b></td>
         <td class="green"><b>${totalWin}</b></td>
         <td class="red"><b>${totalLoss}</b></td>
@@ -659,12 +630,11 @@
     }
 
     // İlk Yükleme
-    loadFullYearData();
+    load2026Data();
 
-    // 5 Saniyede Bir Canlı Fiyat Güncelleme
+    // 5 Saniyede Bir Anlık Fiyat Güncelleme
     setInterval(() => {
       if (yearlyCandles.length > 0) {
-        // Son mum için Binance API'den anlık fiyat güncelle
         fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${SYMBOL}`)
           .then(res => res.json())
           .then(data => {
