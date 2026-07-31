@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ASTER/USDT 30m RSI(8) Strateji Panosu</title>
+  <title>ASTER RSI CODEMSO - Canlı Algoritma & Backtest</title>
   <style>
     :root {
       --bg-color: #f8fafc;
@@ -44,7 +44,7 @@
       display: flex;
       flex-direction: column;
       gap: 20px;
-      max-width: 440px;
+      max-width: 720px;
     }
 
     .card {
@@ -53,7 +53,6 @@
       padding: 20px;
       border: 1px solid var(--border-color);
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-      transition: background-color 0.3s, border-color 0.3s;
     }
 
     .header-bar {
@@ -70,7 +69,7 @@
       background-color: var(--badge-bg);
       color: var(--badge-text);
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .theme-btn {
@@ -96,151 +95,46 @@
       margin-bottom: 16px;
     }
 
-    .rsi-container {
-      background-color: var(--box-bg);
-      padding: 12px 14px;
-      border-radius: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid var(--border-color);
-      margin-bottom: 12px;
-    }
-
-    .rsi-title {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .rsi-value {
-      font-size: 1.4rem;
-      font-weight: 800;
-    }
-
-    .stats-grid {
+    .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 10px;
       margin-bottom: 12px;
     }
 
     .stat-box {
       background-color: var(--box-bg);
-      padding: 10px;
-      border-radius: 8px;
+      padding: 12px;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
       text-align: center;
     }
 
     .stat-label {
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       color: var(--text-muted);
       display: block;
       margin-bottom: 4px;
-      font-weight: 500;
+      font-weight: 600;
     }
 
     .stat-value {
-      font-size: 1.05rem;
-      font-weight: 700;
+      font-size: 1.3rem;
+      font-weight: 800;
     }
 
-    .strategy-box {
+    .position-box {
       background-color: var(--box-bg);
-      border-left: 4px solid #eab308;
-      padding: 12px;
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-
-    .strategy-box.buy-signal { border-color: #22c55e; }
-    .strategy-box.sell-signal { border-color: #ef4444; }
-
-    .strategy-title {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .strategy-status {
-      font-size: 0.85rem;
-      font-weight: 700;
-    }
-
-    .tracker-box {
-      background-color: var(--box-bg);
-      padding: 12px;
-      border-radius: 8px;
+      padding: 14px;
+      border-radius: 10px;
       border: 1px solid var(--border-color);
       margin-bottom: 12px;
     }
 
-    .tracker-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-    }
-
-    .tracker-btn-group {
-      display: flex;
-      gap: 6px;
-    }
-
-    .track-btn {
-      flex: 1;
-      padding: 6px;
-      border: 1px solid var(--border-color);
-      background: var(--card-bg);
-      color: var(--text-color);
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 0.75rem;
-    }
-
-    .track-btn.active {
-      background-color: #22c55e;
-      color: #fff;
-      border-color: #22c55e;
-    }
-
-    /* Tablo Stilleri */
     .table-title {
       font-size: 1rem;
       font-weight: 700;
-      margin-bottom: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .input-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
       margin-bottom: 12px;
-    }
-
-    .input-group label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .input-group input {
-      width: 100px;
-      padding: 6px 8px;
-      border: 1px solid var(--border-color);
-      border-radius: 6px;
-      background: var(--box-bg);
-      color: var(--text-color);
-      font-weight: 600;
-      font-size: 0.85rem;
     }
 
     table {
@@ -264,13 +158,14 @@
       background-color: var(--table-stripe);
     }
 
-    .overbought { color: #ef4444; }
-    .oversold { color: #22c55e; }
+    .green { color: #22c55e; }
+    .red { color: #ef4444; }
     .neutral { color: #eab308; }
 
     .update-time {
       font-size: 0.75rem;
       color: var(--text-muted);
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -278,78 +173,78 @@
 
   <div class="container">
     
-    <!-- ANA TAKİP KART -->
+    <!-- ANLIK DURUM KARTI -->
     <div class="card">
       <div class="header-bar">
-        <div class="badge">30m | RSI (8)</div>
+        <div class="badge">ASTER RSI (CODEMSO) 30m</div>
         <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙 Gece Modu</button>
       </div>
 
       <div class="symbol">ASTER / USDT</div>
       <div class="price" id="price">Yükleniyor...</div>
       
-      <div class="rsi-container">
-        <span class="rsi-title">Anlık RSI (8)</span>
-        <span class="rsi-value neutral" id="rsi">--,--</span>
-      </div>
-
-      <div class="stats-grid">
+      <div class="grid-2">
         <div class="stat-box">
-          <span class="stat-label">24S En Düşük RSI</span>
-          <span class="stat-value oversold" id="min-rsi">--,--</span>
+          <span class="stat-label">Anlık RSI (8)</span>
+          <span class="stat-value neutral" id="rsi">--,--</span>
         </div>
         <div class="stat-box">
-          <span class="stat-label">24S En Yüksek RSI</span>
-          <span class="stat-value overbought" id="max-rsi">--,--</span>
+          <span class="stat-label">Pozisyon Durumu</span>
+          <span class="stat-value" id="pos-status">Pozisyon Yok</span>
         </div>
       </div>
 
-      <!-- ÖZEL STRATEJİ SİNYALİ -->
-      <div class="strategy-box neutral" id="strategy-box">
-        <div class="strategy-title">Strateji Sinyali (Al: ≤22 | Sat: ≥85)</div>
-        <div class="strategy-status" id="strategy-status">Veriler analiz ediliyor...</div>
-      </div>
-
-      <!-- AYLIK İŞLEM TAKİP SAYACI -->
-      <div class="tracker-box">
-        <div class="tracker-header">
-          <span>Bu Ayki %5 Kar Hedefi:</span>
-          <span id="monthly-progress" style="color: #22c55e;">%0 / %5</span>
+      <!-- CANLI POZİSYON DETAYI -->
+      <div class="position-box" id="pos-detail-box">
+        <div style="font-size: 0.85rem; font-weight: 700; margin-bottom: 6px;">Canlı Pozisyon Bilgisi</div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+          <span>Giriş Fiyatı: <b id="entry-price">-</b></span>
+          <span>Canlı PnL: <b id="live-pnl">0,00%</b></span>
         </div>
-        <div class="tracker-btn-group">
-          <button class="track-btn" onclick="toggleTrade(1)">İşlem 1 (%1)</button>
-          <button class="track-btn" onclick="toggleTrade(2)">İşlem 2 (%1)</button>
-          <button class="track-btn" onclick="toggleTrade(3)">İşlem 3 (%1)</button>
-          <button class="track-btn" onclick="toggleTrade(4)">İşlem 4 (%1)</button>
-          <button class="track-btn" onclick="toggleTrade(5)">İşlem 5 (%1)</button>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 4px;">
+          <span>Hedef (+%4): <b id="target-price" class="green">-</b></span>
+          <span>Stop (-%4): <b id="stop-price" class="red">-</b></span>
         </div>
       </div>
 
       <div class="update-time" id="last-update"></div>
     </div>
 
-    <!-- AYLIK BİLEŞİK KAR TABLOSU -->
+    <!-- OTO PINE SCRIPT AYLIK OTOMATİK İŞLEM TABLOSU -->
     <div class="card">
-      <div class="table-title">
-        <span>Aylık %5 Bileşik Kar Tablosu</span>
-      </div>
-      
-      <div class="input-group">
-        <label for="capital">Sermaye ($):</label>
-        <input type="number" id="capital" value="1000" oninput="calculateProfitTable()">
-      </div>
-
+      <div class="table-title">Pine Script Otomatik İstatistik Panosu (Aylık)</div>
       <table>
         <thead>
           <tr>
-            <th>Ay</th>
-            <th>Hedef (%)</th>
-            <th>Top Toplam ($)</th>
-            <th>Net Kar ($)</th>
+            <th>Ay / Yıl</th>
+            <th>İşlem</th>
+            <th>Win</th>
+            <th>Loss</th>
+            <th>Net Kâr (%)</th>
           </tr>
         </thead>
-        <tbody id="profit-table-body">
-          <!-- JS ile dolacak -->
+        <tbody id="monthly-table-body">
+          <!-- JS Otomatik Dolduracak -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SON GERÇEKLEŞEN İŞLEMLER (LOG) -->
+    <div class="card">
+      <div class="table-title">Son Gerçekleşen Otomatik İşlemler</div>
+      <table>
+        <thead>
+          <tr>
+            <th>Giriş Tarihi</th>
+            <th>Çıkış Tarihi</th>
+            <th>Giriş ($)</th>
+            <th>Çıkış ($)</th>
+            <th>Sonuç (%)</th>
+            <th>Neden</th>
+          </tr>
+        </thead>
+        <tbody id="trades-log-body">
+          <!-- JS Otomatik Dolduracak -->
         </tbody>
       </table>
     </div>
@@ -359,16 +254,25 @@
   <script>
     const SYMBOL = 'ASTERUSDT';
     const INTERVAL = '30m';
+    
+    // Pine Script Ayarları
     const RSI_PERIOD = 8;
-    let completedTrades = 0;
+    const BUY_RSI = 20;
+    const SELL_RSI = 85;
+    const PROFIT_TARGET = 4.0; // %4
+    const STOP_LOSS_TARGET = 4.0; // %4
+    const MONTHLY_LOSS_CAP = 5.0; // %5 Aylık Stop
+
+    function formatNum(val, dec = 2) {
+      if (val === null || val === undefined || isNaN(val)) return '--,--';
+      return Number(val).toFixed(dec).replace('.', ',');
+    }
 
     // Wilder's RSI Hesaplama
     function calculateRSIHistory(prices, period = 8) {
       if (prices.length <= period) return [];
 
-      let gains = 0;
-      let losses = 0;
-
+      let gains = 0, losses = 0;
       for (let i = 1; i <= period; i++) {
         const change = prices[i] - prices[i - 1];
         if (change >= 0) gains += change;
@@ -378,9 +282,9 @@
       let avgGain = gains / period;
       let avgLoss = losses / period;
 
-      const rsiHistory = [];
+      const rsiHistory = new Array(prices.length).fill(null);
       let firstRSI = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));
-      rsiHistory.push(firstRSI);
+      rsiHistory[period] = firstRSI;
 
       for (let i = period + 1; i < prices.length; i++) {
         const change = prices[i] - prices[i - 1];
@@ -391,148 +295,252 @@
         avgLoss = (avgLoss * (period - 1) + currentLoss) / period;
 
         if (avgLoss === 0) {
-          rsiHistory.push(100);
+          rsiHistory[i] = 100;
         } else {
           const rs = avgGain / avgLoss;
-          rsiHistory.push(100 - (100 / (1 + rs)));
+          rsiHistory[i] = 100 - (100 / (1 + rs));
         }
       }
 
       return rsiHistory;
     }
 
-    function formatRSI(val) {
-      return Number(val).toFixed(2).replace('.', ',');
-    }
-
-    async function fetchAsterRSI() {
+    async function fetchAndRunEngine() {
+      // Pine Script gibi geriye dönük 1000 mumu çekiyoruz
       const endpoints = [
-        `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=100`,
-        `https://api1.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=100`,
-        `https://api2.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=100`
+        `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=1000`,
+        `https://api1.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=1000`
       ];
 
       let data = null;
-
       for (const url of endpoints) {
         try {
-          const response = await fetch(url);
-          if (response.ok) {
-            data = await response.json();
-            break;
-          }
-        } catch (e) {
-          console.warn(`Endpoint hatası: ${url}`);
-        }
+          const res = await fetch(url);
+          if (res.ok) { data = await res.json(); break; }
+        } catch (e) {}
       }
 
-      if (!data) {
-        document.getElementById('strategy-status').innerText = 'API erişim hatası!';
-        return;
-      }
+      if (!data) return;
 
-      try {
-        const closePrices = data.map(candle => parseFloat(candle[4]));
-        const currentPrice = closePrices[closePrices.length - 1];
+      const candles = data.map(c => ({
+        time: c[0],
+        open: parseFloat(c[1]),
+        high: parseFloat(c[2]),
+        low: parseFloat(c[3]),
+        close: parseFloat(c[4])
+      }));
 
-        const rsiHistory = calculateRSIHistory(closePrices, RSI_PERIOD);
-        if (rsiHistory.length === 0) throw new Error("Yetersiz veri");
+      const closePrices = candles.map(c => c.close);
+      const rsiValues = calculateRSIHistory(closePrices, RSI_PERIOD);
 
-        const currentRSI = rsiHistory[rsiHistory.length - 1];
+      // SIMÜLASYON MOTORU (Pine Script Birebir Mantık)
+      let inPosition = false;
+      let entryPrice = 0;
+      let entryTime = 0;
 
-        const last24hRSI = rsiHistory.slice(-48);
-        const minRSI = Math.min(...last24hRSI);
-        const maxRSI = Math.max(...last24hRSI);
+      const trades = [];
+      const monthlyStats = {};
 
-        // Arayüz Güncelleme
-        document.getElementById('price').innerText = `$${currentPrice.toFixed(4)}`;
+      for (let i = RSI_PERIOD + 1; i < candles.length; i++) {
+        const c = candles[i];
+        const rsiVal = rsiValues[i];
+        const prevRsiVal = rsiValues[i - 1];
         
-        const rsiElement = document.getElementById('rsi');
-        rsiElement.innerText = formatRSI(currentRSI);
-        document.getElementById('min-rsi').innerText = formatRSI(minRSI);
-        document.getElementById('max-rsi').innerText = formatRSI(maxRSI);
+        const dateObj = new Date(c.time);
+        const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
 
-        // Strateji Kontrolü (Al: <=22, Sat: >=85)
-        const stratBox = document.getElementById('strategy-box');
-        const stratStatus = document.getElementById('strategy-status');
-
-        stratBox.className = 'strategy-box ';
-
-        if (currentRSI <= 22) {
-          stratBox.classList.add('buy-signal');
-          stratStatus.innerHTML = '🟢 <b>ALIM BÖLGESİ (RSI ≤ 22)</b><br>Dip dönüşü bekleniyor, kademeli takip et.';
-        } else if (currentRSI >= 85) {
-          stratBox.classList.add('sell-signal');
-          stratStatus.innerHTML = '⚠️ <b>SATIŞ BÖLGESİ (RSI ≥ 85)</b><br>Zirve dönüşü veya %1 kar hedefinde pozisyonu kapat!';
-        } else {
-          stratBox.classList.add('neutral');
-          stratStatus.innerText = '🟡 Pozisyon Takibinde / Nötr Bölge';
+        if (!monthlyStats[monthKey]) {
+          monthlyStats[monthKey] = { trades: 0, win: 0, loss: 0, pnl: 0, locked: false };
         }
 
-        const now = new Date();
-        document.getElementById('last-update').innerText = `Son Güncelleme: ${now.toLocaleTimeString('tr-TR')}`;
+        const mStat = monthlyStats[monthKey];
 
-      } catch (error) {
-        console.error('Veri işleme hatası:', error);
-        document.getElementById('strategy-status').innerText = 'Hesaplama hatası!';
+        // 1. AL GİRİŞ MANTIĞI: crossover(rsi, 20)
+        if (!inPosition && !mStat.locked) {
+          if (prevRsiVal <= BUY_RSI && rsiVal > BUY_RSI) {
+            inPosition = true;
+            entryPrice = c.close;
+            entryTime = c.time;
+          }
+        }
+
+        // 2. SAT ÇIKIŞ MANTIĞI
+        else if (inPosition) {
+          const targetPrice = entryPrice * (1 + PROFIT_TARGET / 100);
+          const stopPrice = entryPrice * (1 - STOP_LOSS_TARGET / 100);
+
+          let exited = false;
+          let exitPrice = 0;
+          let pnl = 0;
+          let reason = '';
+
+          // A) Stop Loss
+          if (c.low <= stopPrice) {
+            exited = true;
+            exitPrice = stopPrice;
+            pnl = -STOP_LOSS_TARGET;
+            reason = 'Stop Loss (%4)';
+          }
+          // B) Kar Hedefi
+          else if (c.high >= targetPrice) {
+            exited = true;
+            exitPrice = targetPrice;
+            pnl = PROFIT_TARGET;
+            reason = 'Kar Hedefi (%4)';
+          }
+          // C) RSI Limiti (>= 85)
+          else if (rsiVal >= SELL_RSI) {
+            exited = true;
+            exitPrice = c.close;
+            pnl = ((c.close - entryPrice) / entryPrice) * 100;
+            reason = `RSI Sat (${formatNum(rsiVal, 1)})`;
+          }
+
+          if (exited) {
+            inPosition = false;
+            const isWin = pnl >= 0;
+
+            trades.push({
+              entryTime,
+              exitTime: c.time,
+              entryPrice,
+              exitPrice,
+              pnl,
+              isWin,
+              reason
+            });
+
+            // Aylık İstatistikleri Güncelle
+            const exitDate = new Date(c.time);
+            const exitMonthKey = `${exitDate.getFullYear()}-${String(exitDate.getMonth() + 1).padStart(2, '0')}`;
+            
+            if (!monthlyStats[exitMonthKey]) {
+              monthlyStats[exitMonthKey] = { trades: 0, win: 0, loss: 0, pnl: 0, locked: false };
+            }
+
+            const currentMStat = monthlyStats[exitMonthKey];
+            currentMStat.trades++;
+            if (isWin) currentMStat.win++;
+            else currentMStat.loss++;
+            currentMStat.pnl += pnl;
+
+            // Aylık Zarar Kilidi Kontrolü (%5)
+            if (currentMStat.pnl <= -MONTHLY_LOSS_CAP) {
+              currentMStat.locked = true;
+            }
+          }
+        }
       }
-    }
 
-    // Aylık Bileşik Kar Tablosunu Hesaplama
-    function calculateProfitTable() {
-      const capitalInput = parseFloat(document.getElementById('capital').value) || 0;
-      const tbody = document.getElementById('profit-table-body');
-      tbody.innerHTML = '';
+      // UI GÜNCELLEME
+      const currentPrice = closePrices[closePrices.length - 1];
+      const currentRSI = rsiValues[rsiValues.length - 1];
 
-      let currentBalance = capitalInput;
-      const monthlyRate = 0.05; // %5 Aylık Kar
+      document.getElementById('price').innerText = `$${currentPrice.toFixed(4)}`;
+      document.getElementById('rsi').innerText = formatNum(currentRSI, 2);
 
-      for (let month = 1; month <= 12; month++) {
-        const profit = currentBalance * monthlyRate;
-        currentBalance += profit;
+      const posStatusEl = document.getElementById('pos-status');
+      const livePnlEl = document.getElementById('live-pnl');
+      const entryPriceEl = document.getElementById('entry-price');
+      const targetPriceEl = document.getElementById('target-price');
+      const stopPriceEl = document.getElementById('stop-price');
+
+      if (inPosition) {
+        posStatusEl.innerText = 'İşlemde (LONG)';
+        posStatusEl.className = 'stat-value green';
+        entryPriceEl.innerText = `$${entryPrice.toFixed(4)}`;
+        
+        const targetP = entryPrice * (1 + PROFIT_TARGET / 100);
+        const stopP = entryPrice * (1 - STOP_LOSS_TARGET / 100);
+        
+        targetPriceEl.innerText = `$${targetP.toFixed(4)}`;
+        stopPriceEl.innerText = `$${stopP.toFixed(4)}`;
+
+        const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
+        livePnlEl.innerText = `${formatNum(livePnl, 2)}%`;
+        livePnlEl.className = livePnl >= 0 ? 'green' : 'red';
+      } else {
+        posStatusEl.innerText = 'Pozisyon Yok';
+        posStatusEl.className = 'stat-value neutral';
+        entryPriceEl.innerText = '-';
+        livePnlEl.innerText = '0,00%';
+        livePnlEl.className = '';
+        targetPriceEl.innerText = '-';
+        stopPriceEl.innerText = '-';
+      }
+
+      // AYLIK TABLOYU DOLDURMA
+      const mTableBody = document.getElementById('monthly-table-body');
+      mTableBody.innerHTML = '';
+
+      let totalTrades = 0, totalWin = 0, totalLoss = 0, totalPnl = 0;
+
+      Object.keys(monthlyStats).sort().reverse().forEach(mKey => {
+        const m = monthlyStats[mKey];
+        if (m.trades === 0) return;
+
+        totalTrades += m.trades;
+        totalWin += m.win;
+        totalLoss += m.loss;
+        totalPnl += m.pnl;
 
         const tr = document.createElement('tr');
+        const pnlClass = m.pnl >= 0 ? 'green' : 'red';
         tr.innerHTML = `
-          <td><b>${month}. Ay</b></td>
-          <td>%5</td>
-          <td><b>$${currentBalance.toFixed(2)}</b></td>
-          <td style="color: #22c55e;">+$${profit.toFixed(2)}</td>
+          <td><b>${mKey}</b> ${m.locked ? '🔒 (Kilitli)' : ''}</td>
+          <td>${m.trades}</td>
+          <td class="green">${m.win}</td>
+          <td class="red">${m.loss}</td>
+          <td class="${pnlClass}"><b>${m.pnl >= 0 ? '+' : ''}${formatNum(m.pnl, 2)}%</b></td>
         `;
-        tbody.appendChild(tr);
-      }
+        mTableBody.appendChild(tr);
+      });
+
+      // Toplam Satırı
+      const totalTr = document.createElement('tr');
+      const totalPnlClass = totalPnl >= 0 ? 'green' : 'red';
+      totalTr.innerHTML = `
+        <td><b>TOPLAM</b></td>
+        <td><b>${totalTrades}</b></td>
+        <td class="green"><b>${totalWin}</b></td>
+        <td class="red"><b>${totalLoss}</b></td>
+        <td class="${totalPnlClass}"><b>${totalPnl >= 0 ? '+' : ''}${formatNum(totalPnl, 2)}%</b></td>
+      `;
+      mTableBody.appendChild(totalTr);
+
+      // İŞLEM LOG TABLOSUNU DOLDURMA (Son 10 İşlem)
+      const logBody = document.getElementById('trades-log-body');
+      logBody.innerHTML = '';
+
+      trades.slice(-10).reverse().forEach(t => {
+        const tr = document.createElement('tr');
+        const pnlClass = t.pnl >= 0 ? 'green' : 'red';
+        const entryD = new Date(t.entryTime).toLocaleString('tr-TR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        const exitD = new Date(t.exitTime).toLocaleString('tr-TR', { month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit' });
+        
+        tr.innerHTML = `
+          <td>${entryD}</td>
+          <td>${exitD}</td>
+          <td>$${t.entryPrice.toFixed(4)}</td>
+          <td>$${t.exitPrice.toFixed(4)}</td>
+          <td class="${pnlClass}"><b>${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</b></td>
+          <td>${t.reason}</td>
+        `;
+        logBody.appendChild(tr);
+      });
+
+      const now = new Date();
+      document.getElementById('last-update').innerText = `Son Güncelleme: ${now.toLocaleTimeString('tr-TR')}`;
     }
 
-    // İşlem Sayacı Butonları
-    function toggleTrade(index) {
-      const btns = document.querySelectorAll('.track-btn');
-      const btn = btns[index - 1];
-
-      if (btn.classList.contains('active')) {
-        btn.classList.remove('active');
-        completedTrades--;
-      } else {
-        btn.classList.add('active');
-        completedTrades++;
-      }
-
-      document.getElementById('monthly-progress').innerText = `%${completedTrades} / %5`;
-    }
-
-    // Gece Modu Aç / Kapat
     function toggleTheme() {
       document.body.classList.toggle('dark-mode');
       const btn = document.getElementById('theme-btn');
-      if (document.body.classList.contains('dark-mode')) {
-        btn.innerText = '☀️ Gündüz Modu';
-      } else {
-        btn.innerText = '🌙 Gece Modu';
-      }
+      btn.innerText = document.body.classList.contains('dark-mode') ? '☀️ Gündüz Modu' : '🌙 Gece Modu';
     }
 
-    // Başlangıç Çalıştırmaları
-    fetchAsterRSI();
-    calculateProfitTable();
-    setInterval(fetchAsterRSI, 3000);
+    fetchAndRunEngine();
+    setInterval(fetchAndRunEngine, 4000);
   </script>
 </body>
 </html>
