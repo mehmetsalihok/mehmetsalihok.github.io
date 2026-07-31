@@ -5,88 +5,182 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ASTER/USDT 30m RSI(8) Takip</title>
   <style>
+    :root {
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --box-bg: #f1f5f9;
+      --badge-bg: #e2e8f0;
+      --badge-text: #0284c7;
+    }
+
+    /* Gece Modu Stilleri */
+    body.dark-mode {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --box-bg: #0f172a;
+      --badge-bg: #334155;
+      --badge-text: #38bdf8;
+    }
+
     * { box-sizing: border-box; }
+    
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: #0f172a;
-      color: #f8fafc;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       margin: 0;
       padding: 24px; /* Sol üst köşeden başlar */
+      transition: background-color 0.3s, color 0.3s;
     }
+
     .card {
-      background-color: #1e293b;
-      border-radius: 12px;
+      background-color: var(--card-bg);
+      border-radius: 14px;
       padding: 20px;
-      border: 1px solid #334155;
-      max-width: 320px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-color);
+      max-width: 340px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+      transition: background-color 0.3s, border-color 0.3s;
     }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
     .badge {
       display: inline-block;
       padding: 4px 10px;
       border-radius: 16px;
-      background-color: #334155;
-      color: #38bdf8;
-      font-size: 0.8rem;
+      background-color: var(--badge-bg);
+      color: var(--badge-text);
+      font-size: 0.75rem;
       font-weight: 600;
-      margin-bottom: 12px;
     }
+
+    .theme-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 4px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
     .symbol {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #ffffff;
       margin-bottom: 4px;
     }
+
     .price {
       font-size: 1.8rem;
       font-weight: 700;
-      color: #f8fafc;
       margin-bottom: 16px;
     }
+
     .rsi-container {
-      background-color: #0f172a;
+      background-color: var(--box-bg);
       padding: 12px 14px;
-      border-radius: 8px;
+      border-radius: 10px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border: 1px solid #334155;
+      border: 1px solid var(--border-color);
+      margin-bottom: 12px;
     }
+
     .rsi-title {
-      font-size: 0.9rem;
-      color: #94a3b8;
-      font-weight: 500;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
     }
+
     .rsi-value {
       font-size: 1.4rem;
       font-weight: 800;
     }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-box {
+      background-color: var(--box-bg);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .stat-value {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
     .status-text {
-      margin-top: 12px;
       font-size: 0.8rem;
       font-weight: 600;
     }
+
     /* RSI Durum Renkleri */
     .overbought { color: #ef4444; } /* RSI >= 70 */
     .oversold { color: #22c55e; }   /* RSI <= 30 */
     .neutral { color: #eab308; }    /* Nötr */
+
     .update-time {
       margin-top: 12px;
       font-size: 0.75rem;
-      color: #64748b;
+      color: var(--text-muted);
     }
   </style>
 </head>
 <body>
 
   <div class="card">
-    <div class="badge">30m | RSI (8)</div>
+    <div class="header-bar">
+      <div class="badge">30m | RSI (8)</div>
+      <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">🌙 Gece Modu</button>
+    </div>
+
     <div class="symbol">ASTER / USDT</div>
     <div class="price" id="price">Yükleniyor...</div>
     
     <div class="rsi-container">
-      <span class="rsi-title">RSI (8)</span>
-      <span class="rsi-value neutral" id="rsi">-</span>
+      <span class="rsi-title">Anlık RSI (8)</span>
+      <span class="rsi-value neutral" id="rsi">--,--</span>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <span class="stat-label">24S En Düşük RSI</span>
+        <span class="stat-value oversold" id="min-rsi">--,--</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-label">24S En Yüksek RSI</span>
+        <span class="stat-value overbought" id="max-rsi">--,--</span>
+      </div>
     </div>
     
     <div class="status-text neutral" id="status">Veri çekiliyor...</div>
@@ -94,13 +188,13 @@
   </div>
 
   <script>
-    const SYMBOL = 'ASTERUSDT'; // Aster Coin Sembolü
-    const INTERVAL = '30m';     // 30 Dakikalık Periyot
-    const RSI_PERIOD = 8;        // 8 Periyotluk RSI
+    const SYMBOL = 'ASTERUSDT';
+    const INTERVAL = '30m';
+    const RSI_PERIOD = 8;
 
-    // Wilder's RSI Formülü
-    function calculateRSI(prices, period = 8) {
-      if (prices.length <= period) return null;
+    // Wilder's RSI Tüm Geçmiş Hesaplama
+    function calculateRSIHistory(prices, period = 8) {
+      if (prices.length <= period) return [];
 
       let gains = 0;
       let losses = 0;
@@ -114,6 +208,10 @@
       let avgGain = gains / period;
       let avgLoss = losses / period;
 
+      const rsiHistory = [];
+      let firstRSI = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));
+      rsiHistory.push(firstRSI);
+
       for (let i = period + 1; i < prices.length; i++) {
         const change = prices[i] - prices[i - 1];
         const currentGain = change >= 0 ? change : 0;
@@ -121,18 +219,29 @@
 
         avgGain = (avgGain * (period - 1) + currentGain) / period;
         avgLoss = (avgLoss * (period - 1) + currentLoss) / period;
+
+        if (avgLoss === 0) {
+          rsiHistory.push(100);
+        } else {
+          const rs = avgGain / avgLoss;
+          rsiHistory.push(100 - (100 / (1 + rs)));
+        }
       }
 
-      if (avgLoss === 0) return 100;
-      const rs = avgGain / avgLoss;
-      return 100 - (100 / (1 + rs));
+      return rsiHistory;
+    }
+
+    // xx,xx formatlama fonksiyonu (örn: 48.23 -> 48,23)
+    function formatRSI(val) {
+      return Number(val).toFixed(2).replace('.', ',');
     }
 
     async function fetchAsterRSI() {
+      // Son 100 mumu çekiyoruz (Yaklaşık 50 saatlik veri)
       const endpoints = [
-        `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=60`,
-        `https://api1.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=60`,
-        `https://api2.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=60`
+        `https://api.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=100`,
+        `https://api1.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=100`,
+        `https://api2.binance.com/api/v3/klines?symbol=${SYMBOL}&interval=${INTERVAL}&limit=100`
       ];
 
       let data = null;
@@ -158,16 +267,28 @@
         const closePrices = data.map(candle => parseFloat(candle[4]));
         const currentPrice = closePrices[closePrices.length - 1];
 
-        const calculatedRSI = calculateRSI(closePrices, RSI_PERIOD);
-        if (calculatedRSI === null) throw new Error("Yetersiz veri");
+        // RSI Geçmişi Hesaplama
+        const rsiHistory = calculateRSIHistory(closePrices, RSI_PERIOD);
+        
+        if (rsiHistory.length === 0) throw new Error("Yetersiz veri");
 
-        const currentRSI = calculatedRSI.toFixed(1);
+        // Anlık RSI
+        const currentRSI = rsiHistory[rsiHistory.length - 1];
 
+        // Son 24 saatlik RSI değerleri (48 adet 30 dakikalık mum = 24 saat)
+        const last24hRSI = rsiHistory.slice(-48);
+        const minRSI = Math.min(...last24hRSI);
+        const maxRSI = Math.max(...last24hRSI);
+
+        // Arayüz Güncelleme
         document.getElementById('price').innerText = `$${currentPrice.toFixed(4)}`;
         
         const rsiElement = document.getElementById('rsi');
         const statusElement = document.getElementById('status');
-        rsiElement.innerText = currentRSI;
+        
+        rsiElement.innerText = formatRSI(currentRSI);
+        document.getElementById('min-rsi').innerText = formatRSI(minRSI);
+        document.getElementById('max-rsi').innerText = formatRSI(maxRSI);
 
         rsiElement.className = 'rsi-value ';
         statusElement.className = 'status-text ';
@@ -195,9 +316,22 @@
       }
     }
 
-    // İlk çalıştırma ve 15s periyodik güncelleme
+    // Gece Modu Aç / Kapat
+    function toggleTheme() {
+      document.body.classList.toggle('dark-mode');
+      const btn = document.getElementById('theme-btn');
+      if (document.body.classList.contains('dark-mode')) {
+        btn.innerText = '☀️ Gündüz Modu';
+      } else {
+        btn.innerText = '🌙 Gece Modu';
+      }
+    }
+
+    // İlk çalıştırma
     fetchAsterRSI();
-    setInterval(fetchAsterRSI, 15000);
+
+    // 3 saniyede bir sürekli canlı güncelleme
+    setInterval(fetchAsterRSI, 3000);
   </script>
 </body>
 </html>
