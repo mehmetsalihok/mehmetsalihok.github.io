@@ -43,109 +43,6 @@
       transition: background-color 0.2s, color 0.2s;
     }
 
-    /* RETRO GİRİŞ EKRANI */
-    #login-screen {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: #0b1120;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    .retro-login-card {
-      background: #1e293b;
-      border: 2px solid #334155;
-      border-radius: 6px;
-      padding: 20px;
-      width: 290px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-      font-family: monospace;
-    }
-
-    .retro-title {
-      font-size: 0.85rem;
-      font-weight: bold;
-      color: #38bdf8;
-      text-align: center;
-      margin-bottom: 15px;
-      border-bottom: 1px dashed #334155;
-      padding-bottom: 8px;
-    }
-
-    .login-field {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      margin-bottom: 12px;
-    }
-
-    .login-field label {
-      font-size: 0.68rem;
-      color: #94a3b8;
-    }
-
-    .login-field input {
-      padding: 6px;
-      border: 1px solid #334155;
-      border-radius: 4px;
-      background: #0f172a;
-      color: #f8fafc;
-      font-size: 0.8rem;
-      font-family: monospace;
-    }
-
-    .login-btn {
-      width: 100%;
-      padding: 8px;
-      background: #0284c7;
-      color: #fff;
-      border: none;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 0.75rem;
-      font-family: monospace;
-      margin-top: 5px;
-    }
-
-    .login-btn:hover { background: #0369a1; }
-
-    .login-error {
-      color: #ef4444;
-      font-size: 0.65rem;
-      text-align: center;
-      margin-top: 8px;
-      min-height: 14px;
-    }
-
-    /* YÜKLEME SPINNER EKRANI */
-    #loading-screen {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background-color: #0b1120;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 9998;
-    }
-
-    .spinner {
-      width: 42px;
-      height: 42px;
-      border: 4px solid #334155;
-      border-top: 4px solid #38bdf8;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
     .container {
       display: flex;
       flex-direction: column;
@@ -353,7 +250,7 @@
       border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 10px;
       position: sticky;
       top: 8px;
     }
@@ -497,33 +394,8 @@
 </head>
 <body class="dark-mode">
 
-  <!-- RETRO GİRİŞ EKRANI -->
-  <div id="login-screen">
-    <div class="retro-login-card">
-      <div class="retro-title">🔒 CODEMSO TERMINAL LOGIN</div>
-      <div class="login-field">
-        <label>KONTROLÖR ADI:</label>
-        <input type="text" id="login-user" value="admin" autocomplete="off">
-      </div>
-      <div class="login-field">
-        <label>GİRİŞ PAROLASI:</label>
-        <input type="password" id="login-pass" value="1234">
-      </div>
-      <button class="login-btn" onclick="handleLogin()">[ GİRİŞ YAP ]</button>
-      <div class="login-error" id="login-error"></div>
-    </div>
-  </div>
-
-  <!-- YÜKLEME SPINNER EKRANI -->
-  <div id="loading-screen" style="display: none;">
-    <div class="spinner"></div>
-    <div style="font-weight:700; margin-top:12px; font-size:0.75rem; color:#38bdf8; font-family:monospace;">
-      CODEMSO TERMINAL YÜKLENİYOR...
-    </div>
-  </div>
-
   <!-- ANA TERMINAL -->
-  <div class="container" id="main-app" style="display: none;">
+  <div class="container" id="main-app">
     
     <div class="header-card">
       <div style="display: flex; align-items: center; gap: 8px;">
@@ -546,51 +418,75 @@
       <!-- ANALİZ KARTLARI IZGARASI -->
       <div class="dashboard-grid" id="grid-container"></div>
 
-      <!-- SAĞ SIDEBAR RADAR -->
+      <!-- SAĞ SIDEBAR RADAR VE ÖZET PERFORMANS PANOSU -->
       <div class="sidebar-card">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-weight: 800; font-size: 0.72rem;">⚡ CANLI RSI RADAR (1s Canlı)</span>
-          <span style="font-size: 0.58rem; color: var(--text-muted);" id="radar-update-time">Canlı</span>
+        <!-- 1. ALARMLI RADAR -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-weight: 800; font-size: 0.72rem;">⚡ CANLI RSI RADAR (1s Canlı)</span>
+            <span style="font-size: 0.58rem; color: var(--text-muted);" id="radar-update-time">Canlı</span>
+          </div>
+
+          <div class="add-coin-row" style="margin-bottom: 6px;">
+            <input type="text" id="new-radar-coin" placeholder="Örn: DOGE" style="flex:1;">
+            <select id="new-radar-tf" class="select-mini">
+              <option value="5m">5m</option>
+              <option value="15m">15m</option>
+              <option value="30m" selected>30m</option>
+              <option value="1h">1h</option>
+              <option value="4h">4h</option>
+            </select>
+            <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:38px;">
+            <button class="add-btn" onclick="addRadarCoin()">+ Ekle</button>
+          </div>
+
+          <table class="watchlist-table">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Coin</th>
+                <th>TF</th>
+                <th>RSI Per.</th>
+                <th>RSI</th>
+                <th>Min (≤)</th>
+                <th>Max (≥)</th>
+                <th>Sıra</th>
+                <th>Sil</th>
+              </tr>
+            </thead>
+            <tbody id="radar-tbody"></tbody>
+          </table>
         </div>
 
-        <div class="add-coin-row">
-          <input type="text" id="new-radar-coin" placeholder="Örn: DOGE" style="flex:1;">
-          <select id="new-radar-tf" class="select-mini">
-            <option value="5m">5m</option>
-            <option value="15m">15m</option>
-            <option value="30m" selected>30m</option>
-            <option value="1h">1h</option>
-            <option value="4h">4h</option>
-          </select>
-          <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:38px;">
-          <button class="add-btn" onclick="addRadarCoin()">+ Ekle</button>
+        <!-- 2. KARTLARIN PERFORMANS & KÂR ÖZETİ PANOSU -->
+        <div style="border-top: 1px solid var(--border-color); padding-top: 8px;">
+          <div style="font-weight: 800; font-size: 0.72rem; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <span>📊 KART PERFORMANS ÖZETİ (<span id="summary-year-label">2026</span>)</span>
+          </div>
+          <table class="watchlist-table">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Coin</th>
+                <th>Bu Ay (%)</th>
+                <th>Yıllık Toplam (%)</th>
+              </tr>
+            </thead>
+            <tbody id="summary-tbody">
+              <!-- JS Otomatik Dolduracak -->
+            </tbody>
+          </table>
         </div>
 
-        <table class="watchlist-table">
-          <thead>
-            <tr>
-              <th style="text-align: left;">Coin</th>
-              <th>TF</th>
-              <th>RSI Per.</th>
-              <th>RSI</th>
-              <th>Min (≤)</th>
-              <th>Max (≥)</th>
-              <th>Sıra</th>
-              <th>Sil</th>
-            </tr>
-          </thead>
-          <tbody id="radar-tbody"></tbody>
-        </table>
       </div>
     </div>
 
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v7';
+    const STORAGE_KEY = 'codemso_multi_terminal_v8';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
+    let cardProfits = []; // Sağ taraftaki özet tablo için hesaplanan kâr verileri
 
     let coinsConfig = [
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
@@ -604,25 +500,6 @@
       { symbol: 'AVAXUSDT',  interval: '30m', rsiLength: 10, buyAlarm: 22, sellAlarm: 80, currentRsi: null },
       { symbol: 'NEARUSDT',  interval: '1h',  rsiLength: 14, buyAlarm: 25, sellAlarm: 75, currentRsi: null }
     ];
-
-    function handleLogin() {
-      const user = document.getElementById('login-user').value.trim();
-      const pass = document.getElementById('login-pass').value.trim();
-      const errEl = document.getElementById('login-error');
-
-      if (user === 'admin' && pass === '1234') {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('loading-screen').style.display = 'flex';
-
-        setTimeout(() => {
-          document.getElementById('loading-screen').style.display = 'none';
-          document.getElementById('main-app').style.display = 'flex';
-          initApp();
-        }, 1200);
-      } else {
-        errEl.innerText = '⚠️ Hatalı kullanıcı adı veya parola!';
-      }
-    }
 
     function formatNum(val, dec = 2) {
       if (val === null || val === undefined || isNaN(val)) return '--,--';
@@ -668,6 +545,7 @@
         } catch(e) {}
       }
       document.getElementById('global-year').value = SELECTED_YEAR;
+      document.getElementById('summary-year-label').innerText = SELECTED_YEAR;
       renderCardsHTML();
       renderRadarHTML();
     }
@@ -709,9 +587,11 @@
 
       coinsConfig.splice(slotIndex, 1);
       candlesData.splice(slotIndex, 1);
+      cardProfits.splice(slotIndex, 1);
 
       saveConfig();
       renderCardsHTML();
+      renderProfitSummarySidebar();
     }
 
     function renderCardsHTML() {
@@ -817,7 +697,6 @@
         grid.innerHTML += cardHTML;
       });
 
-      // HTML BASTIKTAN SONRA MEVCUT YÜKLÜ KARTLARI ANINDA TAZELE
       for (let i = 0; i < coinsConfig.length; i++) {
         if (candlesData[i] && candlesData[i].length > 0) {
           document.getElementById(`loader-${i}`).innerText = '🟢 Canlı';
@@ -873,6 +752,45 @@
         `;
         tbody.appendChild(tr);
       });
+    }
+
+    // SAĞ TARAF: KARTLARIN PERFORMANS & KÂR ÖZETİ TABLOSUNU ÇİZDİRME
+    function renderProfitSummarySidebar() {
+      const tbody = document.getElementById('summary-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let grandTotalMonth = 0;
+      let grandTotalYear = 0;
+
+      coinsConfig.forEach((coin, i) => {
+        const profitObj = cardProfits[i] || { monthPnl: 0, yearPnl: 0 };
+        grandTotalMonth += profitObj.monthPnl;
+        grandTotalYear += profitObj.yearPnl;
+
+        const tr = document.createElement('tr');
+        const mClass = profitObj.monthPnl >= 0 ? 'green' : 'red';
+        const yClass = profitObj.yearPnl >= 0 ? 'green' : 'red';
+
+        tr.innerHTML = `
+          <td style="text-align: left;"><b>${coin.symbol.replace('USDT', '')}</b></td>
+          <td class="${mClass}"><b>${profitObj.monthPnl >= 0 ? '+' : ''}${formatNum(profitObj.monthPnl, 2)}%</b></td>
+          <td class="${yClass}"><b>${profitObj.yearPnl >= 0 ? '+' : ''}${formatNum(profitObj.yearPnl, 2)}%</b></td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // EN ALTA TÜM KARTLARIN TOPLAM KÂR SATIRI
+      const totalTr = document.createElement('tr');
+      const totMClass = grandTotalMonth >= 0 ? 'green' : 'red';
+      const totYClass = grandTotalYear >= 0 ? 'green' : 'red';
+
+      totalTr.innerHTML = `
+        <td style="text-align: left;"><b>TOPLAM</b></td>
+        <td class="${totMClass}"><b>${grandTotalMonth >= 0 ? '+' : ''}${formatNum(grandTotalMonth, 2)}%</b></td>
+        <td class="${totYClass}"><b>${grandTotalYear >= 0 ? '+' : ''}${formatNum(grandTotalYear, 2)}%</b></td>
+      `;
+      tbody.appendChild(totalTr);
     }
 
     function addRadarCoin() {
@@ -976,13 +894,14 @@
 
       document.getElementById(`tf-label-${slotIndex}`).innerText = `${coinsConfig[slotIndex].interval} | RSI(${coinsConfig[slotIndex].rsiLength})`;
 
-      candlesData[slotIndex] = []; // Eski coine ait veriyi temizle
+      candlesData[slotIndex] = [];
       saveConfig();
       loadCoinData(slotIndex);
     }
 
     function changeGlobalYear() {
       SELECTED_YEAR = document.getElementById('global-year').value;
+      document.getElementById('summary-year-label').innerText = SELECTED_YEAR;
       saveConfig();
       candlesData = [];
       renderCardsHTML();
@@ -1165,16 +1084,26 @@
         targetEl.innerText = '-';
       }
 
+      // AYLIK TABLO VE YILLIK/AYLIK HESAPLAMA
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
-      if (mTable) {
-        mTable.innerHTML = '';
-        let totT = 0, totW = 0, totL = 0, totPnl = 0;
+      let totT = 0, totW = 0, totL = 0, totPnl = 0;
+      let currentMonthPnl = 0;
 
-        Object.keys(monthlyStats).sort().reverse().forEach(mKey => {
-          const m = monthlyStats[mKey];
-          if (m.trades === 0) return;
-          totT += m.trades; totW += m.win; totL += m.loss; totPnl += m.pnl;
+      const nowD = new Date();
+      const activeMonthKey = `${SELECTED_YEAR}-${String(nowD.getMonth() + 1).padStart(2, '0')}`;
 
+      if (mTable) mTable.innerHTML = '';
+
+      Object.keys(monthlyStats).sort().reverse().forEach(mKey => {
+        const m = monthlyStats[mKey];
+        if (m.trades === 0) return;
+        totT += m.trades; totW += m.win; totL += m.loss; totPnl += m.pnl;
+
+        if (mKey === activeMonthKey) {
+          currentMonthPnl = m.pnl;
+        }
+
+        if (mTable) {
           const tr = document.createElement('tr');
           tr.innerHTML = `
             <td><b>${mKey}</b></td>
@@ -1184,8 +1113,10 @@
             <td class="${m.pnl >= 0 ? 'green':'red'}"><b>${m.pnl >= 0 ? '+':''}${formatNum(m.pnl, 2)}%</b></td>
           `;
           mTable.appendChild(tr);
-        });
+        }
+      });
 
+      if (mTable) {
         const totalTr = document.createElement('tr');
         totalTr.innerHTML = `
           <td><b>TOPLAM</b></td>
@@ -1196,6 +1127,10 @@
         `;
         mTable.appendChild(totalTr);
       }
+
+      // SAĞ TARAFTAKİ ÖZET BİLGİ İÇİN SAKLA
+      cardProfits[slotIndex] = { monthPnl: currentMonthPnl, yearPnl: totPnl };
+      renderProfitSummarySidebar();
 
       const tTable = document.getElementById(`table-trades-${slotIndex}`);
       if (tTable) {
@@ -1213,8 +1148,12 @@
       }
     }
 
+    // DOĞRUDAN UYGULAMA BAŞLATMA (ŞİFRESİZ)
     function initApp() {
       loadSavedConfig();
+      for (let i = 0; i < coinsConfig.length; i++) {
+        loadCoinData(i);
+      }
       fetchRadarRSIAll();
 
       setInterval(() => {
@@ -1234,6 +1173,11 @@
 
       setInterval(fetchRadarRSIAll, 1000);
     }
+
+    // Sayfa açıldığında şifresiz direkt başlat
+    window.onload = function() {
+      initApp();
+    };
   </script>
 </body>
 </html>
