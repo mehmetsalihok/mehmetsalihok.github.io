@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CODEMSO 4'lü Kripto RSI & Backtest Terminali</title>
-  <!-- TradingView Lightweight Charts CDN -->
-  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <title>CODEMSO 4'lü Kripto Terminali</title>
   <style>
     :root {
       --bg-color: #0b1120;
@@ -65,23 +63,23 @@
       gap: 8px;
     }
 
-    /* 4'LÜ IZGARA (GRID) LAYOUT */
+    /* 4'LÜ IZGARA (2x2 GRID) */
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
       gap: 10px;
     }
 
     @media (min-width: 900px) {
       .dashboard-grid {
-        grid-template-columns: 1fr 1fr; /* 2x2 Izgara */
+        grid-template-columns: 1fr 1fr;
       }
     }
 
     .card {
       background-color: var(--card-bg);
       border-radius: 8px;
-      padding: 8px 10px;
+      padding: 10px;
       border: 1px solid var(--border-color);
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       display: flex;
@@ -116,45 +114,15 @@
       font-weight: 600;
     }
 
-    .settings-grid {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    .setting-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .setting-item label {
-      font-size: 0.62rem;
-      color: var(--text-muted);
-      font-weight: 600;
-    }
-
-    .setting-item input, .setting-item select {
-      padding: 2px 4px;
+    .coin-input {
+      padding: 3px 6px;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background-color: var(--input-bg);
       color: var(--text-color);
-      font-size: 0.68rem;
-      font-weight: 700;
-      width: 65px;
-    }
-
-    .coin-select-input {
-      padding: 2px 4px;
-      border: 1px solid var(--border-color);
-      border-radius: 4px;
-      background-color: var(--input-bg);
-      color: var(--text-color);
-      font-size: 0.72rem;
+      font-size: 0.8rem;
       font-weight: 800;
-      width: 110px;
+      width: 120px;
       text-transform: uppercase;
     }
 
@@ -165,7 +133,7 @@
     }
 
     .price {
-      font-size: 1.1rem;
+      font-size: 1.25rem;
       font-weight: 800;
     }
 
@@ -191,20 +159,52 @@
     }
 
     .stat-value {
-      font-size: 0.88rem;
+      font-size: 0.95rem;
       font-weight: 800;
     }
 
-    /* MINI CHART CONTAINER */
-    .chart-container {
-      width: 100%;
-      height: 160px;
-      border-radius: 4px;
-      overflow: hidden;
+    .position-box {
       background-color: var(--box-bg);
+      padding: 6px 8px;
+      border-radius: 6px;
       border: 1px solid var(--border-color);
     }
 
+    /* HER COINE ÖZEL AYARLAR PANOSU */
+    .coin-settings-box {
+      background-color: var(--box-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .coin-setting-item {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .coin-setting-item label {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .coin-setting-item input {
+      padding: 2px 4px;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      background-color: var(--card-bg);
+      color: var(--text-color);
+      font-size: 0.68rem;
+      font-weight: 700;
+      width: 100%;
+    }
+
+    /* ACCORDION BAŞLIKLAR */
     .table-title {
       font-size: 0.68rem;
       font-weight: 700;
@@ -213,14 +213,14 @@
       align-items: center;
       cursor: pointer;
       user-select: none;
-      padding: 2px 0;
+      padding: 3px 0;
       border-top: 1px solid var(--border-color);
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .collapsible-content {
       display: none;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     table {
@@ -261,250 +261,44 @@
 
   <div class="container">
     
-    <!-- GENEL AYARLAR PANOSU -->
+    <!-- GENEL BAŞLIK VE YIL SEÇİMİ -->
     <div class="header-card">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="badge">CODEMSO TERMINAL (4 COIN)</span>
         <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀️ Gündüz Modu</button>
       </div>
 
-      <div class="settings-grid">
-        <div class="setting-item">
-          <label>Yıl:</label>
-          <select id="global-year" style="width: 55px;" onchange="updateGlobalSettings()">
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
-          </select>
-        </div>
-        <div class="setting-item">
-          <label>RSI Al:</label>
-          <input type="number" id="global-buy-rsi" value="20" onchange="updateGlobalSettings()">
-        </div>
-        <div class="setting-item">
-          <label>RSI Sat:</label>
-          <input type="number" id="global-sell-rsi" value="85" onchange="updateGlobalSettings()">
-        </div>
-        <div class="setting-item">
-          <label>Kâr (%):</label>
-          <input type="number" id="global-profit-target" value="4.0" step="0.1" onchange="updateGlobalSettings()">
-        </div>
-        <div class="setting-item">
-          <label>Ay Kilit (%):</label>
-          <input type="number" id="global-monthly-cap" value="2.5" step="0.5" onchange="updateGlobalSettings()">
-        </div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <label style="font-weight:700; font-size:0.68rem; color:var(--text-muted)">Genel Yıl Seçimi:</label>
+        <select id="global-year" style="padding: 2px 6px; border-radius:4px; background:var(--input-bg); color:var(--text-color); font-weight:700; border:1px solid var(--border-color);" onchange="changeGlobalYear()">
+          <option value="2026">2026</option>
+          <option value="2025">2025</option>
+        </select>
       </div>
     </div>
 
     <!-- 4'LÜ COIN TERMINAL IZGARASI -->
-    <div class="dashboard-grid">
-      
-      <!-- SLOT 1 -->
-      <div class="card" id="card-0">
-        <div class="header-bar">
-          <input type="text" class="coin-select-input" value="ASTERUSDT" id="coin-symbol-0" onchange="changeCoinSymbol(0)">
-          <span class="loader" id="loader-0">Yükleniyor...</span>
-        </div>
-        <div class="price-row">
-          <span class="price" id="price-0">--.--</span>
-          <span style="font-size:0.65rem; color:var(--text-muted)">30m | RSI(8)</span>
-        </div>
-        <div class="grid-2">
-          <div class="stat-box">
-            <span class="stat-label">Anlık RSI</span>
-            <span class="stat-value neutral" id="rsi-0">--,--</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">Pozisyon</span>
-            <span class="stat-value" id="pos-0">Bekleniyor</span>
-          </div>
-        </div>
-        
-        <!-- MINI CHART -->
-        <div class="chart-container" id="chart-0"></div>
-
-        <!-- ACCORDION TABLOLAR -->
-        <div class="table-title" onclick="toggleAccordion('acc-monthly-0')">
-          <span>📅 Aylık Performans Tablosu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-monthly-0">
-          <table>
-            <thead><tr><th>Ay</th><th>İşl.</th><th>Win</th><th>Loss</th><th>Net Kâr (%)</th></tr></thead>
-            <tbody id="table-monthly-0"></tbody>
-          </table>
-        </div>
-
-        <div class="table-title" onclick="toggleAccordion('acc-trades-0')">
-          <span>📜 Son İşlemler Logu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-trades-0">
-          <table>
-            <thead><tr><th>Giriş</th><th>Çıkış</th><th>Net (%)</th><th>Neden</th></tr></thead>
-            <tbody id="table-trades-0"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- SLOT 2 -->
-      <div class="card" id="card-1">
-        <div class="header-bar">
-          <input type="text" class="coin-select-input" value="BTCUSDT" id="coin-symbol-1" onchange="changeCoinSymbol(1)">
-          <span class="loader" id="loader-1">Yükleniyor...</span>
-        </div>
-        <div class="price-row">
-          <span class="price" id="price-1">--.--</span>
-          <span style="font-size:0.65rem; color:var(--text-muted)">30m | RSI(8)</span>
-        </div>
-        <div class="grid-2">
-          <div class="stat-box">
-            <span class="stat-label">Anlık RSI</span>
-            <span class="stat-value neutral" id="rsi-1">--,--</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">Pozisyon</span>
-            <span class="stat-value" id="pos-1">Bekleniyor</span>
-          </div>
-        </div>
-        
-        <div class="chart-container" id="chart-1"></div>
-
-        <div class="table-title" onclick="toggleAccordion('acc-monthly-1')">
-          <span>📅 Aylık Performans Tablosu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-monthly-1">
-          <table>
-            <thead><tr><th>Ay</th><th>İşl.</th><th>Win</th><th>Loss</th><th>Net Kâr (%)</th></tr></thead>
-            <tbody id="table-monthly-1"></tbody>
-          </table>
-        </div>
-
-        <div class="table-title" onclick="toggleAccordion('acc-trades-1')">
-          <span>📜 Son İşlemler Logu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-trades-1">
-          <table>
-            <thead><tr><th>Giriş</th><th>Çıkış</th><th>Net (%)</th><th>Neden</th></tr></thead>
-            <tbody id="table-trades-1"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- SLOT 3 -->
-      <div class="card" id="card-2">
-        <div class="header-bar">
-          <input type="text" class="coin-select-input" value="ETHUSDT" id="coin-symbol-2" onchange="changeCoinSymbol(2)">
-          <span class="loader" id="loader-2">Yükleniyor...</span>
-        </div>
-        <div class="price-row">
-          <span class="price" id="price-2">--.--</span>
-          <span style="font-size:0.65rem; color:var(--text-muted)">30m | RSI(8)</span>
-        </div>
-        <div class="grid-2">
-          <div class="stat-box">
-            <span class="stat-label">Anlık RSI</span>
-            <span class="stat-value neutral" id="rsi-2">--,--</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">Pozisyon</span>
-            <span class="stat-value" id="pos-2">Bekleniyor</span>
-          </div>
-        </div>
-        
-        <div class="chart-container" id="chart-2"></div>
-
-        <div class="table-title" onclick="toggleAccordion('acc-monthly-2')">
-          <span>📅 Aylık Performans Tablosu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-monthly-2">
-          <table>
-            <thead><tr><th>Ay</th><th>İşl.</th><th>Win</th><th>Loss</th><th>Net Kâr (%)</th></tr></thead>
-            <tbody id="table-monthly-2"></tbody>
-          </table>
-        </div>
-
-        <div class="table-title" onclick="toggleAccordion('acc-trades-2')">
-          <span>📜 Son İşlemler Logu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-trades-2">
-          <table>
-            <thead><tr><th>Giriş</th><th>Çıkış</th><th>Net (%)</th><th>Neden</th></tr></thead>
-            <tbody id="table-trades-2"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- SLOT 4 -->
-      <div class="card" id="card-3">
-        <div class="header-bar">
-          <input type="text" class="coin-select-input" value="SOLUSDT" id="coin-symbol-3" onchange="changeCoinSymbol(3)">
-          <span class="loader" id="loader-3">Yükleniyor...</span>
-        </div>
-        <div class="price-row">
-          <span class="price" id="price-3">--.--</span>
-          <span style="font-size:0.65rem; color:var(--text-muted)">30m | RSI(8)</span>
-        </div>
-        <div class="grid-2">
-          <div class="stat-box">
-            <span class="stat-label">Anlık RSI</span>
-            <span class="stat-value neutral" id="rsi-3">--,--</span>
-          </div>
-          <div class="stat-box">
-            <span class="stat-label">Pozisyon</span>
-            <span class="stat-value" id="pos-3">Bekleniyor</span>
-          </div>
-        </div>
-        
-        <div class="chart-container" id="chart-3"></div>
-
-        <div class="table-title" onclick="toggleAccordion('acc-monthly-3')">
-          <span>📅 Aylık Performans Tablosu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-monthly-3">
-          <table>
-            <thead><tr><th>Ay</th><th>İşl.</th><th>Win</th><th>Loss</th><th>Net Kâr (%)</th></tr></thead>
-            <tbody id="table-monthly-3"></tbody>
-          </table>
-        </div>
-
-        <div class="table-title" onclick="toggleAccordion('acc-trades-3')">
-          <span>📜 Son İşlemler Logu</span>
-          <span>▼</span>
-        </div>
-        <div class="collapsible-content" id="acc-trades-3">
-          <table>
-            <thead><tr><th>Giriş</th><th>Çıkış</th><th>Net (%)</th><th>Neden</th></tr></thead>
-            <tbody id="table-trades-3"></tbody>
-          </table>
-        </div>
-      </div>
-
+    <div class="dashboard-grid" id="grid-container">
+      <!-- JS İLE DOLDURULACAK -->
     </div>
 
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v1';
+    const STORAGE_KEY = 'codemso_multi_terminal_v2';
     const INTERVAL = '30m';
     const RSI_PERIOD = 8;
 
-    // Slot Hafızaları
-    let activeCoins = ['ASTERUSDT', 'BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
-    let chartInstances = [null, null, null, null];
-    let seriesInstances = [null, null, null, null];
+    let SELECTED_YEAR = '2026';
     let candlesData = [[], [], [], []];
 
-    // Strateji Ayarları
-    let SELECTED_YEAR = '2026';
-    let BUY_RSI = 20;
-    let SELL_RSI = 85;
-    let PROFIT_TARGET = 4.0;
-    let MONTHLY_CAP = 2.5;
+    // Her Coin İçin Varsayılan ve Bağımsız Ayarlar
+    let coinsConfig = [
+      { symbol: 'ASTERUSDT', buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
+      { symbol: 'BTCUSDT',   buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0 },
+      { symbol: 'ETHUSDT',   buyRsi: 25, sellRsi: 75, profitTarget: 2.5, monthlyCap: 3.0 },
+      { symbol: 'SOLUSDT',   buyRsi: 22, sellRsi: 80, profitTarget: 3.0, monthlyCap: 3.0 }
+    ];
 
     function formatNum(val, dec = 2) {
       if (val === null || val === undefined || isNaN(val)) return '--,--';
@@ -520,84 +314,143 @@
       document.body.classList.toggle('light-mode');
       const isLight = document.body.classList.contains('light-mode');
       document.getElementById('theme-btn').innerText = isLight ? '🌙 Gece Modu' : '☀️ Gündüz Modu';
-      
-      // Grafikleri tema rengine adapte et
-      chartInstances.forEach(chart => {
-        if (!chart) return;
-        chart.applyOptions({
-          layout: {
-            backgroundColor: isLight ? '#f1f5f9' : '#0f172a',
-            textColor: isLight ? '#0f172a' : '#94a3b8',
-          },
-          grid: {
-            vertLines: { color: isLight ? '#e2e8f0' : '#1e293b' },
-            horzLines: { color: isLight ? '#e2e8f0' : '#1e293b' }
-          }
-        });
-      });
     }
 
-    // LocalStorage Yükleme & Kaydetme
-    function loadSettings() {
+    // AYARLARI OKU VE KARTLARI OLUŞTUR
+    function loadSavedConfig() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         try {
-          const s = JSON.parse(saved);
-          if (s.activeCoins) activeCoins = s.activeCoins;
-          if (s.year) document.getElementById('global-year').value = s.year;
-          if (s.buyRsi) document.getElementById('global-buy-rsi').value = s.buyRsi;
-          if (s.sellRsi) document.getElementById('global-sell-rsi').value = s.sellRsi;
-          if (s.profitTarget) document.getElementById('global-profit-target').value = s.profitTarget;
-          if (s.monthlyCap) document.getElementById('global-monthly-cap').value = s.monthlyCap;
+          const parsed = JSON.parse(saved);
+          if (parsed.coinsConfig) coinsConfig = parsed.coinsConfig;
+          if (parsed.year) SELECTED_YEAR = parsed.year;
         } catch(e) {}
       }
-
-      for (let i = 0; i < 4; i++) {
-        document.getElementById(`coin-symbol-${i}`).value = activeCoins[i];
-      }
-
-      readGlobalSettings();
+      document.getElementById('global-year').value = SELECTED_YEAR;
+      renderCardsHTML();
     }
 
-    function saveSettings() {
+    function saveConfig() {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        activeCoins,
-        year: SELECTED_YEAR,
-        buyRsi: BUY_RSI,
-        sellRsi: SELL_RSI,
-        profitTarget: PROFIT_TARGET,
-        monthlyCap: MONTHLY_CAP
+        coinsConfig,
+        year: SELECTED_YEAR
       }));
     }
 
-    function readGlobalSettings() {
-      SELECTED_YEAR = document.getElementById('global-year').value;
-      BUY_RSI = parseFloat(document.getElementById('global-buy-rsi').value) || 20;
-      SELL_RSI = parseFloat(document.getElementById('global-sell-rsi').value) || 85;
-      PROFIT_TARGET = parseFloat(document.getElementById('global-profit-target').value) || 4.0;
-      MONTHLY_CAP = parseFloat(document.getElementById('global-monthly-cap').value) || 2.5;
+    // 4 KARTI HTML OLARAK DİNAMİK YAZDIRMA
+    function renderCardsHTML() {
+      const grid = document.getElementById('grid-container');
+      grid.innerHTML = '';
+
+      coinsConfig.forEach((coin, i) => {
+        const cardHTML = `
+          <div class="card" id="card-${i}">
+            <div class="header-bar">
+              <input type="text" class="coin-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
+              <span class="loader" id="loader-${i}">Yükleniyor...</span>
+            </div>
+
+            <div class="price-row">
+              <span class="price" id="price-${i}">--.--</span>
+              <span style="font-size:0.62rem; color:var(--text-muted)">30m | RSI(8)</span>
+            </div>
+
+            <div class="grid-2">
+              <div class="stat-box">
+                <span class="stat-label">Anlık RSI</span>
+                <span class="stat-value neutral" id="rsi-${i}">--,--</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Pozisyon</span>
+                <span class="stat-value" id="pos-${i}">Nötr</span>
+              </div>
+            </div>
+
+            <div class="position-box">
+              <div style="display: flex; justify-content: space-between; font-size: 0.65rem;">
+                <span>Giriş: <b id="entry-${i}">-</b></span>
+                <span>Canlı PnL: <b id="live-pnl-${i}">0,00%</b></span>
+                <span>Hedef: <b id="target-${i}" class="green">-</b></span>
+              </div>
+            </div>
+
+            <!-- HER COINE ÖZEL AYARLAR PANOSU -->
+            <div class="coin-settings-box">
+              <div class="coin-setting-item">
+                <label>RSI Al:</label>
+                <input type="number" id="setting-buyRsi-${i}" value="${coin.buyRsi}" onchange="updateCoinSetting(${i})">
+              </div>
+              <div class="coin-setting-item">
+                <label>RSI Sat:</label>
+                <input type="number" id="setting-sellRsi-${i}" value="${coin.sellRsi}" onchange="updateCoinSetting(${i})">
+              </div>
+              <div class="coin-setting-item">
+                <label>Kâr (%):</label>
+                <input type="number" step="0.1" id="setting-profitTarget-${i}" value="${coin.profitTarget}" onchange="updateCoinSetting(${i})">
+              </div>
+              <div class="coin-setting-item">
+                <label>Ay Kilit (%):</label>
+                <input type="number" step="0.5" id="setting-monthlyCap-${i}" value="${coin.monthlyCap}" onchange="updateCoinSetting(${i})">
+              </div>
+            </div>
+
+            <!-- ACCORDION TABLOLAR -->
+            <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
+              <span>📅 Aylık Performans Tablosu (${SELECTED_YEAR})</span>
+              <span>▼</span>
+            </div>
+            <div class="collapsible-content" id="acc-monthly-${i}">
+              <table>
+                <thead><tr><th>Ay</th><th>İşl.</th><th>Win</th><th>Loss</th><th>Net Kâr (%)</th></tr></thead>
+                <tbody id="table-monthly-${i}"></tbody>
+              </table>
+            </div>
+
+            <div class="table-title" onclick="toggleAccordion('acc-trades-${i}')">
+              <span>📜 Son İşlemler Logu</span>
+              <span>▼</span>
+            </div>
+            <div class="collapsible-content" id="acc-trades-${i}">
+              <table>
+                <thead><tr><th>Giriş</th><th>Çıkış</th><th>Net (%)</th><th>Neden</th></tr></thead>
+                <tbody id="table-trades-${i}"></tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        grid.innerHTML += cardHTML;
+      });
     }
 
-    function updateGlobalSettings() {
-      readGlobalSettings();
-      saveSettings();
+    // TEK COİNİN AYARINI GÜNCELLEME
+    function updateCoinSetting(slotIndex) {
+      let sym = document.getElementById(`coin-symbol-${slotIndex}`).value.toUpperCase().trim();
+      if (!sym.endsWith('USDT')) sym += 'USDT';
+      
+      document.getElementById(`coin-symbol-${slotIndex}`).value = sym;
+
+      coinsConfig[slotIndex] = {
+        symbol: sym,
+        buyRsi: parseFloat(document.getElementById(`setting-buyRsi-${slotIndex}`).value) || 20,
+        sellRsi: parseFloat(document.getElementById(`setting-sellRsi-${slotIndex}`).value) || 85,
+        profitTarget: parseFloat(document.getElementById(`setting-profitTarget-${slotIndex}`).value) || 4.0,
+        monthlyCap: parseFloat(document.getElementById(`setting-monthlyCap-${slotIndex}`).value) || 2.5
+      };
+
+      saveConfig();
+      loadCoinData(slotIndex);
+    }
+
+    function changeGlobalYear() {
+      SELECTED_YEAR = document.getElementById('global-year').value;
+      saveConfig();
+      renderCardsHTML();
       for (let i = 0; i < 4; i++) {
         loadCoinData(i);
       }
     }
 
-    function changeCoinSymbol(slotIndex) {
-      let val = document.getElementById(`coin-symbol-${slotIndex}`).value.toUpperCase().trim();
-      if (!val.endsWith('USDT')) val += 'USDT';
-      
-      activeCoins[slotIndex] = val;
-      document.getElementById(`coin-symbol-${slotIndex}`).value = val;
-      
-      saveSettings();
-      loadCoinData(slotIndex);
-    }
-
-    // RSI HESAPLAMA
+    // RSI HESAPLAMA (WILDER'S FORMÜLÜ)
     function calculateRSIHistory(prices, period = 8) {
       if (prices.length <= period) return [];
       let gains = 0, losses = 0;
@@ -627,45 +480,11 @@
       return rsiHistory;
     }
 
-    // LIGHTWEIGHT CHART OLUŞTURMA
-    function initChart(slotIndex) {
-      const container = document.getElementById(`chart-${slotIndex}`);
-      container.innerHTML = ''; // Temizle
-
-      const chart = LightweightCharts.createChart(container, {
-        height: 160,
-        layout: {
-          backgroundColor: '#0f172a',
-          textColor: '#94a3b8',
-          fontSize: 9
-        },
-        grid: {
-          vertLines: { color: '#1e293b' },
-          horzLines: { color: '#1e293b' }
-        },
-        timeScale: {
-          timeVisible: true,
-          secondsVisible: false
-        }
-      });
-
-      const candlestickSeries = chart.addCandlestickSeries({
-        upColor: '#22c55e',
-        downColor: '#ef4444',
-        borderVisible: false,
-        wickUpColor: '#22c55e',
-        wickDownColor: '#ef4444'
-      });
-
-      chartInstances[slotIndex] = chart;
-      seriesInstances[slotIndex] = candlestickSeries;
-    }
-
     // BINANCE YILLIK VERİ ÇEKME MOTORU
     async function loadCoinData(slotIndex) {
-      const symbol = activeCoins[slotIndex];
+      const coin = coinsConfig[slotIndex];
       const loaderEl = document.getElementById(`loader-${slotIndex}`);
-      loaderEl.innerText = 'Yükleniyor...';
+      if (loaderEl) loaderEl.innerText = 'Yükleniyor...';
 
       const yearStart = new Date(`${SELECTED_YEAR}-01-01T00:00:00Z`).getTime();
       const yearEnd = SELECTED_YEAR === '2026' ? Date.now() : new Date(`${SELECTED_YEAR}-12-31T23:59:59Z`).getTime();
@@ -674,7 +493,7 @@
       let startTime = yearStart;
 
       while (startTime < yearEnd) {
-        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${INTERVAL}&limit=1000&startTime=${startTime}`;
+        const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${INTERVAL}&limit=1000&startTime=${startTime}`;
         try {
           const res = await fetch(url);
           if (res.ok) {
@@ -682,7 +501,6 @@
             if (!data || data.length === 0) break;
 
             const parsed = data.map(c => ({
-              time: Math.floor(c[0] / 1000), // Lightweight charts Unix Timestamp (saniye)
               rawTime: c[0],
               open: parseFloat(c[1]),
               high: parseFloat(c[2]),
@@ -698,15 +516,18 @@
       }
 
       candlesData[slotIndex] = allCandles;
-      loaderEl.innerText = '🟢 Canlı';
+      if (loaderEl) loaderEl.innerText = '🟢 Canlı';
       runBacktestAndRender(slotIndex);
     }
 
-    // SİMÜLASYON VE GRAFİK ÇİZİMİ
+    // SİMÜLASYON MOTORU
     function runBacktestAndRender(slotIndex) {
+      const coin = coinsConfig[slotIndex];
       const candles = candlesData[slotIndex];
+      const loaderEl = document.getElementById(`loader-${slotIndex}`);
+
       if (!candles || candles.length === 0) {
-        document.getElementById(`loader-${slotIndex}`).innerText = '⚠️ Hata / Yanlış Sembol';
+        if (loaderEl) loaderEl.innerText = '⚠️ Hata / Yanlış Coin';
         return;
       }
 
@@ -718,7 +539,6 @@
 
       const trades = [];
       const monthlyStats = {};
-      const chartMarkers = [];
 
       for (let i = RSI_PERIOD + 1; i < candles.length; i++) {
         const c = candles[i];
@@ -736,24 +556,15 @@
 
         // 1. AL SİNYALİ
         if (!inPosition && !mStat.capReached) {
-          if (prevRsiVal <= BUY_RSI && rsiVal > BUY_RSI) {
+          if (prevRsiVal <= coin.buyRsi && rsiVal > coin.buyRsi) {
             inPosition = true;
             entryPrice = c.close;
-            
-            // Grafiğe AL İşareti Koy
-            chartMarkers.push({
-              time: c.time,
-              position: 'belowBar',
-              color: '#22c55e',
-              shape: 'arrowUp',
-              text: 'AL $' + c.close.toFixed(3)
-            });
           }
         }
 
         // 2. SAT SİNYALİ
         else if (inPosition) {
-          const targetPrice = entryPrice * (1 + PROFIT_TARGET / 100);
+          const targetPrice = entryPrice * (1 + coin.profitTarget / 100);
 
           let exited = false;
           let pnl = 0;
@@ -761,9 +572,9 @@
 
           if (c.high >= targetPrice) {
             exited = true;
-            pnl = PROFIT_TARGET;
-            reason = `Kâr (%${PROFIT_TARGET})`;
-          } else if (rsiVal >= SELL_RSI) {
+            pnl = coin.profitTarget;
+            reason = `Kâr (%${coin.profitTarget})`;
+          } else if (rsiVal >= coin.sellRsi) {
             exited = true;
             pnl = ((c.close - entryPrice) / entryPrice) * 100;
             reason = `RSI Sat (${formatNum(rsiVal, 1)})`;
@@ -781,24 +592,10 @@
             else curM.loss++;
             curM.pnl += pnl;
 
-            if (curM.pnl >= MONTHLY_CAP) curM.capReached = true;
-
-            // Grafiğe SAT İşareti Koy
-            chartMarkers.push({
-              time: c.time,
-              position: 'aboveBar',
-              color: isWin ? '#38bdf8' : '#eab308',
-              shape: 'arrowDown',
-              text: `SAT (%${formatNum(pnl, 1)})`
-            });
+            if (curM.pnl >= coin.monthlyCap) curM.capReached = true;
           }
         }
       }
-
-      // GRAFİĞİ BASTIR
-      initChart(slotIndex);
-      seriesInstances[slotIndex].setData(candles);
-      seriesInstances[slotIndex].setMarkers(chartMarkers);
 
       // ANLIK KART VERİLERİ
       const currentPrice = closePrices[closePrices.length - 1];
@@ -808,8 +605,29 @@
       document.getElementById(`rsi-${slotIndex}`).innerText = formatNum(currentRSI, 2);
 
       const posEl = document.getElementById(`pos-${slotIndex}`);
-      posEl.innerText = inPosition ? 'LONG' : 'Nötr';
-      posEl.className = inPosition ? 'stat-value green' : 'stat-value neutral';
+      const entryEl = document.getElementById(`entry-${slotIndex}`);
+      const livePnlEl = document.getElementById(`live-pnl-${slotIndex}`);
+      const targetEl = document.getElementById(`target-${slotIndex}`);
+
+      if (inPosition) {
+        posEl.innerText = 'LONG';
+        posEl.className = 'stat-value green';
+        entryEl.innerText = `$${entryPrice.toFixed(4)}`;
+        
+        const targetP = entryPrice * (1 + coin.profitTarget / 100);
+        targetEl.innerText = `$${targetP.toFixed(4)}`;
+
+        const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
+        livePnlEl.innerText = `${formatNum(livePnl, 2)}%`;
+        livePnlEl.className = livePnl >= 0 ? 'green' : 'red';
+      } else {
+        posEl.innerText = 'Nötr';
+        posEl.className = 'stat-value neutral';
+        entryEl.innerText = '-';
+        livePnlEl.innerText = '0,00%';
+        livePnlEl.className = '';
+        targetEl.innerText = '-';
+      }
 
       // AYLIK TABLO DOLDUR
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
@@ -848,17 +666,17 @@
       });
     }
 
-    // İLK YÜKLEME
-    loadSettings();
+    // BAŞLANGIÇ
+    loadSavedConfig();
     for (let i = 0; i < 4; i++) {
       loadCoinData(i);
     }
 
-    // 5 SANİYEDE BİR TÜM SLOTLARIN ANLIK FİYATINI CANLI TAZELE
+    // 5 SANİYEDE BİR CANLI FİYAT DÖNGÜSÜ
     setInterval(() => {
-      activeCoins.forEach((sym, slotIndex) => {
+      coinsConfig.forEach((coin, slotIndex) => {
         if (candlesData[slotIndex] && candlesData[slotIndex].length > 0 && SELECTED_YEAR === '2026') {
-          fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`)
+          fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${coin.symbol}`)
             .then(res => res.json())
             .then(data => {
               const livePrice = parseFloat(data.price);
