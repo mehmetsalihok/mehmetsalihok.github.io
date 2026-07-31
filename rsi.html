@@ -47,7 +47,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-width: 1650px;
+      max-width: 1700px;
       margin: 0 auto;
     }
 
@@ -73,7 +73,7 @@
     @media (min-width: 1150px) {
       .main-layout {
         display: grid;
-        grid-template-columns: 1fr 420px; /* Sağ Radar Genişliği */
+        grid-template-columns: 1fr 450px; /* Radar alanı rahat sığsın diye 450px yapıldı */
         align-items: start;
       }
     }
@@ -265,23 +265,24 @@
     }
 
     .watchlist-table th, .watchlist-table td {
-      padding: 3px 2px;
+      padding: 4px 3px;
       border-bottom: 1px solid var(--border-color);
       text-align: center;
     }
 
     .watchlist-table th {
       color: var(--text-muted);
-      font-size: 0.55rem;
+      font-size: 0.58rem;
       text-transform: uppercase;
     }
 
+    /* GENİŞLETİLMİŞ KUTU BOYUTU */
     .alarm-input {
-      width: 28px;
-      padding: 1px 2px;
-      font-size: 0.6rem;
+      width: 38px; /* 28px'den 38px'e çıkarıldı, rahatça sığar */
+      padding: 2px 3px;
+      font-size: 0.65rem;
       border: 1px solid var(--border-color);
-      border-radius: 3px;
+      border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
       text-align: center;
@@ -289,10 +290,10 @@
     }
 
     .select-mini {
-      padding: 1px 2px;
-      font-size: 0.6rem;
+      padding: 2px 3px;
+      font-size: 0.62rem;
       border: 1px solid var(--border-color);
-      border-radius: 3px;
+      border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
       font-weight: 700;
@@ -303,8 +304,8 @@
       border: none;
       color: var(--text-muted);
       cursor: pointer;
-      padding: 0 1px;
-      font-size: 0.62rem;
+      padding: 0 2px;
+      font-size: 0.65rem;
     }
 
     .action-btn:hover {
@@ -419,7 +420,7 @@
             <option value="1h">1h</option>
             <option value="4h">4h</option>
           </select>
-          <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:32px;">
+          <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:38px;">
           <button class="add-btn" onclick="addRadarCoin()">+ Ekle</button>
         </div>
 
@@ -461,7 +462,7 @@
       { symbol: 'SOLUSDT',   interval: '30m', rsiLength: 8,  buyRsi: 22, sellRsi: 80, profitTarget: 3.0, monthlyCap: 3.0 }
     ];
 
-    // Sağ Taraf İzleme Listesi (Özel TF ve RSI Periyodu ile)
+    // Sağ Taraf İzleme Listesi
     let radarWatchlist = [
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8,  buyAlarm: 20, sellAlarm: 85, currentRsi: null },
       { symbol: 'DOGEUSDT',  interval: '15m', rsiLength: 10, buyAlarm: 20, sellAlarm: 85, currentRsi: null },
@@ -486,7 +487,6 @@
       document.getElementById('theme-btn').innerText = isLight ? '🌙 Gece Modu' : '☀️ Gündüz Modu';
     }
 
-    // BİP SESİ SİMÜLASYONU
     function playBeepSound() {
       try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -506,7 +506,6 @@
       playBeepSound();
     }
 
-    // CONFIG OKU VE KAYDET
     function loadSavedConfig() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -530,7 +529,6 @@
       }));
     }
 
-    // 4 ANALİZ KARTINI YAZDIRMA
     function renderCardsHTML() {
       const grid = document.getElementById('grid-container');
       grid.innerHTML = '';
@@ -627,13 +625,14 @@
       });
     }
 
-    // SAĞ RADAR TABLOSUNU YAZDIRMA
+    // SAĞ RADAR TABLOSUNU YAZDIRMA (4 HANELİ RSI & GENİŞ KUTULAR)
     function renderRadarHTML() {
       const tbody = document.getElementById('radar-tbody');
       tbody.innerHTML = '';
 
       radarWatchlist.forEach((item, index) => {
-        let rsiDisplay = item.currentRsi !== null ? formatNum(item.currentRsi, 1) : '--,--';
+        // 4 HANELİ (xx,xx) RSI FORMATI
+        let rsiDisplay = item.currentRsi !== null ? formatNum(item.currentRsi, 2) : '--,--';
         let rsiClass = 'neutral';
         let alertClass = '';
 
@@ -675,7 +674,6 @@
       });
     }
 
-    // RADAR İŞLEMLERİ: COIN EKLE / SİL / TAŞI
     function addRadarCoin() {
       const input = document.getElementById('new-radar-coin');
       const tfSelect = document.getElementById('new-radar-tf');
@@ -728,19 +726,16 @@
       fetchRadarRSIAll();
     }
 
-    // CANLI SAĞ RADAR RSI HESAPLAMA MOTORU (ÖZEL TF & RSI UZUNLUĞU İLE)
     async function fetchRadarRSIAll() {
       let alarmTriggeredAny = false;
 
       for (let item of radarWatchlist) {
         try {
-          // Her coin için tanımlanan özel zaman dilimi (interval) ile 50 mum verisi çekiliyor
           const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${item.symbol}&interval=${item.interval}&limit=50`);
           if (res.ok) {
             const data = await res.json();
             const closePrices = data.map(c => parseFloat(c[4]));
             
-            // Her coin için tanımlanan özel RSI uzunluğu (rsiLength) ile RSI hesaplanıyor
             const rsiVals = calculateRSIHistory(closePrices, item.rsiLength);
             const currentRSI = rsiVals[rsiVals.length - 1];
 
@@ -793,7 +788,6 @@
       }
     }
 
-    // RSI FORMÜLÜ (WILDER'S DİNAMİK PERİYOD)
     function calculateRSIHistory(prices, period = 8) {
       if (prices.length <= period) return [];
       let gains = 0, losses = 0;
@@ -823,7 +817,6 @@
       return rsiHistory;
     }
 
-    // ANALİZ KARTLARI VERİ ÇEKME MOTORU
     async function loadCoinData(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const loaderEl = document.getElementById(`loader-${slotIndex}`);
@@ -863,7 +856,6 @@
       runBacktestAndRender(slotIndex);
     }
 
-    // SİMÜLASYON
     function runBacktestAndRender(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const candles = candlesData[slotIndex];
@@ -897,7 +889,6 @@
 
         const mStat = monthlyStats[monthKey];
 
-        // AL
         if (!inPosition && !mStat.capReached) {
           if (prevRsiVal <= coin.buyRsi && rsiVal > coin.buyRsi) {
             inPosition = true;
@@ -905,7 +896,6 @@
           }
         }
 
-        // SAT
         else if (inPosition) {
           const targetPrice = entryPrice * (1 + coin.profitTarget / 100);
 
@@ -971,7 +961,6 @@
         targetEl.innerText = '-';
       }
 
-      // AYLIK TABLO DOLDUR
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
       mTable.innerHTML = '';
 
@@ -990,7 +979,6 @@
         mTable.appendChild(tr);
       });
 
-      // İŞLEM LOGU DOLDUR
       const tTable = document.getElementById(`table-trades-${slotIndex}`);
       tTable.innerHTML = '';
       trades.slice(-5).reverse().forEach(t => {
@@ -1012,7 +1000,7 @@
     }
     fetchRadarRSIAll();
 
-    // DÖNGÜLER: 1 SANİYELİK CANLI TAZELEME (1000ms)
+    // DÖNGÜLER: 1s CANLI TAZELEME
     setInterval(() => {
       coinsConfig.forEach((coin, slotIndex) => {
         if (candlesData[slotIndex] && candlesData[slotIndex].length > 0 && SELECTED_YEAR === '2026') {
@@ -1028,7 +1016,6 @@
       });
     }, 1000);
 
-    // Sağ Radar için 1 Saniyede Bir Anlık RSI Taraması
     setInterval(fetchRadarRSIAll, 1000);
   </script>
 </body>
