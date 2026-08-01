@@ -621,7 +621,7 @@
     </div>
   </div>
 
-  <!-- STRATEJİ SİHİRBAZI MODALI -->
+  <!-- STRATEJİ SİHİRBAZI MODALI (AYRILMIŞ İŞLEM VE KAYIP SATIRLARI) -->
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
       <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
@@ -651,8 +651,12 @@
           <b id="opt-best-winrate" class="green">--%</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span>Kayıp / İşlem:</span>
+          <span>Kayıp İşlem Sayısı:</span>
           <b id="opt-best-loss" class="red">0 Kayıp</b>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>Toplam İşlem Sayısı:</span>
+          <b id="opt-best-trades">0 İşlem</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
           <span>Geçmiş Net Toplam Kâr:</span>
@@ -786,7 +790,6 @@
       }));
     }
 
-    /* SITE İÇİ ÖZEL YENİ KART EKLEME MODAL İŞLEMLERİ */
     function addNewCard() {
       if (coinsConfig.length >= 8) {
         alert('Maksimum 8 adet analiz kartı ekleyebilirsiniz!');
@@ -1129,7 +1132,10 @@
       if (wrEl) wrEl.innerText = `%${bestCandidate.winRate}`;
 
       const lossEl = document.getElementById('opt-best-loss');
-      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayıp / ${bestCandidate.totalTrades} İşlem`;
+      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayıp`;
+
+      const tradesEl = document.getElementById('opt-best-trades');
+      if (tradesEl) tradesEl.innerText = `${bestCandidate.totalTrades} İşlem`;
 
       const pnlEl = document.getElementById('opt-best-pnl');
       if (pnlEl) pnlEl.innerText = `${bestCandidate.totPnl >= 0 ? '+' : ''}${bestCandidate.totPnl.toFixed(2)}%`;
