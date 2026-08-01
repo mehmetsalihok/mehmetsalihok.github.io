@@ -1,17 +1,17 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CODEMSO | Terminal Giriş</title>
+  <title>CODEMSO | Terminal Login</title>
   <style>
     :root {
-      --bg-color: #f1f5f9;
+      --bg-color: #f8fafc;
       --card-bg: #ffffff;
       --text-color: #0f172a;
       --text-muted: #64748b;
       --border-color: #cbd5e1;
-      --box-bg: #f8fafc;
+      --box-bg: #ffffff;
       --accent-color: #0284c7;
       --accent-hover: #0369a1;
       --danger-color: #ef4444;
@@ -25,7 +25,7 @@
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
       min-height: 100vh;
@@ -36,38 +36,52 @@
       font-size: 0.72rem;
     }
 
-    /* DAHA KÜÇÜK VE KOMPAKT BEYAZ KART */
+    /* KOMPAKT VE ZARİF BEYAZ KART */
     .login-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
       width: 100%;
-      max-width: 290px;
-      padding: 20px 18px;
+      max-width: 280px;
+      padding: 22px 20px;
       display: flex;
       flex-direction: column;
       gap: 14px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
     }
 
     .login-header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
       border-bottom: 1px solid var(--border-color);
-      padding-bottom: 10px;
+      padding-bottom: 14px;
+      gap: 10px;
+    }
+
+    /* KORUMALI LOGO BİÇİMLENDİRMESİ */
+    .login-logo {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     .brand-name {
-      font-weight: 800;
-      font-size: 1rem;
+      font-weight: 700;
+      font-size: 0.92rem;
       letter-spacing: 0.5px;
       color: var(--text-color);
     }
 
     .brand-sub {
       color: #0284c7;
-      font-size: 0.62rem;
-      font-weight: 700;
-      margin-top: 2px;
-      display: block;
+      font-size: 0.58rem;
+      font-weight: 600;
       letter-spacing: 0.5px;
+      display: block;
+      margin-top: 2px;
     }
 
     .form-group {
@@ -77,9 +91,9 @@
     }
 
     .form-group label {
-      font-size: 0.60rem;
+      font-size: 0.58rem;
       color: var(--text-muted);
-      font-weight: 700;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -89,8 +103,8 @@
       border: 1px solid var(--border-color);
       color: var(--text-color);
       padding: 6px 8px;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.72rem;
+      font-weight: 400;
       outline: none;
       width: 100%;
       transition: border-color 0.2s;
@@ -98,19 +112,19 @@
 
     .form-control:focus {
       border-color: #0284c7;
-      background-color: #ffffff;
     }
 
+    /* KÜÇÜLTÜLMÜŞ VE ŞIK LOGIN BUTONU */
     .btn-login {
       background-color: var(--accent-color);
       color: #ffffff;
       border: 1px solid var(--accent-hover);
-      padding: 8px;
-      font-size: 0.72rem;
-      font-weight: 800;
+      padding: 7px 12px;
+      font-size: 0.68rem;
+      font-weight: 600;
       cursor: pointer;
       letter-spacing: 0.5px;
-      margin-top: 2px;
+      margin-top: 4px;
       transition: background-color 0.2s;
     }
 
@@ -120,8 +134,8 @@
 
     .error-msg {
       color: var(--danger-color);
-      font-size: 0.62rem;
-      font-weight: 700;
+      font-size: 0.60rem;
+      font-weight: 500;
       display: none;
       text-align: center;
       background-color: #fef2f2;
@@ -130,11 +144,11 @@
     }
 
     .footer-info {
-      font-size: 0.58rem;
+      font-size: 0.55rem;
       color: var(--text-muted);
       text-align: center;
       font-family: monospace;
-      margin-top: 4px;
+      margin-top: 2px;
     }
   </style>
 </head>
@@ -142,24 +156,28 @@
 
   <div class="login-card">
     <div class="login-header">
-      <div class="brand-name">CODEMSO</div>
-      <span class="brand-sub">TERMINAL ERİŞİM PORTALI</span>
+      <!-- Sürüklenemez ve adresi doğrudan görünmez Logo -->
+      <img src="https://i.hizliresim.com/mes685t.png" alt="Logo" class="login-logo" oncontextmenu="return false;">
+      <div>
+        <div class="brand-name">CODEMSO</div>
+        <span class="brand-sub">TERMINAL ACCESS PORTAL</span>
+      </div>
     </div>
 
     <form id="login-form" onsubmit="handleLogin(event)">
       <div class="form-group" style="margin-bottom: 10px;">
-        <label for="username">Kullanıcı Adı</label>
-        <input type="text" id="username" class="form-control" placeholder="Kullanıcı adı" required autocomplete="username">
+        <label for="username">Username</label>
+        <input type="text" id="username" class="form-control" placeholder="Enter username" required autocomplete="username">
       </div>
 
       <div class="form-group" style="margin-bottom: 10px;">
-        <label for="password">Şifre</label>
-        <input type="password" id="password" class="form-control" placeholder="Şifre" required autocomplete="current-password">
+        <label for="password">Password</label>
+        <input type="password" id="password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
       </div>
 
-      <div id="error-msg" class="error-msg">Kullanıcı adı veya şifre hatalı!</div>
+      <div id="error-msg" class="error-msg">Invalid username or password.</div>
 
-      <button type="submit" class="btn-login">GİRİŞ YAP</button>
+      <button type="submit" class="btn-login">LOGIN</button>
     </form>
 
     <div class="footer-info">
@@ -169,7 +187,7 @@
 
   <script>
     // ==========================================
-    // GİRİŞ BİLGİLERİ (BURADAN DEĞİŞTİREBİLİRSİNİZ)
+    // LOGIN CREDENTIALS
     // ==========================================
     const VALID_USERNAME = "salih";
     const VALID_PASSWORD = "123";
@@ -182,11 +200,8 @@
       const errorEl = document.getElementById('error-msg');
 
       if (userInput === VALID_USERNAME && passInput === VALID_PASSWORD) {
-        // Oturum kaydını yap
         sessionStorage.setItem('codemso_auth', 'true');
         errorEl.style.display = 'none';
-        
-        // Doğrudan terminal sayfasına yönlendir
         window.location.href = 'rsi.html';
       } else {
         errorEl.style.display = 'block';
