@@ -559,7 +559,7 @@
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
       <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
-        <span>🤖 MINIMUM KAYIP SİHİRBAZI</span>
+        <span>🤖 STRATEJİ SİHİRBAZI</span>
         <button onclick="closeOptimizerModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-weight:bold;">✖</button>
       </div>
 
@@ -569,7 +569,7 @@
 
       <div style="background:var(--box-bg); padding:10px; border-radius:6px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px; font-size:0.68rem;">
         <div style="display:flex; justify-content:space-between;">
-          <span>Hedef Kâr Oranınız:</span>
+          <span>Hedef Kâr Oranı:</span>
           <b id="opt-target-profit" class="green">%1.0</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
@@ -581,19 +581,15 @@
           <b id="opt-best-sell" style="color:#eab308;">--</b>
         </div>
         <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:4px;">
-          <span>En Düşüş Kayıp Oranı:</span>
-          <b id="opt-best-loss" class="red">0 Kayıp</b>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
           <span>Başarı Oranı (Win Rate):</span>
           <b id="opt-best-winrate" class="green">--%</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span>Toplam İşlem Sayısı:</span>
-          <b id="opt-best-trades">--</b>
+          <span>Kayıp / İşlem:</span>
+          <b id="opt-best-loss" class="red">0 Kayıp</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span>Geçmiş Net Kâr:</span>
+          <span>Geçmiş Net Toplam Kâr:</span>
           <b id="opt-best-pnl" class="green">--%</b>
         </div>
       </div>
@@ -606,7 +602,7 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v11';
+    const STORAGE_KEY = 'codemso_multi_terminal_v12';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
@@ -641,9 +637,15 @@
       return Number(val).toFixed(dec).replace('.', ',');
     }
 
+    function parseVal(val, defaultVal = 0) {
+      if (val === null || val === undefined) return defaultVal;
+      const parsed = parseFloat(val.toString().replace(',', '.'));
+      return isNaN(parsed) ? defaultVal : parsed;
+    }
+
     function toggleAccordion(id) {
       const el = document.getElementById(id);
-      el.style.display = (el.style.display === 'block') ? 'none' : 'block';
+      if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     }
 
     function changeTheme(theme) {
@@ -830,7 +832,7 @@
                 <input type="number" step="0.5" id="setting-monthlyCap-${i}" value="${coin.monthlyCap}" onchange="updateCoinSetting(${i})">
               </div>
 
-              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">🪄 Sihirbaz (En Düşük Kayıplı RSI'ı Bul)</button>
+              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">🪄 Sihirbaz (En İdeal RSI'ı Bul)</button>
             </div>
 
             <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
@@ -870,7 +872,7 @@
       }
     }
 
-    // 🤖 YENİLENMİŞ MINIMUM KAYIP / AZ İŞLEM SİHİRBAZI (AUTO-OPTIMIZER)
+    // 🤖 STABİL, HIZLI VE DENGELİ AUTO-OPTIMIZER SİHİRBAZI
     function runAutoOptimizer(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const candles = candlesData[slotIndex];
@@ -880,7 +882,11 @@
         return;
       }
 
-      const targetProfit = parseFloat(document.getElementById(`setting-profitTarget-${slotIndex}`).value) || 1.0;
+      const profitInput = document.getElementById(`setting-profitTarget-${slotIndex}`);
+      const capInput = document.getElementById(`setting-monthlyCap-${slotIndex}`);
+
+      const targetProfit = profitInput ? parseVal(profitInput.value, 1.0) : (coin.profitTarget || 1.0);
+      const monthlyCap = capInput ? parseVal(capInput.value, 4.0) : (coin.monthlyCap || 4.0);
       const rsiLen = coin.rsiLength || 8;
 
       const closePrices = candles.map(c => c.close);
@@ -888,9 +894,9 @@
 
       let bestCandidate = null;
 
-      // 12 ile 35 RSI Al, 65 ile 92 RSI Sat kombinasyon taraması
-      for (let buyRsi = 12; buyRsi <= 35; buyRsi += 1) {
-        for (let sellRsi = 65; sellRsi <= 92; sellRsi += 1) {
+      // Hızlı ve geniş kapsama aralığı (RSI Al: 12..40, RSI Sat: 60..92)
+      for (let buyRsi = 12; buyRsi <= 40; buyRsi++) {
+        for (let sellRsi = 60; sellRsi <= 92; sellRsi++) {
           
           let inPos = false;
           let entryP = 0;
@@ -934,43 +940,25 @@
                 else lossCount++;
                 totPnl += pnl;
                 mStats[monthKey].pnl += pnl;
-                if (mStats[monthKey].pnl >= coin.monthlyCap) mStats[monthKey].capReached = true;
+                if (mStats[monthKey].pnl >= monthlyCap) mStats[monthKey].capReached = true;
               }
             }
           }
 
-          // Rasgele 1 işlem şansını önlemek için en az 2 işlem yapmış şartı
-          if (totalTrades >= 2) {
+          if (totalTrades >= 1) {
             const winRate = (winCount / totalTrades) * 100;
+            // Dengeli kârlılık formülü: Win Rate ve Net Kâr çarpanı
+            const score = totPnl * Math.pow(winRate / 100, 1.5);
 
-            let isBetter = false;
-            if (!bestCandidate) {
-              isBetter = true;
-            } else {
-              // 1. ÖNCELİK: En Yüksek Win Rate (En az Kayıp)
-              if (winRate > bestCandidate.winRate) {
-                isBetter = true;
-              } else if (winRate === bestCandidate.winRate) {
-                // 2. ÖNCELİK: Az İşlem Sayısı (Kullanıcı İsteği: Yüksek Seçicilik)
-                if (totalTrades < bestCandidate.totalTrades) {
-                  isBetter = true;
-                } else if (totalTrades === bestCandidate.totalTrades) {
-                  // 3. ÖNCELİK: Yüksek Net PnL
-                  if (totPnl > bestCandidate.maxPnl) {
-                    isBetter = true;
-                  }
-                }
-              }
-            }
-
-            if (isBetter) {
+            if (!bestCandidate || score > bestCandidate.score) {
               bestCandidate = {
                 buyRsi,
                 sellRsi,
-                winRate,
-                totalTrades,
+                winRate: winRate.toFixed(0),
                 lossCount,
-                maxPnl: totPnl
+                totalTrades,
+                totPnl,
+                score
               };
             }
           }
@@ -978,51 +966,64 @@
       }
 
       if (!bestCandidate) {
-        alert('Seçilen zaman diliminde uygun ve güvenli bir kombinasyon bulunamadı.');
+        alert('Bu coin ve zaman dilimi için kârlı bir RSI kombinasyonu bulunamadı.');
         return;
       }
 
       tempOptimizerResult = {
         slotIndex,
         buyRsi: bestCandidate.buyRsi,
-        sellRsi: bestCandidate.sellRsi,
-        profitTarget: targetProfit,
-        pnl: bestCandidate.maxPnl,
-        winRate: bestCandidate.winRate.toFixed(0),
-        lossCount: bestCandidate.lossCount,
-        totalTrades: bestCandidate.totalTrades
+        sellRsi: bestCandidate.sellRsi
       };
 
-      document.getElementById('opt-coin-title').innerText = `${coin.symbol} (${coin.interval} | RSI ${rsiLen})`;
-      document.getElementById('opt-target-profit').innerText = `%${targetProfit.toFixed(1)}`;
-      document.getElementById('opt-best-buy').innerText = bestCandidate.buyRsi;
-      document.getElementById('opt-best-sell').innerText = bestCandidate.sellRsi;
-      document.getElementById('opt-best-loss').innerText = `${bestCandidate.lossCount} Kayıp`;
-      document.getElementById('opt-best-winrate').innerText = `%${bestCandidate.winRate.toFixed(0)}`;
-      document.getElementById('opt-best-trades').innerText = `${bestCandidate.totalTrades} İşlem`;
-      document.getElementById('opt-best-pnl').innerText = `${bestCandidate.maxPnl >= 0 ? '+' : ''}${bestCandidate.maxPnl.toFixed(2)}%`;
+      const titleEl = document.getElementById('opt-coin-title');
+      if (titleEl) titleEl.innerText = `${coin.symbol} (${coin.interval} | RSI ${rsiLen})`;
 
-      document.getElementById('optimizer-modal').style.display = 'flex';
+      const targetEl = document.getElementById('opt-target-profit');
+      if (targetEl) targetEl.innerText = `%${targetProfit.toFixed(1)} (Ay Kilit: %${monthlyCap.toFixed(1)})`;
+
+      const buyEl = document.getElementById('opt-best-buy');
+      if (buyEl) buyEl.innerText = bestCandidate.buyRsi;
+
+      const sellEl = document.getElementById('opt-best-sell');
+      if (sellEl) sellEl.innerText = bestCandidate.sellRsi;
+
+      const wrEl = document.getElementById('opt-best-winrate');
+      if (wrEl) wrEl.innerText = `%${bestCandidate.winRate}`;
+
+      const lossEl = document.getElementById('opt-best-loss');
+      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayıp / ${bestCandidate.totalTrades} İşlem`;
+
+      const pnlEl = document.getElementById('opt-best-pnl');
+      if (pnlEl) pnlEl.innerText = `${bestCandidate.totPnl >= 0 ? '+' : ''}${bestCandidate.totPnl.toFixed(2)}%`;
+
+      const modalEl = document.getElementById('optimizer-modal');
+      if (modalEl) modalEl.style.display = 'flex';
     }
 
     function applyOptimizerResult() {
       if (!tempOptimizerResult) return;
       const idx = tempOptimizerResult.slotIndex;
 
-      document.getElementById(`setting-buyRsi-${idx}`).value = tempOptimizerResult.buyRsi;
-      document.getElementById(`setting-sellRsi-${idx}`).value = tempOptimizerResult.sellRsi;
+      const buyInput = document.getElementById(`setting-buyRsi-${idx}`);
+      const sellInput = document.getElementById(`setting-sellRsi-${idx}`);
+
+      if (buyInput) buyInput.value = tempOptimizerResult.buyRsi;
+      if (sellInput) sellInput.value = tempOptimizerResult.sellRsi;
 
       updateCoinSetting(idx);
       closeOptimizerModal();
     }
 
     function closeOptimizerModal() {
-      document.getElementById('optimizer-modal').style.display = 'none';
+      const modalEl = document.getElementById('optimizer-modal');
+      if (modalEl) modalEl.style.display = 'none';
       tempOptimizerResult = null;
     }
 
     function renderRadarHTML() {
       const tbody = document.getElementById('radar-tbody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
       radarWatchlist.forEach((item, index) => {
@@ -1175,7 +1176,7 @@
 
     function updateRadarItem(index, field, value) {
       if (field === 'rsiLength' || field === 'buyAlarm' || field === 'sellAlarm') {
-        radarWatchlist[index][field] = parseFloat(value) || 0;
+        radarWatchlist[index][field] = parseVal(value);
       } else {
         radarWatchlist[index][field] = value;
       }
@@ -1211,7 +1212,8 @@
       }
 
       const now = new Date();
-      document.getElementById('radar-update-time').innerText = now.toLocaleTimeString('tr-TR');
+      const timeEl = document.getElementById('radar-update-time');
+      if (timeEl) timeEl.innerText = now.toLocaleTimeString('tr-TR');
     }
 
     function updateCoinSetting(slotIndex) {
@@ -1230,13 +1232,14 @@
         symbol: sym,
         interval: newInterval,
         rsiLength: parseInt(document.getElementById(`setting-rsiLength-${slotIndex}`).value) || 8,
-        buyRsi: parseFloat(document.getElementById(`setting-buyRsi-${slotIndex}`).value) || 20,
-        sellRsi: parseFloat(document.getElementById(`setting-sellRsi-${slotIndex}`).value) || 85,
-        profitTarget: parseFloat(document.getElementById(`setting-profitTarget-${slotIndex}`).value) || 4.0,
-        monthlyCap: parseFloat(document.getElementById(`setting-monthlyCap-${slotIndex}`).value) || 2.5
+        buyRsi: parseVal(document.getElementById(`setting-buyRsi-${slotIndex}`).value, 20),
+        sellRsi: parseVal(document.getElementById(`setting-sellRsi-${slotIndex}`).value, 85),
+        profitTarget: parseVal(document.getElementById(`setting-profitTarget-${slotIndex}`).value, 4.0),
+        monthlyCap: parseVal(document.getElementById(`setting-monthlyCap-${slotIndex}`).value, 2.5)
       };
 
-      document.getElementById(`tf-label-${slotIndex}`).innerText = `${coinsConfig[slotIndex].interval} | RSI(${coinsConfig[slotIndex].rsiLength})`;
+      const tfLabelEl = document.getElementById(`tf-label-${slotIndex}`);
+      if (tfLabelEl) tfLabelEl.innerText = `${coinsConfig[slotIndex].interval} | RSI(${coinsConfig[slotIndex].rsiLength})`;
 
       saveConfig();
 
@@ -1250,7 +1253,8 @@
 
     function changeGlobalYear() {
       SELECTED_YEAR = document.getElementById('global-year').value;
-      document.getElementById('summary-year-label').innerText = SELECTED_YEAR;
+      const sumLabel = document.getElementById('summary-year-label');
+      if (sumLabel) sumLabel.innerText = SELECTED_YEAR;
       saveConfig();
       candlesData = [];
       renderCardsHTML();
