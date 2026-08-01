@@ -510,7 +510,7 @@
       <div class="brand-title">
         CODEMSO TERMINAL
         <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
-        <span class="version-tag">v2.6.0 | Mehmet Salih OK</span>
+        <span class="version-tag">v2.6.1 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
@@ -534,7 +534,7 @@
       </div>
     </div>
 
-    <!-- 🚀 YENİ PANEL: CANLI AKTİF POZİSYONLAR VE SON 10 İŞLEM -->
+    <!-- CANLI AKTİF POZİSYONLAR VE SON 10 İŞLEM -->
     <div class="card" style="border-top: 3px solid #0284c7;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
         <span style="font-weight: 800; font-size: 0.72rem; color: #38bdf8;">AÇIK POZİSYONLAR (CANLI)</span>
@@ -724,7 +724,7 @@
     let candlesData = [];
     let cardProfits = [];
     let cardTradesHistory = [];
-    let cardActivePositions = []; // Açık pozisyonları canlı tutar
+    let cardActivePositions = [];
     let lastPrices = [];
     let tempOptimizerResult = null;
 
@@ -1293,13 +1293,11 @@
       tbody.appendChild(totalTr);
     }
 
-    /* 🚀 CANLI AKTİF POZİSYONLAR VE GLOBAL SON 10 İŞLEMİ ÇİZER */
     function renderGlobalPositionsAndHistory() {
       const posTbody = document.getElementById('active-positions-tbody');
       const countLabel = document.getElementById('active-pos-count-label');
       const tradesTbody = document.getElementById('global-trades-tbody');
 
-      // 1. AÇIK POZİSYONLARI DERLE
       const activeList = cardActivePositions.filter(p => p && p.inPosition);
 
       if (countLabel) countLabel.innerText = `${activeList.length} Açık Pozisyon`;
@@ -1323,7 +1321,6 @@
         }
       }
 
-      // 2. SON 10 TAMAMLATILAN GLOBAL İŞLEMİ DERLE
       let allTrades = [];
       coinsConfig.forEach((coin, idx) => {
         const trades = cardTradesHistory[idx] || [];
@@ -1743,7 +1740,6 @@
           livePnlEl.className = livePnl >= 0 ? 'green' : 'red';
         }
 
-        // CANLI AÇIK POZİSYON LİSTESİNİ GÜNCELLE
         cardActivePositions[slotIndex] = {
           inPosition: true,
           symbol: coin.symbol,
@@ -1838,7 +1834,13 @@
               .then(data => {
                 const livePrice = parseFloat(data.price);
                 const candles = candlesData[slotIndex];
-                candles[candles.length - 1].close = livePrice;
+                const lastCandle = candles[candles.length - 1];
+                
+                // Live fiyata göre mum kapanış, en yüksek ve en düşük değerlerini anlık güncelle
+                lastCandle.close = livePrice;
+                if (livePrice > lastCandle.high) lastCandle.high = livePrice;
+                if (livePrice < lastCandle.low) lastCandle.low = livePrice;
+
                 runBacktestAndRender(slotIndex);
               }).catch(e => console.warn(e));
           }
