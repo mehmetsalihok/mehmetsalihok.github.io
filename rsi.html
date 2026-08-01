@@ -31,6 +31,20 @@
       --input-bg: #ffffff;
     }
 
+    /* ZİFİRİ KARANLIK (OLED PITCH BLACK) TEMASI */
+    body.oled-mode {
+      --bg-color: #000000;
+      --card-bg: #0d0d0d;
+      --text-color: #ffffff;
+      --text-muted: #888888;
+      --border-color: #222222;
+      --box-bg: #141414;
+      --badge-bg: #1a1a1a;
+      --badge-text: #38bdf8;
+      --table-stripe: #080808;
+      --input-bg: #121212;
+    }
+
     * { box-sizing: border-box; }
     
     body {
@@ -47,7 +61,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-width: 1700px;
+      max-width: 1750px;
       margin: 0 auto;
     }
 
@@ -79,7 +93,7 @@
 
     .dashboard-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
       gap: 8px;
     }
 
@@ -117,13 +131,12 @@
       font-weight: 700;
     }
 
-    .theme-btn {
-      background: transparent;
+    .theme-select {
+      background: var(--input-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
       padding: 2px 6px;
       border-radius: 4px;
-      cursor: pointer;
       font-size: 0.62rem;
       font-weight: 600;
     }
@@ -183,6 +196,12 @@
       gap: 4px;
     }
 
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+    }
+
     .stat-box {
       background-color: var(--box-bg);
       padding: 3px 5px;
@@ -192,14 +211,14 @@
     }
 
     .stat-label {
-      font-size: 0.58rem;
+      font-size: 0.56rem;
       color: var(--text-muted);
       display: block;
       font-weight: 600;
     }
 
     .stat-value {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 800;
     }
 
@@ -332,6 +351,17 @@
 
     .action-btn:hover { color: var(--text-color); }
 
+    .csv-btn {
+      background: transparent;
+      color: #38bdf8;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.62rem;
+    }
+
+    .csv-btn:hover { text-decoration: underline; }
+
     .alarm-triggered {
       animation: pulseAlert 0.8s infinite alternate;
       font-weight: 900;
@@ -400,7 +430,14 @@
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="badge">CODEMSO TERMINAL & RADAR</span>
         <button class="add-card-btn" id="btn-add-card" onclick="addNewCard()">+ Yeni Kart Ekle (<span id="card-count-label">2</span>/8)</button>
-        <button class="theme-btn" onclick="toggleTheme()" id="theme-btn">☀️ Gündüz Modu</button>
+        
+        <!-- TEMA SEÇİMİ -->
+        <select class="theme-select" id="theme-select" onchange="changeTheme(this.value)">
+          <option value="dark">🌙 Gece Modu</option>
+          <option value="oled">🖤 Zifiri Karanlık (OLED)</option>
+          <option value="light">☀️ Gündüz Modu</option>
+        </select>
+
         <button class="theme-btn" onclick="playTestSound()">🔊 Ses Testi</button>
       </div>
 
@@ -427,7 +464,7 @@
           </div>
 
           <div class="add-coin-row" style="margin-bottom: 6px;">
-            <input type="text" id="new-radar-coin" placeholder="Örn: DOGE" style="flex:1;">
+            <input type="text" id="new-radar-coin" placeholder="Örn: FLOKI" style="flex:1;">
             <select id="new-radar-tf" class="select-mini">
               <option value="5m">5m</option>
               <option value="15m">15m</option>
@@ -479,11 +516,12 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v9';
+    const STORAGE_KEY = 'codemso_multi_terminal_v10';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
     let cardProfits = [];
+    let cardTradesHistory = []; // CSV İndirmek için işlem geçmişi hafızası
 
     let coinsConfig = [
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
@@ -491,12 +529,22 @@
     ];
 
     let radarWatchlist = [
+      { symbol: 'FLOKIUSDT', interval: '30m', rsiLength: 8,  buyAlarm: 20, sellAlarm: 85, currentRsi: null },
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8,  buyAlarm: 20, sellAlarm: 85, currentRsi: null },
       { symbol: 'DOGEUSDT',  interval: '15m', rsiLength: 10, buyAlarm: 20, sellAlarm: 85, currentRsi: null },
       { symbol: 'PEPEUSDT',  interval: '5m',  rsiLength: 8,  buyAlarm: 20, sellAlarm: 80, currentRsi: null },
-      { symbol: 'AVAXUSDT',  interval: '30m', rsiLength: 10, buyAlarm: 22, sellAlarm: 80, currentRsi: null },
-      { symbol: 'NEARUSDT',  interval: '1h',  rsiLength: 14, buyAlarm: 25, sellAlarm: 75, currentRsi: null }
+      { symbol: 'AVAXUSDT',  interval: '30m', rsiLength: 10, buyAlarm: 22, sellAlarm: 80, currentRsi: null }
     ];
+
+    // DİNAMİK FİYAT BİÇİMLENDİRİCİ (FLOKI, PEPE VS. İÇİN HASSAS BASAMAK)
+    function formatPrice(val) {
+      if (val === null || val === undefined || isNaN(val)) return '--.--';
+      const num = Number(val);
+      if (num < 0.0001) return '$' + num.toFixed(8);
+      if (num < 0.01) return '$' + num.toFixed(6);
+      if (num < 1) return '$' + num.toFixed(4);
+      return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
     function formatNum(val, dec = 2) {
       if (val === null || val === undefined || isNaN(val)) return '--,--';
@@ -508,10 +556,13 @@
       el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     }
 
-    function toggleTheme() {
-      document.body.classList.toggle('light-mode');
-      const isLight = document.body.classList.contains('light-mode');
-      document.getElementById('theme-btn').innerText = isLight ? '🌙 Gece Modu' : '☀️ Gündüz Modu';
+    function changeTheme(theme) {
+      document.body.classList.remove('light-mode', 'oled-mode', 'dark-mode');
+      if (theme === 'light') document.body.classList.add('light-mode');
+      else if (theme === 'oled') document.body.classList.add('oled-mode');
+      else document.body.classList.add('dark-mode');
+
+      saveConfig();
     }
 
     function playBeepSound() {
@@ -539,6 +590,10 @@
           if (parsed.coinsConfig && parsed.coinsConfig.length > 0) coinsConfig = parsed.coinsConfig;
           if (parsed.radarWatchlist) radarWatchlist = parsed.radarWatchlist;
           if (parsed.year) SELECTED_YEAR = parsed.year;
+          if (parsed.theme) {
+            document.getElementById('theme-select').value = parsed.theme;
+            changeTheme(parsed.theme);
+          }
         } catch(e) {}
       }
       document.getElementById('global-year').value = SELECTED_YEAR;
@@ -548,10 +603,12 @@
     }
 
     function saveConfig() {
+      const activeTheme = document.getElementById('theme-select').value;
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         coinsConfig,
         radarWatchlist,
-        year: SELECTED_YEAR
+        year: SELECTED_YEAR,
+        theme: activeTheme
       }));
     }
 
@@ -562,13 +619,13 @@
       }
 
       coinsConfig.push({
-        symbol: 'SOLUSDT',
+        symbol: 'FLOKIUSDT',
         interval: '30m',
         rsiLength: 8,
-        buyRsi: 22,
-        sellRsi: 80,
-        profitTarget: 3.0,
-        monthlyCap: 3.0
+        buyRsi: 20,
+        sellRsi: 85,
+        profitTarget: 4.0,
+        monthlyCap: 2.5
       });
 
       saveConfig();
@@ -585,6 +642,7 @@
       coinsConfig.splice(slotIndex, 1);
       candlesData.splice(slotIndex, 1);
       cardProfits.splice(slotIndex, 1);
+      cardTradesHistory.splice(slotIndex, 1);
 
       saveConfig();
       renderCardsHTML();
@@ -635,6 +693,22 @@
               </div>
             </div>
 
+            <!-- C KISMI: İSTATİSTİK & PERFORMANS SATIRI -->
+            <div class="grid-3">
+              <div class="stat-box">
+                <span class="stat-label">Win Rate</span>
+                <span class="stat-value green" id="win-rate-${i}">0%</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Ort. Süre</span>
+                <span class="stat-value" id="avg-time-${i}">-</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-label">Max Seri</span>
+                <span class="stat-value green" id="max-streak-${i}">0</span>
+              </div>
+            </div>
+
             <div class="coin-settings-box">
               <div class="coin-setting-item">
                 <label>TF:</label>
@@ -679,9 +753,9 @@
               </table>
             </div>
 
-            <div class="table-title" onclick="toggleAccordion('acc-trades-${i}')">
-              <span>📜 Son İşlemler Logu</span>
-              <span>▼</span>
+            <div class="table-title">
+              <span onclick="toggleAccordion('acc-trades-${i}')">📜 Son İşlemler Logu ▼</span>
+              <button class="csv-btn" onclick="exportTradesCSV(${i})">[📥 CSV İndir]</button>
             </div>
             <div class="collapsible-content" id="acc-trades-${i}">
               <table>
@@ -694,7 +768,6 @@
         grid.innerHTML += cardHTML;
       });
 
-      // Kartlar render edildikten sonra hafızadaki canlı durumları koru
       for (let i = 0; i < coinsConfig.length; i++) {
         if (candlesData[i] && candlesData[i].length > 0) {
           const loaderEl = document.getElementById(`loader-${i}`);
@@ -790,6 +863,33 @@
       tbody.appendChild(totalTr);
     }
 
+    // CSV EXPORT (İŞLEM GEÇMİŞİNİ İNDİRME)
+    function exportTradesCSV(slotIndex) {
+      const coin = coinsConfig[slotIndex];
+      const trades = cardTradesHistory[slotIndex] || [];
+
+      if (trades.length === 0) {
+        alert('İndirilecek işlem kaydı bulunamadı!');
+        return;
+      }
+
+      let csvContent = "data:text/csv;charset=utf-8,Coin,Giris_Tarihi,Cikis_Tarihi,Giris_Fiyati,Cikis_Fiyati,Net_Yuzde,Neden\n";
+
+      trades.forEach(t => {
+        const entryD = new Date(t.entryTime).toLocaleString('tr-TR');
+        const exitD = new Date(t.exitTime).toLocaleString('tr-TR');
+        csvContent += `${coin.symbol},"${entryD}","${exitD}",${t.entryPrice},${t.exitPrice},${t.pnl.toFixed(2)},"${t.reason}"\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `${coin.symbol}_${SELECTED_YEAR}_Islem_Gecmisi.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
     function addRadarCoin() {
       const input = document.getElementById('new-radar-coin');
       const tfSelect = document.getElementById('new-radar-tf');
@@ -873,7 +973,6 @@
       document.getElementById('radar-update-time').innerText = now.toLocaleTimeString('tr-TR');
     }
 
-    // AYAR DEĞİŞTİĞİNDE ANINDA TEPKİ VEREN AKILLI MOTOR
     function updateCoinSetting(slotIndex) {
       let sym = document.getElementById(`coin-symbol-${slotIndex}`).value.toUpperCase().trim();
       if (!sym.endsWith('USDT')) sym += 'USDT';
@@ -900,7 +999,6 @@
 
       saveConfig();
 
-      // SADECE Sembol veya TF değişirse Binance'ten yeniden indir, yoksa HAFIZADAN ANINDA HESAPLA!
       if (symbolChanged || intervalChanged || !candlesData[slotIndex] || candlesData[slotIndex].length === 0) {
         candlesData[slotIndex] = [];
         loadCoinData(slotIndex);
@@ -1004,6 +1102,7 @@
 
       let inPosition = false;
       let entryPrice = 0;
+      let entryTime = 0;
 
       const trades = [];
       const monthlyStats = {};
@@ -1026,6 +1125,7 @@
           if (prevRsiVal <= coin.buyRsi && rsiVal > coin.buyRsi) {
             inPosition = true;
             entryPrice = c.close;
+            entryTime = c.rawTime;
           }
         }
 
@@ -1050,7 +1150,7 @@
             inPosition = false;
             const isWin = pnl >= 0;
 
-            trades.push({ entryTime: c.rawTime, exitTime: c.rawTime, entryPrice, exitPrice: c.close, pnl, isWin, reason });
+            trades.push({ entryTime, exitTime: c.rawTime, entryPrice, exitPrice: c.close, pnl, isWin, reason });
 
             const curM = monthlyStats[monthKey];
             curM.trades++;
@@ -1063,12 +1163,47 @@
         }
       }
 
+      // C KISMI: İSTATİSTİK METRİKLERİ HESAPLAMA (Win Rate, Ort. Süre, Seri)
+      let winCount = trades.filter(t => t.isWin).length;
+      let totalCount = trades.length;
+      let winRate = totalCount > 0 ? ((winCount / totalCount) * 100).toFixed(0) : 0;
+
+      let totalDurationMs = 0;
+      let currentStreak = 0;
+      let maxStreak = 0;
+
+      trades.forEach(t => {
+        totalDurationMs += (t.exitTime - t.entryTime);
+        if (t.isWin) {
+          currentStreak++;
+          if (currentStreak > maxStreak) maxStreak = currentStreak;
+        } else {
+          currentStreak = 0;
+        }
+      });
+
+      let avgHours = totalCount > 0 ? (totalDurationMs / totalCount / (1000 * 60 * 60)).toFixed(1) : '-';
+
+      // UI İSTATİSTİK BİLGİLERİNİ GÜNCELLE
+      const winRateEl = document.getElementById(`win-rate-${slotIndex}`);
+      const avgTimeEl = document.getElementById(`avg-time-${slotIndex}`);
+      const maxStreakEl = document.getElementById(`max-streak-${slotIndex}`);
+
+      if (winRateEl) winRateEl.innerText = `${winRate}%`;
+      if (avgTimeEl) avgTimeEl.innerText = avgHours !== '-' ? `${avgHours}s` : '-';
+      if (maxStreakEl) maxStreakEl.innerText = maxStreak;
+
+      // CSV İÇİN İŞLEM GEÇMİŞİNİ SAKLA
+      cardTradesHistory[slotIndex] = trades;
+
       const currentPrice = closePrices[closePrices.length - 1];
       const currentRSI = rsiValues[rsiValues.length - 1];
 
       const priceEl = document.getElementById(`price-${slotIndex}`);
       const rsiEl = document.getElementById(`rsi-${slotIndex}`);
-      if (priceEl) priceEl.innerText = `$${currentPrice.toFixed(4)}`;
+      
+      // DİNAMİK FİYAT BİÇİMLENDİRİCİ KULLANILIYOR (FLOKI, PEPE UYUMLU)
+      if (priceEl) priceEl.innerText = formatPrice(currentPrice);
       if (rsiEl) rsiEl.innerText = formatNum(currentRSI, 2);
 
       const posEl = document.getElementById(`pos-${slotIndex}`);
@@ -1078,10 +1213,10 @@
 
       if (inPosition) {
         if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'stat-value green'; }
-        if (entryEl) entryEl.innerText = `$${entryPrice.toFixed(4)}`;
+        if (entryEl) entryEl.innerText = formatPrice(entryPrice);
         
         const targetP = entryPrice * (1 + coin.profitTarget / 100);
-        if (targetEl) targetEl.innerText = `$${targetP.toFixed(4)}`;
+        if (targetEl) targetEl.innerText = formatPrice(targetP);
 
         const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
         if (livePnlEl) {
@@ -1147,8 +1282,8 @@
         trades.slice(-5).reverse().forEach(t => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td>$${t.entryPrice.toFixed(3)}</td>
-            <td>$${t.exitPrice.toFixed(3)}</td>
+            <td>${formatPrice(t.entryPrice)}</td>
+            <td>${formatPrice(t.exitPrice)}</td>
             <td class="${t.pnl >= 0 ? 'green':'red'}"><b>${t.pnl >= 0 ? '+':''}${formatNum(t.pnl, 2)}%</b></td>
             <td>${t.reason}</td>
           `;
