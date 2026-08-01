@@ -394,7 +394,6 @@
 </head>
 <body class="dark-mode">
 
-  <!-- ANA TERMINAL -->
   <div class="container" id="main-app">
     
     <div class="header-card">
@@ -470,9 +469,7 @@
                 <th>Yıllık Toplam (%)</th>
               </tr>
             </thead>
-            <tbody id="summary-tbody">
-              <!-- JS Otomatik Dolduracak -->
-            </tbody>
+            <tbody id="summary-tbody"></tbody>
           </table>
         </div>
 
@@ -482,11 +479,11 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v8';
+    const STORAGE_KEY = 'codemso_multi_terminal_v9';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
-    let cardProfits = []; // Sağ taraftaki özet tablo için hesaplanan kâr verileri
+    let cardProfits = [];
 
     let coinsConfig = [
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
@@ -697,9 +694,11 @@
         grid.innerHTML += cardHTML;
       });
 
+      // Kartlar render edildikten sonra hafızadaki canlı durumları koru
       for (let i = 0; i < coinsConfig.length; i++) {
         if (candlesData[i] && candlesData[i].length > 0) {
-          document.getElementById(`loader-${i}`).innerText = '🟢 Canlı';
+          const loaderEl = document.getElementById(`loader-${i}`);
+          if (loaderEl) loaderEl.innerText = '🟢 Canlı';
           runBacktestAndRender(i);
         } else {
           loadCoinData(i);
@@ -754,7 +753,6 @@
       });
     }
 
-    // SAĞ TARAF: KARTLARIN PERFORMANS & KÂR ÖZETİ TABLOSUNU ÇİZDİRME
     function renderProfitSummarySidebar() {
       const tbody = document.getElementById('summary-tbody');
       if (!tbody) return;
@@ -780,7 +778,6 @@
         tbody.appendChild(tr);
       });
 
-      // EN ALTA TÜM KARTLARIN TOPLAM KÂR SATIRI
       const totalTr = document.createElement('tr');
       const totMClass = grandTotalMonth >= 0 ? 'green' : 'red';
       const totYClass = grandTotalYear >= 0 ? 'green' : 'red';
@@ -876,15 +873,22 @@
       document.getElementById('radar-update-time').innerText = now.toLocaleTimeString('tr-TR');
     }
 
+    // AYAR DEĞİŞTİĞİNDE ANINDA TEPKİ VEREN AKILLI MOTOR
     function updateCoinSetting(slotIndex) {
       let sym = document.getElementById(`coin-symbol-${slotIndex}`).value.toUpperCase().trim();
       if (!sym.endsWith('USDT')) sym += 'USDT';
       
       document.getElementById(`coin-symbol-${slotIndex}`).value = sym;
 
+      const oldCoin = coinsConfig[slotIndex] || {};
+      const newInterval = document.getElementById(`setting-interval-${slotIndex}`).value || '30m';
+      
+      const symbolChanged = (oldCoin.symbol !== sym);
+      const intervalChanged = (oldCoin.interval !== newInterval);
+
       coinsConfig[slotIndex] = {
         symbol: sym,
-        interval: document.getElementById(`setting-interval-${slotIndex}`).value || '30m',
+        interval: newInterval,
         rsiLength: parseInt(document.getElementById(`setting-rsiLength-${slotIndex}`).value) || 8,
         buyRsi: parseFloat(document.getElementById(`setting-buyRsi-${slotIndex}`).value) || 20,
         sellRsi: parseFloat(document.getElementById(`setting-sellRsi-${slotIndex}`).value) || 85,
@@ -894,9 +898,15 @@
 
       document.getElementById(`tf-label-${slotIndex}`).innerText = `${coinsConfig[slotIndex].interval} | RSI(${coinsConfig[slotIndex].rsiLength})`;
 
-      candlesData[slotIndex] = [];
       saveConfig();
-      loadCoinData(slotIndex);
+
+      // SADECE Sembol veya TF değişirse Binance'ten yeniden indir, yoksa HAFIZADAN ANINDA HESAPLA!
+      if (symbolChanged || intervalChanged || !candlesData[slotIndex] || candlesData[slotIndex].length === 0) {
+        candlesData[slotIndex] = [];
+        loadCoinData(slotIndex);
+      } else {
+        runBacktestAndRender(slotIndex);
+      }
     }
 
     function changeGlobalYear() {
@@ -1056,8 +1066,10 @@
       const currentPrice = closePrices[closePrices.length - 1];
       const currentRSI = rsiValues[rsiValues.length - 1];
 
-      document.getElementById(`price-${slotIndex}`).innerText = `$${currentPrice.toFixed(4)}`;
-      document.getElementById(`rsi-${slotIndex}`).innerText = formatNum(currentRSI, 2);
+      const priceEl = document.getElementById(`price-${slotIndex}`);
+      const rsiEl = document.getElementById(`rsi-${slotIndex}`);
+      if (priceEl) priceEl.innerText = `$${currentPrice.toFixed(4)}`;
+      if (rsiEl) rsiEl.innerText = formatNum(currentRSI, 2);
 
       const posEl = document.getElementById(`pos-${slotIndex}`);
       const entryEl = document.getElementById(`entry-${slotIndex}`);
@@ -1065,26 +1077,24 @@
       const targetEl = document.getElementById(`target-${slotIndex}`);
 
       if (inPosition) {
-        posEl.innerText = 'LONG';
-        posEl.className = 'stat-value green';
-        entryEl.innerText = `$${entryPrice.toFixed(4)}`;
+        if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'stat-value green'; }
+        if (entryEl) entryEl.innerText = `$${entryPrice.toFixed(4)}`;
         
         const targetP = entryPrice * (1 + coin.profitTarget / 100);
-        targetEl.innerText = `$${targetP.toFixed(4)}`;
+        if (targetEl) targetEl.innerText = `$${targetP.toFixed(4)}`;
 
         const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
-        livePnlEl.innerText = `${formatNum(livePnl, 2)}%`;
-        livePnlEl.className = livePnl >= 0 ? 'green' : 'red';
+        if (livePnlEl) {
+          livePnlEl.innerText = `${formatNum(livePnl, 2)}%`;
+          livePnlEl.className = livePnl >= 0 ? 'green' : 'red';
+        }
       } else {
-        posEl.innerText = 'Nötr';
-        posEl.className = 'stat-value neutral';
-        entryEl.innerText = '-';
-        livePnlEl.innerText = '0,00%';
-        livePnlEl.className = '';
-        targetEl.innerText = '-';
+        if (posEl) { posEl.innerText = 'Nötr'; posEl.className = 'stat-value neutral'; }
+        if (entryEl) entryEl.innerText = '-';
+        if (livePnlEl) { livePnlEl.innerText = '0,00%'; livePnlEl.className = ''; }
+        if (targetEl) targetEl.innerText = '-';
       }
 
-      // AYLIK TABLO VE YILLIK/AYLIK HESAPLAMA
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
       let totT = 0, totW = 0, totL = 0, totPnl = 0;
       let currentMonthPnl = 0;
@@ -1128,7 +1138,6 @@
         mTable.appendChild(totalTr);
       }
 
-      // SAĞ TARAFTAKİ ÖZET BİLGİ İÇİN SAKLA
       cardProfits[slotIndex] = { monthPnl: currentMonthPnl, yearPnl: totPnl };
       renderProfitSummarySidebar();
 
@@ -1148,7 +1157,6 @@
       }
     }
 
-    // DOĞRUDAN UYGULAMA BAŞLATMA (ŞİFRESİZ)
     function initApp() {
       loadSavedConfig();
       for (let i = 0; i < coinsConfig.length; i++) {
@@ -1174,7 +1182,6 @@
       setInterval(fetchRadarRSIAll, 1000);
     }
 
-    // Sayfa açıldığında şifresiz direkt başlat
     window.onload = function() {
       initApp();
     };
