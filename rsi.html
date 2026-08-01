@@ -510,7 +510,7 @@
       <div class="brand-title">
         CODEMSO TERMINAL
         <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
-        <span class="version-tag">v2.5.0 | Mehmet Salih OK</span>
+        <span class="version-tag">v2.6.0 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
@@ -532,6 +532,47 @@
           </select>
         </div>
       </div>
+    </div>
+
+    <!-- 🚀 YENİ PANEL: CANLI AKTİF POZİSYONLAR VE SON 10 İŞLEM -->
+    <div class="card" style="border-top: 3px solid #0284c7;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <span style="font-weight: 800; font-size: 0.72rem; color: #38bdf8;">AÇIK POZİSYONLAR (CANLI)</span>
+        <span style="font-size: 0.58rem; color: var(--text-muted);" id="active-pos-count-label">0 Açık Pozisyon</span>
+      </div>
+      
+      <table class="watchlist-table" style="margin-bottom: 8px;">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Coin</th>
+            <th>Giriş Fiyatı</th>
+            <th>Canlı PnL (%)</th>
+            <th>Hedef Çıkış</th>
+          </tr>
+        </thead>
+        <tbody id="active-positions-tbody">
+          <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>
+        </tbody>
+      </table>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 6px; margin-bottom: 4px;">
+        <span style="font-weight: 800; font-size: 0.72rem;">SON 10 TAMAMLATILAN İŞLEM (GLOBAL)</span>
+      </div>
+
+      <table class="watchlist-table">
+        <thead>
+          <tr>
+            <th style="text-align: left;">Coin</th>
+            <th>Giriş</th>
+            <th>Çıkış</th>
+            <th>Net Kâr (%)</th>
+            <th>Neden / Zaman</th>
+          </tr>
+        </thead>
+        <tbody id="global-trades-tbody">
+          <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz işlem kaydı bulunmuyor.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="main-layout">
@@ -621,7 +662,7 @@
     </div>
   </div>
 
-  <!-- STRATEJİ SİHİRBAZI MODALI (AYRILMIŞ İŞLEM VE KAYIP SATIRLARI) -->
+  <!-- STRATEJİ SİHİRBAZI MODALI -->
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
       <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
@@ -677,12 +718,13 @@
       window.location.href = 'index.html';
     }
 
-    const STORAGE_KEY = 'codemso_multi_terminal_v15';
+    const STORAGE_KEY = 'codemso_multi_terminal_v16';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
     let cardProfits = [];
     let cardTradesHistory = [];
+    let cardActivePositions = []; // Açık pozisyonları canlı tutar
     let lastPrices = [];
     let tempOptimizerResult = null;
 
@@ -873,11 +915,13 @@
       candlesData.splice(slotIndex, 1);
       cardProfits.splice(slotIndex, 1);
       cardTradesHistory.splice(slotIndex, 1);
+      cardActivePositions.splice(slotIndex, 1);
       lastPrices.splice(slotIndex, 1);
 
       saveConfig();
       renderCardsHTML();
       renderProfitSummarySidebar();
+      renderGlobalPositionsAndHistory();
     }
 
     function renderCardsHTML() {
@@ -1249,6 +1293,77 @@
       tbody.appendChild(totalTr);
     }
 
+    /* 🚀 CANLI AKTİF POZİSYONLAR VE GLOBAL SON 10 İŞLEMİ ÇİZER */
+    function renderGlobalPositionsAndHistory() {
+      const posTbody = document.getElementById('active-positions-tbody');
+      const countLabel = document.getElementById('active-pos-count-label');
+      const tradesTbody = document.getElementById('global-trades-tbody');
+
+      // 1. AÇIK POZİSYONLARI DERLE
+      const activeList = cardActivePositions.filter(p => p && p.inPosition);
+
+      if (countLabel) countLabel.innerText = `${activeList.length} Açık Pozisyon`;
+
+      if (posTbody) {
+        posTbody.innerHTML = '';
+        if (activeList.length === 0) {
+          posTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>';
+        } else {
+          activeList.forEach(p => {
+            const tr = document.createElement('tr');
+            const pnlClass = p.livePnl >= 0 ? 'green' : 'red';
+            tr.innerHTML = `
+              <td style="text-align: left;"><b>${p.symbol.replace('USDT', '')}</b></td>
+              <td>${formatPrice(p.entryPrice)}</td>
+              <td class="${pnlClass}"><b>${formatNum(p.livePnl, 2)}%</b></td>
+              <td class="green"><b>${formatPrice(p.targetPrice)}</b></td>
+            `;
+            posTbody.appendChild(tr);
+          });
+        }
+      }
+
+      // 2. SON 10 TAMAMLATILAN GLOBAL İŞLEMİ DERLE
+      let allTrades = [];
+      coinsConfig.forEach((coin, idx) => {
+        const trades = cardTradesHistory[idx] || [];
+        trades.forEach(t => {
+          allTrades.push({
+            symbol: coin.symbol,
+            entryPrice: t.entryPrice,
+            exitPrice: t.exitPrice,
+            pnl: t.pnl,
+            reason: t.reason,
+            exitTime: t.exitTime
+          });
+        });
+      });
+
+      allTrades.sort((a, b) => b.exitTime - a.exitTime);
+      const last10 = allTrades.slice(0, 10);
+
+      if (tradesTbody) {
+        tradesTbody.innerHTML = '';
+        if (last10.length === 0) {
+          tradesTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz tamamlanan işlem bulunmuyor.</td></tr>';
+        } else {
+          last10.forEach(t => {
+            const tr = document.createElement('tr');
+            const pnlClass = t.pnl >= 0 ? 'green' : 'red';
+            const dateStr = new Date(t.exitTime).toLocaleString('tr-TR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            tr.innerHTML = `
+              <td style="text-align: left;"><b>${t.symbol.replace('USDT', '')}</b></td>
+              <td>${formatPrice(t.entryPrice)}</td>
+              <td>${formatPrice(t.exitPrice)}</td>
+              <td class="${pnlClass}"><b>${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</b></td>
+              <td>${t.reason} (${dateStr})</td>
+            `;
+            tradesTbody.appendChild(tr);
+          });
+        }
+      }
+    }
+
     function exportTradesCSV(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const trades = cardTradesHistory[slotIndex] || [];
@@ -1615,23 +1730,34 @@
       const livePnlEl = document.getElementById(`live-pnl-${slotIndex}`);
       const targetEl = document.getElementById(`target-${slotIndex}`);
 
+      const targetP = entryPrice * (1 + coin.profitTarget / 100);
+      const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
+
       if (inPosition) {
         if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'stat-value green'; }
         if (entryEl) entryEl.innerText = formatPrice(entryPrice);
-        
-        const targetP = entryPrice * (1 + coin.profitTarget / 100);
         if (targetEl) targetEl.innerText = formatPrice(targetP);
 
-        const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
         if (livePnlEl) {
           livePnlEl.innerText = `${formatNum(livePnl, 2)}%`;
           livePnlEl.className = livePnl >= 0 ? 'green' : 'red';
         }
+
+        // CANLI AÇIK POZİSYON LİSTESİNİ GÜNCELLE
+        cardActivePositions[slotIndex] = {
+          inPosition: true,
+          symbol: coin.symbol,
+          entryPrice,
+          targetPrice: targetP,
+          livePnl
+        };
       } else {
         if (posEl) { posEl.innerText = 'Nötr'; posEl.className = 'stat-value neutral'; }
         if (entryEl) entryEl.innerText = '-';
         if (livePnlEl) { livePnlEl.innerText = '0,00%'; livePnlEl.className = ''; }
         if (targetEl) targetEl.innerText = '-';
+
+        cardActivePositions[slotIndex] = { inPosition: false };
       }
 
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
@@ -1679,6 +1805,7 @@
 
       cardProfits[slotIndex] = { monthPnl: currentMonthPnl, yearPnl: totPnl };
       renderProfitSummarySidebar();
+      renderGlobalPositionsAndHistory();
 
       const tTable = document.getElementById(`table-trades-${slotIndex}`);
       if (tTable) {
