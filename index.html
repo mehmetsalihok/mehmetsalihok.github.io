@@ -199,7 +199,7 @@
       const passInput = document.getElementById('password').value.trim();
       const errorEl = document.getElementById('error-msg');
 
-      if (userInput === salih && passInput === salih) {
+      if (userInput === VALID_USERNAME && passInput === VALID_PASSWORD) {
         sessionStorage.setItem('codemso_auth', 'true');
         errorEl.style.display = 'none';
         window.location.href = 'rsi.html';
