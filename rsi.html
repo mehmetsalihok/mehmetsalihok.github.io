@@ -147,24 +147,24 @@
       }
     }
 
-    /* 4 SANİYELİK İPEKSI VE DENGELİ NEFES ALMA DÖNGÜSÜ */
+    /* KUSURSUZ YUMUŞAKLIKTA NEFES ALMA (SMOOTH BREATHE) ANİMASYONU */
     @keyframes softPulse {
       0% {
-        background-color: rgba(56, 189, 248, 0.12);
         opacity: 1;
+        background-color: rgba(2, 132, 199, 0.12);
       }
       50% {
-        background-color: rgba(56, 189, 248, 0.02);
-        opacity: 0.8;
+        opacity: 0.35;
+        background-color: transparent;
       }
       100% {
-        background-color: rgba(56, 189, 248, 0.12);
         opacity: 1;
+        background-color: rgba(2, 132, 199, 0.12);
       }
     }
 
     .flashing-row {
-      animation: softPulse 4s infinite ease-in-out;
+      animation: softPulse 3.5s infinite ease-in-out;
     }
 
     .card {
@@ -530,7 +530,7 @@
       <div class="brand-title">
         CODEMSO TERMINAL
         <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
-        <span class="version-tag">v2.8.1 | Mehmet Salih OK</span>
+        <span class="version-tag">v2.8.2 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
@@ -1315,6 +1315,7 @@
       tbody.appendChild(totalTr);
     }
 
+    /* SMART DOM UPDATING: CANLI POZİSYON ANİMASYONUNUN KESİNTİSİZ AKMASINI SAĞLAR */
     function renderGlobalPositionsAndHistory() {
       const posTbody = document.getElementById('active-positions-tbody');
       const countLabel = document.getElementById('active-pos-count-label');
@@ -1325,21 +1326,41 @@
       if (countLabel) countLabel.innerText = `${activeList.length} Açık Pozisyon`;
 
       if (posTbody) {
-        posTbody.innerHTML = '';
         if (activeList.length === 0) {
           posTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>';
         } else {
+          const placeholder = posTbody.querySelector('td[colspan="4"]');
+          if (placeholder) posTbody.innerHTML = '';
+
+          const activeSymbols = new Set(activeList.map(p => p.symbol));
+
+          Array.from(posTbody.children).forEach(tr => {
+            if (tr.dataset.symbol && !activeSymbols.has(tr.dataset.symbol)) {
+              tr.remove();
+            }
+          });
+
           activeList.forEach(p => {
-            const tr = document.createElement('tr');
-            tr.className = 'flashing-row'; // 4 SANİYELİK İPEKSI CANLI DÖNGÜ
+            let tr = posTbody.querySelector(`tr[data-symbol="${p.symbol}"]`);
             const pnlClass = p.livePnl >= 0 ? 'green' : 'red';
-            tr.innerHTML = `
+            const htmlContent = `
               <td style="text-align: left;"><b>${p.symbol.replace('USDT', '')}</b></td>
               <td>${formatPrice(p.entryPrice)}</td>
               <td class="${pnlClass}"><b>${formatNum(p.livePnl, 2)}%</b></td>
               <td class="green"><b>${formatPrice(p.targetPrice)}</b></td>
             `;
-            posTbody.appendChild(tr);
+
+            if (!tr) {
+              tr = document.createElement('tr');
+              tr.className = 'flashing-row';
+              tr.dataset.symbol = p.symbol;
+              tr.innerHTML = htmlContent;
+              posTbody.appendChild(tr);
+            } else {
+              if (tr.innerHTML !== htmlContent) {
+                tr.innerHTML = htmlContent;
+              }
+            }
           });
         }
       }
