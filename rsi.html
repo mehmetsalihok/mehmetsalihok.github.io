@@ -67,7 +67,6 @@
       margin: 0 auto;
     }
 
-    /* PROFESYONEL HEADER BAR */
     .header-card {
       background-color: var(--card-bg);
       padding: 8px 12px;
@@ -137,6 +136,18 @@
       }
     }
 
+    /* KART AÇILIŞ VE KAPANIŞ ANİMASYONLARI */
+    @keyframes cardAppear {
+      from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-8px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
     .card {
       background-color: var(--card-bg);
       padding: 8px 10px;
@@ -145,6 +156,13 @@
       flex-direction: column;
       gap: 6px;
       position: relative;
+      animation: cardAppear 0.3s ease-out forwards;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .card-deleting {
+      opacity: 0 !important;
+      transform: scale(0.92) translateY(-10px) !important;
     }
 
     .header-bar {
@@ -489,12 +507,11 @@
 
   <div class="container" id="main-app">
     
-    <!-- PROFESYONEL HEADER BAR (KÜNYE & SÜRÜM BİLGİSİ EKLENDİ) -->
     <div class="header-card">
       <div class="brand-title">
         CODEMSO TERMINAL
         <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
-        <span class="version-tag">v2.58.985/mehmetsalihok</span>
+        <span class="version-tag">v2.5.0 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
@@ -579,7 +596,6 @@
 
   </div>
 
-  <!-- SİHİRBAZ / AUTO-OPTIMIZER MODAL PENCERESİ -->
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
       <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
@@ -626,13 +642,13 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v14';
+    const STORAGE_KEY = 'codemso_multi_terminal_v15';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
     let cardProfits = [];
     let cardTradesHistory = [];
-    let lastPrices = []; // Anlık fiyat yönü takibi için
+    let lastPrices = [];
     let tempOptimizerResult = null;
 
     let coinsConfig = [
@@ -761,12 +777,32 @@
       loadCoinData(coinsConfig.length - 1);
     }
 
+    /* ONAYLI VE ANİMASYONLU KART SİLME */
     function removeCard(slotIndex) {
       if (coinsConfig.length <= 1) {
         alert('En az 1 adet analiz kartı bulunmalıdır!');
         return;
       }
 
+      const coin = coinsConfig[slotIndex];
+      const coinName = coin ? coin.symbol.replace('USDT', '') : 'Bu';
+
+      if (!confirm(`${coinName} kartını silmek istediğinize emin misiniz?`)) {
+        return;
+      }
+
+      const cardEl = document.getElementById(`card-${slotIndex}`);
+      if (cardEl) {
+        cardEl.classList.add('card-deleting');
+        setTimeout(() => {
+          executeRemoveCard(slotIndex);
+        }, 300);
+      } else {
+        executeRemoveCard(slotIndex);
+      }
+    }
+
+    function executeRemoveCard(slotIndex) {
       coinsConfig.splice(slotIndex, 1);
       candlesData.splice(slotIndex, 1);
       cardProfits.splice(slotIndex, 1);
@@ -1194,7 +1230,15 @@
       fetchRadarRSIAll();
     }
 
+    /* ONAYLI RADAR COIN SİLME */
     function removeRadarCoin(index) {
+      const item = radarWatchlist[index];
+      const coinName = item ? item.symbol.replace('USDT', '') : 'Bu';
+
+      if (!confirm(`${coinName} radardan silinsin mi?`)) {
+        return;
+      }
+
       radarWatchlist.splice(index, 1);
       saveConfig();
       renderRadarHTML();
@@ -1483,15 +1527,15 @@
       const priceEl = document.getElementById(`price-${slotIndex}`);
       const rsiEl = document.getElementById(`rsi-${slotIndex}`);
       
-      // ANLIK FİYAT YÖNÜNE GÖRE YEŞİL / KIRMIZI RENK ANIMASYONU
+      // ANLIK FİYAT YÖNÜNE GÖRE YEŞİL / KIRMIZI ANLIK TEPKİ
       if (priceEl) {
         priceEl.innerText = formatPrice(currentPrice);
         const prevP = lastPrices[slotIndex];
         if (prevP !== undefined && prevP !== null) {
           if (currentPrice > prevP) {
-            priceEl.style.color = '#22c55e'; // Yükselişte Yeşil
+            priceEl.style.color = '#22c55e';
           } else if (currentPrice < prevP) {
-            priceEl.style.color = '#ef4444'; // Düşüşte Kırmızı
+            priceEl.style.color = '#ef4444';
           }
         }
         lastPrices[slotIndex] = currentPrice;
