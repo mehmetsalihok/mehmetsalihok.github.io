@@ -147,15 +147,14 @@
       }
     }
 
-    /* AÇIK POZİSYONLAR İÇİN HAFİF YANIP SÖNME (PULSE) ANİMASYONU */
+    /* 3 SANİYELİK KUSURSUZ YUMUŞAK DÖNGÜLÜ PULSE ANİMASYONU */
     @keyframes softPulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.45; }
-      100% { opacity: 1; }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
     }
 
     .flashing-row {
-      animation: softPulse 1.5s infinite ease-in-out;
+      animation: softPulse 3s infinite ease-in-out;
     }
 
     .card {
@@ -513,7 +512,8 @@
     }
   </style>
 </head>
-<body class="dark-mode">
+<!-- VARSAYILAN OLARAK GÜNDÜZ MODUNDA (LIGHT-MODE) BAŞLAR -->
+<body class="light-mode">
 
   <div class="container" id="main-app">
     
@@ -521,16 +521,16 @@
       <div class="brand-title">
         CODEMSO TERMINAL
         <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
-        <span class="version-tag">v2.7.0 | Mehmet Salih OK</span>
+        <span class="version-tag">v2.8.0 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
         <button class="add-card-btn" id="btn-add-card" onclick="addNewCard()">+ Yeni Kart Ekle (<span id="card-count-label">2</span>/8)</button>
         
         <select class="theme-select" id="theme-select" onchange="changeTheme(this.value)">
+          <option value="light" selected>Gündüz Modu</option>
           <option value="dark">Gece Modu</option>
           <option value="oled">Zifiri Karanlık (OLED)</option>
-          <option value="light">Gündüz Modu</option>
         </select>
 
         <button class="header-select" onclick="playTestSound()">Ses Testi</button>
@@ -815,6 +815,7 @@
 
     function loadSavedConfig() {
       const saved = localStorage.getItem(STORAGE_KEY);
+      let activeTheme = 'light'; // VARSAYILAN OLARAK GÜNDÜZ MODU
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -822,11 +823,12 @@
           if (parsed.radarWatchlist) radarWatchlist = parsed.radarWatchlist;
           if (parsed.year) SELECTED_YEAR = parsed.year;
           if (parsed.theme) {
-            document.getElementById('theme-select').value = parsed.theme;
-            changeTheme(parsed.theme);
+            activeTheme = parsed.theme;
           }
         } catch(e) {}
       }
+      document.getElementById('theme-select').value = activeTheme;
+      changeTheme(activeTheme);
       document.getElementById('global-year').value = SELECTED_YEAR;
       document.getElementById('summary-year-label').innerText = SELECTED_YEAR;
       renderCardsHTML();
@@ -1320,7 +1322,7 @@
         } else {
           activeList.forEach(p => {
             const tr = document.createElement('tr');
-            tr.className = 'flashing-row'; // AÇIK POZİSYONLAR İÇİN HAFİF YANIP SÖNME EFEKTİ
+            tr.className = 'flashing-row'; // 3 SANİYELİK YUMUŞAK CANLI PULSE ANİMASYONU
             const pnlClass = p.livePnl >= 0 ? 'green' : 'red';
             tr.innerHTML = `
               <td style="text-align: left;"><b>${p.symbol.replace('USDT', '')}</b></td>
@@ -1362,7 +1364,6 @@
             const pnlClass = t.pnl >= 0 ? 'green' : 'red';
             const dateStr = new Date(t.exitTime).toLocaleString('tr-TR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-            // ZAMAN HESABI (24 SAAT = MAVİ, 24-48 SAAT = TURUNCU, 48+ SAAT = NORMAL)
             const diffHours = (nowMs - t.exitTime) / (1000 * 60 * 60);
             let timeColorStyle = '';
             if (diffHours <= 24) {
