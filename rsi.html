@@ -147,14 +147,24 @@
       }
     }
 
-    /* 3 SANİYELİK KUSURSUZ YUMUŞAK DÖNGÜLÜ PULSE ANİMASYONU */
+    /* 4 SANİYELİK İPEKSI VE DENGELİ NEFES ALMA DÖNGÜSÜ */
     @keyframes softPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.35; }
+      0% {
+        background-color: rgba(56, 189, 248, 0.12);
+        opacity: 1;
+      }
+      50% {
+        background-color: rgba(56, 189, 248, 0.02);
+        opacity: 0.8;
+      }
+      100% {
+        background-color: rgba(56, 189, 248, 0.12);
+        opacity: 1;
+      }
     }
 
     .flashing-row {
-      animation: softPulse 3s infinite ease-in-out;
+      animation: softPulse 4s infinite ease-in-out;
     }
 
     .card {
@@ -512,7 +522,6 @@
     }
   </style>
 </head>
-<!-- VARSAYILAN OLARAK GÜNDÜZ MODUNDA (LIGHT-MODE) BAŞLAR -->
 <body class="light-mode">
 
   <div class="container" id="main-app">
@@ -521,7 +530,7 @@
       <div class="brand-title">
         CODEMSO TERMINAL
         <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
-        <span class="version-tag">v2.8.0 | Mehmet Salih OK</span>
+        <span class="version-tag">v2.8.1 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
@@ -548,7 +557,7 @@
     <!-- CANLI AKTİF POZİSYONLAR VE SON 10 İŞLEM -->
     <div class="card" style="border-top: 3px solid #0284c7;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-        <span style="font-weight: 800; font-size: 0.72rem; color: #38bdf8;">AÇIK POZİSYONLAR (CANLI)</span>
+        <span style="font-weight: 800; font-size: 0.72rem; color: #0284c7;">AÇIK POZİSYONLAR (CANLI)</span>
         <span style="font-size: 0.58rem; color: var(--text-muted);" id="active-pos-count-label">0 Açık Pozisyon</span>
       </div>
       
@@ -815,7 +824,7 @@
 
     function loadSavedConfig() {
       const saved = localStorage.getItem(STORAGE_KEY);
-      let activeTheme = 'light'; // VARSAYILAN OLARAK GÜNDÜZ MODU
+      let activeTheme = 'light';
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
@@ -1322,7 +1331,7 @@
         } else {
           activeList.forEach(p => {
             const tr = document.createElement('tr');
-            tr.className = 'flashing-row'; // 3 SANİYELİK YUMUŞAK CANLI PULSE ANİMASYONU
+            tr.className = 'flashing-row'; // 4 SANİYELİK İPEKSI CANLI DÖNGÜ
             const pnlClass = p.livePnl >= 0 ? 'green' : 'red';
             tr.innerHTML = `
               <td style="text-align: left;"><b>${p.symbol.replace('USDT', '')}</b></td>
@@ -1367,9 +1376,9 @@
             const diffHours = (nowMs - t.exitTime) / (1000 * 60 * 60);
             let timeColorStyle = '';
             if (diffHours <= 24) {
-              timeColorStyle = 'color: #38bdf8;'; // Mavi
+              timeColorStyle = 'color: #0284c7;';
             } else if (diffHours > 24 && diffHours <= 48) {
-              timeColorStyle = 'color: #fb923c;'; // Turuncu
+              timeColorStyle = 'color: #ea580c;';
             }
 
             tr.innerHTML = `
