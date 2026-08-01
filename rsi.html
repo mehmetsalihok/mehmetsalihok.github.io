@@ -595,6 +595,33 @@
 
   </div>
 
+  <!-- SİTE İÇİ ÖZEL YENİ KART EKLEME MODALI -->
+  <div class="modal-overlay" id="add-card-modal">
+    <div class="modal-card">
+      <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
+        <span>YENİ KART EKLE</span>
+        <button onclick="closeAddCardModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-weight:bold;">✖</button>
+      </div>
+
+      <div style="font-size:0.65rem; color:var(--text-muted);">
+        Analiz etmek istediğiniz coin sembolünü girin:
+      </div>
+
+      <div style="background:var(--box-bg); padding:10px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:8px;">
+        <div class="coin-setting-item">
+          <label for="new-card-symbol-input">Coin Sembolü:</label>
+          <input type="text" id="new-card-symbol-input" placeholder="Örn: BTC, ETH, SOL" style="text-transform: uppercase;" onkeyup="handleAddCardKeyPress(event)">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:6px;">
+        <button class="add-card-btn" style="flex:1; padding:6px;" onclick="confirmAddNewCard()">Ekle</button>
+        <button class="header-select" style="padding:6px;" onclick="closeAddCardModal()">İptal</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRATEJİ SİHİRBAZI MODALI -->
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
       <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
@@ -641,7 +668,7 @@
   </div>
 
   <script>
-    // OTURUM KONTROLÜ (Giriş yapılmadıysa index.html'e yönlendir)
+    // OTURUM KONTROLÜ
     if (localStorage.getItem('codemso_auth') !== 'true') {
       window.location.href = 'index.html';
     }
@@ -759,17 +786,31 @@
       }));
     }
 
-    /* YENİ KART EKLEME (KULLANICIYA COİN SORAR) */
+    /* SITE İÇİ ÖZEL YENİ KART EKLEME MODAL İŞLEMLERİ */
     function addNewCard() {
       if (coinsConfig.length >= 8) {
         alert('Maksimum 8 adet analiz kartı ekleyebilirsiniz!');
         return;
       }
 
-      let userInput = prompt("Eklemek istediğiniz coin sembolünü girin (Örn: BTC, ETH, SOL):", "BTC");
-      if (!userInput) return; // İptal edildiyse işlem yapma
+      const modal = document.getElementById('add-card-modal');
+      const input = document.getElementById('new-card-symbol-input');
+      if (input) input.value = '';
+      if (modal) modal.style.display = 'flex';
+      setTimeout(() => { if (input) input.focus(); }, 100);
+    }
 
-      let sym = userInput.toUpperCase().trim();
+    function confirmAddNewCard() {
+      const input = document.getElementById('new-card-symbol-input');
+      if (!input) return;
+
+      let val = input.value.trim();
+      if (!val) {
+        alert('Lütfen geçerli bir coin sembolü girin!');
+        return;
+      }
+
+      let sym = val.toUpperCase();
       if (!sym.endsWith('USDT')) sym += 'USDT';
 
       coinsConfig.push({
@@ -786,6 +827,18 @@
       saveConfig();
       renderCardsHTML();
       loadCoinData(coinsConfig.length - 1);
+      closeAddCardModal();
+    }
+
+    function handleAddCardKeyPress(event) {
+      if (event.key === 'Enter') {
+        confirmAddNewCard();
+      }
+    }
+
+    function closeAddCardModal() {
+      const modal = document.getElementById('add-card-modal');
+      if (modal) modal.style.display = 'none';
     }
 
     function removeCard(slotIndex) {
