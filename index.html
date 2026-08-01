@@ -1,224 +1,197 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Codemso | Global Mobile Solutions</title>
-    
-    <link rel="icon" href="https://i.hizliresim.com/49omvfc.png" type="image/png">
-    <link rel="apple-touch-icon" href="https://i.hizliresim.com/49omvfc.png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CODEMSO | Terminal Giriş</title>
+  <style>
+    :root {
+      --bg-color: #0b1120;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --box-bg: #0f172a;
+      --accent-color: #0284c7;
+      --accent-hover: #0369a1;
+      --danger-color: #ef4444;
+    }
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #050505;
-            color: #ffffff;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            -webkit-font-smoothing: antialiased;
-        }
+    * {
+      box-sizing: border-box;
+      border-radius: 0 !important;
+      margin: 0;
+      padding: 0;
+    }
 
-        .ambient-glow {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60vw;
-            height: 60vw;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-        }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      font-size: 0.75rem;
+    }
 
-        .fade-in-up {
-            animation: fadeInUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-            opacity: 0;
-            transform: translateY(20px);
-        }
+    .login-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      width: 100%;
+      max-width: 340px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    }
 
-        .delay-100 { animation-delay: 100ms; }
-        .delay-200 { animation-delay: 200ms; }
-        .delay-300 { animation-delay: 300ms; }
+    .login-header {
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
 
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .brand-name {
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      color: var(--text-color);
+    }
 
-        /* Dil Seçici - Kapsayıcı kutu */
-        .lang-switch {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            border-radius: 100px;
-            padding: 4px;
-            display: inline-flex;
-        }
+    .brand-sub {
+      color: #38bdf8;
+      font-size: 0.65rem;
+      font-weight: 600;
+      margin-top: 4px;
+      display: block;
+    }
 
-        .lang-btn {
-            padding: 6px 14px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: #71717a;
-            border-radius: 100px;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
 
-        .lang-btn.active {
-            background: #ffffff;
-            color: #000000;
-            box-shadow: 0 2px 10px rgba(255, 255, 255, 0.1);
-        }
+    .form-group label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-        /* Mail Linki Efekti */
-        .mail-link {
-            transition: all 0.3s ease;
-        }
-        .mail-link:hover {
-            color: #ffffff;
-            text-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
-        }
+    .form-control {
+      background-color: var(--box-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 8px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+    }
 
-        .marquee-container {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 80px;
-            display: flex;
-            align-items: center;
-            overflow: hidden;
-            mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-            -webkit-mask-image: linear-gradient(to right, transparent, black 15%, black 85%, transparent);
-            border-top: 1px solid rgba(255, 255, 255, 0.03);
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(5px);
-            z-index: 10;
-        }
+    .form-control:focus {
+      border-color: #38bdf8;
+    }
 
-        .marquee-content {
-            display: inline-flex;
-            gap: 4rem;
-            padding-left: 4rem;
-            animation: marquee 60s linear infinite;
-        }
+    .btn-login {
+      background-color: var(--accent-color);
+      color: #ffffff;
+      border: 1px solid var(--accent-hover);
+      padding: 9px;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+      transition: background-color 0.2s;
+    }
 
-        @keyframes marquee {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
-        }
+    .btn-login:hover {
+      background-color: var(--accent-hover);
+    }
 
-        .tech-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: #52525b;
-            transition: color 0.3s;
-        }
+    .error-msg {
+      color: var(--danger-color);
+      font-size: 0.65rem;
+      font-weight: 700;
+      display: none;
+      text-align: center;
+      background-color: rgba(239, 68, 68, 0.1);
+      padding: 6px;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
 
-        .tech-item:hover { color: #e4e4e7; }
-        .tech-item i { font-size: 1.25rem; }
-        .tech-item span { font-size: 0.8rem; font-weight: 500; letter-spacing: 0.05em; }
-    </style>
+    .footer-info {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      text-align: center;
+      font-family: monospace;
+      margin-top: 8px;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="ambient-glow"></div>
-
-    <div style="position: fixed; top: 25px; right: 25px; z-index: 9999;" class="fade-in-up">
-        <div class="lang-switch">
-            <button id="btn-tr" class="lang-btn active" onclick="setLang('tr')">TR</button>
-            <button id="btn-en" class="lang-btn" onclick="setLang('en')">EN</button>
-        </div>
+  <div class="login-card">
+    <div class="login-header">
+      <div class="brand-name">CODEMSO</div>
+      <span class="brand-sub">TERMINAL ERİŞİM PORTALI</span>
     </div>
 
-    <main class="relative z-10 flex-grow flex flex-col items-center justify-center px-6 pb-20 mt-10">
-        
-        <div class="relative w-28 h-28 mb-8 fade-in-up">
-            <div class="absolute inset-0 bg-blue-500/10 blur-2xl rounded-full scale-150"></div>
-            <img src="https://i.hizliresim.com/49omvfc.png" alt="Codemso Logo" class="relative z-10 w-full h-full object-contain">
-        </div>
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="username">Kullanıcı Adı</label>
+        <input type="text" id="username" class="form-control" placeholder="Kullanıcı adınızı girin" required autocomplete="username">
+      </div>
 
-        <div class="text-center max-w-lg fade-in-up delay-100">
-            <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-white mb-3">
-                Codemso
-            </h1>
-            
-            <p id="slogan-text" class="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-6">
-                Evrensel Mobil Çözümler
-            </p>
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="password">Şifre</label>
+        <input type="password" id="password" class="form-control" placeholder="Şifrenizi girin" required autocomplete="current-password">
+      </div>
 
-            <p id="desc-text" class="text-zinc-400 leading-relaxed text-[1rem] md:text-[1.1rem] mb-10 font-light">
-                Fikirlerinizi, sınır tanımayan, iOS ve Android ekosistemlerinde yaşayan <span class="text-zinc-100 font-medium">yüksek performanslı global deneyimlere</span> dönüştürüyoruz.
-            </p>
+      <div id="error-msg" class="error-msg">Kullanıcı adı veya şifre hatalı!</div>
 
-            <div class="fade-in-up delay-200">
-                <a href="mailto:info@codemso.com" class="mail-link group inline-flex items-center gap-2 text-zinc-400 font-medium text-[1.1rem]">
-                    <i class="fa-regular fa-envelope text-blue-500/70 group-hover:text-blue-400 transition-colors"></i>
-                    <span>info@codemso.com</span>
-                </a>
-            </div>
-        </div>
-    </main>
+      <button type="submit" class="btn-login">GİRİŞ YAP</button>
+    </form>
 
-    <div class="marquee-container fade-in-up delay-300">
-        <div class="marquee-content" id="marquee-content">
-            <div class="flex gap-16 items-center tech-group">
-                <div class="tech-item"><i class="fa-brands fa-swift"></i><span>SWIFT</span></div>
-                <div class="tech-item"><i class="fa-brands fa-android"></i><span>KOTLIN</span></div>
-                
-                <div class="tech-item">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M14.314 0L2.3 12 6 15.7 21.684.013h-7.357zm.014 11.072L7.857 17.53l3.67 3.67 9.03-9.028h-6.229zM21.684 24h-7.37L11.54 21.23l3.67-3.67L21.684 24z"/>
-                    </svg>
-                    <span>FLUTTER</span>
-                </div>
-
-                <div class="tech-item"><i class="fa-brands fa-react"></i><span>REACT NATIVE</span></div>
-                <div class="w-1 h-1 rounded-full bg-zinc-700 mx-4"></div>
-                <div class="tech-item"><i class="fa-solid fa-cloud"></i><span>CLOUD</span></div>
-                <div class="tech-item"><i class="fa-solid fa-globe"></i><span>GLOBAL</span></div>
-                <div class="tech-item"><i class="fa-solid fa-shield-halved"></i><span>SECURE</span></div>
-            </div>
-        </div>
+    <div class="footer-info">
+      v2.5.0 | Mehmet Salih OK
     </div>
+  </div>
 
-    <script>
-        const translations = {
-            tr: {
-                slogan: "Evrensel Mobil Çözümler",
-                desc: "Fikirlerinizi, sınır tanımayan, iOS ve Android ekosistemlerinde yaşayan <span class='text-zinc-100 font-medium'>yüksek performanslı global deneyimlere</span> dönüştürüyoruz."
-            },
-            en: {
-                slogan: "Universal Mobile Solutions",
-                desc: "Transforming ideas into <span class='text-zinc-100 font-medium'>high-performance global experiences</span> that live boundary-free in iOS and Android ecosystems."
-            }
-        };
+  <script>
+    // ==========================================
+    // GİRİŞ BİLGİLERİNİ BURADAN DEĞİŞTİREBİLİRSİNİZ
+    // ==========================================
+    const VALID_USERNAME = "salih";
+    const VALID_PASSWORD = "123";
 
-        function setLang(lang) {
-            document.getElementById('slogan-text').innerText = translations[lang].slogan;
-            document.getElementById('desc-text').innerHTML = translations[lang].desc;
-            
-            document.querySelectorAll('.lang-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('btn-' + lang).classList.add('active');
-        }
+    // Oturum önceden açıldıysa direkt yönlendir
+    if (sessionStorage.getItem('codemso_auth') === 'true') {
+      window.location.href = 'rsi.html';
+    }
 
-        const marqueeContent = document.getElementById('marquee-content');
-        const techGroup = marqueeContent.querySelector('.tech-group');
-        for(let i = 0; i < 3; i++) { 
-            marqueeContent.appendChild(techGroup.cloneNode(true)); 
-        }
-    </script>
+    function handleLogin(e) {
+      e.preventDefault();
 
+      const userInput = document.getElementById('username').value.trim();
+      const passInput = document.getElementById('password').value.trim();
+      const errorEl = document.getElementById('error-msg');
+
+      if (userInput === VALID_USERNAME && passInput === VALID_PASSWORD) {
+        sessionStorage.setItem('codemso_auth', 'true');
+        errorEl.style.display = 'none';
+        window.location.href = 'rsi.html';
+      } else {
+        errorEl.style.display = 'block';
+        document.getElementById('password').value = '';
+      }
+    }
+  </script>
 </body>
 </html>
