@@ -147,6 +147,17 @@
       }
     }
 
+    /* AÇIK POZİSYONLAR İÇİN HAFİF YANIP SÖNME (PULSE) ANİMASYONU */
+    @keyframes softPulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.45; }
+      100% { opacity: 1; }
+    }
+
+    .flashing-row {
+      animation: softPulse 1.5s infinite ease-in-out;
+    }
+
     .card {
       background-color: var(--card-bg);
       padding: 8px 10px;
@@ -510,7 +521,7 @@
       <div class="brand-title">
         CODEMSO TERMINAL
         <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
-        <span class="version-tag">v2.6.1 | Mehmet Salih OK</span>
+        <span class="version-tag">v2.7.0 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
@@ -718,7 +729,7 @@
       window.location.href = 'index.html';
     }
 
-    const STORAGE_KEY = 'codemso_multi_terminal_v16';
+    const STORAGE_KEY = 'codemso_multi_terminal_v17';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
@@ -1309,6 +1320,7 @@
         } else {
           activeList.forEach(p => {
             const tr = document.createElement('tr');
+            tr.className = 'flashing-row'; // AÇIK POZİSYONLAR İÇİN HAFİF YANIP SÖNME EFEKTİ
             const pnlClass = p.livePnl >= 0 ? 'green' : 'red';
             tr.innerHTML = `
               <td style="text-align: left;"><b>${p.symbol.replace('USDT', '')}</b></td>
@@ -1338,6 +1350,7 @@
 
       allTrades.sort((a, b) => b.exitTime - a.exitTime);
       const last10 = allTrades.slice(0, 10);
+      const nowMs = Date.now();
 
       if (tradesTbody) {
         tradesTbody.innerHTML = '';
@@ -1348,12 +1361,22 @@
             const tr = document.createElement('tr');
             const pnlClass = t.pnl >= 0 ? 'green' : 'red';
             const dateStr = new Date(t.exitTime).toLocaleString('tr-TR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            // ZAMAN HESABI (24 SAAT = MAVİ, 24-48 SAAT = TURUNCU, 48+ SAAT = NORMAL)
+            const diffHours = (nowMs - t.exitTime) / (1000 * 60 * 60);
+            let timeColorStyle = '';
+            if (diffHours <= 24) {
+              timeColorStyle = 'color: #38bdf8;'; // Mavi
+            } else if (diffHours > 24 && diffHours <= 48) {
+              timeColorStyle = 'color: #fb923c;'; // Turuncu
+            }
+
             tr.innerHTML = `
-              <td style="text-align: left;"><b>${t.symbol.replace('USDT', '')}</b></td>
-              <td>${formatPrice(t.entryPrice)}</td>
-              <td>${formatPrice(t.exitPrice)}</td>
-              <td class="${pnlClass}"><b>${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</b></td>
-              <td>${t.reason} (${dateStr})</td>
+              <td style="text-align: left;"><b style="${timeColorStyle}">${t.symbol.replace('USDT', '')}</b></td>
+              <td style="${timeColorStyle}">${formatPrice(t.entryPrice)}</td>
+              <td style="${timeColorStyle}">${formatPrice(t.exitPrice)}</td>
+              <td class="${pnlClass}" style="${timeColorStyle}"><b>${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</b></td>
+              <td style="${timeColorStyle}">${t.reason} (${dateStr})</td>
             `;
             tradesTbody.appendChild(tr);
           });
@@ -1836,7 +1859,6 @@
                 const candles = candlesData[slotIndex];
                 const lastCandle = candles[candles.length - 1];
                 
-                // Live fiyata göre mum kapanış, en yüksek ve en düşük değerlerini anlık güncelle
                 lastCandle.close = livePrice;
                 if (livePrice > lastCandle.high) lastCandle.high = livePrice;
                 if (livePrice < lastCandle.low) lastCandle.low = livePrice;
