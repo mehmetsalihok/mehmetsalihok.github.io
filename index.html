@@ -36,7 +36,6 @@
       font-size: 0.72rem;
     }
 
-    /* KOMPAKT VE ZARİF BEYAZ KART */
     .login-card {
       background-color: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -59,7 +58,6 @@
       gap: 10px;
     }
 
-    /* KORUMALI LOGO BİÇİMLENDİRMESİ */
     .login-logo {
       height: 42px;
       width: auto;
@@ -114,7 +112,6 @@
       border-color: #0284c7;
     }
 
-    /* KÜÇÜLTÜLMÜŞ VE ŞIK LOGIN BUTONU */
     .btn-login {
       background-color: var(--accent-color);
       color: #ffffff;
@@ -156,7 +153,6 @@
 
   <div class="login-card">
     <div class="login-header">
-      <!-- Sürüklenemez ve adresi doğrudan görünmez Logo -->
       <img src="https://i.hizliresim.com/mes685t.png" alt="Logo" class="login-logo" oncontextmenu="return false;">
       <div>
         <div class="brand-name">CODEMSO</div>
@@ -186,11 +182,13 @@
   </div>
 
   <script>
-    // ==========================================
-    // LOGIN CREDENTIALS
-    // ==========================================
     const VALID_USERNAME = "salih";
     const VALID_PASSWORD = "123";
+
+    // Tarayıcıda oturum kayıtlıysa doğrudan terminale geç
+    if (localStorage.getItem('codemso_auth') === 'true') {
+      window.location.href = 'rsi.html';
+    }
 
     function handleLogin(e) {
       e.preventDefault();
@@ -200,7 +198,7 @@
       const errorEl = document.getElementById('error-msg');
 
       if (userInput === VALID_USERNAME && passInput === VALID_PASSWORD) {
-        sessionStorage.setItem('codemso_auth', 'true');
+        localStorage.setItem('codemso_auth', 'true');
         errorEl.style.display = 'none';
         window.location.href = 'rsi.html';
       } else {
