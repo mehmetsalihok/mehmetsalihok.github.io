@@ -12,26 +12,25 @@
       --text-muted: #94a3b8;
       --border-color: #334155;
       --box-bg: #0f172a;
-      --badge-bg: #334155;
+      --badge-bg: #1e293b;
       --badge-text: #38bdf8;
       --table-stripe: #182232;
       --input-bg: #0f172a;
     }
 
     body.light-mode {
-      --bg-color: #f8fafc;
+      --bg-color: #f1f5f9;
       --card-bg: #ffffff;
       --text-color: #0f172a;
       --text-muted: #64748b;
       --border-color: #cbd5e1;
-      --box-bg: #f1f5f9;
-      --badge-bg: #e2e8f0;
+      --box-bg: #f8fafc;
+      --badge-bg: #ffffff;
       --badge-text: #0284c7;
       --table-stripe: #f8fafc;
       --input-bg: #ffffff;
     }
 
-    /* ZİFİRİ KARANLIK (OLED PITCH BLACK) TEMASI */
     body.oled-mode {
       --bg-color: #000000;
       --card-bg: #0d0d0d;
@@ -39,13 +38,16 @@
       --text-muted: #888888;
       --border-color: #222222;
       --box-bg: #141414;
-      --badge-bg: #1a1a1a;
+      --badge-bg: #0d0d0d;
       --badge-text: #38bdf8;
       --table-stripe: #080808;
       --input-bg: #121212;
     }
 
-    * { box-sizing: border-box; }
+    * { 
+      box-sizing: border-box; 
+      border-radius: 0 !important; /* TÜM YUVARLAK KÖŞELER KALDIRILDI */
+    }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -57,42 +59,6 @@
       transition: background-color 0.2s, color 0.2s;
     }
 
-    /* 🦖 3 SANİYELİK YÜKLEME EKRANI OVERLAY */
-    #loading-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background-color: #0b1120;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 99999;
-      transition: opacity 0.5s ease, visibility 0.5s ease;
-    }
-
-    .dino-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .dino-gif {
-      width: 90px;
-      height: auto;
-      image-rendering: pixelated; /* Retro piksel netliği */
-      filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
-    }
-
-    .dino-text {
-      font-family: monospace;
-      font-size: 0.8rem;
-      font-weight: bold;
-      color: #38bdf8;
-      letter-spacing: 1px;
-    }
-
     .container {
       display: flex;
       flex-direction: column;
@@ -101,15 +67,39 @@
       margin: 0 auto;
     }
 
+    /* PROFESYONEL SADE HEADER */
     .header-card {
       background-color: var(--card-bg);
-      border-radius: 8px;
-      padding: 6px 10px;
+      padding: 8px 12px;
       border: 1px solid var(--border-color);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .brand-title {
+      font-weight: 800;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+      color: var(--text-color);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-title span {
+      color: #38bdf8;
+      font-size: 0.65rem;
+      border-left: 2px solid var(--border-color);
+      padding-left: 8px;
+      font-weight: 600;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
       gap: 8px;
     }
 
@@ -141,10 +131,8 @@
 
     .card {
       background-color: var(--card-bg);
-      border-radius: 8px;
       padding: 8px 10px;
       border: 1px solid var(--border-color);
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -157,32 +145,21 @@
       align-items: center;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 6px;
-      background-color: var(--badge-bg);
-      color: var(--badge-text);
-      font-size: 0.62rem;
-      font-weight: 700;
-    }
-
-    .theme-select {
+    .theme-select, .header-select {
       background: var(--input-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
-      padding: 3px 6px;
-      border-radius: 4px;
-      font-size: 0.62rem;
+      padding: 4px 6px;
+      font-size: 0.65rem;
       font-weight: 600;
+      outline: none;
     }
 
     .add-card-btn {
-      background: #22c55e;
+      background: #0284c7;
       color: #ffffff;
-      border: none;
+      border: 1px solid #0369a1;
       padding: 4px 10px;
-      border-radius: 4px;
       cursor: pointer;
       font-size: 0.65rem;
       font-weight: bold;
@@ -190,6 +167,7 @@
 
     .add-card-btn:disabled {
       background: #64748b;
+      border-color: #475569;
       cursor: not-allowed;
     }
 
@@ -206,14 +184,29 @@
     .coin-input {
       padding: 3px 6px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background-color: var(--input-bg);
       color: var(--text-color);
       font-size: 0.78rem;
       font-weight: 800;
-      width: 110px;
+      width: 105px;
       text-transform: uppercase;
+      outline: none;
     }
+
+    .color-picker {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1px solid var(--border-color);
+      background: transparent;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-picker::-webkit-color-swatch { border: none; }
 
     .price-row {
       display: flex;
@@ -241,7 +234,6 @@
     .stat-box {
       background-color: var(--box-bg);
       padding: 4px 6px;
-      border-radius: 4px;
       border: 1px solid var(--border-color);
       text-align: center;
     }
@@ -261,14 +253,12 @@
     .position-box {
       background-color: var(--box-bg);
       padding: 5px 6px;
-      border-radius: 4px;
       border: 1px solid var(--border-color);
     }
 
     .coin-settings-box {
       background-color: var(--box-bg);
       border: 1px solid var(--border-color);
-      border-radius: 6px;
       padding: 8px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -290,7 +280,6 @@
     .coin-setting-item input, .coin-setting-item select {
       padding: 5px 6px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background-color: var(--card-bg);
       color: var(--text-color);
       font-size: 0.70rem;
@@ -305,21 +294,17 @@
 
     .wizard-btn {
       grid-column: span 3;
-      background: linear-gradient(135deg, #0284c7, #2563eb);
+      background: #0284c7;
       color: #ffffff;
-      border: none;
+      border: 1px solid #0369a1;
       padding: 6px 8px;
-      border-radius: 4px;
       font-size: 0.68rem;
       font-weight: bold;
       cursor: pointer;
       text-align: center;
-      transition: opacity 0.2s;
     }
 
-    .wizard-btn:hover {
-      opacity: 0.9;
-    }
+    .wizard-btn:hover { background: #0369a1; }
 
     .modal-overlay {
       position: fixed;
@@ -334,10 +319,8 @@
     .modal-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
       padding: 16px;
-      width: 330px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      width: 320px;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -345,7 +328,6 @@
 
     .sidebar-card {
       background-color: var(--card-bg);
-      border-radius: 8px;
       padding: 8px;
       border: 1px solid var(--border-color);
       display: flex;
@@ -363,7 +345,6 @@
     .add-coin-row input, .add-coin-row select {
       padding: 4px 6px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
       font-weight: 700;
@@ -374,7 +355,6 @@
       background: #0284c7;
       color: #fff;
       border: none;
-      border-radius: 4px;
       padding: 4px 10px;
       cursor: pointer;
       font-weight: 700;
@@ -404,7 +384,6 @@
       padding: 3px 3px;
       font-size: 0.68rem;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
       text-align: center;
@@ -415,7 +394,6 @@
       padding: 3px 3px;
       font-size: 0.65rem;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
       font-weight: 700;
@@ -444,13 +422,8 @@
     .csv-btn:hover { text-decoration: underline; }
 
     .alarm-triggered {
-      animation: pulseAlert 0.8s infinite alternate;
+      background-color: rgba(239, 68, 68, 0.2) !important;
       font-weight: 900;
-    }
-
-    @keyframes pulseAlert {
-      from { background-color: rgba(239, 68, 68, 0.15); }
-      to { background-color: rgba(239, 68, 68, 0.55); }
     }
 
     .table-title {
@@ -505,37 +478,32 @@
 </head>
 <body class="dark-mode">
 
-  <!-- 🦖 3 SANİYELİK NOSTALJİK DİNO YÜKLEME EKRANI -->
-  <div id="loading-overlay">
-    <div class="dino-container">
-      <!-- 8-Bit Pixel Dinazor GIF -->
-      <img src="https://media.giphy.com/media/13HgwGsXF0aiGY/giphy.gif" alt="Running Dino" class="dino-gif">
-      <div class="dino-text">CODEMSO TERMINAL HAZIRLANIYOR...</div>
-    </div>
-  </div>
-
   <div class="container" id="main-app">
     
+    <!-- PROFESYONEL SADE HEADER BAR -->
     <div class="header-card">
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <span class="badge">CODEMSO TERMINAL & RADAR</span>
+      <div class="brand-title">
+        CODEMSO TERMINAL <span>RSI ANALİZ & RADAR</span>
+      </div>
+
+      <div class="header-controls">
         <button class="add-card-btn" id="btn-add-card" onclick="addNewCard()">+ Yeni Kart Ekle (<span id="card-count-label">2</span>/8)</button>
         
         <select class="theme-select" id="theme-select" onchange="changeTheme(this.value)">
-          <option value="dark">🌙 Gece Modu</option>
-          <option value="oled">🖤 Zifiri Karanlık (OLED)</option>
-          <option value="light">☀️ Gündüz Modu</option>
+          <option value="dark">Gece Modu</option>
+          <option value="oled">Zifiri Karanlık (OLED)</option>
+          <option value="light">Gündüz Modu</option>
         </select>
 
-        <button class="theme-btn" onclick="playTestSound()">🔊 Ses Testi</button>
-      </div>
+        <button class="header-select" onclick="playTestSound()">Ses Testi</button>
 
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <label style="font-weight:700; font-size:0.65rem; color:var(--text-muted)">Genel Yıl Seçimi:</label>
-        <select id="global-year" style="padding: 2px 6px; border-radius:4px; background:var(--input-bg); color:var(--text-color); font-weight:700; border:1px solid var(--border-color);" onchange="changeGlobalYear()">
-          <option value="2026">2026</option>
-          <option value="2025">2025</option>
-        </select>
+        <div style="display: flex; align-items: center; gap: 4px;">
+          <label style="font-weight:700; font-size:0.62rem; color:var(--text-muted)">Yıl:</label>
+          <select id="global-year" class="header-select" onchange="changeGlobalYear()">
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+          </select>
+        </div>
       </div>
     </div>
 
@@ -545,7 +513,7 @@
       <div class="sidebar-card">
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-weight: 800; font-size: 0.72rem;">⚡ CANLI RSI RADAR (1s Canlı)</span>
+            <span style="font-weight: 800; font-size: 0.72rem;">CANLI RSI RADAR (1s)</span>
             <span style="font-size: 0.58rem; color: var(--text-muted);" id="radar-update-time">Canlı</span>
           </div>
 
@@ -581,7 +549,7 @@
 
         <div style="border-top: 1px solid var(--border-color); padding-top: 8px;">
           <div style="font-weight: 800; font-size: 0.72rem; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
-            <span>📊 KART PERFORMANS ÖZETİ (<span id="summary-year-label">2026</span>)</span>
+            <span>KART PERFORMANS ÖZETİ (<span id="summary-year-label">2026</span>)</span>
           </div>
           <table class="watchlist-table">
             <thead>
@@ -604,7 +572,7 @@
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
       <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
-        <span>🤖 STRATEJİ SİHİRBAZI</span>
+        <span>STRATEJİ SİHİRBAZI</span>
         <button onclick="closeOptimizerModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-weight:bold;">✖</button>
       </div>
 
@@ -612,7 +580,7 @@
         Coin Analiz Ediliyor...
       </div>
 
-      <div style="background:var(--box-bg); padding:10px; border-radius:6px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px; font-size:0.68rem;">
+      <div style="background:var(--box-bg); padding:10px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px; font-size:0.68rem;">
         <div style="display:flex; justify-content:space-between;">
           <span>Hedef Kâr Oranı:</span>
           <b id="opt-target-profit" class="green">%1.0</b>
@@ -641,13 +609,13 @@
 
       <div style="display:flex; gap:6px;">
         <button class="add-card-btn" style="flex:1; padding:6px;" onclick="applyOptimizerResult()">Uygula ve Kaydet</button>
-        <button class="theme-btn" style="padding:6px;" onclick="closeOptimizerModal()">Vazgeç</button>
+        <button class="header-select" style="padding:6px;" onclick="closeOptimizerModal()">Vazgeç</button>
       </div>
     </div>
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v12';
+    const STORAGE_KEY = 'codemso_multi_terminal_v13';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
@@ -656,8 +624,8 @@
     let tempOptimizerResult = null;
 
     let coinsConfig = [
-      { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
-      { symbol: 'BTCUSDT',   interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0 }
+      { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5, color: '#38bdf8' },
+      { symbol: 'BTCUSDT',   interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0, color: '#eab308' }
     ];
 
     let radarWatchlist = [
@@ -699,6 +667,16 @@
       else if (theme === 'oled') document.body.classList.add('oled-mode');
       else document.body.classList.add('dark-mode');
 
+      saveConfig();
+    }
+
+    function updateCardColor(slotIndex, color) {
+      if (!coinsConfig[slotIndex]) return;
+      coinsConfig[slotIndex].color = color;
+      const cardEl = document.getElementById(`card-${slotIndex}`);
+      if (cardEl) {
+        cardEl.style.borderTop = `3px solid ${color}`;
+      }
       saveConfig();
     }
 
@@ -762,7 +740,8 @@
         buyRsi: 20,
         sellRsi: 85,
         profitTarget: 4.0,
-        monthlyCap: 2.5
+        monthlyCap: 2.5,
+        color: '#38bdf8'
       });
 
       saveConfig();
@@ -796,10 +775,14 @@
       if (addBtn) addBtn.disabled = coinsConfig.length >= 8;
 
       coinsConfig.forEach((coin, i) => {
+        const cardColor = coin.color || '#38bdf8';
         const cardHTML = `
-          <div class="card" id="card-${i}">
+          <div class="card" id="card-${i}" style="border-top: 3px solid ${cardColor};">
             <div class="header-bar">
-              <input type="text" class="coin-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <input type="color" class="color-picker" value="${cardColor}" id="card-color-${i}" onchange="updateCardColor(${i}, this.value)" title="Kart Vurgu Rengini Değiştir">
+                <input type="text" class="coin-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
+              </div>
               <div>
                 <span class="loader" id="loader-${i}">Yükleniyor...</span>
                 <button class="remove-card-btn" onclick="removeCard(${i})" title="Kartı Sil">✖</button>
@@ -877,11 +860,11 @@
                 <input type="number" step="0.5" id="setting-monthlyCap-${i}" value="${coin.monthlyCap}" onchange="updateCoinSetting(${i})">
               </div>
 
-              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">🪄 Sihirbaz (En İdeal RSI'ı Bul)</button>
+              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">Sihirbaz (En İdeal RSI'ı Bul)</button>
             </div>
 
             <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
-              <span>📅 Aylık Performans Tablosu (${SELECTED_YEAR})</span>
+              <span>Aylık Performans Tablosu (${SELECTED_YEAR})</span>
               <span>▼</span>
             </div>
             <div class="collapsible-content" id="acc-monthly-${i}">
@@ -892,8 +875,8 @@
             </div>
 
             <div class="table-title">
-              <span onclick="toggleAccordion('acc-trades-${i}')">📜 Son İşlemler Logu ▼</span>
-              <button class="csv-btn" onclick="exportTradesCSV(${i})">[📥 CSV İndir]</button>
+              <span onclick="toggleAccordion('acc-trades-${i}')">Son İşlemler Logu ▼</span>
+              <button class="csv-btn" onclick="exportTradesCSV(${i})">[CSV İndir]</button>
             </div>
             <div class="collapsible-content" id="acc-trades-${i}">
               <table>
@@ -1277,7 +1260,8 @@
         buyRsi: parseVal(document.getElementById(`setting-buyRsi-${slotIndex}`).value, 20),
         sellRsi: parseVal(document.getElementById(`setting-sellRsi-${slotIndex}`).value, 85),
         profitTarget: parseVal(document.getElementById(`setting-profitTarget-${slotIndex}`).value, 4.0),
-        monthlyCap: parseVal(document.getElementById(`setting-monthlyCap-${slotIndex}`).value, 2.5)
+        monthlyCap: parseVal(document.getElementById(`setting-monthlyCap-${slotIndex}`).value, 2.5),
+        color: oldCoin.color || '#38bdf8'
       };
 
       const tfLabelEl = document.getElementById(`tf-label-${slotIndex}`);
@@ -1581,16 +1565,6 @@
         loadCoinData(i);
       }
       fetchRadarRSIAll();
-
-      // 🦖 3 Saniye Sonra Dino Yükleme Ekranını Kapat
-      setTimeout(() => {
-        const overlay = document.getElementById('loading-overlay');
-        if (overlay) {
-          overlay.style.opacity = '0';
-          overlay.style.visibility = 'hidden';
-          setTimeout(() => { overlay.style.display = 'none'; }, 500);
-        }
-      }, 3000);
 
       setInterval(() => {
         coinsConfig.forEach((coin, slotIndex) => {
