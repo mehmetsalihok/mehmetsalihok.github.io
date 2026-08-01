@@ -46,7 +46,7 @@
 
     * { 
       box-sizing: border-box; 
-      border-radius: 0 !important; /* TÜM YUVARLAK KÖŞELER KALDIRILDI */
+      border-radius: 0 !important;
     }
     
     body {
@@ -67,7 +67,7 @@
       margin: 0 auto;
     }
 
-    /* PROFESYONEL SADE HEADER */
+    /* PROFESYONEL HEADER BAR */
     .header-card {
       background-color: var(--card-bg);
       padding: 8px 12px;
@@ -89,12 +89,20 @@
       gap: 8px;
     }
 
-    .brand-title span {
+    .brand-subtitle {
       color: #38bdf8;
       font-size: 0.65rem;
-      border-left: 2px solid var(--border-color);
+      border-left: 1px solid var(--border-color);
       padding-left: 8px;
       font-weight: 600;
+    }
+
+    .version-tag {
+      font-size: 0.58rem;
+      color: var(--text-muted);
+      border-left: 1px solid var(--border-color);
+      padding-left: 8px;
+      font-family: monospace;
     }
 
     .header-controls {
@@ -217,6 +225,7 @@
     .price {
       font-size: 1.2rem;
       font-weight: 800;
+      transition: color 0.3s ease;
     }
 
     .grid-2 {
@@ -480,10 +489,12 @@
 
   <div class="container" id="main-app">
     
-    <!-- PROFESYONEL SADE HEADER BAR -->
+    <!-- PROFESYONEL HEADER BAR (KÜNYE & SÜRÜM BİLGİSİ EKLENDİ) -->
     <div class="header-card">
       <div class="brand-title">
-        CODEMSO TERMINAL <span>RSI ANALİZ & RADAR</span>
+        CODEMSO TERMINAL
+        <span class="brand-subtitle">RSI ANALİZ & RADAR</span>
+        <span class="version-tag">v2.4.0 | Mehmet Salih OK</span>
       </div>
 
       <div class="header-controls">
@@ -615,12 +626,13 @@
   </div>
 
   <script>
-    const STORAGE_KEY = 'codemso_multi_terminal_v13';
+    const STORAGE_KEY = 'codemso_multi_terminal_v14';
 
     let SELECTED_YEAR = '2026';
     let candlesData = [];
     let cardProfits = [];
     let cardTradesHistory = [];
+    let lastPrices = []; // Anlık fiyat yönü takibi için
     let tempOptimizerResult = null;
 
     let coinsConfig = [
@@ -759,6 +771,7 @@
       candlesData.splice(slotIndex, 1);
       cardProfits.splice(slotIndex, 1);
       cardTradesHistory.splice(slotIndex, 1);
+      lastPrices.splice(slotIndex, 1);
 
       saveConfig();
       renderCardsHTML();
@@ -1470,7 +1483,20 @@
       const priceEl = document.getElementById(`price-${slotIndex}`);
       const rsiEl = document.getElementById(`rsi-${slotIndex}`);
       
-      if (priceEl) priceEl.innerText = formatPrice(currentPrice);
+      // ANLIK FİYAT YÖNÜNE GÖRE YEŞİL / KIRMIZI RENK ANIMASYONU
+      if (priceEl) {
+        priceEl.innerText = formatPrice(currentPrice);
+        const prevP = lastPrices[slotIndex];
+        if (prevP !== undefined && prevP !== null) {
+          if (currentPrice > prevP) {
+            priceEl.style.color = '#22c55e'; // Yükselişte Yeşil
+          } else if (currentPrice < prevP) {
+            priceEl.style.color = '#ef4444'; // Düşüşte Kırmızı
+          }
+        }
+        lastPrices[slotIndex] = currentPrice;
+      }
+
       if (rsiEl) rsiEl.innerText = formatNum(currentRSI, 2);
 
       const posEl = document.getElementById(`pos-${slotIndex}`);
