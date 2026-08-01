@@ -300,7 +300,7 @@
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 16px;
-      width: 340px;
+      width: 320px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.5);
       display: flex;
       flex-direction: column;
@@ -559,7 +559,7 @@
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
       <div style="font-weight:800; font-size:0.8rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
-        <span>🤖 DENGELİ KÂR HEDEF SİHİRBAZI</span>
+        <span>🤖 STRATEJİ SİHİRBAZI</span>
         <button onclick="closeOptimizerModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-weight:bold;">✖</button>
       </div>
 
@@ -569,8 +569,8 @@
 
       <div style="background:var(--box-bg); padding:10px; border-radius:6px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px; font-size:0.68rem;">
         <div style="display:flex; justify-content:space-between;">
-          <span>İşlem Başı Kâr / Aylık Kilit:</span>
-          <b id="opt-targets-display" class="green">%1.0 / %4.0</b>
+          <span>Hedef Kâr Oranı:</span>
+          <b id="opt-target-profit" class="green">%1.0</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
           <span>Önerilen RSI Al:</span>
@@ -581,20 +581,12 @@
           <b id="opt-best-sell" style="color:#eab308;">--</b>
         </div>
         <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:4px;">
-          <span>Aylık Hedef Başarısı:</span>
-          <b id="opt-best-capped-months" class="green">0 Ay Hedefe Ulaştı</b>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
           <span>Başarı Oranı (Win Rate):</span>
           <b id="opt-best-winrate" class="green">--%</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span>Kayıp İşlem Sayısı:</span>
+          <span>Kayıp / İşlem:</span>
           <b id="opt-best-loss" class="red">0 Kayıp</b>
-        </div>
-        <div style="display:flex; justify-content:space-between;">
-          <span>Toplam İşlem Sayısı:</span>
-          <b id="opt-best-trades">--</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
           <span>Geçmiş Net Toplam Kâr:</span>
@@ -840,7 +832,7 @@
                 <input type="number" step="0.5" id="setting-monthlyCap-${i}" value="${coin.monthlyCap}" onchange="updateCoinSetting(${i})">
               </div>
 
-              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">🪄 Sihirbaz (Aylık Kilit Odaklı İdeal RSI'ı Bul)</button>
+              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">🪄 Sihirbaz (En İdeal RSI'ı Bul)</button>
             </div>
 
             <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
@@ -880,7 +872,7 @@
       }
     }
 
-    // 🤖 GENİŞLETİLMİŞ VE KORUMALI AUTO-OPTIMIZER SİHİRBAZI
+    // 🤖 STABİL VE YÜKSEK PERFORMANSLI STRATEJİ SİHİRBAZI
     function runAutoOptimizer(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const candles = candlesData[slotIndex];
@@ -891,10 +883,7 @@
       }
 
       const profitInput = document.getElementById(`setting-profitTarget-${slotIndex}`);
-      const capInput = document.getElementById(`setting-monthlyCap-${slotIndex}`);
-
       const targetProfit = profitInput ? parseVal(profitInput.value, 1.0) : 1.0;
-      const monthlyCap = capInput ? parseVal(capInput.value, 4.0) : 4.0;
       const rsiLen = coin.rsiLength || 8;
 
       const closePrices = candles.map(c => c.close);
@@ -902,9 +891,9 @@
 
       let bestCandidate = null;
 
-      // Genişletilmiş Tarama Aralığı (RSI Al: 10..45, RSI Sat: 55..95)
-      for (let buyRsi = 10; buyRsi <= 45; buyRsi += 1) {
-        for (let sellRsi = 55; sellRsi <= 95; sellRsi += 1) {
+      // Hızlı ve güvenli tarama aralığı (RSI Al: 15..35, RSI Sat: 65..90)
+      for (let buyRsi = 15; buyRsi <= 35; buyRsi++) {
+        for (let sellRsi = 65; sellRsi <= 90; sellRsi++) {
           
           let inPos = false;
           let entryP = 0;
@@ -912,23 +901,18 @@
           let winCount = 0;
           let lossCount = 0;
           let totalTrades = 0;
-          const mStats = {};
 
           for (let i = rsiLen + 1; i < candles.length; i++) {
             const c = candles[i];
             const rsi = rsiValues[i];
             const prevRsi = rsiValues[i - 1];
 
-            const dateObj = new Date(c.rawTime);
-            const monthKey = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
-            if (!mStats[monthKey]) mStats[monthKey] = { pnl: 0, capReached: false };
-
-            if (!inPos && !mStats[monthKey].capReached) {
+            if (!inPos) {
               if (prevRsi <= buyRsi && rsi > buyRsi) {
                 inPos = true;
                 entryP = c.close;
               }
-            } else if (inPos) {
+            } else {
               const targetP = entryP * (1 + targetProfit / 100);
               let exited = false;
               let pnl = 0;
@@ -947,54 +931,24 @@
                 if (pnl >= 0) winCount++;
                 else lossCount++;
                 totPnl += pnl;
-                mStats[monthKey].pnl += pnl;
-                if (mStats[monthKey].pnl >= monthlyCap) mStats[monthKey].capReached = true;
               }
             }
           }
 
-          if (totalTrades >= 1) {
+          if (totalTrades >= 2 && totPnl > 0) {
             const winRate = (winCount / totalTrades) * 100;
-            
-            let cappedMonths = 0;
-            let totalActiveMonths = 0;
-            Object.keys(mStats).forEach(mKey => {
-              if (mStats[mKey].pnl !== 0 || mStats[mKey].capReached) {
-                totalActiveMonths++;
-                if (mStats[mKey].pnl >= monthlyCap) cappedMonths++;
-              }
-            });
+            // Dengeli skor formülü: Yüksek Win Rate + Sağlıklı Toplam Kâr
+            const score = (winRate * 2.5) + totPnl;
 
-            let isBetter = false;
-            if (!bestCandidate) {
-              isBetter = true;
-            } else {
-              // 1. ÖNCELİK: Aylık Kilit Hedefine Ulaşılan Ay Sayısı (En Yüksek)
-              if (cappedMonths > bestCandidate.cappedMonths) {
-                isBetter = true;
-              } else if (cappedMonths === bestCandidate.cappedMonths) {
-                // 2. ÖNCELİK: Yüksek Win Rate (Aynı Ay Kilit Sayısında Başarı Oranı Yüksek Olan)
-                if (winRate > bestCandidate.winRate) {
-                  isBetter = true;
-                } else if (winRate === bestCandidate.winRate) {
-                  // 3. ÖNCELİK: Net Toplam Kâr
-                  if (totPnl > bestCandidate.maxPnl) {
-                    isBetter = true;
-                  }
-                }
-              }
-            }
-
-            if (isBetter) {
+            if (!bestCandidate || score > bestCandidate.score) {
               bestCandidate = {
                 buyRsi,
                 sellRsi,
-                winRate,
-                totalTrades,
+                winRate: winRate.toFixed(0),
                 lossCount,
-                cappedMonths,
-                totalActiveMonths,
-                maxPnl: totPnl
+                totalTrades,
+                totPnl,
+                score
               };
             }
           }
@@ -1002,50 +956,36 @@
       }
 
       if (!bestCandidate) {
-        alert('Seçilen zaman diliminde uygun bir kombinasyon bulunamadı.');
+        alert('Bu coin ve zaman dilimi için kârlı bir RSI kombinasyonu bulunamadı.');
         return;
       }
 
       tempOptimizerResult = {
         slotIndex,
         buyRsi: bestCandidate.buyRsi,
-        sellRsi: bestCandidate.sellRsi,
-        profitTarget,
-        monthlyCap,
-        pnl: bestCandidate.maxPnl,
-        winRate: bestCandidate.winRate.toFixed(0),
-        lossCount: bestCandidate.lossCount,
-        totalTrades: bestCandidate.totalTrades,
-        cappedMonths: bestCandidate.cappedMonths,
-        totalActiveMonths: bestCandidate.totalActiveMonths
+        sellRsi: bestCandidate.sellRsi
       };
 
       const titleEl = document.getElementById('opt-coin-title');
       if (titleEl) titleEl.innerText = `${coin.symbol} (${coin.interval} | RSI ${rsiLen})`;
-      
-      const targetDispEl = document.getElementById('opt-targets-display');
-      if (targetDispEl) targetDispEl.innerText = `%${targetProfit.toFixed(1)} / %${monthlyCap.toFixed(1)}`;
-      
+
+      const targetEl = document.getElementById('opt-target-profit');
+      if (targetEl) targetEl.innerText = `%${targetProfit.toFixed(1)}`;
+
       const buyEl = document.getElementById('opt-best-buy');
       if (buyEl) buyEl.innerText = bestCandidate.buyRsi;
-      
+
       const sellEl = document.getElementById('opt-best-sell');
       if (sellEl) sellEl.innerText = bestCandidate.sellRsi;
-      
-      const capEl = document.getElementById('opt-best-capped-months');
-      if (capEl) capEl.innerText = `${bestCandidate.cappedMonths} / ${bestCandidate.totalActiveMonths || 1} Ay Kilitlendi`;
-      
-      const lossEl = document.getElementById('opt-best-loss');
-      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayıp`;
-      
+
       const wrEl = document.getElementById('opt-best-winrate');
-      if (wrEl) wrEl.innerText = `%${bestCandidate.winRate.toFixed(0)}`;
-      
-      const tradesEl = document.getElementById('opt-best-trades');
-      if (tradesEl) tradesEl.innerText = `${bestCandidate.totalTrades} İşlem`;
-      
+      if (wrEl) wrEl.innerText = `%${bestCandidate.winRate}`;
+
+      const lossEl = document.getElementById('opt-best-loss');
+      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayıp / ${bestCandidate.totalTrades} İşlem`;
+
       const pnlEl = document.getElementById('opt-best-pnl');
-      if (pnlEl) pnlEl.innerText = `${bestCandidate.maxPnl >= 0 ? '+' : ''}${bestCandidate.maxPnl.toFixed(2)}%`;
+      if (pnlEl) pnlEl.innerText = `+${bestCandidate.totPnl.toFixed(2)}%`;
 
       const modalEl = document.getElementById('optimizer-modal');
       if (modalEl) modalEl.style.display = 'flex';
