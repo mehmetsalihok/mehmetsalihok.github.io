@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CODEMSO Terminali & RSI Radar</title>
+  <title>CODEMSO Kripto Terminali & RSI Radar</title>
   <style>
     :root {
       --bg-color: #0b1120;
@@ -111,7 +111,7 @@
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 6px;
       position: relative;
     }
 
@@ -135,7 +135,7 @@
       background: var(--input-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
-      padding: 2px 6px;
+      padding: 3px 6px;
       border-radius: 4px;
       font-size: 0.62rem;
       font-weight: 600;
@@ -168,7 +168,7 @@
     }
 
     .coin-input {
-      padding: 2px 4px;
+      padding: 3px 6px;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background-color: var(--input-bg);
@@ -204,14 +204,14 @@
 
     .stat-box {
       background-color: var(--box-bg);
-      padding: 3px 5px;
+      padding: 4px 6px;
       border-radius: 4px;
       border: 1px solid var(--border-color);
       text-align: center;
     }
 
     .stat-label {
-      font-size: 0.56rem;
+      font-size: 0.58rem;
       color: var(--text-muted);
       display: block;
       font-weight: 600;
@@ -229,37 +229,43 @@
       border: 1px solid var(--border-color);
     }
 
+    /* FERAHLATILMIŞ COIN AYARLAR PANOSU STİLLERİ */
     .coin-settings-box {
       background-color: var(--box-bg);
       border: 1px solid var(--border-color);
-      border-radius: 4px;
-      padding: 5px;
+      border-radius: 6px;
+      padding: 8px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
+      gap: 6px 8px; /* Satır ve sütun arası mesafeler artırıldı */
     }
 
     .coin-setting-item {
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 3px; /* Etiket ile kutu arası mesafe genişletildi */
     }
 
     .coin-setting-item label {
-      font-size: 0.56rem;
+      font-size: 0.60rem;
       color: var(--text-muted);
       font-weight: 600;
     }
 
     .coin-setting-item input, .coin-setting-item select {
-      padding: 2px 3px;
+      padding: 5px 6px; /* Dikey yükseklik 2px'den 5px'e çıkarıldı */
       border: 1px solid var(--border-color);
-      border-radius: 3px;
+      border-radius: 4px;
       background-color: var(--card-bg);
       color: var(--text-color);
-      font-size: 0.65rem;
+      font-size: 0.70rem;
       font-weight: 700;
       width: 100%;
+      outline: none;
+    }
+
+    .coin-setting-item input:focus, .coin-setting-item select:focus {
+      border-color: #38bdf8;
     }
 
     .sidebar-card {
@@ -280,13 +286,13 @@
     }
 
     .add-coin-row input, .add-coin-row select {
-      padding: 3px 4px;
+      padding: 4px 6px;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
       font-weight: 700;
-      font-size: 0.65rem;
+      font-size: 0.68rem;
     }
 
     .add-btn {
@@ -294,10 +300,10 @@
       color: #fff;
       border: none;
       border-radius: 4px;
-      padding: 3px 8px;
+      padding: 4px 10px;
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.65rem;
+      font-size: 0.68rem;
     }
 
     .watchlist-table {
@@ -320,8 +326,8 @@
 
     .alarm-input {
       width: 38px;
-      padding: 2px 3px;
-      font-size: 0.65rem;
+      padding: 3px 3px;
+      font-size: 0.68rem;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background: var(--input-bg);
@@ -331,8 +337,8 @@
     }
 
     .select-mini {
-      padding: 2px 3px;
-      font-size: 0.62rem;
+      padding: 3px 3px;
+      font-size: 0.65rem;
       border: 1px solid var(--border-color);
       border-radius: 4px;
       background: var(--input-bg);
@@ -429,20 +435,20 @@
     <div class="header-card">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span class="badge">CODEMSO TERMINAL & RADAR</span>
-        <button class="add-card-btn" id="btn-add-card" onclick="addNewCard()">+Kart Ekle (<span id="card-count-label">2</span>/8)</button>
+        <button class="add-card-btn" id="btn-add-card" onclick="addNewCard()">+ Yeni Kart Ekle (<span id="card-count-label">2</span>/8)</button>
         
         <!-- TEMA SEÇİMİ -->
         <select class="theme-select" id="theme-select" onchange="changeTheme(this.value)">
-          <option value="dark">Gece Modu</option>
-          <option value="oled">Zifiri Karanlık</option>
-          <option value="light">Gündüz Modu</option>
+          <option value="dark">🌙 Gece Modu</option>
+          <option value="oled">🖤 Zifiri Karanlık (OLED)</option>
+          <option value="light">☀️ Gündüz Modu</option>
         </select>
 
         <button class="theme-btn" onclick="playTestSound()">🔊 Ses Testi</button>
       </div>
 
       <div style="display: flex; align-items: center; gap: 6px;">
-        <label style="font-weight:700; font-size:0.65rem; color:var(--text-muted)">Yıl Seçimi:</label>
+        <label style="font-weight:700; font-size:0.65rem; color:var(--text-muted)">Genel Yıl Seçimi:</label>
         <select id="global-year" style="padding: 2px 6px; border-radius:4px; background:var(--input-bg); color:var(--text-color); font-weight:700; border:1px solid var(--border-color);" onchange="changeGlobalYear()">
           <option value="2026">2026</option>
           <option value="2025">2025</option>
@@ -459,7 +465,7 @@
         <!-- 1. ALARMLI RADAR -->
         <div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-weight: 800; font-size: 0.72rem;">CANLI RSI RADAR</span>
+            <span style="font-weight: 800; font-size: 0.72rem;">⚡ CANLI RSI RADAR (1s Canlı)</span>
             <span style="font-size: 0.58rem; color: var(--text-muted);" id="radar-update-time">Canlı</span>
           </div>
 
@@ -521,7 +527,7 @@
     let SELECTED_YEAR = '2026';
     let candlesData = [];
     let cardProfits = [];
-    let cardTradesHistory = []; // CSV İndirmek için işlem geçmişi hafızası
+    let cardTradesHistory = [];
 
     let coinsConfig = [
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5 },
@@ -536,7 +542,6 @@
       { symbol: 'AVAXUSDT',  interval: '30m', rsiLength: 10, buyAlarm: 22, sellAlarm: 80, currentRsi: null }
     ];
 
-    // DİNAMİK FİYAT BİÇİMLENDİRİCİ (FLOKI, PEPE VS. İÇİN HASSAS BASAMAK)
     function formatPrice(val) {
       if (val === null || val === undefined || isNaN(val)) return '--.--';
       const num = Number(val);
@@ -693,7 +698,6 @@
               </div>
             </div>
 
-            <!-- C KISMI: İSTATİSTİK & PERFORMANS SATIRI -->
             <div class="grid-3">
               <div class="stat-box">
                 <span class="stat-label">Win Rate</span>
@@ -743,7 +747,7 @@
             </div>
 
             <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
-              <span>Aylık Performans Tablosu (${SELECTED_YEAR})</span>
+              <span>📅 Aylık Performans Tablosu (${SELECTED_YEAR})</span>
               <span>▼</span>
             </div>
             <div class="collapsible-content" id="acc-monthly-${i}">
@@ -754,8 +758,8 @@
             </div>
 
             <div class="table-title">
-              <span onclick="toggleAccordion('acc-trades-${i}')">Son İşlemler Logu ▼</span>
-              <button class="csv-btn" onclick="exportTradesCSV(${i})">CSV İndir</button>
+              <span onclick="toggleAccordion('acc-trades-${i}')">📜 Son İşlemler Logu ▼</span>
+              <button class="csv-btn" onclick="exportTradesCSV(${i})">[📥 CSV İndir]</button>
             </div>
             <div class="collapsible-content" id="acc-trades-${i}">
               <table>
@@ -863,7 +867,6 @@
       tbody.appendChild(totalTr);
     }
 
-    // CSV EXPORT (İŞLEM GEÇMİŞİNİ İNDİRME)
     function exportTradesCSV(slotIndex) {
       const coin = coinsConfig[slotIndex];
       const trades = cardTradesHistory[slotIndex] || [];
@@ -1163,7 +1166,7 @@
         }
       }
 
-      // C KISMI: İSTATİSTİK METRİKLERİ HESAPLAMA (Win Rate, Ort. Süre, Seri)
+      // C KISMI: İSTATİSTİK METRİKLERİ
       let winCount = trades.filter(t => t.isWin).length;
       let totalCount = trades.length;
       let winRate = totalCount > 0 ? ((winCount / totalCount) * 100).toFixed(0) : 0;
@@ -1184,7 +1187,6 @@
 
       let avgHours = totalCount > 0 ? (totalDurationMs / totalCount / (1000 * 60 * 60)).toFixed(1) : '-';
 
-      // UI İSTATİSTİK BİLGİLERİNİ GÜNCELLE
       const winRateEl = document.getElementById(`win-rate-${slotIndex}`);
       const avgTimeEl = document.getElementById(`avg-time-${slotIndex}`);
       const maxStreakEl = document.getElementById(`max-streak-${slotIndex}`);
@@ -1193,7 +1195,6 @@
       if (avgTimeEl) avgTimeEl.innerText = avgHours !== '-' ? `${avgHours}s` : '-';
       if (maxStreakEl) maxStreakEl.innerText = maxStreak;
 
-      // CSV İÇİN İŞLEM GEÇMİŞİNİ SAKLA
       cardTradesHistory[slotIndex] = trades;
 
       const currentPrice = closePrices[closePrices.length - 1];
@@ -1202,7 +1203,6 @@
       const priceEl = document.getElementById(`price-${slotIndex}`);
       const rsiEl = document.getElementById(`rsi-${slotIndex}`);
       
-      // DİNAMİK FİYAT BİÇİMLENDİRİCİ KULLANILIYOR (FLOKI, PEPE UYUMLU)
       if (priceEl) priceEl.innerText = formatPrice(currentPrice);
       if (rsiEl) rsiEl.innerText = formatNum(currentRSI, 2);
 
@@ -1212,7 +1212,7 @@
       const targetEl = document.getElementById(`target-${slotIndex}`);
 
       if (inPosition) {
-        if (posEl) { posEl.innerText = 'ALIM YAPILDI'; posEl.className = 'stat-value green'; }
+        if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'stat-value green'; }
         if (entryEl) entryEl.innerText = formatPrice(entryPrice);
         
         const targetP = entryPrice * (1 + coin.profitTarget / 100);
