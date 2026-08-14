@@ -7,18 +7,15 @@
 
   <style>
     :root {
-      --bg-color: #0b101b;
-      --card-bg: #111827;
-      --text-color: #f3f4f6;
-      --text-muted: #94a3b8;
-      --border-color: #1e293b;
+      --bg-main: #0a0e17;
+      --bg-panel: #101623;
+      --bg-sub: #161f31;
+      --bg-input: #0c111c;
+      --border-main: #202b40;
+      --border-sub: #2d3c58;
       --border-focus: #0284c7;
-      --box-bg: #0b1120;
-      --badge-bg: #1e293b;
-      --badge-text: #38bdf8;
-      --table-stripe: #0f172a;
-      --table-hover: #1e293b;
-      --input-bg: #0b1120;
+      --text-main: #f1f5f9;
+      --text-muted: #8899b5;
       --accent: #0284c7;
       --accent-hover: #0369a1;
       --green: #10b981;
@@ -26,21 +23,19 @@
       --red: #f43f5e;
       --red-bg: rgba(244, 63, 94, 0.12);
       --neutral: #eab308;
+      --neutral-bg: rgba(234, 179, 8, 0.12);
     }
 
     body.light-mode {
-      --bg-color: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-color: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #cbd5e1;
+      --bg-main: #f1f5f9;
+      --bg-panel: #ffffff;
+      --bg-sub: #f8fafc;
+      --bg-input: #ffffff;
+      --border-main: #cbd5e1;
+      --border-sub: #e2e8f0;
       --border-focus: #0284c7;
-      --box-bg: #f8fafc;
-      --badge-bg: #e0f2fe;
-      --badge-text: #0369a1;
-      --table-stripe: #f8fafc;
-      --table-hover: #f1f5f9;
-      --input-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
       --accent: #0284c7;
       --accent-hover: #0369a1;
       --green: #059669;
@@ -48,21 +43,19 @@
       --red: #e11d48;
       --red-bg: rgba(225, 29, 72, 0.1);
       --neutral: #d97706;
+      --neutral-bg: rgba(217, 119, 6, 0.1);
     }
 
     body.oled-mode {
-      --bg-color: #000000;
-      --card-bg: #080808;
-      --text-color: #ffffff;
-      --text-muted: #737373;
-      --border-color: #1f1f1f;
+      --bg-main: #000000;
+      --bg-panel: #0a0a0a;
+      --bg-sub: #121212;
+      --bg-input: #000000;
+      --border-main: #222222;
+      --border-sub: #333333;
       --border-focus: #38bdf8;
-      --box-bg: #000000;
-      --badge-bg: #141414;
-      --badge-text: #38bdf8;
-      --table-stripe: #040404;
-      --table-hover: #121212;
-      --input-bg: #000000;
+      --text-main: #ffffff;
+      --text-muted: #737373;
       --accent: #0284c7;
       --accent-hover: #0369a1;
       --green: #22c55e;
@@ -70,172 +63,114 @@
       --red: #ef4444;
       --red-bg: rgba(239, 68, 68, 0.12);
       --neutral: #eab308;
+      --neutral-bg: rgba(234, 179, 8, 0.12);
     }
 
     * {
       box-sizing: border-box;
       font-family: Arial, Helvetica, sans-serif !important;
-      border-radius: 2px;
+      border-radius: 0;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      margin: 0;
-      padding: 10px;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      padding: 8px;
       font-size: 11px;
       line-height: 1.35;
-      letter-spacing: -0.2px;
-      transition: background-color 0.2s ease, color 0.2s ease;
       font-variant-numeric: tabular-nums;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
 
-    ::-webkit-scrollbar {
-      width: 4px;
-      height: 4px;
-    }
-    ::-webkit-scrollbar-track {
-      background: var(--bg-color);
-    }
-    ::-webkit-scrollbar-thumb {
-      background: var(--border-color);
-    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg-main); }
+    ::-webkit-scrollbar-thumb { background: var(--border-main); }
 
-    .container {
+    .app-viewport {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      max-width: 1800px;
+      max-width: 1850px;
       margin: 0 auto;
     }
 
-    .header-card {
-      background: var(--card-bg);
-      padding: 8px 12px;
-      border: 1px solid var(--border-color);
+    /* ÜST KONTROL ÇUBUĞU */
+    .top-command-bar {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-main);
+      padding: 6px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .brand-title {
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.5px;
-      color: var(--text-color);
-      display: flex;
-      align-items: center;
       gap: 8px;
     }
 
-    .brand-subtitle {
-      color: var(--badge-text);
-      font-size: 10px;
-      border-left: 1px solid var(--border-color);
-      padding-left: 8px;
+    .brand-meta {
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .brand-name {
+      font-size: 13px;
       font-weight: 700;
+      letter-spacing: 0.8px;
+      color: var(--text-main);
+    }
+
+    .brand-tag {
+      font-size: 9px;
+      color: var(--accent);
+      font-weight: 700;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
     }
 
-    .version-tag {
-      font-size: 10px;
+    .brand-ver {
+      font-size: 9px;
       color: var(--text-muted);
-      border-left: 1px solid var(--border-color);
-      padding-left: 8px;
-      font-weight: 400;
+      letter-spacing: 0.3px;
     }
 
-    .header-controls {
+    .command-actions {
       display: flex;
       align-items: center;
       gap: 6px;
       flex-wrap: wrap;
     }
 
-    .main-layout {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
+    .btn-terminal {
+      background: var(--accent);
+      color: #ffffff;
+      border: 1px solid var(--accent);
+      padding: 4px 10px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      transition: all 0.15s ease;
     }
 
-    @media (min-width: 1200px) {
-      .main-layout {
-        display: grid;
-        grid-template-columns: 1fr 450px;
-        align-items: start;
-      }
+    .btn-terminal:hover:not(:disabled) {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
     }
 
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 8px;
+    .btn-terminal:disabled {
+      background: var(--border-main);
+      border-color: var(--border-sub);
+      color: var(--text-muted);
+      cursor: not-allowed;
     }
 
-    @media (min-width: 768px) and (max-width: 1199px) {
-      .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    .card {
-      background-color: var(--card-bg);
-      padding: 8px 10px;
-      border: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      position: relative;
-      animation: cardAppear 0.2s ease-out forwards;
-      transition: border-color 0.15s ease;
-    }
-
-    @keyframes cardAppear {
-      from {
-        opacity: 0;
-        transform: translateY(4px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .card-deleting {
-      opacity: 0 !important;
-      transform: scale(0.95) translateY(-8px) !important;
-      transition: transform 0.2s ease, opacity 0.2s ease !important;
-    }
-
-    @keyframes softPulse {
-      0% {
-        background-color: rgba(2, 132, 199, 0.18);
-      }
-      50% {
-        background-color: transparent;
-      }
-      100% {
-        background-color: rgba(2, 132, 199, 0.18);
-      }
-    }
-
-    .flashing-row {
-      animation: softPulse 2.8s infinite ease-in-out;
-    }
-
-    .header-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-bottom: 2px;
-    }
-
-    .theme-select, .header-select {
-      background: var(--input-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-color);
+    .control-select, .control-btn {
+      background: var(--bg-input);
+      border: 1px solid var(--border-main);
+      color: var(--text-main);
       padding: 4px 8px;
       font-size: 10px;
       font-weight: 700;
@@ -243,290 +178,355 @@
       cursor: pointer;
     }
 
-    .theme-select:hover, .header-select:hover {
+    .control-select:hover, .control-btn:hover {
       border-color: var(--border-focus);
     }
 
-    .add-card-btn {
-      background: var(--accent);
-      color: #ffffff;
-      border: 1px solid var(--accent);
-      padding: 4px 10px;
-      cursor: pointer;
+    /* TELEMETRİ / POZİSYON & SON İŞLEMLER DECK */
+    .telemetry-deck {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    @media (min-width: 992px) {
+      .telemetry-deck {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .telemetry-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-main);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-sub);
+      padding-bottom: 4px;
+    }
+
+    .panel-title {
       font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.6px;
+      color: var(--accent);
     }
 
-    .add-card-btn:hover:not(:disabled) {
-      background: var(--accent-hover);
-      border-color: var(--accent-hover);
-    }
-
-    .add-card-btn:disabled {
-      background: #475569;
-      border-color: #334155;
-      color: #94a3b8;
-      cursor: not-allowed;
-    }
-
-    .remove-card-btn {
-      background: transparent;
+    .panel-meta {
+      font-size: 9px;
       color: var(--text-muted);
-      border: 1px solid transparent;
-      cursor: pointer;
       font-weight: 700;
-      font-size: 10px;
-      padding: 2px 6px;
-      text-transform: uppercase;
     }
 
-    .remove-card-btn:hover {
-      color: var(--red);
-      background-color: var(--red-bg);
-      border-color: var(--red);
+    /* ÇALIŞMA ALANI DÜZENİ */
+    .workspace-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
     }
 
-    .coin-input {
-      padding: 3px 6px;
-      border: 1px solid var(--border-color);
-      background-color: var(--input-bg);
-      color: var(--text-color);
-      font-size: 12px;
-      font-weight: 700;
-      width: 105px;
-      text-transform: uppercase;
-      outline: none;
+    @media (min-width: 1280px) {
+      .workspace-layout {
+        display: grid;
+        grid-template-columns: 1fr 440px;
+        align-items: start;
+      }
     }
 
-    .coin-input:focus {
-      border-color: var(--border-focus);
+    /* ANALİZ KARTLARI */
+    .card-deck {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 8px;
+    }
+
+    .terminal-card {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-main);
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      animation: moduleIn 0.2s ease-out forwards;
+      transition: border-color 0.15s ease;
+    }
+
+    @keyframes moduleIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card-deleting {
+      opacity: 0 !important;
+      transform: scale(0.96) !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .card-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-sub);
+      padding: 4px 6px;
+      border: 1px solid var(--border-sub);
+    }
+
+    .symbol-pill-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .color-picker {
       -webkit-appearance: none;
-      -moz-appearance: none;
       appearance: none;
-      width: 18px;
-      height: 18px;
-      border: 1px solid var(--border-color);
+      width: 14px;
+      height: 14px;
+      border: 1px solid var(--border-sub);
       background: transparent;
       cursor: pointer;
       padding: 0;
-      vertical-align: middle;
     }
-
     .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
     .color-picker::-webkit-color-swatch { border: none; }
 
-    .price-row {
+    .symbol-input {
+      background: var(--bg-input);
+      border: 1px solid var(--border-sub);
+      color: var(--text-main);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 5px;
+      width: 100px;
+      text-transform: uppercase;
+      outline: none;
+    }
+
+    .symbol-input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .card-meta-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-delete-card {
+      background: transparent;
+      border: 1px solid var(--border-sub);
+      color: var(--text-muted);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+    }
+
+    .btn-delete-card:hover {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-bg);
+    }
+
+    /* FİYAT BÖLÜMÜ */
+    .ticker-display {
       display: flex;
       justify-content: space-between;
-      align-items: baseline;
-      margin: 2px 0;
+      align-items: flex-end;
+      padding: 4px 2px;
+      border-bottom: 1px solid var(--border-sub);
     }
 
-    .price {
-      font-size: 18px;
+    .ticker-price {
+      font-size: 19px;
       font-weight: 700;
       letter-spacing: -0.5px;
-      transition: color 0.2s ease;
     }
 
-    .grid-2 {
+    .ticker-timeframe {
+      font-size: 9px;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    /* VERİ GRIDLERİ */
+    .metric-grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 4px;
     }
 
-    .grid-3 {
+    .metric-grid-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: 4px;
     }
 
-    .stat-box {
-      background-color: var(--box-bg);
-      padding: 5px 6px;
-      border: 1px solid var(--border-color);
+    .metric-tile {
+      background: var(--bg-sub);
+      border: 1px solid var(--border-sub);
+      padding: 4px 6px;
       text-align: center;
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 1px;
     }
 
-    .stat-label {
-      font-size: 9px;
+    .metric-label {
+      font-size: 8px;
       color: var(--text-muted);
-      text-transform: uppercase;
       font-weight: 700;
+      text-transform: uppercase;
       letter-spacing: 0.4px;
     }
 
-    .stat-value {
-      font-size: 13px;
+    .metric-value {
+      font-size: 12px;
       font-weight: 700;
     }
 
-    .position-box {
-      background-color: var(--box-bg);
-      padding: 5px 8px;
-      border: 1px solid var(--border-color);
+    .position-monitor-strip {
+      background: var(--bg-input);
+      border: 1px solid var(--border-sub);
+      padding: 4px 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
     }
 
-    .coin-settings-box {
-      background-color: var(--box-bg);
-      border: 1px solid var(--border-color);
+    /* PARAMETRE PANELİ */
+    .config-matrix {
+      background: var(--bg-sub);
+      border: 1px solid var(--border-sub);
       padding: 6px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 4px 6px;
     }
 
-    .coin-setting-item {
+    .config-field {
       display: flex;
       flex-direction: column;
       gap: 2px;
     }
 
-    .coin-setting-item label {
-      font-size: 9px;
+    .config-field label {
+      font-size: 8px;
       color: var(--text-muted);
       font-weight: 700;
       text-transform: uppercase;
     }
 
-    .coin-setting-item input, .coin-setting-item select {
+    .config-field input, .config-field select {
+      background: var(--bg-input);
+      border: 1px solid var(--border-sub);
+      color: var(--text-main);
       padding: 3px 4px;
-      border: 1px solid var(--border-color);
-      background-color: var(--card-bg);
-      color: var(--text-color);
       font-size: 10px;
       font-weight: 700;
-      width: 100%;
       outline: none;
+      width: 100%;
     }
 
-    .coin-setting-item input:focus, .coin-setting-item select:focus {
+    .config-field input:focus, .config-field select:focus {
       border-color: var(--border-focus);
     }
 
-    .wizard-btn {
+    .btn-optimizer {
       grid-column: span 3;
-      background: var(--accent);
-      color: #ffffff;
-      border: 1px solid var(--accent-hover);
-      padding: 5px 8px;
-      font-size: 10px;
+      background: var(--bg-input);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 4px;
+      font-size: 9px;
       font-weight: 700;
       cursor: pointer;
-      text-align: center;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
     }
 
-    .wizard-btn:hover {
-      background: var(--accent-hover);
+    .btn-optimizer:hover {
+      background: var(--accent);
+      color: #ffffff;
     }
 
-    .modal-overlay {
-      position: fixed;
-      top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.7);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
-
-    .modal-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      padding: 14px;
-      width: 320px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .sidebar-card {
-      background-color: var(--card-bg);
-      padding: 10px;
-      border: 1px solid var(--border-color);
+    /* SAĞ PANEL / RADAR DOCK */
+    .sidebar-dock {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-main);
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
       gap: 10px;
       position: sticky;
-      top: 10px;
+      top: 8px;
     }
 
-    .add-coin-row {
+    .radar-add-row {
       display: flex;
       gap: 4px;
     }
 
-    .add-coin-row input, .add-coin-row select {
-      padding: 4px 6px;
-      border: 1px solid var(--border-color);
-      background: var(--input-bg);
-      color: var(--text-color);
-      font-weight: 700;
+    .radar-add-row input, .radar-add-row select {
+      background: var(--bg-input);
+      border: 1px solid var(--border-sub);
+      color: var(--text-main);
       font-size: 10px;
+      font-weight: 700;
+      padding: 4px 6px;
       outline: none;
     }
 
-    .add-coin-row input:focus, .add-coin-row select:focus {
+    .radar-add-row input:focus, .radar-add-row select:focus {
       border-color: var(--border-focus);
     }
 
-    .add-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 4px 10px;
-      cursor: pointer;
-      font-weight: 700;
-      font-size: 10px;
-      text-transform: uppercase;
-    }
-
-    .add-btn:hover {
-      background: var(--accent-hover);
-    }
-
-    .watchlist-table, table {
+    /* TABLOLAR */
+    .data-table, .watchlist-table {
       width: 100%;
       border-collapse: collapse;
       font-size: 10px;
     }
 
-    .watchlist-table th, .watchlist-table td,
-    table th, table td {
+    .data-table th, .data-table td,
+    .watchlist-table th, .watchlist-table td {
       padding: 4px 4px;
-      border-bottom: 1px solid var(--border-color);
+      border-bottom: 1px solid var(--border-sub);
       text-align: center;
     }
 
-    .watchlist-table th, table th {
+    .data-table th, .watchlist-table th {
       color: var(--text-muted);
-      font-size: 9px;
+      font-size: 8px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.4px;
+      background: var(--bg-sub);
     }
 
     tbody tr:hover {
-      background-color: var(--table-hover);
+      background: var(--bg-sub);
     }
 
     .alarm-input {
-      width: 36px;
-      padding: 2px 2px;
+      width: 34px;
+      padding: 2px;
       font-size: 10px;
-      border: 1px solid var(--border-color);
-      background: var(--input-bg);
-      color: var(--text-color);
+      border: 1px solid var(--border-sub);
+      background: var(--bg-input);
+      color: var(--text-main);
       text-align: center;
       font-weight: 700;
       outline: none;
@@ -537,45 +537,68 @@
     }
 
     .select-mini {
-      padding: 2px 3px;
+      padding: 2px 4px;
       font-size: 9px;
-      border: 1px solid var(--border-color);
-      background: var(--input-bg);
-      color: var(--text-color);
+      border: 1px solid var(--border-sub);
+      background: var(--bg-input);
+      color: var(--text-main);
       font-weight: 700;
       outline: none;
     }
 
-    .action-btn {
-      background: var(--input-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-color);
-      cursor: pointer;
-      padding: 2px 4px;
-      font-size: 9px;
+    .btn-row-action {
+      background: var(--bg-input);
+      border: 1px solid var(--border-sub);
+      color: var(--text-main);
+      font-size: 8px;
       font-weight: 700;
+      padding: 2px 4px;
+      cursor: pointer;
       text-transform: uppercase;
-      margin: 0 1px;
     }
 
-    .action-btn:hover {
+    .btn-row-action:hover {
       border-color: var(--border-focus);
-      color: var(--badge-text);
+      color: var(--accent);
     }
 
-    .action-btn.red-btn:hover {
+    .btn-row-action.delete-action:hover {
       border-color: var(--red);
       color: var(--red);
       background: var(--red-bg);
     }
 
+    .drawer-toggle {
+      font-size: 9px;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+      padding: 4px 0;
+      border-top: 1px solid var(--border-sub);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .drawer-toggle:hover {
+      color: var(--text-main);
+    }
+
+    .collapsible-content {
+      display: none;
+      margin-top: 2px;
+    }
+
     .csv-btn {
       background: transparent;
-      color: #38bdf8;
+      color: var(--accent);
       border: none;
       cursor: pointer;
       font-weight: 700;
-      font-size: 9px;
+      font-size: 8px;
       text-transform: uppercase;
       padding: 0;
     }
@@ -584,133 +607,162 @@
       text-decoration: underline;
     }
 
-    .alarm-triggered {
-      background-color: var(--red-bg) !important;
-      font-weight: 700;
+    /* MODALLAR */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
     }
 
-    .table-title {
-      font-size: 10px;
-      font-weight: 700;
+    .modal-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-main);
+      padding: 14px;
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      cursor: pointer;
-      user-select: none;
-      padding: 4px 0;
-      border-top: 1px solid var(--border-color);
-      margin-top: 4px;
-      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-sub);
+      padding-bottom: 6px;
+    }
+
+    .modal-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
       text-transform: uppercase;
+      letter-spacing: 0.6px;
     }
 
-    .table-title:hover {
-      color: var(--text-color);
+    /* ANİMASYON VE RENKLER */
+    @keyframes pulseActive {
+      0% { background-color: var(--green-bg); }
+      50% { background-color: transparent; }
+      100% { background-color: var(--green-bg); }
     }
 
-    .collapsible-content {
-      display: none;
-      margin-top: 4px;
+    .flashing-row {
+      animation: pulseActive 2.5s infinite ease-in-out;
+    }
+
+    .alarm-triggered {
+      background-color: var(--red-bg) !important;
+      font-weight: 700;
     }
 
     .green { color: var(--green); font-weight: 700; }
     .red { color: var(--red); font-weight: 700; }
     .neutral { color: var(--neutral); font-weight: 700; }
 
-    .loader {
-      font-size: 9px;
-      color: #38bdf8;
+    .status-badge {
+      font-size: 8px;
       font-weight: 700;
+      color: var(--accent);
       text-transform: uppercase;
+      letter-spacing: 0.4px;
     }
   </style>
 </head>
 <body class="light-mode">
 
-  <div class="container" id="main-app">
+  <div class="app-viewport" id="main-app">
     
-    <div class="header-card">
-      <div class="brand-title">
-        CODEMSO TERMINAL
-        <span class="brand-subtitle">STRATEJI RADARI</span>
-        <span class="version-tag">v2.8.2/mehmetsalihok</span>
+    <!-- ÜST KONTROL BAR -->
+    <header class="top-command-bar">
+      <div class="brand-meta">
+        <span class="brand-name">CODEMSO TERMINAL</span>
+        <span class="brand-tag">STRATEJI RADARI</span>
+        <span class="brand-ver">v2.8.2/mehmetsalihok</span>
       </div>
 
-      <div class="header-controls">
-        <button class="add-card-btn" id="btn-add-card" onclick="addNewCard()">+ Kart Ekle (<span id="card-count-label">2</span>/8)</button>
+      <div class="command-actions">
+        <button class="btn-terminal" id="btn-add-card" onclick="addNewCard()">+ Kart Ekle (<span id="card-count-label">2</span>/8)</button>
         
-        <select class="theme-select" id="theme-select" onchange="changeTheme(this.value)">
+        <select class="control-select" id="theme-select" onchange="changeTheme(this.value)">
           <option value="light" selected>Gunduz Modu</option>
           <option value="dark">Gece Modu</option>
           <option value="oled">Zifiri Karanlik (OLED)</option>
         </select>
 
-        <button class="header-select" onclick="playTestSound()">Ses Testi</button>
+        <button class="control-btn" onclick="playTestSound()">Ses Testi</button>
 
         <div style="display: flex; align-items: center; gap: 4px;">
-          <label style="font-weight:700; font-size:10px; color:var(--text-muted)">YIL:</label>
-          <select id="global-year" class="header-select" onchange="changeGlobalYear()">
+          <label style="font-weight:700; font-size:9px; color:var(--text-muted)">YIL:</label>
+          <select id="global-year" class="control-select" onchange="changeGlobalYear()">
             <option value="2026">2026</option>
             <option value="2025">2025</option>
           </select>
         </div>
       </div>
-    </div>
+    </header>
 
-    <!-- CANLI AKTİF POZİSYONLAR VE SON 10 İŞLEM -->
-    <div class="card" style="border-top: 3px solid #0284c7;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-        <span style="font-weight: 700; font-size: 11px; color: #0284c7; text-transform: uppercase;">ACIK POZISYONLAR (CANLI)</span>
-        <span style="font-size: 9px; color: var(--text-muted); font-weight: 700;" id="active-pos-count-label">0 Acik Pozisyon</span>
-      </div>
-      
-      <table class="watchlist-table" style="margin-bottom: 8px;">
-        <thead>
-          <tr>
-            <th style="text-align: left;">Coin</th>
-            <th>Giris Fiyati</th>
-            <th>Canli PnL (%)</th>
-            <th>Hedef Cikis</th>
-          </tr>
-        </thead>
-        <tbody id="active-positions-tbody">
-          <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Su an acik pozisyon bulunmuyor.</td></tr>
-        </tbody>
-      </table>
-
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 6px; margin-bottom: 4px;">
-        <span style="font-weight: 700; font-size: 11px; text-transform: uppercase;">SON 10 TAMAMLANAN ISLEM (GLOBAL)</span>
+    <!-- TELEMETRİ / DECK (CANLI POZİSYONLAR & GLOBAL İŞLEMLER) -->
+    <section class="telemetry-deck">
+      <div class="telemetry-panel" style="border-top: 2px solid var(--accent);">
+        <div class="panel-header">
+          <span class="panel-title">Canli Acik Pozisyonlar</span>
+          <span class="panel-meta" id="active-pos-count-label">0 Acik Pozisyon</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Coin</th>
+              <th>Giris Fiyati</th>
+              <th>Canli PnL</th>
+              <th>Hedef Cikis</th>
+            </tr>
+          </thead>
+          <tbody id="active-positions-tbody">
+            <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Su an acik pozisyon bulunmuyor.</td></tr>
+          </tbody>
+        </table>
       </div>
 
-      <table class="watchlist-table">
-        <thead>
-          <tr>
-            <th style="text-align: left;">Coin</th>
-            <th>Giris</th>
-            <th>Cikis</th>
-            <th>Net Kar (%)</th>
-            <th>Neden / Zaman</th>
-          </tr>
-        </thead>
-        <tbody id="global-trades-tbody">
-          <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henuz islem kaydi bulunmuyor.</td></tr>
-        </tbody>
-      </table>
-    </div>
+      <div class="telemetry-panel" style="border-top: 2px solid var(--border-focus);">
+        <div class="panel-header">
+          <span class="panel-title">Son 10 Tamamlanan Islem (Global)</span>
+          <span class="panel-meta">Gercek Zamanli</span>
+        </div>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="text-align: left;">Coin</th>
+              <th>Giris</th>
+              <th>Cikis</th>
+              <th>Net Kar</th>
+              <th>Neden / Zaman</th>
+            </tr>
+          </thead>
+          <tbody id="global-trades-tbody">
+            <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henuz islem kaydi bulunmuyor.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-    <!-- ANA YERLEŞİM (KARTLAR + SAĞ PANEL) -->
-    <div class="main-layout">
-      <div class="dashboard-grid" id="grid-container"></div>
+    <!-- ÇALIŞMA ALANI (KARTLAR + RADAR DOCK) -->
+    <main class="workspace-layout">
+      <section class="card-deck" id="grid-container"></section>
 
-      <div class="sidebar-card">
+      <aside class="sidebar-dock">
         <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <span style="font-weight: 700; font-size: 11px; text-transform: uppercase;">CANLI RSI RADAR (1s)</span>
-            <span style="font-size: 9px; color: var(--text-muted); font-weight: 700;" id="radar-update-time">CANLI</span>
+          <div class="panel-header" style="margin-bottom: 6px;">
+            <span class="panel-title">Canli RSI Radar (1s)</span>
+            <span class="panel-meta" id="radar-update-time">CANLI</span>
           </div>
 
-          <div class="add-coin-row" style="margin-bottom: 6px;">
-            <input type="text" id="new-radar-coin" placeholder="ORN: FLOKI" style="flex:1; text-transform: uppercase;">
+          <div class="radar-add-row" style="margin-bottom: 6px;">
+            <input type="text" id="new-radar-coin" placeholder="ORN: FLOKI" style="flex:1; text-transform:uppercase;">
             <select id="new-radar-tf" class="select-mini">
               <option value="5m">5m</option>
               <option value="15m">15m</option>
@@ -719,7 +771,7 @@
               <option value="4h">4h</option>
             </select>
             <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:36px;">
-            <button class="add-btn" onclick="addRadarCoin()">Ekle</button>
+            <button class="btn-terminal" style="padding:4px 8px;" onclick="addRadarCoin()">Ekle</button>
           </div>
 
           <table class="watchlist-table">
@@ -739,79 +791,78 @@
           </table>
         </div>
 
-        <div style="border-top: 1px solid var(--border-color); padding-top: 8px;">
-          <div style="font-weight: 700; font-size: 11px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase;">
-            <span>KART PERFORMANS OZETI (<span id="summary-year-label">2026</span>)</span>
+        <div style="border-top: 1px solid var(--border-sub); padding-top: 8px;">
+          <div class="panel-header" style="margin-bottom: 6px;">
+            <span class="panel-title">Kart Performans Ozeti (<span id="summary-year-label">2026</span>)</span>
           </div>
           <table class="watchlist-table">
             <thead>
               <tr>
                 <th style="text-align: left;">Coin</th>
-                <th>Bu Ay (%)</th>
-                <th>Yillik Toplam (%)</th>
+                <th>Bu Ay</th>
+                <th>Yillik Toplam</th>
               </tr>
             </thead>
             <tbody id="summary-tbody"></tbody>
           </table>
         </div>
-
-      </div>
-    </div>
+      </aside>
+    </main>
 
   </div>
 
-  <!-- SİTE İÇİ ÖZEL YENİ KART EKLEME MODALI -->
+  <!-- SİTE İÇİ KART EKLEME MODALI -->
   <div class="modal-overlay" id="add-card-modal">
-    <div class="modal-card">
-      <div style="font-weight:700; font-size:12px; color:#38bdf8; display:flex; justify-content:space-between; align-items:center; text-transform: uppercase;">
-        <span>YENI KART EKLE</span>
-        <button onclick="closeAddCardModal()" class="remove-card-btn">Kapat</button>
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Yeni Kart Ekle</span>
+        <button onclick="closeAddCardModal()" class="btn-delete-card">Kapat</button>
       </div>
 
       <div style="font-size:10px; color:var(--text-muted);">
-        Analiz etmek istediginiz coin sembolunu girin:
+        Analiz edilecek kripto ciftini girin:
       </div>
 
-      <div style="background:var(--box-bg); padding:8px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;">
-        <div class="coin-setting-item">
+      <div style="background:var(--bg-sub); padding:8px; border:1px solid var(--border-sub);">
+        <div class="config-field">
           <label for="new-card-symbol-input">Coin Sembolu:</label>
           <input type="text" id="new-card-symbol-input" placeholder="ORN: BTC, ETH, SOL" style="text-transform: uppercase;" onkeyup="handleAddCardKeyPress(event)">
         </div>
       </div>
 
       <div style="display:flex; gap:6px;">
-        <button class="add-card-btn" style="flex:1; padding:6px;" onclick="confirmAddNewCard()">Ekle</button>
-        <button class="header-select" style="padding:6px 12px;" onclick="closeAddCardModal()">Iptal</button>
+        <button class="btn-terminal" style="flex:1; padding:6px;" onclick="confirmAddNewCard()">Ekle</button>
+        <button class="control-btn" style="padding:6px 12px;" onclick="closeAddCardModal()">Iptal</button>
       </div>
     </div>
   </div>
 
   <!-- STRATEJİ SİHİRBAZI MODALI -->
   <div class="modal-overlay" id="optimizer-modal">
-    <div class="modal-card">
-      <div style="font-weight:700; font-size:12px; color:#38bdf8; display:flex; justify-content:space-between; align-items:center; text-transform: uppercase;">
-        <span>STRATEJI SIHIRBAZI</span>
-        <button onclick="closeOptimizerModal()" class="remove-card-btn">Kapat</button>
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-title">Strateji Sihirbazi</span>
+        <button onclick="closeOptimizerModal()" class="btn-delete-card">Kapat</button>
       </div>
 
       <div style="font-size:10px; color:var(--text-muted); font-weight:700;" id="opt-coin-title">
         Coin Analiz Ediliyor...
       </div>
 
-      <div style="background:var(--box-bg); padding:10px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px; font-size:10px;">
+      <div style="background:var(--bg-sub); padding:8px; border:1px solid var(--border-sub); display:flex; flex-direction:column; gap:5px; font-size:10px;">
         <div style="display:flex; justify-content:space-between;">
           <span style="color:var(--text-muted);">Hedef Kar Orani:</span>
           <b id="opt-target-profit" class="green">%1.0</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
           <span style="color:var(--text-muted);">Onerilen RSI Al:</span>
-          <b id="opt-best-buy" style="color:#38bdf8;">--</b>
+          <b id="opt-best-buy" style="color:var(--accent);">--</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
           <span style="color:var(--text-muted);">Onerilen RSI Sat:</span>
-          <b id="opt-best-sell" style="color:#eab308;">--</b>
+          <b id="opt-best-sell" style="color:var(--neutral);">--</b>
         </div>
-        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:4px;">
+        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-sub); padding-top:4px;">
           <span style="color:var(--text-muted);">Win Rate:</span>
           <b id="opt-best-winrate" class="green">--%</b>
         </div>
@@ -830,8 +881,8 @@
       </div>
 
       <div style="display:flex; gap:6px;">
-        <button class="add-card-btn" style="flex:1; padding:6px;" onclick="applyOptimizerResult()">Uygula ve Kaydet</button>
-        <button class="header-select" style="padding:6px 12px;" onclick="closeOptimizerModal()">Vazgec</button>
+        <button class="btn-terminal" style="flex:1; padding:6px;" onclick="applyOptimizerResult()">Uygula ve Kaydet</button>
+        <button class="control-btn" style="padding:6px 12px;" onclick="closeOptimizerModal()">Vazgec</button>
       </div>
     </div>
   </div>
@@ -853,7 +904,7 @@
     let tempOptimizerResult = null;
 
     let coinsConfig = [
-      { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5, color: '#38bdf8' },
+      { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5, color: '#0284c7' },
       { symbol: 'BTCUSDT',   interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0, color: '#eab308' }
     ];
 
@@ -992,7 +1043,7 @@
         sellRsi: 85,
         profitTarget: 4.0,
         monthlyCap: 2.5,
-        color: '#38bdf8'
+        color: '#0284c7'
       });
 
       saveConfig();
@@ -1060,61 +1111,59 @@
       if (addBtn) addBtn.disabled = coinsConfig.length >= 8;
 
       coinsConfig.forEach((coin, i) => {
-        const cardColor = coin.color || '#38bdf8';
+        const cardColor = coin.color || '#0284c7';
         const cardHTML = `
-          <div class="card" id="card-${i}" style="border-top: 3px solid ${cardColor};">
-            <div class="header-bar">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <input type="color" class="color-picker" value="${cardColor}" id="card-color-${i}" onchange="updateCardColor(${i}, this.value)" title="Kart Vurgu Rengini Degistir">
-                <input type="text" class="coin-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
+          <div class="terminal-card" id="card-${i}" style="border-top: 3px solid ${cardColor};">
+            <div class="card-topbar">
+              <div class="symbol-pill-group">
+                <input type="color" class="color-picker" value="${cardColor}" id="card-color-${i}" onchange="updateCardColor(${i}, this.value)" title="Renk Secimi">
+                <input type="text" class="symbol-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
               </div>
-              <div style="display:flex; align-items:center; gap:6px;">
-                <span class="loader" id="loader-${i}">YUKLENIYOR</span>
-                <button class="remove-card-btn" onclick="removeCard(${i})" title="Karti Sil">Sil</button>
-              </div>
-            </div>
-
-            <div class="price-row">
-              <span class="price" id="price-${i}">--.--</span>
-              <span style="font-size:10px; color:var(--text-muted);" id="tf-label-${i}">${coin.interval} | RSI(${coin.rsiLength})</span>
-            </div>
-
-            <div class="grid-2">
-              <div class="stat-box">
-                <span class="stat-label">Anlik RSI</span>
-                <span class="stat-value neutral" id="rsi-${i}">--,--</span>
-              </div>
-              <div class="stat-box">
-                <span class="stat-label">Pozisyon</span>
-                <span class="stat-value" id="pos-${i}">Notr</span>
+              <div class="card-meta-right">
+                <span class="status-badge" id="loader-${i}">YUKLENIYOR</span>
+                <button class="btn-delete-card" onclick="removeCard(${i})" title="Karti Sil">Sil</button>
               </div>
             </div>
 
-            <div class="position-box">
-              <div style="display: flex; justify-content: space-between; font-size: 10px;">
-                <span>Giris: <b id="entry-${i}">-</b></span>
-                <span>PnL: <b id="live-pnl-${i}">0,00%</b></span>
-                <span>Hedef: <b id="target-${i}" class="green">-</b></span>
+            <div class="ticker-display">
+              <span class="ticker-price" id="price-${i}">--.--</span>
+              <span class="ticker-timeframe" id="tf-label-${i}">${coin.interval} | RSI(${coin.rsiLength})</span>
+            </div>
+
+            <div class="metric-grid-2">
+              <div class="metric-tile">
+                <span class="metric-label">Anlik RSI</span>
+                <span class="metric-value neutral" id="rsi-${i}">--,--</span>
+              </div>
+              <div class="metric-tile">
+                <span class="metric-label">Pozisyon Durumu</span>
+                <span class="metric-value" id="pos-${i}">Notr</span>
               </div>
             </div>
 
-            <div class="grid-3">
-              <div class="stat-box">
-                <span class="stat-label">Win Rate</span>
-                <span class="stat-value green" id="win-rate-${i}">0%</span>
+            <div class="position-monitor-strip">
+              <span>Giris: <b id="entry-${i}">-</b></span>
+              <span>PnL: <b id="live-pnl-${i}">0,00%</b></span>
+              <span>Hedef: <b id="target-${i}" class="green">-</b></span>
+            </div>
+
+            <div class="metric-grid-3">
+              <div class="metric-tile">
+                <span class="metric-label">Win Rate</span>
+                <span class="metric-value green" id="win-rate-${i}">0%</span>
               </div>
-              <div class="stat-box">
-                <span class="stat-label">Ort. Sure</span>
-                <span class="stat-value" id="avg-time-${i}">-</span>
+              <div class="metric-tile">
+                <span class="metric-label">Ort. Sure</span>
+                <span class="metric-value" id="avg-time-${i}">-</span>
               </div>
-              <div class="stat-box">
-                <span class="stat-label">Max Seri</span>
-                <span class="stat-value green" id="max-streak-${i}">0</span>
+              <div class="metric-tile">
+                <span class="metric-label">Max Seri</span>
+                <span class="metric-value green" id="max-streak-${i}">0</span>
               </div>
             </div>
 
-            <div class="coin-settings-box">
-              <div class="coin-setting-item">
+            <div class="config-matrix">
+              <div class="config-field">
                 <label>TF:</label>
                 <select id="setting-interval-${i}" onchange="updateCoinSetting(${i})">
                   <option value="5m" ${coin.interval==='5m'?'selected':''}>5m</option>
@@ -1124,47 +1173,47 @@
                   <option value="4h" ${coin.interval==='4h'?'selected':''}>4h</option>
                 </select>
               </div>
-              <div class="coin-setting-item">
+              <div class="config-field">
                 <label>RSI Per.:</label>
                 <input type="number" id="setting-rsiLength-${i}" value="${coin.rsiLength}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="coin-setting-item">
+              <div class="config-field">
                 <label>RSI Al:</label>
                 <input type="number" id="setting-buyRsi-${i}" value="${coin.buyRsi}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="coin-setting-item">
+              <div class="config-field">
                 <label>RSI Sat:</label>
                 <input type="number" id="setting-sellRsi-${i}" value="${coin.sellRsi}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="coin-setting-item">
+              <div class="config-field">
                 <label>Kar (%):</label>
                 <input type="number" step="0.1" id="setting-profitTarget-${i}" value="${coin.profitTarget}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="coin-setting-item">
+              <div class="config-field">
                 <label>Ay Kilit (%):</label>
                 <input type="number" step="0.5" id="setting-monthlyCap-${i}" value="${coin.monthlyCap}" onchange="updateCoinSetting(${i})">
               </div>
 
-              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">Sihirbaz (Ideal RSI Bul)</button>
+              <button class="btn-optimizer" onclick="runAutoOptimizer(${i})">Sihirbaz (Ideal RSI Bul)</button>
             </div>
 
-            <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
+            <div class="drawer-toggle" onclick="toggleAccordion('acc-monthly-${i}')">
               <span>Aylik Performans Tablosu (${SELECTED_YEAR})</span>
               <span>[+]</span>
             </div>
             <div class="collapsible-content" id="acc-monthly-${i}">
-              <table>
+              <table class="data-table">
                 <thead><tr><th>Ay</th><th>Isl.</th><th>Win</th><th>Loss</th><th>Net Kar (%)</th></tr></thead>
                 <tbody id="table-monthly-${i}"></tbody>
               </table>
             </div>
 
-            <div class="table-title">
+            <div class="drawer-toggle">
               <span onclick="toggleAccordion('acc-trades-${i}')">Son Islemler Logu [+]</span>
               <button class="csv-btn" onclick="exportTradesCSV(${i})">[CSV INDIR]</button>
             </div>
             <div class="collapsible-content" id="acc-trades-${i}">
-              <table>
+              <table class="data-table">
                 <thead><tr><th>Giris</th><th>Cikis</th><th>Net (%)</th><th>Neden</th></tr></thead>
                 <tbody id="table-trades-${i}"></tbody>
               </table>
@@ -1373,10 +1422,10 @@
           <td><input type="number" class="alarm-input" value="${item.buyAlarm}" onchange="updateRadarItem(${index}, 'buyAlarm', this.value)"></td>
           <td><input type="number" class="alarm-input" value="${item.sellAlarm}" onchange="updateRadarItem(${index}, 'sellAlarm', this.value)"></td>
           <td>
-            <button class="action-btn" onclick="moveRadarCoin(${index}, -1)">Yukari</button>
-            <button class="action-btn" onclick="moveRadarCoin(${index}, 1)">Asagi</button>
+            <button class="btn-row-action" onclick="moveRadarCoin(${index}, -1)">Yukari</button>
+            <button class="btn-row-action" onclick="moveRadarCoin(${index}, 1)">Asagi</button>
           </td>
-          <td><button class="action-btn red-btn" onclick="removeRadarCoin(${index})">Sil</button></td>
+          <td><button class="btn-row-action delete-action" onclick="removeRadarCoin(${index})">Sil</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1655,7 +1704,7 @@
         sellRsi: parseVal(document.getElementById(`setting-sellRsi-${slotIndex}`).value, 85),
         profitTarget: parseVal(document.getElementById(`setting-profitTarget-${slotIndex}`).value, 4.0),
         monthlyCap: parseVal(document.getElementById(`setting-monthlyCap-${slotIndex}`).value, 2.5),
-        color: oldCoin.color || '#38bdf8'
+        color: oldCoin.color || '#0284c7'
       };
 
       const tfLabelEl = document.getElementById(`tf-label-${slotIndex}`);
@@ -1888,7 +1937,7 @@
       const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
 
       if (inPosition) {
-        if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'stat-value green'; }
+        if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'metric-value green'; }
         if (entryEl) entryEl.innerText = formatPrice(entryPrice);
         if (targetEl) targetEl.innerText = formatPrice(targetP);
 
@@ -1905,7 +1954,7 @@
           livePnl
         };
       } else {
-        if (posEl) { posEl.innerText = 'Notr'; posEl.className = 'stat-value neutral'; }
+        if (posEl) { posEl.innerText = 'Notr'; posEl.className = 'metric-value neutral'; }
         if (entryEl) entryEl.innerText = '-';
         if (livePnlEl) { livePnlEl.innerText = '0,00%'; livePnlEl.className = ''; }
         if (targetEl) targetEl.innerText = '-';
