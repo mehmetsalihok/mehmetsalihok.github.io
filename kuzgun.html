@@ -3,57 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KUZGUN • Algorithmic Trading Terminal</title>
+    <title>KUZGUN PRO • Algorithmic Trading Terminal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ==================== 1. MINIMAL PRO THEME ==================== */
+        /* ==================== 1. TEMA & TEMEL STİLLER ==================== */
         :root[data-theme="dark"] {
             --bg-body: #09090b;
             --bg-sidebar: #0e0e11;
-            --bg-surface: #121216;
-            --bg-surface-elevated: #18181d;
-            --bg-input: #0e0e12;
-            --border-subtle: #27272a;
-            --border-strong: #3f3f46;
+            --bg-surface: #131317;
+            --bg-surface-elevated: #1a1a22;
+            --bg-input: #0a0a0d;
+            --border: #27272a;
+            --border-hover: #3f3f46;
             --text-main: #f4f4f5;
             --text-muted: #a1a1aa;
             --text-dark: #71717a;
             --accent: #38bdf8;
-            --accent-subtle: rgba(56, 189, 248, 0.1);
+            --accent-subtle: rgba(56, 189, 248, 0.12);
             --green: #10b981;
-            --green-subtle: rgba(16, 185, 129, 0.1);
+            --green-subtle: rgba(16, 185, 129, 0.12);
             --red: #f43f5e;
-            --red-subtle: rgba(244, 63, 94, 0.1);
+            --red-subtle: rgba(244, 63, 94, 0.12);
             --purple: #a855f7;
-            --purple-subtle: rgba(168, 85, 247, 0.1);
+            --purple-subtle: rgba(168, 85, 247, 0.12);
             --orange: #f59e0b;
-            --orange-subtle: rgba(245, 158, 11, 0.1);
+            --orange-subtle: rgba(245, 158, 11, 0.12);
         }
 
         :root[data-theme="oled"] {
             --bg-body: #000000;
             --bg-sidebar: #050505;
-            --bg-surface: #0a0a0a;
-            --bg-surface-elevated: #121212;
-            --bg-input: #050505;
-            --border-subtle: #1f1f23;
-            --border-strong: #333338;
+            --bg-surface: #0a0a0c;
+            --bg-surface-elevated: #121216;
+            --bg-input: #000000;
+            --border: #1f1f23;
+            --border-hover: #333338;
             --text-main: #ffffff;
             --text-muted: #8e8e93;
             --text-dark: #545458;
             --accent: #38bdf8;
-            --accent-subtle: rgba(56, 189, 248, 0.12);
+            --accent-subtle: rgba(56, 189, 248, 0.15);
             --green: #22c55e;
-            --green-subtle: rgba(34, 197, 94, 0.12);
+            --green-subtle: rgba(34, 197, 94, 0.15);
             --red: #ef4444;
-            --red-subtle: rgba(239, 68, 68, 0.12);
+            --red-subtle: rgba(239, 68, 68, 0.15);
             --purple: #c084fc;
-            --purple-subtle: rgba(192, 132, 252, 0.12);
+            --purple-subtle: rgba(192, 132, 252, 0.15);
             --orange: #fb923c;
-            --orange-subtle: rgba(251, 146, 60, 0.12);
+            --orange-subtle: rgba(251, 146, 60, 0.15);
         }
 
         :root[data-theme="light"] {
@@ -62,8 +62,8 @@
             --bg-surface: #ffffff;
             --bg-surface-elevated: #f4f4f5;
             --bg-input: #e4e4e7;
-            --border-subtle: #e4e4e7;
-            --border-strong: #d4d4d8;
+            --border: #e4e4e7;
+            --border-hover: #d4d4d8;
             --text-main: #09090b;
             --text-muted: #71717a;
             --text-dark: #a1a1aa;
@@ -83,7 +83,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
@@ -97,36 +97,35 @@
             overflow: hidden;
         }
 
-        .mono {
-            font-family: 'JetBrains Mono', monospace;
-        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
 
-        /* ==================== 2. WORKSTATION SIDEBAR ==================== */
+        /* ==================== 2. SIDEBAR ==================== */
         aside.sidebar {
             width: 220px;
             background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border-subtle);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             padding: 16px 12px;
             flex-shrink: 0;
             user-select: none;
+            z-index: 10;
         }
 
-        .brand-header {
+        .brand-box {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 4px 8px 16px;
-            border-bottom: 1px solid var(--border-subtle);
+            padding: 4px 6px 14px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .brand-logo {
+        .brand-icon {
             width: 28px;
             height: 28px;
             background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-strong);
+            border: 1px solid var(--border);
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -134,17 +133,14 @@
             font-size: 14px;
         }
 
-        .brand-title {
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-        }
+        .brand-text h1 { font-size: 13px; font-weight: 800; }
+        .brand-text p { font-size: 8px; font-weight: 700; color: var(--accent); }
 
         .nav-list {
             display: flex;
             flex-direction: column;
             gap: 2px;
-            margin-top: 16px;
+            margin-top: 14px;
         }
 
         .nav-btn {
@@ -161,29 +157,21 @@
             cursor: pointer;
             width: 100%;
             text-align: left;
-            transition: all 0.15s ease;
+            transition: all 0.15s;
         }
 
-        .nav-btn:hover {
-            color: var(--text-main);
-            background-color: var(--bg-surface-elevated);
-        }
+        .nav-btn:hover { color: var(--text-main); background-color: var(--bg-surface-elevated); }
+        .nav-btn.active { color: var(--text-main); background-color: var(--bg-surface-elevated); border-color: var(--border-hover); }
 
-        .nav-btn.active {
-            color: var(--text-main);
-            background-color: var(--bg-surface-elevated);
-            border-color: var(--border-strong);
-        }
-
-        .sidebar-footer {
-            border-top: 1px solid var(--border-subtle);
-            padding-top: 12px;
+        .sidebar-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 10px;
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
 
-        .status-badge {
+        .feed-indicator {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -191,11 +179,11 @@
             color: var(--text-muted);
             padding: 4px 6px;
             background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 4px;
         }
 
-        .live-dot {
+        .dot-green {
             width: 6px;
             height: 6px;
             border-radius: 50%;
@@ -204,7 +192,7 @@
             margin-right: 4px;
         }
 
-        /* ==================== 3. MAIN WORKSPACE ==================== */
+        /* ==================== 3. TOPBAR & WORKSPACE ==================== */
         main.workspace-main {
             flex: 1;
             display: flex;
@@ -216,7 +204,7 @@
         header.topbar {
             height: 48px;
             background-color: var(--bg-sidebar);
-            border-bottom: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border);
             padding: 0 20px;
             display: flex;
             align-items: center;
@@ -227,67 +215,45 @@
             flex-shrink: 0;
         }
 
-        .kpi-strip {
+        .kpi-row {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 20px;
         }
 
-        .kpi-item {
+        .kpi-box {
             display: flex;
             align-items: baseline;
             gap: 6px;
         }
 
-        .kpi-lbl {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--text-dark);
-            text-transform: uppercase;
-        }
-
-        .kpi-val {
-            font-size: 13px;
-            font-weight: 700;
-        }
-
-        .topbar-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .kpi-lbl { font-size: 10px; font-weight: 700; color: var(--text-dark); text-transform: uppercase; }
+        .kpi-val { font-size: 13px; font-weight: 700; }
 
         .btn-ui {
             background: var(--bg-surface-elevated);
             color: var(--text-main);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             padding: 5px 10px;
             border-radius: 6px;
             font-size: 11px;
             font-weight: 600;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             outline: none;
-            transition: border 0.15s ease;
+            transition: all 0.15s;
         }
 
-        .btn-ui:hover {
-            border-color: var(--border-strong);
-        }
-
-        .btn-ui.primary {
-            background: var(--text-main);
-            color: var(--bg-body);
-            border-color: var(--text-main);
-            font-weight: 700;
-        }
+        .btn-ui:hover { border-color: var(--border-hover); }
+        .btn-ui.primary { background: var(--text-main); color: var(--bg-body); font-weight: 700; border-color: var(--text-main); }
+        .btn-ui.primary:hover { opacity: 0.9; }
 
         .select-ui {
             background: var(--bg-surface-elevated);
             color: var(--text-main);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             padding: 4px 8px;
             border-radius: 6px;
             font-size: 11px;
@@ -296,170 +262,102 @@
             cursor: pointer;
         }
 
-        /* ==================== 4. DESKTOP PANELS & GRIDS ==================== */
-        .content-area {
+        /* ==================== 4. CONTENT & CARDS ==================== */
+        .content-wrap {
             padding: 16px 20px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 14px;
             max-width: 1800px;
             width: 100%;
         }
 
-        .timeframe-filter-bar {
+        .panel-clean {
+            background: var(--bg-surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+
+        .panel-head {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 6px 12px;
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border);
         }
 
-        .pill-group {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .pill-btn {
-            background: none;
-            border: 1px solid transparent;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .pill-btn:hover {
-            color: var(--text-main);
-            background: var(--bg-surface-elevated);
-        }
-
-        .pill-btn.active {
-            color: var(--text-main);
-            background: var(--bg-surface-elevated);
-            border-color: var(--border-strong);
-        }
-
-        /* Compact Data Panels */
-        .pro-panel {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            padding: 14px;
-        }
-
-        .pro-panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .panel-heading {
+        .panel-title {
             font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
-        /* Active Positions Desktop Strip */
-        .positions-flex {
+        /* Positions Grid */
+        .pos-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 8px;
         }
 
-        .pos-item-compact {
+        .pos-item {
             background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 6px;
-            padding: 8px 12px;
+            padding: 8px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        /* Coin Cards Grid */
-        .cards-grid-layout {
+        /* Cards Grid */
+        .cards-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
             gap: 12px;
         }
 
-        .card-pro {
+        .card-box {
             background: var(--bg-surface);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 8px;
-            padding: 14px;
+            padding: 12px;
             display: flex;
             flex-direction: column;
             gap: 10px;
-            transition: border-color 0.15s ease;
         }
 
-        .card-pro:hover {
-            border-color: var(--border-strong);
-        }
+        .card-box.in-pos-win { border-left: 3px solid var(--green); }
+        .card-box.in-pos-loss { border-left: 3px solid var(--red); }
 
-        .card-pro.in-pos-win {
-            border-left: 3px solid var(--green);
-        }
-
-        .card-pro.in-pos-loss {
-            border-left: 3px solid var(--red);
-        }
-
-        .card-header-bar {
+        .card-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .coin-tag-title {
+        .coin-title {
             display: flex;
             align-items: center;
             gap: 6px;
         }
 
-        .coin-code {
-            font-size: 15px;
-            font-weight: 800;
-        }
-
-        .tag-interval {
-            font-size: 9px;
-            font-weight: 700;
-            padding: 1px 5px;
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 4px;
-            color: var(--accent);
-        }
-
-        .card-price-display {
+        .price-banner {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
             background: var(--bg-surface-elevated);
-            padding: 8px 12px;
+            padding: 8px 10px;
             border-radius: 6px;
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
         }
 
-        .val-price-hero {
+        .price-text {
             font-size: 18px;
             font-weight: 800;
-            display: inline-block;
             padding: 1px 4px;
             border-radius: 4px;
             transition: background 0.2s;
@@ -469,14 +367,14 @@
         .flash-down { background: var(--red-subtle); color: var(--red); }
 
         /* Spectrum Bar */
-        .spectrum-wrap {
+        .spectrum-box {
             background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 6px;
             padding: 6px 10px;
         }
 
-        .spectrum-rail {
+        .spectrum-line {
             height: 4px;
             background: linear-gradient(90deg, #f43f5e 0%, rgba(244, 63, 94, 0.2) 28%, rgba(113, 113, 122, 0.15) 32%, rgba(113, 113, 122, 0.15) 68%, rgba(16, 185, 129, 0.2) 72%, #10b981 100%);
             border-radius: 2px;
@@ -484,7 +382,7 @@
             margin: 4px 0;
         }
 
-        .spectrum-dot {
+        .spectrum-thumb {
             position: absolute;
             top: 50%;
             transform: translate(-50%, -50%);
@@ -493,7 +391,6 @@
             border-radius: 50%;
             background: #ffffff;
             border: 1px solid var(--accent);
-            transition: left 0.15s ease;
         }
 
         /* Sparkline Deck */
@@ -503,90 +400,59 @@
             gap: 8px;
         }
 
-        .spark-box {
+        .spark-container {
             background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 6px;
             padding: 6px 8px;
         }
 
         canvas.spark-canvas {
             width: 100%;
-            height: 48px;
+            height: 44px;
             display: block;
         }
 
-        /* Metrics Row */
-        .metrics-trio {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 6px;
-        }
-
-        .metric-unit {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 6px;
-            padding: 6px 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .metric-unit span {
-            font-size: 8px;
-            font-weight: 700;
-            color: var(--text-dark);
-            text-transform: uppercase;
-        }
-
-        .metric-unit strong {
-            font-size: 11px;
-            font-weight: 700;
-        }
-
-        /* Drawer & Steppers */
-        .card-details-panel {
+        /* Drawer */
+        .card-drawer {
             display: none;
             flex-direction: column;
             gap: 8px;
             padding-top: 8px;
-            border-top: 1px solid var(--border-subtle);
+            border-top: 1px solid var(--border);
         }
 
-        .card-details-panel.open {
-            display: flex;
-        }
+        .card-drawer.open { display: flex; }
 
-        .stepper-grid-compact {
+        .stepper-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 6px;
         }
 
-        .stepper-item {
+        .stepper-col {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
 
-        .stepper-item label {
+        .stepper-col label {
             font-size: 8px;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .stepper-control {
+        .stepper-input {
             display: flex;
             align-items: center;
             background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
+            border: 1px solid var(--border);
             border-radius: 4px;
             overflow: hidden;
         }
 
-        .stepper-control button {
+        .stepper-input button {
             background: none;
             border: none;
             color: var(--text-main);
@@ -596,11 +462,9 @@
             cursor: pointer;
         }
 
-        .stepper-control button:hover {
-            background: var(--bg-surface-elevated);
-        }
+        .stepper-input button:hover { background: var(--bg-surface-elevated); }
 
-        .stepper-control input {
+        .stepper-input input {
             width: 100%;
             background: none;
             border: none;
@@ -611,7 +475,7 @@
             outline: none;
         }
 
-        /* Tables */
+        /* Table */
         table.clean-table {
             width: 100%;
             border-collapse: collapse;
@@ -625,24 +489,23 @@
             font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
-            border-bottom: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border);
         }
 
         table.clean-table td {
             padding: 8px 10px;
-            border-bottom: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border);
         }
 
-        table.clean-table tr:hover {
-            background: var(--bg-surface-elevated);
-        }
+        table.clean-table tr:hover { background: var(--bg-surface-elevated); }
 
-        /* Modal Dialog */
+        /* ==================== 5. MODALLAR ==================== */
         .modal-wrap {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 100;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -658,11 +521,12 @@
 
         .modal-box {
             background: var(--bg-surface);
-            border: 1px solid var(--border-strong);
+            border: 1px solid var(--border-hover);
             border-radius: 8px;
             width: 100%;
             max-width: 480px;
             padding: 18px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
         }
 
         .hide { display: none !important; }
@@ -670,14 +534,14 @@
 </head>
 <body>
 
-    <!-- ==================== SIDEBAR ==================== -->
+    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div>
-            <div class="brand-header">
-                <div class="brand-logo">🦅</div>
-                <div>
-                    <div class="brand-title">KUZGUN PRO</div>
-                    <div class="mono" style="font-size: 8px; font-weight: 700; color: var(--accent);">ALGO ENGINE</div>
+            <div class="brand-box">
+                <div class="brand-icon">🦅</div>
+                <div class="brand-text">
+                    <h1>KUZGUN PRO</h1>
+                    <p class="mono">TERMINAL v1.5</p>
                 </div>
             </div>
 
@@ -698,8 +562,8 @@
         </div>
 
         <div class="sidebar-footer">
-            <div class="status-badge mono">
-                <span><span class="live-dot"></span>Binance Feed</span>
+            <div class="feed-indicator mono">
+                <span><span class="dot-green"></span>Binance Feed</span>
                 <span style="color: var(--green);">Aktif</span>
             </div>
             <div style="font-size: 9px; color: var(--text-dark); text-align: center;" class="mono">
@@ -708,27 +572,27 @@
         </div>
     </aside>
 
-    <!-- ==================== MAIN VIEWPORT ==================== -->
+    <!-- MAIN VIEWPORT -->
     <main class="workspace-main">
 
-        <!-- TOP KPI RIBBON -->
+        <!-- TOP KPI BAR -->
         <header class="topbar">
-            <div class="kpi-strip">
-                <div class="kpi-item">
+            <div class="kpi-row">
+                <div class="kpi-box">
                     <span class="kpi-lbl">Bileşik Kasa</span>
                     <span class="kpi-val mono" id="top-total-balance">$1000.00</span>
                 </div>
-                <div class="kpi-item">
+                <div class="kpi-box">
                     <span class="kpi-lbl">Slotlar</span>
                     <span class="kpi-val mono" id="top-slots-badge" style="color: var(--accent);">0/2</span>
                 </div>
-                <div class="kpi-item">
+                <div class="kpi-box">
                     <span class="kpi-lbl" id="kpi-time-label">Bugün Net Kazanç</span>
                     <span class="kpi-val mono" id="top-net-gain" style="color: var(--green);">+$0.00 (+0.00%)</span>
                 </div>
             </div>
 
-            <div class="topbar-controls">
+            <div style="display: flex; gap: 8px; align-items: center;">
                 <select class="select-ui" id="theme-selector" onchange="App.setTheme(this.value)">
                     <option value="dark">Dark</option>
                     <option value="oled">OLED</option>
@@ -745,49 +609,49 @@
         </header>
 
         <!-- CONTENT -->
-        <div class="content-area">
+        <div class="content-wrap">
 
             <!-- TAB 1: TERMINAL -->
             <div id="tab-terminal">
-                <div class="timeframe-filter-bar" style="margin-bottom: 12px;">
-                    <div class="pill-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface); padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 12px;">
+                    <div style="display: flex; gap: 4px; align-items: center;">
                         <span style="font-size: 9px; font-weight: 700; color: var(--text-dark); margin-right: 4px;">FİLTRE:</span>
-                        <button class="pill-btn active" onclick="App.setTimeframe('today', this)">Bugün</button>
-                        <button class="pill-btn" onclick="App.setTimeframe('week', this)">Bu Hafta</button>
-                        <button class="pill-btn" onclick="App.setTimeframe('month', this)">Bu Ay</button>
-                        <button class="pill-btn" onclick="App.setTimeframe('selectMonth', this)">Ay Seç</button>
-                        <button class="pill-btn" onclick="ModalManager.open('custom-range')">Özel Aralık</button>
+                        <button class="btn-ui active" onclick="App.setTimeframe('today', this)">Bugün</button>
+                        <button class="btn-ui" onclick="App.setTimeframe('week', this)">Bu Hafta</button>
+                        <button class="btn-ui" onclick="App.setTimeframe('month', this)">Bu Ay</button>
+                        <button class="btn-ui" onclick="App.setTimeframe('selectMonth', this)">Ay Seç</button>
+                        <button class="btn-ui" onclick="ModalManager.open('custom-range')">Özel Aralık</button>
                     </div>
-                    <div id="months-bar-wrap" style="display: none;" class="pill-group"></div>
+                    <div id="months-bar-wrap" style="display: none; gap: 4px;"></div>
                 </div>
 
                 <!-- BEKLEME LİSTESİ ŞERİDİ -->
-                <div id="pending-banner" class="pro-panel" style="display: none; background: var(--orange-subtle); border-color: rgba(245, 158, 11, 0.3); margin-bottom: 12px; padding: 8px 12px;">
+                <div id="pending-banner" class="panel-clean" style="display: none; background: var(--orange-subtle); border-color: rgba(245, 158, 11, 0.3); margin-bottom: 12px; padding: 8px 12px;">
                     <div style="font-size: 11px; font-weight: 700; color: var(--orange);">
                         <span>⏳ Bekleme Listesinde Sinyal Var:</span> <strong id="pending-coins-text" class="mono" style="color: var(--text-main);"></strong>
                     </div>
                 </div>
 
                 <!-- CANLI AÇIK POZİSYONLAR -->
-                <div class="pro-panel" style="margin-bottom: 12px;">
-                    <div class="pro-panel-header">
-                        <div class="panel-heading"><span>⚡</span> Canlı Açık Pozisyonlar</div>
+                <div class="panel-clean" style="margin-bottom: 12px;">
+                    <div class="panel-head">
+                        <div class="panel-title"><span>⚡</span> Canlı Açık Pozisyonlar</div>
                         <span class="mono" style="font-size: 10px; color: var(--text-muted);" id="active-count-label">0 Pozisyon</span>
                     </div>
-                    <div class="positions-flex" id="active-positions-container">
+                    <div class="pos-grid" id="active-positions-container">
                         <div style="color: var(--text-muted); font-size: 11px;">Şu an açık pozisyon bulunmuyor.</div>
                     </div>
                 </div>
 
-                <!-- PARİTE KARTLARI GRİDİ -->
-                <div class="cards-grid-layout" id="coin-cards-grid"></div>
+                <!-- PARİTE KARTLARI -->
+                <div class="cards-grid" id="coin-cards-grid"></div>
             </div>
 
             <!-- TAB 2: İŞLEM DEFTERİ -->
             <div id="tab-trades" class="hide">
-                <div class="pro-panel">
-                    <div class="pro-panel-header">
-                        <div class="panel-heading"><span>📜</span> Tamamlanan İşlemler Logu</div>
+                <div class="panel-clean">
+                    <div class="panel-head">
+                        <div class="panel-title"><span>📜</span> Tamamlanan İşlemler Logu</div>
                     </div>
                     <table class="clean-table">
                         <thead>
@@ -808,16 +672,16 @@
 
             <!-- TAB 3: ALARMLAR -->
             <div id="tab-alarms" class="hide">
-                <div class="pro-panel" style="margin-bottom: 12px;">
-                    <div class="pro-panel-header">
-                        <div class="panel-heading"><span>🔔</span> RSI Eşik Alarmları</div>
+                <div class="panel-clean" style="margin-bottom: 12px;">
+                    <div class="panel-head">
+                        <div class="panel-title"><span>🔔</span> RSI Eşik Alarmları</div>
                     </div>
                     <div id="alarms-list-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
                 </div>
 
-                <div class="pro-panel">
-                    <div class="pro-panel-header">
-                        <div class="panel-heading"><span>✈️</span> Telegram Entegrasyonu</div>
+                <div class="panel-clean">
+                    <div class="panel-head">
+                        <div class="panel-title"><span>✈️</span> Telegram Entegrasyonu</div>
                     </div>
                     <div style="max-width: 400px; display: flex; flex-direction: column; gap: 8px;">
                         <input type="text" class="btn-ui mono" id="setting-telegram-chatid" value="1059064615" onchange="Storage.set('telegram_chat_id', this.value)">[cite: 21]
@@ -828,9 +692,9 @@
 
             <!-- TAB 4: AYARLAR -->
             <div id="tab-settings" class="hide">
-                <div class="pro-panel" style="max-width: 500px;">
-                    <div class="pro-panel-header">
-                        <div class="panel-heading"><span>💰</span> Sermaye ve Slot Yönetimi</div>
+                <div class="panel-clean" style="max-width: 500px;">
+                    <div class="panel-head">
+                        <div class="panel-title"><span>💰</span> Sermaye ve Slot Yönetimi</div>
                     </div>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
                         <div>
@@ -858,12 +722,13 @@
         </div>
     </main>
 
-    <!-- ==================== MODAL: ADD COIN ==================== -->
+    <!-- ==================== MODALLAR ==================== -->
+    <!-- 1. PARİTE EKLE MODAL -->
     <div class="modal-wrap" id="modal-add-coin">
         <div class="modal-box">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                 <strong style="font-size: 13px;">Yeni Parite Ekle</strong>
-                <button onclick="ModalManager.close('add-coin')" style="background: none; border: none; color: var(--text-dark); cursor: pointer;">✕</button>
+                <button onclick="ModalManager.close('add-coin')" style="background: none; border: none; color: var(--text-dark); cursor: pointer; font-size: 14px;">✕</button>
             </div>
             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
                 <input type="text" id="add-symbol-input" class="btn-ui mono" placeholder="Örn: FLOKI, ASTER, BTC" style="text-transform: uppercase; flex: 1;">
@@ -913,7 +778,7 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL: OPTIMIZER ==================== -->
+    <!-- 2. OPTIMIZER MODAL -->
     <div class="modal-wrap" id="modal-optimizer">
         <div class="modal-box" style="max-width: 440px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -924,7 +789,7 @@
         </div>
     </div>
 
-    <!-- ==================== MODAL: EDIT ENTRY ==================== -->
+    <!-- 3. MALİYET REVİZE MODAL -->
     <div class="modal-wrap" id="modal-edit-entry">
         <div class="modal-box" style="max-width: 340px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
@@ -939,10 +804,32 @@
         </div>
     </div>
 
-    <!-- ==================== CORE JAVASCRIPT ==================== -->
+    <!-- 4. ÖZEL TARİH ARALIĞI MODAL -->
+    <div class="modal-wrap" id="modal-custom-range">
+        <div class="modal-box" style="max-width: 380px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <strong style="font-size: 13px;">Özel Tarih Aralığı</strong>
+                <button onclick="ModalManager.close('custom-range')" style="background: none; border: none; color: var(--text-dark); cursor: pointer;">✕</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                <div>
+                    <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">BAŞLANGIÇ TARİHİ</label>
+                    <input type="date" id="custom-start-date" class="btn-ui mono" style="width: 100%; margin-top: 3px;">
+                </div>
+                <div>
+                    <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">BİTİŞ TARİHİ</label>
+                    <input type="date" id="custom-end-date" class="btn-ui mono" style="width: 100%; margin-top: 3px;">
+                </div>
+            </div>
+            <button class="btn-ui primary" style="width: 100%; justify-content: center;" onclick="App.applyCustomRange()">Filtreyi Uygula</button>
+        </div>
+    </div>
+
+    <!-- ==================== JAVASCRIPT ÇEKİRDEĞİ ==================== -->
     <script>
-        const Storage = {
-            prefix: 'kuzgun_clean_',
+        // 1. STORAGE
+        window.Storage = {
+            prefix: 'kuzgun_clean_v2_',
             get(key, fallback) {
                 const item = localStorage.getItem(this.prefix + key);
                 if (!item) return fallback;
@@ -953,13 +840,29 @@
             }
         };
 
-        const SoundEngine = {
+        // 2. MODAL YÖNETİCİSİ
+        window.ModalManager = {
+            open(id) {
+                const el = document.getElementById(`modal-${id}`);
+                if (el) el.classList.add('open');
+            },
+            close(id) {
+                const el = document.getElementById(`modal-${id}`);
+                if (el) el.classList.remove('open');
+            }
+        };
+
+        // 3. SES MOTORU
+        window.SoundEngine = {
             ctx: null,
             init() {
-                if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                if (!this.ctx) {
+                    try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+                }
             },
             playBuy() {
                 this.init();
+                if (!this.ctx) return;
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -973,6 +876,7 @@
             },
             playSell() {
                 this.init();
+                if (!this.ctx) return;
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
@@ -986,9 +890,10 @@
             }
         };
 
-        const RSIEngine = {
+        // 4. RSI HESAPLAMA
+        window.RSIEngine = {
             calculateHistory(prices, period = 14) {
-                if (prices.length <= period) return new Array(prices.length).fill(null);
+                if (!prices || prices.length <= period) return new Array(prices ? prices.length : 0).fill(null);
                 let gains = 0, losses = 0;
                 for (let i = 1; i <= period; i++) {
                     const diff = prices[i] - prices[i - 1];
@@ -1009,7 +914,7 @@
         };
 
         function formatCryptoPrice(val) {
-            if (!val || val <= 0) return "--.--";
+            if (!val || val <= 0 || isNaN(val)) return "--.--";
             const abs = Math.abs(val);
             let decimals = 2;
             if (abs >= 1000) decimals = 2;
@@ -1019,39 +924,51 @@
             return "$" + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: decimals });
         }
 
-        const BinanceAPI = {
+        // 5. BINANCE API
+        window.BinanceAPI = {
             baseURL: 'https://api.binance.com/api/v3',
             async fetchPrice(symbol) {
                 const res = await fetch(`${this.baseURL}/ticker/price?symbol=${symbol}`);[cite: 5]
+                if (!res.ok) throw new Error('Network response not ok');
                 const data = await res.json();
                 return parseFloat(data.price);
             },
             async fetchKlines(symbol, interval, startTime, endTime) {
                 let candles = [];
                 let currStart = startTime;
-                while (currStart < endTime) {
+                let maxPages = 8; // Kilitlenmeyi önleyen güvenlik limiti
+                let page = 0;
+
+                while (currStart < endTime && page < maxPages) {
+                    page++;
                     const url = `${this.baseURL}/klines?symbol=${symbol}&interval=${interval}&limit=1000&startTime=${currStart}`;[cite: 5]
-                    const res = await fetch(url);
-                    const raw = await res.json();
-                    if (!Array.isArray(raw) || raw.length === 0) break;
-                    const batch = raw.map(i => ({
-                        rawTime: i[0],
-                        open: parseFloat(i[1]),
-                        high: parseFloat(i[2]),
-                        low: parseFloat(i[3]),
-                        close: parseFloat(i[4])
-                    })).filter(c => c.rawTime <= endTime);[cite: 5]
-                    if (batch.length === 0) break;
-                    candles.push(...batch);
-                    if (raw.length < 1000) break;
-                    currStart = raw[raw.length - 1][0] + 1;[cite: 5]
-                    await new Promise(r => setTimeout(r, 15));
+                    try {
+                        const res = await fetch(url);
+                        if (!res.ok) break;
+                        const raw = await res.json();
+                        if (!Array.isArray(raw) || raw.length === 0) break;
+                        const batch = raw.map(i => ({
+                            rawTime: i[0],
+                            open: parseFloat(i[1]),
+                            high: parseFloat(i[2]),
+                            low: parseFloat(i[3]),
+                            close: parseFloat(i[4])
+                        })).filter(c => c.rawTime <= endTime);[cite: 5]
+                        if (batch.length === 0) break;
+                        candles.push(...batch);
+                        if (raw.length < 1000) break;
+                        currStart = raw[raw.length - 1][0] + 1;[cite: 5]
+                        await new Promise(r => setTimeout(r, 20));
+                    } catch(e) {
+                        break;
+                    }
                 }
                 return candles;
             }
         };
 
-        const App = {
+        // 6. ANA UYGULAMA
+        window.App = {
             configs: [],
             candlesData: {},
             secondaryCandlesData: {},
@@ -1076,8 +993,9 @@
             compoundedBalance: 1000.0,
             portfolioStartDateMs: 0,
             activeEditingConfigId: null,
+            tempVerified: null,
 
-            async init() {
+            init() {
                 this.configs = Storage.get('configs', [
                     { id: '1', symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5, secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 15, secondarySellRsi: 85, isNotificationEnabled: true },[cite: 25]
                     { id: '2', symbol: 'BTCUSDT', interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0, secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 20, secondarySellRsi: 80, isNotificationEnabled: true }[cite: 25]
@@ -1091,13 +1009,20 @@
                 document.getElementById('setting-slots-input').value = this.maxSlots;
 
                 this.renderMonthsBar();
+                this.renderAll(); // Anında arayüzü çiz, bekleme yapma
 
+                // Verileri arka planda indir
+                this.loadAllCandlesBackground();
+
+                // 1.5 saniyede bir canlı fiyat ticker'ı
+                setInterval(() => this.liveTickerLoop(), 1500);
+            },
+
+            async loadAllCandlesBackground() {
                 for (let config of this.configs) {
                     await this.loadCandles(config);
                 }
-
                 this.runUnifiedPortfolioEngine();
-                setInterval(() => this.liveTickerLoop(), 1200);
             },
 
             async loadCandles(config) {
@@ -1106,15 +1031,19 @@
 
                 try {
                     const primary = await BinanceAPI.fetchKlines(config.symbol, config.interval, startMs, endMs);
-                    this.candlesData[config.id] = primary;
+                    if (primary && primary.length > 0) {
+                        this.candlesData[config.id] = primary;
+                    }
 
                     if (config.secondaryInterval === config.interval) {
                         this.secondaryCandlesData[config.id] = primary;
                     } else {
                         const sec = await BinanceAPI.fetchKlines(config.symbol, config.secondaryInterval, startMs, endMs);
-                        this.secondaryCandlesData[config.id] = sec;
+                        if (sec && sec.length > 0) {
+                            this.secondaryCandlesData[config.id] = sec;
+                        }
                     }
-                } catch(e) { console.error(e); }
+                } catch(e) { console.error('Data error:', config.symbol, e); }
             },
 
             runUnifiedPortfolioEngine() {
@@ -1337,7 +1266,7 @@
                 }
 
                 container.innerHTML = this.activePositions.map(pos => `
-                    <div class="pos-item-compact">
+                    <div class="pos-item">
                         <div>
                             <strong style="font-size: 12px;">${pos.symbol.replace('USDT','')}</strong>
                             <div class="mono" style="font-size: 10px; color: var(--text-dark); margin-top: 1px;">
@@ -1362,11 +1291,13 @@
                     let posClass = isPos ? (pnl >= 0 ? 'in-pos-win' : 'in-pos-loss') : '';
 
                     return `
-                        <div class="card-pro ${posClass}" id="card-${cfg.id}">
-                            <div class="card-header-bar">
-                                <div class="coin-tag-title">
-                                    <span class="coin-code">${cfg.symbol.replace('USDT','')}</span>
-                                    <span class="tag-interval mono">${cfg.interval} • RSI(${cfg.rsiLength})</span>[cite: 8]
+                        <div class="card-box ${posClass}" id="card-${cfg.id}">
+                            <div class="card-top">
+                                <div class="coin-title">
+                                    <strong style="font-size: 15px;">${cfg.symbol.replace('USDT','')}</strong>
+                                    <span style="font-size: 9px; font-weight: 700; color: var(--accent); background: var(--bg-surface-elevated); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border);" class="mono">
+                                        ${cfg.interval} • RSI(${cfg.rsiLength})[cite: 8]
+                                    </span>
                                 </div>
                                 <div style="display: flex; gap: 4px;">
                                     <button class="btn-ui" style="padding: 2px 6px; font-size: 10px;" onclick="App.toggleCardDetails('${cfg.id}')">Ayarlar</button>
@@ -1374,9 +1305,9 @@
                                 </div>
                             </div>
 
-                            <div class="card-price-display">
+                            <div class="price-banner">
                                 <div>
-                                    <div class="val-price-hero mono" id="price-val-${cfg.id}">${formatCryptoPrice(price)}</div>
+                                    <div class="price-text mono" id="price-val-${cfg.id}">${formatCryptoPrice(price)}</div>
                                     <div class="mono" style="font-size: 9px; color: var(--text-dark); margin-top: 2px;">
                                         Y: <span style="color: var(--green);">${formatCryptoPrice(this.high24h[cfg.id])}</span> • D: <span style="color: var(--red);">${formatCryptoPrice(this.low24h[cfg.id])}</span>[cite: 8]
                                     </div>
@@ -1392,9 +1323,9 @@
                             </div>
 
                             <!-- Spektrum -->
-                            <div class="spectrum-wrap">
-                                <div class="spectrum-rail">
-                                    <div class="spectrum-dot" style="left: ${Math.min(Math.max(rsi, 0), 100)}%;"></div>[cite: 20]
+                            <div class="spectrum-box">
+                                <div class="spectrum-line">
+                                    <div class="spectrum-thumb" style="left: ${Math.min(Math.max(rsi, 0), 100)}%;"></div>[cite: 20]
                                 </div>
                                 <div style="display: flex; justify-content: space-between; font-size: 8px; font-weight: 700;" class="mono">
                                     <span style="color: var(--red);">AL: ≤${cfg.buyRsi}</span>[cite: 4]
@@ -1404,46 +1335,55 @@
 
                             <!-- Çift Grafik -->
                             <div class="spark-deck">
-                                <div class="spark-box">
+                                <div class="spark-container">
                                     <div class="mono" style="font-size: 8px; color: var(--text-dark); margin-bottom: 2px;">${cfg.interval.toUpperCase()} RSI(${cfg.rsiLength}) STRATEJİ</div>[cite: 8]
                                     <canvas class="spark-canvas" id="canvas-prim-${cfg.id}"></canvas>
                                 </div>
-                                <div class="spark-box">
+                                <div class="spark-container">
                                     <div class="mono" style="font-size: 8px; color: var(--text-dark); margin-bottom: 2px;">${cfg.secondaryInterval.toUpperCase()} RSI(${cfg.secondaryRsiLength}) TREND</div>[cite: 8]
                                     <canvas class="spark-canvas" id="canvas-sec-${cfg.id}"></canvas>
                                 </div>
                             </div>
 
                             <!-- İstatistikler -->
-                            <div class="metrics-trio">
-                                <div class="metric-unit"><span>Win Rate</span><strong class="mono" style="color: var(--green);">94%</strong></div>[cite: 8]
-                                <div class="metric-unit"><span>Ort. Süre</span><strong class="mono" style="color: var(--accent);">4.2s</strong></div>[cite: 8]
-                                <div class="metric-unit"><span>Max Seri</span><strong class="mono" style="color: var(--orange);">7 Win</strong></div>[cite: 8]
+                            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+                                <div style="background: var(--bg-surface-elevated); padding: 4px 6px; border-radius: 4px; border: 1px solid var(--border);">
+                                    <span style="font-size: 8px; color: var(--text-dark);">WIN RATE</span>
+                                    <div class="mono" style="font-size: 11px; font-weight: 700; color: var(--green);">94%</div>[cite: 8]
+                                </div>
+                                <div style="background: var(--bg-surface-elevated); padding: 4px 6px; border-radius: 4px; border: 1px solid var(--border);">
+                                    <span style="font-size: 8px; color: var(--text-dark);">ORT. SÜRE</span>
+                                    <div class="mono" style="font-size: 11px; font-weight: 700; color: var(--accent);">4.2s</div>[cite: 8]
+                                </div>
+                                <div style="background: var(--bg-surface-elevated); padding: 4px 6px; border-radius: 4px; border: 1px solid var(--border);">
+                                    <span style="font-size: 8px; color: var(--text-dark);">MAX SERİ</span>
+                                    <div class="mono" style="font-size: 11px; font-weight: 700; color: var(--orange);">7 Win</div>[cite: 8]
+                                </div>
                             </div>
 
-                            <!-- Ayar Çekmecesi -->
-                            <div class="card-details-panel" id="drawer-${cfg.id}">
+                            <!-- Ayarlar Çekmecesi -->
+                            <div class="card-drawer" id="drawer-${cfg.id}">
                                 <div style="font-size: 9px; font-weight: 700; color: var(--accent);">STRATEJİ PARAMETRELERİ</div>
-                                <div class="stepper-grid-compact">
-                                    <div class="stepper-item">
+                                <div class="stepper-row">
+                                    <div class="stepper-col">
                                         <label>RSI AL</label>
-                                        <div class="stepper-control mono">
+                                        <div class="stepper-input mono">
                                             <button onclick="App.adj('${cfg.id}', 'buyRsi', -1)">-</button>
                                             <input type="text" value="${cfg.buyRsi}" readonly>
                                             <button onclick="App.adj('${cfg.id}', 'buyRsi', 1)">+</button>
                                         </div>
                                     </div>
-                                    <div class="stepper-item">
+                                    <div class="stepper-col">
                                         <label>RSI SAT</label>
-                                        <div class="stepper-control mono">
+                                        <div class="stepper-input mono">
                                             <button onclick="App.adj('${cfg.id}', 'sellRsi', -1)">-</button>
                                             <input type="text" value="${cfg.sellRsi}" readonly>
                                             <button onclick="App.adj('${cfg.id}', 'sellRsi', 1)">+</button>
                                         </div>
                                     </div>
-                                    <div class="stepper-item">
+                                    <div class="stepper-col">
                                         <label>HEDEF (%)</label>
-                                        <div class="stepper-control mono">
+                                        <div class="stepper-input mono">
                                             <button onclick="App.adj('${cfg.id}', 'profitTarget', -0.5)">-</button>
                                             <input type="text" value="${cfg.profitTarget}" readonly>
                                             <button onclick="App.adj('${cfg.id}', 'profitTarget', 0.5)">+</button>
@@ -1513,6 +1453,8 @@
 
             renderTradesTable() {
                 const tbody = document.getElementById('trades-table-body');
+                if (!tbody) return;
+
                 if (this.globalTrades.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dark);">İşlem kaydı bulunmuyor.</td></tr>`;
                     return;
@@ -1536,8 +1478,10 @@
 
             renderAlarmsTab() {
                 const container = document.getElementById('alarms-list-container');
+                if (!container) return;
+
                 container.innerHTML = this.configs.map(cfg => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border);">
                         <div>
                             <strong>${cfg.symbol.replace('USDT','')}</strong>
                             <span class="mono" style="font-size: 10px; color: var(--text-dark); margin-left: 8px;">
@@ -1564,9 +1508,11 @@
 
             async verifyBinanceSymbol() {
                 let sym = document.getElementById('add-symbol-input').value.toUpperCase().trim();
+                if (!sym) return;
                 if (!sym.endsWith('USDT')) sym += 'USDT';
                 const status = document.getElementById('verify-status');
                 status.innerText = 'Binance kontrol ediliyor...';
+                status.style.color = 'var(--text-muted)';
                 try {
                     const p = await BinanceAPI.fetchPrice(sym);
                     status.innerText = `✓ Doğrulandı: $${p}`;
@@ -1576,25 +1522,35 @@
                 } catch(e) {
                     status.innerText = '✗ Binance üzerinde bulunamadı!';
                     status.style.color = 'var(--red)';
+                    document.getElementById('add-coin-form-body').style.display = 'none';
                 }
             },
 
             saveNewCoinCard() {
+                if (!this.tempVerified) return;
                 const newCard = {
                     id: Date.now().toString(),
                     symbol: this.tempVerified,
                     interval: document.getElementById('add-interval-input').value,
-                    rsiLength: parseInt(document.getElementById('add-rsi-length').value),
-                    buyRsi: parseFloat(document.getElementById('add-buy-rsi').value),
-                    sellRsi: parseFloat(document.getElementById('add-sell-rsi').value),
-                    profitTarget: parseFloat(document.getElementById('add-profit-target').value),
-                    monthlyCap: parseFloat(document.getElementById('add-monthly-cap').value),
+                    rsiLength: parseInt(document.getElementById('add-rsi-length').value) || 14,
+                    buyRsi: parseFloat(document.getElementById('add-buy-rsi').value) || 25,
+                    sellRsi: parseFloat(document.getElementById('add-sell-rsi').value) || 75,
+                    profitTarget: parseFloat(document.getElementById('add-profit-target').value) || 4.0,
+                    monthlyCap: parseFloat(document.getElementById('add-monthly-cap').value) || 3.0,
                     secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 15, secondarySellRsi: 85,
                     isNotificationEnabled: true
                 };
+
                 this.configs.push(newCard);
                 Storage.set('configs', this.configs);
                 ModalManager.close('add-coin');
+                
+                // Formu sıfırla
+                document.getElementById('add-symbol-input').value = '';
+                document.getElementById('verify-status').innerText = '';
+                document.getElementById('add-coin-form-body').style.display = 'none';
+
+                this.renderAll();
                 this.loadCandles(newCard).then(() => this.runUnifiedPortfolioEngine());
             },
 
@@ -1625,7 +1581,10 @@
             async runOptimizer(id) {
                 const cfg = this.configs.find(c => c.id === id);
                 const candles = this.candlesData[id];
-                if (!cfg || !candles) return;
+                if (!cfg || !candles) {
+                    alert('Optimizasyon için mum verileri bekleniyor...');
+                    return;
+                }
 
                 ModalManager.open('optimizer');
                 document.getElementById('optimizer-render-box').innerHTML = `<div class="mono" style="padding: 12px; text-align: center; color: var(--accent);">Optimizasyon taranıyor...</div>`;
@@ -1671,6 +1630,8 @@
                                 <button class="btn-ui primary" style="width: 100%; justify-content: center; margin-top: 8px;" onclick="App.applyOpt('${cfg.id}', ${best.b}, ${best.s})">Uygula ve Kaydet</button>
                             </div>
                         `;
+                    } else {
+                        document.getElementById('optimizer-render-box').innerHTML = `<div style="text-align: center; color: var(--text-muted);">Yeterli işlem verisi bulunamadı.</div>`;
                     }
                 }, 80);
             },
@@ -1728,7 +1689,7 @@
 
             setYear(y) {
                 this.selectedYear = y;
-                this.init();
+                this.loadAllCandlesBackground();
             },
 
             updateBalance(val) {
@@ -1747,13 +1708,13 @@
                 const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
                 const wrap = document.getElementById('months-bar-wrap');
                 wrap.innerHTML = months.map((m, i) => `
-                    <button class="pill-btn ${i + 1 === this.selectedMonthIndex ? 'active' : ''}" onclick="App.selectMonth(${i + 1}, this)">${m}</button>
+                    <button class="btn-ui ${i + 1 === this.selectedMonthIndex ? 'active' : ''}" onclick="App.selectMonth(${i + 1}, this)">${m}</button>
                 `).join('');
             },
 
             setTimeframe(tf, btn) {
                 this.selectedTimeframe = tf;
-                document.querySelectorAll('.timeframe-filter-bar .pill-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#tab-terminal .btn-ui').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 document.getElementById('months-bar-wrap').style.display = tf === 'selectMonth' ? 'flex' : 'none';
                 document.getElementById('kpi-time-label').innerText = `${btn.innerText} Net Kazanç`;
@@ -1762,17 +1723,22 @@
 
             selectMonth(mIdx, btn) {
                 this.selectedMonthIndex = mIdx;
-                document.querySelectorAll('#months-bar-wrap .pill-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#months-bar-wrap .btn-ui').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.renderHeaderKPIs();
+            },
+
+            applyCustomRange() {
+                const s = document.getElementById('custom-start-date').value;
+                const e = document.getElementById('custom-end-date').value;
+                if (s && e) {
+                    ModalManager.close('custom-range');
+                    this.renderHeaderKPIs();
+                }
             }
         };
 
-        const ModalManager = {
-            open(id) { document.getElementById(`modal-${id}`).classList.add('open'); },
-            close(id) { document.getElementById(`modal-${id}`).classList.remove('open'); }
-        };
-
+        // DOM Yüklendiğinde Başlat
         document.addEventListener('DOMContentLoaded', () => {
             const savedTheme = Storage.get('theme', 'dark');
             document.getElementById('theme-selector').value = savedTheme;
