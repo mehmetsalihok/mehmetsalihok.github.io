@@ -4,46 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CODEMSO Terminal & RSI Radar</title>
-  
-  <!-- Google Fonts: Inter & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
     :root {
-      --bg-color: #0b0f19;
+      --bg-color: #0b101b;
       --card-bg: #111827;
-      --card-header-bg: #162032;
       --text-color: #f3f4f6;
-      --text-muted: #9ca3af;
-      --border-color: #1f293d;
-      --border-focus: #0ea5e9;
-      --box-bg: #090d16;
+      --text-muted: #94a3b8;
+      --border-color: #1e293b;
+      --border-focus: #0284c7;
+      --box-bg: #0b1120;
       --badge-bg: #1e293b;
       --badge-text: #38bdf8;
-      --table-stripe: #0e1524;
-      --table-hover: #172338;
-      --input-bg: #0c121e;
+      --table-stripe: #0f172a;
+      --table-hover: #1e293b;
+      --input-bg: #0b1120;
       --accent: #0284c7;
       --accent-hover: #0369a1;
       --green: #10b981;
       --green-bg: rgba(16, 185, 129, 0.12);
       --red: #f43f5e;
       --red-bg: rgba(244, 63, 94, 0.12);
-      --neutral: #f59e0b;
-      --radius: 6px;
-      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.35);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -2px rgba(0, 0, 0, 0.5);
+      --neutral: #eab308;
     }
 
     body.light-mode {
       --bg-color: #f1f5f9;
       --card-bg: #ffffff;
-      --card-header-bg: #f8fafc;
       --text-color: #0f172a;
       --text-muted: #64748b;
-      --border-color: #e2e8f0;
+      --border-color: #cbd5e1;
       --border-focus: #0284c7;
       --box-bg: #f8fafc;
       --badge-bg: #e0f2fe;
@@ -58,24 +48,21 @@
       --red: #e11d48;
       --red-bg: rgba(225, 29, 72, 0.1);
       --neutral: #d97706;
-      --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.06);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
     }
 
     body.oled-mode {
       --bg-color: #000000;
-      --card-bg: #09090b;
-      --card-header-bg: #121215;
-      --text-color: #fafafa;
-      --text-muted: #71717a;
-      --border-color: #1c1c20;
+      --card-bg: #080808;
+      --text-color: #ffffff;
+      --text-muted: #737373;
+      --border-color: #1f1f1f;
       --border-focus: #38bdf8;
       --box-bg: #000000;
-      --badge-bg: #18181b;
+      --badge-bg: #141414;
       --badge-text: #38bdf8;
-      --table-stripe: #050505;
-      --table-hover: #121214;
-      --input-bg: #050505;
+      --table-stripe: #040404;
+      --table-hover: #121212;
+      --input-bg: #000000;
       --accent: #0284c7;
       --accent-hover: #0369a1;
       --green: #22c55e;
@@ -83,59 +70,49 @@
       --red: #ef4444;
       --red-bg: rgba(239, 68, 68, 0.12);
       --neutral: #eab308;
-      --shadow-sm: none;
-      --shadow-md: none;
     }
 
     * {
       box-sizing: border-box;
+      font-family: Arial, Helvetica, sans-serif !important;
+      border-radius: 2px;
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background-color: var(--bg-color);
       color: var(--text-color);
       margin: 0;
       padding: 10px;
-      font-size: 0.75rem;
-      line-height: 1.4;
-      letter-spacing: -0.01em;
-      transition: background-color 0.25s ease, color 0.25s ease;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
+      font-size: 11px;
+      line-height: 1.35;
+      letter-spacing: -0.2px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      font-variant-numeric: tabular-nums;
     }
 
-    /* Custom Scrollbars */
     ::-webkit-scrollbar {
-      width: 5px;
-      height: 5px;
+      width: 4px;
+      height: 4px;
     }
     ::-webkit-scrollbar-track {
       background: var(--bg-color);
     }
     ::-webkit-scrollbar-thumb {
       background: var(--border-color);
-      border-radius: 4px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--text-muted);
     }
 
     .container {
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-width: 1780px;
+      gap: 8px;
+      max-width: 1800px;
       margin: 0 auto;
     }
 
-    /* Header Bar */
     .header-card {
       background: var(--card-bg);
-      padding: 8px 14px;
+      padding: 8px 12px;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -144,61 +121,49 @@
     }
 
     .brand-title {
-      font-weight: 800;
-      font-size: 0.88rem;
+      font-weight: 700;
+      font-size: 13px;
       letter-spacing: 0.5px;
       color: var(--text-color);
       display: flex;
       align-items: center;
-      gap: 10px;
-    }
-
-    .brand-title::before {
-      content: '';
-      display: inline-block;
-      width: 8px;
-      height: 8px;
-      background: #0284c7;
-      border-radius: 50%;
-      box-shadow: 0 0 8px #0284c7;
+      gap: 8px;
     }
 
     .brand-subtitle {
       color: var(--badge-text);
-      font-size: 0.65rem;
+      font-size: 10px;
       border-left: 1px solid var(--border-color);
-      padding-left: 10px;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      padding-left: 8px;
+      font-weight: 700;
       text-transform: uppercase;
     }
 
     .version-tag {
-      font-size: 0.60rem;
+      font-size: 10px;
       color: var(--text-muted);
       border-left: 1px solid var(--border-color);
-      padding-left: 10px;
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 500;
+      padding-left: 8px;
+      font-weight: 400;
     }
 
     .header-controls {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       flex-wrap: wrap;
     }
 
     .main-layout {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     @media (min-width: 1200px) {
       .main-layout {
         display: grid;
-        grid-template-columns: 1fr 440px;
+        grid-template-columns: 1fr 450px;
         align-items: start;
       }
     }
@@ -206,7 +171,7 @@
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 10px;
+      gap: 8px;
     }
 
     @media (min-width: 768px) and (max-width: 1199px) {
@@ -215,44 +180,35 @@
       }
     }
 
-    /* Cards */
     .card {
       background-color: var(--card-bg);
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
       position: relative;
-      animation: cardAppear 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-      transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .card:hover {
-      box-shadow: var(--shadow-md);
-      border-color: color-mix(in srgb, var(--border-color) 80%, white);
+      animation: cardAppear 0.2s ease-out forwards;
+      transition: border-color 0.15s ease;
     }
 
     @keyframes cardAppear {
       from {
         opacity: 0;
-        transform: translateY(6px) scale(0.98);
+        transform: translateY(4px);
       }
       to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
       }
     }
 
     .card-deleting {
       opacity: 0 !important;
-      transform: scale(0.94) translateY(-10px) !important;
-      transition: transform 0.25s ease, opacity 0.25s ease !important;
+      transform: scale(0.95) translateY(-8px) !important;
+      transition: transform 0.2s ease, opacity 0.2s ease !important;
     }
 
-    /* Live Flashing Pulse */
     @keyframes softPulse {
       0% {
         background-color: rgba(2, 132, 199, 0.18);
@@ -273,22 +229,18 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
     }
 
-    /* Inputs, Selects & Buttons */
     .theme-select, .header-select {
       background: var(--input-bg);
       border: 1px solid var(--border-color);
       color: var(--text-color);
-      padding: 5px 8px;
-      font-size: 0.68rem;
-      font-weight: 600;
-      font-family: inherit;
-      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 700;
       outline: none;
       cursor: pointer;
-      transition: all 0.15s ease;
     }
 
     .theme-select:hover, .header-select:hover {
@@ -299,23 +251,17 @@
       background: var(--accent);
       color: #ffffff;
       border: 1px solid var(--accent);
-      padding: 5px 12px;
-      border-radius: 4px;
+      padding: 4px 10px;
       cursor: pointer;
-      font-size: 0.68rem;
+      font-size: 10px;
       font-weight: 700;
-      font-family: inherit;
-      box-shadow: 0 1px 2px rgba(2, 132, 199, 0.3);
-      transition: all 0.15s ease;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
 
     .add-card-btn:hover:not(:disabled) {
       background: var(--accent-hover);
       border-color: var(--accent-hover);
-      transform: translateY(-1px);
     }
 
     .add-card-btn:disabled {
@@ -323,162 +269,143 @@
       border-color: #334155;
       color: #94a3b8;
       cursor: not-allowed;
-      box-shadow: none;
-      transform: none;
     }
 
     .remove-card-btn {
       background: transparent;
       color: var(--text-muted);
-      border: none;
+      border: 1px solid transparent;
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.85rem;
+      font-size: 10px;
       padding: 2px 6px;
-      border-radius: 3px;
-      transition: color 0.15s, background-color 0.15s;
+      text-transform: uppercase;
     }
 
     .remove-card-btn:hover {
       color: var(--red);
       background-color: var(--red-bg);
+      border-color: var(--red);
     }
 
     .coin-input {
-      padding: 4px 8px;
+      padding: 3px 6px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background-color: var(--input-bg);
       color: var(--text-color);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.82rem;
+      font-size: 12px;
       font-weight: 700;
-      width: 110px;
+      width: 105px;
       text-transform: uppercase;
       outline: none;
-      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     .coin-input:focus {
       border-color: var(--border-focus);
-      box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15);
     }
 
     .color-picker {
       -webkit-appearance: none;
       -moz-appearance: none;
       appearance: none;
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background: transparent;
       cursor: pointer;
       padding: 0;
-      overflow: hidden;
       vertical-align: middle;
     }
 
     .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
-    .color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
+    .color-picker::-webkit-color-swatch { border: none; }
 
     .price-row {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      margin: 2px 0 4px 0;
+      margin: 2px 0;
     }
 
     .price {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.35rem;
-      font-weight: 800;
+      font-size: 18px;
+      font-weight: 700;
       letter-spacing: -0.5px;
-      font-variant-numeric: tabular-nums;
-      transition: color 0.3s ease;
+      transition: color 0.2s ease;
     }
 
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px;
+      gap: 4px;
     }
 
     .grid-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+      gap: 4px;
     }
 
     .stat-box {
       background-color: var(--box-bg);
-      padding: 6px 8px;
+      padding: 5px 6px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       text-align: center;
       display: flex;
       flex-direction: column;
-      justify-content: center;
       gap: 2px;
     }
 
     .stat-label {
-      font-size: 0.58rem;
+      font-size: 9px;
       color: var(--text-muted);
       text-transform: uppercase;
-      font-weight: 600;
-      letter-spacing: 0.5px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
     }
 
     .stat-value {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.90rem;
-      font-weight: 800;
-      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      font-weight: 700;
     }
 
     .position-box {
       background-color: var(--box-bg);
-      padding: 6px 10px;
+      padding: 5px 8px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
     }
 
     .coin-settings-box {
       background-color: var(--box-bg);
       border: 1px solid var(--border-color);
-      border-radius: 4px;
-      padding: 8px;
+      padding: 6px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 6px 8px;
+      gap: 4px 6px;
     }
 
     .coin-setting-item {
       display: flex;
       flex-direction: column;
-      gap: 3px;
+      gap: 2px;
     }
 
     .coin-setting-item label {
-      font-size: 0.60rem;
+      font-size: 9px;
       color: var(--text-muted);
-      font-weight: 600;
+      font-weight: 700;
       text-transform: uppercase;
     }
 
     .coin-setting-item input, .coin-setting-item select {
-      padding: 4px 6px;
+      padding: 3px 4px;
       border: 1px solid var(--border-color);
-      border-radius: 3px;
       background-color: var(--card-bg);
       color: var(--text-color);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.70rem;
+      font-size: 10px;
       font-weight: 700;
       width: 100%;
       outline: none;
-      transition: border-color 0.15s ease;
     }
 
     .coin-setting-item input:focus, .coin-setting-item select:focus {
@@ -487,83 +414,65 @@
 
     .wizard-btn {
       grid-column: span 3;
-      background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+      background: var(--accent);
       color: #ffffff;
-      border: 1px solid #0369a1;
-      padding: 6px 10px;
-      font-size: 0.70rem;
+      border: 1px solid var(--accent-hover);
+      padding: 5px 8px;
+      font-size: 10px;
       font-weight: 700;
-      font-family: inherit;
-      border-radius: 4px;
       cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
 
     .wizard-btn:hover {
-      background: linear-gradient(180deg, #0369a1 0%, #075985 100%);
-      transform: translateY(-1px);
+      background: var(--accent-hover);
     }
 
-    /* Modal Overlay & Card */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.7);
       display: none;
       justify-content: center;
       align-items: center;
       z-index: 9999;
-      animation: fadeIn 0.15s ease-out;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
     }
 
     .modal-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
-      border-radius: 8px;
-      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
-      padding: 16px;
-      width: 340px;
+      padding: 14px;
+      width: 320px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      animation: cardAppear 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      gap: 10px;
     }
 
     .sidebar-card {
       background-color: var(--card-bg);
-      padding: 12px;
+      padding: 10px;
       border: 1px solid var(--border-color);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow-sm);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
       position: sticky;
       top: 10px;
     }
 
     .add-coin-row {
       display: flex;
-      gap: 6px;
+      gap: 4px;
     }
 
     .add-coin-row input, .add-coin-row select {
-      padding: 5px 8px;
+      padding: 4px 6px;
       border: 1px solid var(--border-color);
-      border-radius: 4px;
       background: var(--input-bg);
       color: var(--text-color);
-      font-family: inherit;
-      font-weight: 600;
-      font-size: 0.70rem;
+      font-weight: 700;
+      font-size: 10px;
       outline: none;
     }
 
@@ -575,42 +484,36 @@
       background: var(--accent);
       color: #fff;
       border: none;
-      padding: 5px 12px;
-      border-radius: 4px;
+      padding: 4px 10px;
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.70rem;
-      font-family: inherit;
-      transition: background-color 0.15s ease;
+      font-size: 10px;
+      text-transform: uppercase;
     }
 
     .add-btn:hover {
       background: var(--accent-hover);
     }
 
-    /* Tables */
     .watchlist-table, table {
       width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      font-size: 0.65rem;
-      font-variant-numeric: tabular-nums;
+      border-collapse: collapse;
+      font-size: 10px;
     }
 
     .watchlist-table th, .watchlist-table td,
     table th, table td {
-      padding: 5px 6px;
+      padding: 4px 4px;
       border-bottom: 1px solid var(--border-color);
       text-align: center;
     }
 
     .watchlist-table th, table th {
       color: var(--text-muted);
-      font-size: 0.58rem;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: var(--card-bg);
+      letter-spacing: 0.3px;
     }
 
     tbody tr:hover {
@@ -618,16 +521,14 @@
     }
 
     .alarm-input {
-      width: 40px;
-      padding: 2px 4px;
-      font-size: 0.68rem;
+      width: 36px;
+      padding: 2px 2px;
+      font-size: 10px;
       border: 1px solid var(--border-color);
-      border-radius: 3px;
       background: var(--input-bg);
       color: var(--text-color);
       text-align: center;
       font-weight: 700;
-      font-family: 'JetBrains Mono', monospace;
       outline: none;
     }
 
@@ -636,10 +537,9 @@
     }
 
     .select-mini {
-      padding: 2px 4px;
-      font-size: 0.65rem;
+      padding: 2px 3px;
+      font-size: 9px;
       border: 1px solid var(--border-color);
-      border-radius: 3px;
       background: var(--input-bg);
       color: var(--text-color);
       font-weight: 700;
@@ -647,18 +547,26 @@
     }
 
     .action-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
       cursor: pointer;
-      padding: 1px 3px;
-      font-size: 0.68rem;
-      border-radius: 2px;
-      transition: color 0.15s;
+      padding: 2px 4px;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      margin: 0 1px;
     }
 
     .action-btn:hover {
-      color: var(--text-color);
+      border-color: var(--border-focus);
+      color: var(--badge-text);
+    }
+
+    .action-btn.red-btn:hover {
+      border-color: var(--red);
+      color: var(--red);
+      background: var(--red-bg);
     }
 
     .csv-btn {
@@ -667,35 +575,33 @@
       border: none;
       cursor: pointer;
       font-weight: 700;
-      font-size: 0.62rem;
-      padding: 2px 4px;
-      border-radius: 3px;
-      transition: all 0.15s ease;
+      font-size: 9px;
+      text-transform: uppercase;
+      padding: 0;
     }
 
     .csv-btn:hover {
-      background-color: rgba(56, 189, 248, 0.1);
       text-decoration: underline;
     }
 
     .alarm-triggered {
       background-color: var(--red-bg) !important;
-      font-weight: 800;
+      font-weight: 700;
     }
 
     .table-title {
-      font-size: 0.68rem;
+      font-size: 10px;
       font-weight: 700;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
       user-select: none;
-      padding: 5px 0;
+      padding: 4px 0;
       border-top: 1px solid var(--border-color);
       margin-top: 4px;
       color: var(--text-muted);
-      transition: color 0.15s;
+      text-transform: uppercase;
     }
 
     .table-title:hover {
@@ -705,19 +611,17 @@
     .collapsible-content {
       display: none;
       margin-top: 4px;
-      overflow-x: auto;
     }
 
-    /* Status & Color Helpers */
     .green { color: var(--green); font-weight: 700; }
     .red { color: var(--red); font-weight: 700; }
     .neutral { color: var(--neutral); font-weight: 700; }
 
     .loader {
-      font-size: 0.60rem;
+      font-size: 9px;
       color: #38bdf8;
-      font-weight: 600;
-      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      text-transform: uppercase;
     }
   </style>
 </head>
@@ -725,11 +629,10 @@
 
   <div class="container" id="main-app">
     
-    <!-- HEADER BAR -->
     <div class="header-card">
       <div class="brand-title">
         CODEMSO TERMINAL
-        <span class="brand-subtitle">Pro Strategy Radar</span>
+        <span class="brand-subtitle">STRATEJI RADARI</span>
         <span class="version-tag">v2.8.2/mehmetsalihok</span>
       </div>
 
@@ -737,15 +640,15 @@
         <button class="add-card-btn" id="btn-add-card" onclick="addNewCard()">+ Kart Ekle (<span id="card-count-label">2</span>/8)</button>
         
         <select class="theme-select" id="theme-select" onchange="changeTheme(this.value)">
-          <option value="light" selected>Gündüz Modu</option>
+          <option value="light" selected>Gunduz Modu</option>
           <option value="dark">Gece Modu</option>
-          <option value="oled">Zifiri Karanlık (OLED)</option>
+          <option value="oled">Zifiri Karanlik (OLED)</option>
         </select>
 
-        <button class="header-select" onclick="playTestSound()">🔊 Ses Testi</button>
+        <button class="header-select" onclick="playTestSound()">Ses Testi</button>
 
         <div style="display: flex; align-items: center; gap: 4px;">
-          <label style="font-weight:700; font-size:0.65rem; color:var(--text-muted)">Yıl:</label>
+          <label style="font-weight:700; font-size:10px; color:var(--text-muted)">YIL:</label>
           <select id="global-year" class="header-select" onchange="changeGlobalYear()">
             <option value="2026">2026</option>
             <option value="2025">2025</option>
@@ -757,40 +660,40 @@
     <!-- CANLI AKTİF POZİSYONLAR VE SON 10 İŞLEM -->
     <div class="card" style="border-top: 3px solid #0284c7;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-        <span style="font-weight: 800; font-size: 0.75rem; color: #38bdf8; letter-spacing: 0.5px;">AÇIK POZİSYONLAR (CANLI)</span>
-        <span style="font-size: 0.60rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;" id="active-pos-count-label">0 Açık Pozisyon</span>
+        <span style="font-weight: 700; font-size: 11px; color: #0284c7; text-transform: uppercase;">ACIK POZISYONLAR (CANLI)</span>
+        <span style="font-size: 9px; color: var(--text-muted); font-weight: 700;" id="active-pos-count-label">0 Acik Pozisyon</span>
       </div>
       
       <table class="watchlist-table" style="margin-bottom: 8px;">
         <thead>
           <tr>
             <th style="text-align: left;">Coin</th>
-            <th>Giriş Fiyatı</th>
-            <th>Canlı PnL (%)</th>
-            <th>Hedef Çıkış</th>
+            <th>Giris Fiyati</th>
+            <th>Canli PnL (%)</th>
+            <th>Hedef Cikis</th>
           </tr>
         </thead>
         <tbody id="active-positions-tbody">
-          <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>
+          <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Su an acik pozisyon bulunmuyor.</td></tr>
         </tbody>
       </table>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 8px; margin-bottom: 4px;">
-        <span style="font-weight: 800; font-size: 0.72rem; letter-spacing: 0.5px;">SON 10 TAMAMLANAN İŞLEM (GLOBAL)</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 6px; margin-bottom: 4px;">
+        <span style="font-weight: 700; font-size: 11px; text-transform: uppercase;">SON 10 TAMAMLANAN ISLEM (GLOBAL)</span>
       </div>
 
       <table class="watchlist-table">
         <thead>
           <tr>
             <th style="text-align: left;">Coin</th>
-            <th>Giriş</th>
-            <th>Çıkış</th>
-            <th>Net Kâr (%)</th>
+            <th>Giris</th>
+            <th>Cikis</th>
+            <th>Net Kar (%)</th>
             <th>Neden / Zaman</th>
           </tr>
         </thead>
         <tbody id="global-trades-tbody">
-          <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz işlem kaydı bulunmuyor.</td></tr>
+          <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henuz islem kaydi bulunmuyor.</td></tr>
         </tbody>
       </table>
     </div>
@@ -801,13 +704,13 @@
 
       <div class="sidebar-card">
         <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <span style="font-weight: 800; font-size: 0.75rem; color:#38bdf8; letter-spacing: 0.5px;">CANLI RSI RADAR (1s)</span>
-            <span style="font-size: 0.60rem; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;" id="radar-update-time">Canlı</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-weight: 700; font-size: 11px; text-transform: uppercase;">CANLI RSI RADAR (1s)</span>
+            <span style="font-size: 9px; color: var(--text-muted); font-weight: 700;" id="radar-update-time">CANLI</span>
           </div>
 
-          <div class="add-coin-row" style="margin-bottom: 8px;">
-            <input type="text" id="new-radar-coin" placeholder="Örn: FLOKI" style="flex:1; text-transform: uppercase;">
+          <div class="add-coin-row" style="margin-bottom: 6px;">
+            <input type="text" id="new-radar-coin" placeholder="ORN: FLOKI" style="flex:1; text-transform: uppercase;">
             <select id="new-radar-tf" class="select-mini">
               <option value="5m">5m</option>
               <option value="15m">15m</option>
@@ -815,8 +718,8 @@
               <option value="1h">1h</option>
               <option value="4h">4h</option>
             </select>
-            <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:42px;">
-            <button class="add-btn" onclick="addRadarCoin()">+ Ekle</button>
+            <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:36px;">
+            <button class="add-btn" onclick="addRadarCoin()">Ekle</button>
           </div>
 
           <table class="watchlist-table">
@@ -826,9 +729,9 @@
                 <th>TF</th>
                 <th>Per.</th>
                 <th>RSI</th>
-                <th>Min (≤)</th>
-                <th>Max (≥)</th>
-                <th>Sıra</th>
+                <th>Min (&le;)</th>
+                <th>Max (&ge;)</th>
+                <th>Sira</th>
                 <th>Sil</th>
               </tr>
             </thead>
@@ -836,16 +739,16 @@
           </table>
         </div>
 
-        <div style="border-top: 1px solid var(--border-color); padding-top: 10px;">
-          <div style="font-weight: 800; font-size: 0.72rem; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="letter-spacing: 0.5px;">KART PERFORMANS ÖZETİ (<span id="summary-year-label">2026</span>)</span>
+        <div style="border-top: 1px solid var(--border-color); padding-top: 8px;">
+          <div style="font-weight: 700; font-size: 11px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase;">
+            <span>KART PERFORMANS OZETI (<span id="summary-year-label">2026</span>)</span>
           </div>
           <table class="watchlist-table">
             <thead>
               <tr>
                 <th style="text-align: left;">Coin</th>
                 <th>Bu Ay (%)</th>
-                <th>Yıllık Toplam (%)</th>
+                <th>Yillik Toplam (%)</th>
               </tr>
             </thead>
             <tbody id="summary-tbody"></tbody>
@@ -860,25 +763,25 @@
   <!-- SİTE İÇİ ÖZEL YENİ KART EKLEME MODALI -->
   <div class="modal-overlay" id="add-card-modal">
     <div class="modal-card">
-      <div style="font-weight:800; font-size:0.85rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
-        <span>YENİ KART EKLE</span>
-        <button onclick="closeAddCardModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem;">✖</button>
+      <div style="font-weight:700; font-size:12px; color:#38bdf8; display:flex; justify-content:space-between; align-items:center; text-transform: uppercase;">
+        <span>YENI KART EKLE</span>
+        <button onclick="closeAddCardModal()" class="remove-card-btn">Kapat</button>
       </div>
 
-      <div style="font-size:0.68rem; color:var(--text-muted);">
-        Analiz etmek istediğiniz coin sembolünü girin:
+      <div style="font-size:10px; color:var(--text-muted);">
+        Analiz etmek istediginiz coin sembolunu girin:
       </div>
 
-      <div style="background:var(--box-bg); padding:10px; border:1px solid var(--border-color); border-radius:4px; display:flex; flex-direction:column; gap:8px;">
+      <div style="background:var(--box-bg); padding:8px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;">
         <div class="coin-setting-item">
-          <label for="new-card-symbol-input">Coin Sembolü:</label>
-          <input type="text" id="new-card-symbol-input" placeholder="Örn: BTC, ETH, SOL" style="text-transform: uppercase;" onkeyup="handleAddCardKeyPress(event)">
+          <label for="new-card-symbol-input">Coin Sembolu:</label>
+          <input type="text" id="new-card-symbol-input" placeholder="ORN: BTC, ETH, SOL" style="text-transform: uppercase;" onkeyup="handleAddCardKeyPress(event)">
         </div>
       </div>
 
-      <div style="display:flex; gap:8px; margin-top:4px;">
-        <button class="add-card-btn" style="flex:1; padding:7px; justify-content:center;" onclick="confirmAddNewCard()">Ekle</button>
-        <button class="header-select" style="padding:7px 14px;" onclick="closeAddCardModal()">İptal</button>
+      <div style="display:flex; gap:6px;">
+        <button class="add-card-btn" style="flex:1; padding:6px;" onclick="confirmAddNewCard()">Ekle</button>
+        <button class="header-select" style="padding:6px 12px;" onclick="closeAddCardModal()">Iptal</button>
       </div>
     </div>
   </div>
@@ -886,49 +789,49 @@
   <!-- STRATEJİ SİHİRBAZI MODALI -->
   <div class="modal-overlay" id="optimizer-modal">
     <div class="modal-card">
-      <div style="font-weight:800; font-size:0.85rem; color:#38bdf8; display:flex; justify-content:space-between; align-items:center;">
-        <span>STRATEJİ SİHİRBAZI</span>
-        <button onclick="closeOptimizerModal()" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem;">✖</button>
+      <div style="font-weight:700; font-size:12px; color:#38bdf8; display:flex; justify-content:space-between; align-items:center; text-transform: uppercase;">
+        <span>STRATEJI SIHIRBAZI</span>
+        <button onclick="closeOptimizerModal()" class="remove-card-btn">Kapat</button>
       </div>
 
-      <div style="font-size:0.68rem; color:var(--text-muted); font-family:'JetBrains Mono', monospace;" id="opt-coin-title">
+      <div style="font-size:10px; color:var(--text-muted); font-weight:700;" id="opt-coin-title">
         Coin Analiz Ediliyor...
       </div>
 
-      <div style="background:var(--box-bg); padding:12px; border:1px solid var(--border-color); border-radius:6px; display:flex; flex-direction:column; gap:8px; font-size:0.72rem; font-family:'JetBrains Mono', monospace;">
+      <div style="background:var(--box-bg); padding:10px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px; font-size:10px;">
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted); font-family:'Inter', sans-serif;">Hedef Kâr Oranı:</span>
+          <span style="color:var(--text-muted);">Hedef Kar Orani:</span>
           <b id="opt-target-profit" class="green">%1.0</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted); font-family:'Inter', sans-serif;">Önerilen RSI Al:</span>
+          <span style="color:var(--text-muted);">Onerilen RSI Al:</span>
           <b id="opt-best-buy" style="color:#38bdf8;">--</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted); font-family:'Inter', sans-serif;">Önerilen RSI Sat:</span>
+          <span style="color:var(--text-muted);">Onerilen RSI Sat:</span>
           <b id="opt-best-sell" style="color:#eab308;">--</b>
         </div>
-        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:6px;">
-          <span style="color:var(--text-muted); font-family:'Inter', sans-serif;">Win Rate:</span>
+        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-color); padding-top:4px;">
+          <span style="color:var(--text-muted);">Win Rate:</span>
           <b id="opt-best-winrate" class="green">--%</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted); font-family:'Inter', sans-serif;">Kayıp İşlem:</span>
-          <b id="opt-best-loss" class="red">0 Kayıp</b>
+          <span style="color:var(--text-muted);">Kayip Islem:</span>
+          <b id="opt-best-loss" class="red">0 Kayip</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted); font-family:'Inter', sans-serif;">Toplam İşlem:</span>
-          <b id="opt-best-trades">0 İşlem</b>
+          <span style="color:var(--text-muted);">Toplam Islem:</span>
+          <b id="opt-best-trades">0 Islem</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted); font-family:'Inter', sans-serif;">Net Toplam Kâr:</span>
+          <span style="color:var(--text-muted);">Net Toplam Kar:</span>
           <b id="opt-best-pnl" class="green">--%</b>
         </div>
       </div>
 
-      <div style="display:flex; gap:8px; margin-top:4px;">
-        <button class="add-card-btn" style="flex:1; padding:7px; justify-content:center;" onclick="applyOptimizerResult()">Uygula ve Kaydet</button>
-        <button class="header-select" style="padding:7px 14px;" onclick="closeOptimizerModal()">Vazgeç</button>
+      <div style="display:flex; gap:6px;">
+        <button class="add-card-btn" style="flex:1; padding:6px;" onclick="applyOptimizerResult()">Uygula ve Kaydet</button>
+        <button class="header-select" style="padding:6px 12px;" onclick="closeOptimizerModal()">Vazgec</button>
       </div>
     </div>
   </div>
@@ -1057,7 +960,7 @@
 
     function addNewCard() {
       if (coinsConfig.length >= 8) {
-        alert('Maksimum 8 adet analiz kartı ekleyebilirsiniz!');
+        alert('Maksimum 8 adet analiz karti ekleyebilirsiniz!');
         return;
       }
 
@@ -1074,7 +977,7 @@
 
       let val = input.value.trim();
       if (!val) {
-        alert('Lütfen geçerli bir coin sembolü girin!');
+        alert('Lutfen gecerli bir coin sembolu girin!');
         return;
       }
 
@@ -1111,14 +1014,14 @@
 
     function removeCard(slotIndex) {
       if (coinsConfig.length <= 1) {
-        alert('En az 1 adet analiz kartı bulunmalıdır!');
+        alert('En az 1 adet analiz karti bulunmalidir!');
         return;
       }
 
       const coin = coinsConfig[slotIndex];
       const coinName = coin ? coin.symbol.replace('USDT', '') : 'Bu';
 
-      if (!confirm(`${coinName} kartını silmek istediğinize emin misiniz?`)) {
+      if (!confirm(`${coinName} kartini silmek istediginize emin misiniz?`)) {
         return;
       }
 
@@ -1127,7 +1030,7 @@
         cardEl.classList.add('card-deleting');
         setTimeout(() => {
           executeRemoveCard(slotIndex);
-        }, 250);
+        }, 200);
       } else {
         executeRemoveCard(slotIndex);
       }
@@ -1162,34 +1065,34 @@
           <div class="card" id="card-${i}" style="border-top: 3px solid ${cardColor};">
             <div class="header-bar">
               <div style="display: flex; align-items: center; gap: 6px;">
-                <input type="color" class="color-picker" value="${cardColor}" id="card-color-${i}" onchange="updateCardColor(${i}, this.value)" title="Kart Vurgu Rengini Değiştir">
+                <input type="color" class="color-picker" value="${cardColor}" id="card-color-${i}" onchange="updateCardColor(${i}, this.value)" title="Kart Vurgu Rengini Degistir">
                 <input type="text" class="coin-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
               </div>
               <div style="display:flex; align-items:center; gap:6px;">
-                <span class="loader" id="loader-${i}">Yükleniyor...</span>
-                <button class="remove-card-btn" onclick="removeCard(${i})" title="Kartı Sil">✖</button>
+                <span class="loader" id="loader-${i}">YUKLENIYOR</span>
+                <button class="remove-card-btn" onclick="removeCard(${i})" title="Karti Sil">Sil</button>
               </div>
             </div>
 
             <div class="price-row">
               <span class="price" id="price-${i}">--.--</span>
-              <span style="font-size:0.62rem; color:var(--text-muted); font-family:'JetBrains Mono', monospace;" id="tf-label-${i}">${coin.interval} | RSI(${coin.rsiLength})</span>
+              <span style="font-size:10px; color:var(--text-muted);" id="tf-label-${i}">${coin.interval} | RSI(${coin.rsiLength})</span>
             </div>
 
             <div class="grid-2">
               <div class="stat-box">
-                <span class="stat-label">Anlık RSI</span>
+                <span class="stat-label">Anlik RSI</span>
                 <span class="stat-value neutral" id="rsi-${i}">--,--</span>
               </div>
               <div class="stat-box">
                 <span class="stat-label">Pozisyon</span>
-                <span class="stat-value" id="pos-${i}">Nötr</span>
+                <span class="stat-value" id="pos-${i}">Notr</span>
               </div>
             </div>
 
             <div class="position-box">
-              <div style="display: flex; justify-content: space-between; font-size: 0.65rem; font-family:'JetBrains Mono', monospace;">
-                <span>Giriş: <b id="entry-${i}">-</b></span>
+              <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                <span>Giris: <b id="entry-${i}">-</b></span>
                 <span>PnL: <b id="live-pnl-${i}">0,00%</b></span>
                 <span>Hedef: <b id="target-${i}" class="green">-</b></span>
               </div>
@@ -1201,7 +1104,7 @@
                 <span class="stat-value green" id="win-rate-${i}">0%</span>
               </div>
               <div class="stat-box">
-                <span class="stat-label">Ort. Süre</span>
+                <span class="stat-label">Ort. Sure</span>
                 <span class="stat-value" id="avg-time-${i}">-</span>
               </div>
               <div class="stat-box">
@@ -1234,7 +1137,7 @@
                 <input type="number" id="setting-sellRsi-${i}" value="${coin.sellRsi}" onchange="updateCoinSetting(${i})">
               </div>
               <div class="coin-setting-item">
-                <label>Kâr (%):</label>
+                <label>Kar (%):</label>
                 <input type="number" step="0.1" id="setting-profitTarget-${i}" value="${coin.profitTarget}" onchange="updateCoinSetting(${i})">
               </div>
               <div class="coin-setting-item">
@@ -1242,27 +1145,27 @@
                 <input type="number" step="0.5" id="setting-monthlyCap-${i}" value="${coin.monthlyCap}" onchange="updateCoinSetting(${i})">
               </div>
 
-              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">✨ Sihirbaz (En İdeal RSI'ı Bul)</button>
+              <button class="wizard-btn" onclick="runAutoOptimizer(${i})">Sihirbaz (Ideal RSI Bul)</button>
             </div>
 
             <div class="table-title" onclick="toggleAccordion('acc-monthly-${i}')">
-              <span>Aylık Performans Tablosu (${SELECTED_YEAR})</span>
-              <span>▼</span>
+              <span>Aylik Performans Tablosu (${SELECTED_YEAR})</span>
+              <span>[+]</span>
             </div>
             <div class="collapsible-content" id="acc-monthly-${i}">
               <table>
-                <thead><tr><th>Ay</th><th>İşl.</th><th>Win</th><th>Loss</th><th>Net Kâr (%)</th></tr></thead>
+                <thead><tr><th>Ay</th><th>Isl.</th><th>Win</th><th>Loss</th><th>Net Kar (%)</th></tr></thead>
                 <tbody id="table-monthly-${i}"></tbody>
               </table>
             </div>
 
             <div class="table-title">
-              <span onclick="toggleAccordion('acc-trades-${i}')">Son İşlemler Logu ▼</span>
-              <button class="csv-btn" onclick="exportTradesCSV(${i})">[CSV İndir]</button>
+              <span onclick="toggleAccordion('acc-trades-${i}')">Son Islemler Logu [+]</span>
+              <button class="csv-btn" onclick="exportTradesCSV(${i})">[CSV INDIR]</button>
             </div>
             <div class="collapsible-content" id="acc-trades-${i}">
               <table>
-                <thead><tr><th>Giriş</th><th>Çıkış</th><th>Net (%)</th><th>Neden</th></tr></thead>
+                <thead><tr><th>Giris</th><th>Cikis</th><th>Net (%)</th><th>Neden</th></tr></thead>
                 <tbody id="table-trades-${i}"></tbody>
               </table>
             </div>
@@ -1274,7 +1177,7 @@
       for (let i = 0; i < coinsConfig.length; i++) {
         if (candlesData[i] && candlesData[i].length > 0) {
           const loaderEl = document.getElementById(`loader-${i}`);
-          if (loaderEl) loaderEl.innerText = '🟢 Canlı';
+          if (loaderEl) loaderEl.innerText = 'CANLI';
           runBacktestAndRender(i);
         } else {
           loadCoinData(i);
@@ -1287,7 +1190,7 @@
       const candles = candlesData[slotIndex];
 
       if (!candles || candles.length === 0) {
-        alert('Lütfen önce coinin verilerinin yüklenmesini bekleyin!');
+        alert('Lutfen once coinin verilerinin yuklenmesini bekleyin!');
         return;
       }
 
@@ -1373,7 +1276,7 @@
       }
 
       if (!bestCandidate) {
-        alert('Bu coin ve zaman dilimi için kârlı bir RSI kombinasyonu bulunamadı.');
+        alert('Bu coin ve zaman dilimi icin karli bir RSI kombinasyonu bulunamadi.');
         return;
       }
 
@@ -1399,10 +1302,10 @@
       if (wrEl) wrEl.innerText = `%${bestCandidate.winRate}`;
 
       const lossEl = document.getElementById('opt-best-loss');
-      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayıp`;
+      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayip`;
 
       const tradesEl = document.getElementById('opt-best-trades');
-      if (tradesEl) tradesEl.innerText = `${bestCandidate.totalTrades} İşlem`;
+      if (tradesEl) tradesEl.innerText = `${bestCandidate.totalTrades} Islem`;
 
       const pnlEl = document.getElementById('opt-best-pnl');
       if (pnlEl) pnlEl.innerText = `${bestCandidate.totPnl >= 0 ? '+' : ''}${bestCandidate.totPnl.toFixed(2)}%`;
@@ -1454,7 +1357,7 @@
         const tr = document.createElement('tr');
         tr.className = alertClass;
         tr.innerHTML = `
-          <td style="text-align: left; font-family:'JetBrains Mono', monospace;"><b>${item.symbol.replace('USDT', '')}</b></td>
+          <td style="text-align: left;"><b>${item.symbol.replace('USDT', '')}</b></td>
           <td>
             <select class="select-mini" onchange="updateRadarItem(${index}, 'interval', this.value)">
               <option value="5m" ${item.interval==='5m'?'selected':''}>5m</option>
@@ -1466,14 +1369,14 @@
           <td>
             <input type="number" class="alarm-input" value="${item.rsiLength}" onchange="updateRadarItem(${index}, 'rsiLength', this.value)">
           </td>
-          <td class="${rsiClass}" style="font-family:'JetBrains Mono', monospace;"><b>${rsiDisplay}</b></td>
+          <td class="${rsiClass}"><b>${rsiDisplay}</b></td>
           <td><input type="number" class="alarm-input" value="${item.buyAlarm}" onchange="updateRadarItem(${index}, 'buyAlarm', this.value)"></td>
           <td><input type="number" class="alarm-input" value="${item.sellAlarm}" onchange="updateRadarItem(${index}, 'sellAlarm', this.value)"></td>
           <td>
-            <button class="action-btn" onclick="moveRadarCoin(${index}, -1)">▲</button>
-            <button class="action-btn" onclick="moveRadarCoin(${index}, 1)">▼</button>
+            <button class="action-btn" onclick="moveRadarCoin(${index}, -1)">Yukari</button>
+            <button class="action-btn" onclick="moveRadarCoin(${index}, 1)">Asagi</button>
           </td>
-          <td><button class="action-btn red" onclick="removeRadarCoin(${index})">✖</button></td>
+          <td><button class="action-btn red-btn" onclick="removeRadarCoin(${index})">Sil</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1497,9 +1400,9 @@
         const yClass = profitObj.yearPnl >= 0 ? 'green' : 'red';
 
         tr.innerHTML = `
-          <td style="text-align: left; font-family:'JetBrains Mono', monospace;"><b>${coin.symbol.replace('USDT', '')}</b></td>
-          <td class="${mClass}" style="font-family:'JetBrains Mono', monospace;"><b>${profitObj.monthPnl >= 0 ? '+' : ''}${formatNum(profitObj.monthPnl, 2)}%</b></td>
-          <td class="${yClass}" style="font-family:'JetBrains Mono', monospace;"><b>${profitObj.yearPnl >= 0 ? '+' : ''}${formatNum(profitObj.yearPnl, 2)}%</b></td>
+          <td style="text-align: left;"><b>${coin.symbol.replace('USDT', '')}</b></td>
+          <td class="${mClass}"><b>${profitObj.monthPnl >= 0 ? '+' : ''}${formatNum(profitObj.monthPnl, 2)}%</b></td>
+          <td class="${yClass}"><b>${profitObj.yearPnl >= 0 ? '+' : ''}${formatNum(profitObj.yearPnl, 2)}%</b></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1510,13 +1413,12 @@
 
       totalTr.innerHTML = `
         <td style="text-align: left;"><b>TOPLAM</b></td>
-        <td class="${totMClass}" style="font-family:'JetBrains Mono', monospace;"><b>${grandTotalMonth >= 0 ? '+' : ''}${formatNum(grandTotalMonth, 2)}%</b></td>
-        <td class="${totYClass}" style="font-family:'JetBrains Mono', monospace;"><b>${grandTotalYear >= 0 ? '+' : ''}${formatNum(grandTotalYear, 2)}%</b></td>
+        <td class="${totMClass}"><b>${grandTotalMonth >= 0 ? '+' : ''}${formatNum(grandTotalMonth, 2)}%</b></td>
+        <td class="${totYClass}"><b>${grandTotalYear >= 0 ? '+' : ''}${formatNum(grandTotalYear, 2)}%</b></td>
       `;
       tbody.appendChild(totalTr);
     }
 
-    /* SMART DOM UPDATING */
     function renderGlobalPositionsAndHistory() {
       const posTbody = document.getElementById('active-positions-tbody');
       const countLabel = document.getElementById('active-pos-count-label');
@@ -1524,11 +1426,11 @@
 
       const activeList = cardActivePositions.filter(p => p && p.inPosition);
 
-      if (countLabel) countLabel.innerText = `${activeList.length} Açık Pozisyon`;
+      if (countLabel) countLabel.innerText = `${activeList.length} Acik Pozisyon`;
 
       if (posTbody) {
         if (activeList.length === 0) {
-          posTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>';
+          posTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Su an acik pozisyon bulunmuyor.</td></tr>';
         } else {
           const placeholder = posTbody.querySelector('td[colspan="4"]');
           if (placeholder) posTbody.innerHTML = '';
@@ -1545,10 +1447,10 @@
             let tr = posTbody.querySelector(`tr[data-symbol="${p.symbol}"]`);
             const pnlClass = p.livePnl >= 0 ? 'green' : 'red';
             const htmlContent = `
-              <td style="text-align: left; font-family:'JetBrains Mono', monospace;"><b>${p.symbol.replace('USDT', '')}</b></td>
-              <td style="font-family:'JetBrains Mono', monospace;">${formatPrice(p.entryPrice)}</td>
-              <td class="${pnlClass}" style="font-family:'JetBrains Mono', monospace;"><b>${formatNum(p.livePnl, 2)}%</b></td>
-              <td class="green" style="font-family:'JetBrains Mono', monospace;"><b>${formatPrice(p.targetPrice)}</b></td>
+              <td style="text-align: left;"><b>${p.symbol.replace('USDT', '')}</b></td>
+              <td>${formatPrice(p.entryPrice)}</td>
+              <td class="${pnlClass}"><b>${formatNum(p.livePnl, 2)}%</b></td>
+              <td class="green"><b>${formatPrice(p.targetPrice)}</b></td>
             `;
 
             if (!tr) {
@@ -1588,7 +1490,7 @@
       if (tradesTbody) {
         tradesTbody.innerHTML = '';
         if (last10.length === 0) {
-          tradesTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz tamamlanan işlem bulunmuyor.</td></tr>';
+          tradesTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henuz tamamlanan islem bulunmuyor.</td></tr>';
         } else {
           last10.forEach(t => {
             const tr = document.createElement('tr');
@@ -1604,10 +1506,10 @@
             }
 
             tr.innerHTML = `
-              <td style="text-align: left; font-family:'JetBrains Mono', monospace;"><b style="${timeColorStyle}">${t.symbol.replace('USDT', '')}</b></td>
-              <td style="${timeColorStyle} font-family:'JetBrains Mono', monospace;">${formatPrice(t.entryPrice)}</td>
-              <td style="${timeColorStyle} font-family:'JetBrains Mono', monospace;">${formatPrice(t.exitPrice)}</td>
-              <td class="${pnlClass}" style="${timeColorStyle} font-family:'JetBrains Mono', monospace;"><b>${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</b></td>
+              <td style="text-align: left;"><b style="${timeColorStyle}">${t.symbol.replace('USDT', '')}</b></td>
+              <td style="${timeColorStyle}">${formatPrice(t.entryPrice)}</td>
+              <td style="${timeColorStyle}">${formatPrice(t.exitPrice)}</td>
+              <td class="${pnlClass}" style="${timeColorStyle}"><b>${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</b></td>
               <td style="${timeColorStyle}">${t.reason} (${dateStr})</td>
             `;
             tradesTbody.appendChild(tr);
@@ -1621,7 +1523,7 @@
       const trades = cardTradesHistory[slotIndex] || [];
 
       if (trades.length === 0) {
-        alert('İndirilecek işlem kaydı bulunamadı!');
+        alert('Indirilecek islem kaydi bulunamadi!');
         return;
       }
 
@@ -1812,7 +1714,7 @@
       if (!coin) return;
 
       const loaderEl = document.getElementById(`loader-${slotIndex}`);
-      if (loaderEl) loaderEl.innerText = 'Yükleniyor...';
+      if (loaderEl) loaderEl.innerText = 'YUKLENIYOR';
 
       const yearStart = new Date(`${SELECTED_YEAR}-01-01T00:00:00Z`).getTime();
       const yearEnd = SELECTED_YEAR === '2026' ? Date.now() : new Date(`${SELECTED_YEAR}-12-31T23:59:59Z`).getTime();
@@ -1844,7 +1746,7 @@
       }
 
       candlesData[slotIndex] = allCandles;
-      if (loaderEl) loaderEl.innerText = '🟢 Canlı';
+      if (loaderEl) loaderEl.innerText = 'CANLI';
       runBacktestAndRender(slotIndex);
     }
 
@@ -1856,7 +1758,7 @@
       const loaderEl = document.getElementById(`loader-${slotIndex}`);
 
       if (!candles || candles.length === 0) {
-        if (loaderEl) loaderEl.innerText = '⚠️ Hata / Yanlış Coin';
+        if (loaderEl) loaderEl.innerText = 'HATA';
         return;
       }
 
@@ -1902,7 +1804,7 @@
           if (c.high >= targetPrice) {
             exited = true;
             pnl = coin.profitTarget;
-            reason = `Kâr (%${coin.profitTarget})`;
+            reason = `Kar (%${coin.profitTarget})`;
           } else if (rsiVal >= coin.sellRsi) {
             exited = true;
             pnl = ((c.close - entryPrice) / entryPrice) * 100;
@@ -2003,7 +1905,7 @@
           livePnl
         };
       } else {
-        if (posEl) { posEl.innerText = 'Nötr'; posEl.className = 'stat-value neutral'; }
+        if (posEl) { posEl.innerText = 'Notr'; posEl.className = 'stat-value neutral'; }
         if (entryEl) entryEl.innerText = '-';
         if (livePnlEl) { livePnlEl.innerText = '0,00%'; livePnlEl.className = ''; }
         if (targetEl) targetEl.innerText = '-';
@@ -2032,11 +1934,11 @@
         if (mTable) {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td style="font-family:'JetBrains Mono', monospace;"><b>${mKey}</b></td>
+            <td><b>${mKey}</b></td>
             <td>${m.trades}</td>
             <td class="green">${m.win}</td>
             <td class="red">${m.loss}</td>
-            <td class="${m.pnl >= 0 ? 'green':'red'}" style="font-family:'JetBrains Mono', monospace;"><b>${m.pnl >= 0 ? '+':''}${formatNum(m.pnl, 2)}%</b></td>
+            <td class="${m.pnl >= 0 ? 'green':'red'}"><b>${m.pnl >= 0 ? '+':''}${formatNum(m.pnl, 2)}%</b></td>
           `;
           mTable.appendChild(tr);
         }
@@ -2049,7 +1951,7 @@
           <td><b>${totT}</b></td>
           <td class="green"><b>${totW}</b></td>
           <td class="red"><b>${totL}</b></td>
-          <td class="${totPnl >= 0 ? 'green':'red'}" style="font-family:'JetBrains Mono', monospace;"><b>${totPnl >= 0 ? '+':''}${formatNum(totPnl, 2)}%</b></td>
+          <td class="${totPnl >= 0 ? 'green':'red'}"><b>${totPnl >= 0 ? '+':''}${formatNum(totPnl, 2)}%</b></td>
         `;
         mTable.appendChild(totalTr);
       }
@@ -2064,9 +1966,9 @@
         trades.slice(-5).reverse().forEach(t => {
           const tr = document.createElement('tr');
           tr.innerHTML = `
-            <td style="font-family:'JetBrains Mono', monospace;">${formatPrice(t.entryPrice)}</td>
-            <td style="font-family:'JetBrains Mono', monospace;">${formatPrice(t.exitPrice)}</td>
-            <td class="${t.pnl >= 0 ? 'green':'red'}" style="font-family:'JetBrains Mono', monospace;"><b>${t.pnl >= 0 ? '+':''}${formatNum(t.pnl, 2)}%</b></td>
+            <td>${formatPrice(t.entryPrice)}</td>
+            <td>${formatPrice(t.exitPrice)}</td>
+            <td class="${t.pnl >= 0 ? 'green':'red'}"><b>${t.pnl >= 0 ? '+':''}${formatNum(t.pnl, 2)}%</b></td>
             <td>${t.reason}</td>
           `;
           tTable.appendChild(tr);
