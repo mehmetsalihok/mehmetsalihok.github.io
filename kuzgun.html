@@ -1,696 +1,577 @@
 <!DOCTYPE html>
-<html lang="tr" data-theme="oled">
+<html lang="tr" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KUZGUN • Cyber Terminal</title>
-    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUZGUN PRO • Algorithmic Cloud Trading Terminal</title>
+    <!-- Modern Web Fontları: Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 
     <style>
-        /* ==================== CSS DEĞİŞKENLERİ & MODERN THEME ==================== */
-        :root[data-theme="oled"] {
-            --bg-body: #050608;
-            --bg-surface: rgba(14, 17, 23, 0.85);
-            --bg-surface-elevated: rgba(22, 27, 34, 0.85);
-            --bg-card-sub: rgba(28, 34, 44, 0.6);
-            --border-glass: rgba(255, 255, 255, 0.08);
-            --border-glass-glow: rgba(56, 189, 248, 0.4);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --text-dark: #64748b;
+        /* ==================== 1. TEMA VE DESKTOP DEĞİŞKENLERİ ==================== */
+        :root[data-theme="dark"] {
+            --bg-base: #090d16;
+            --bg-sidebar: #0d121f;
+            --bg-panel: #111827;
+            --bg-card: #151d30;
+            --bg-card-hover: #1a243b;
+            --bg-input: #0b0f19;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(56, 189, 248, 0.4);
+            --border-active: #38bdf8;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
             --cyan: #06b6d4;
-            --cyan-glow: rgba(6, 182, 212, 0.25);
+            --cyan-glow: rgba(6, 182, 212, 0.15);
             --blue: #38bdf8;
-            --blue-glow: rgba(56, 189, 248, 0.25);
+            --blue-glow: rgba(56, 189, 248, 0.15);
             --green: #10b981;
-            --green-glow: rgba(16, 185, 129, 0.25);
+            --green-glow: rgba(16, 185, 129, 0.15);
             --red: #f43f5e;
-            --red-glow: rgba(244, 63, 94, 0.25);
-            --purple: #c084fc;
-            --purple-glow: rgba(192, 132, 252, 0.25);
-            --orange: #fb923c;
-            --orange-glow: rgba(251, 146, 60, 0.25);
-            --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7), inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+            --red-glow: rgba(244, 63, 94, 0.15);
+            --purple: #a855f7;
+            --purple-glow: rgba(168, 85, 247, 0.15);
+            --orange: #f97316;
+            --orange-glow: rgba(249, 115, 22, 0.15);
+            --shadow-panel: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
         }
 
-        :root[data-theme="dark"] {
-            --bg-body: #0f172a;
-            --bg-surface: rgba(30, 41, 59, 0.85);
-            --bg-surface-elevated: rgba(51, 65, 85, 0.85);
-            --bg-card-sub: rgba(71, 85, 105, 0.4);
-            --border-glass: rgba(255, 255, 255, 0.1);
-            --border-glass-glow: rgba(56, 189, 248, 0.4);
-            --text-main: #f1f5f9;
-            --text-muted: #cbd5e1;
-            --text-dark: #94a3b8;
+        :root[data-theme="oled"] {
+            --bg-base: #000000;
+            --bg-sidebar: #050505;
+            --bg-panel: #0a0a0c;
+            --bg-card: #101014;
+            --bg-card-hover: #16161c;
+            --bg-input: #050507;
+            --border: rgba(255, 255, 255, 0.06);
+            --border-hover: rgba(56, 189, 248, 0.4);
+            --border-active: #38bdf8;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --text-muted: #48484a;
             --cyan: #06b6d4;
             --cyan-glow: rgba(6, 182, 212, 0.2);
             --blue: #38bdf8;
             --blue-glow: rgba(56, 189, 248, 0.2);
-            --green: #10b981;
-            --green-glow: rgba(16, 185, 129, 0.2);
-            --red: #f43f5e;
-            --red-glow: rgba(244, 63, 94, 0.2);
+            --green: #22c55e;
+            --green-glow: rgba(34, 197, 94, 0.2);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.2);
             --purple: #c084fc;
             --purple-glow: rgba(192, 132, 252, 0.2);
             --orange: #fb923c;
             --orange-glow: rgba(251, 146, 60, 0.2);
-            --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            --shadow-panel: 0 10px 35px -5px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
         }
 
         :root[data-theme="light"] {
-            --bg-body: #f8fafc;
-            --bg-surface: rgba(255, 255, 255, 0.9);
-            --bg-surface-elevated: rgba(241, 245, 249, 0.9);
-            --bg-card-sub: rgba(226, 232, 240, 0.6);
-            --border-glass: rgba(0, 0, 0, 0.08);
-            --border-glass-glow: rgba(2, 132, 199, 0.3);
-            --text-main: #0f172a;
-            --text-muted: #475569;
-            --text-dark: #94a3b8;
+            --bg-base: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --bg-panel: #ffffff;
+            --bg-card: #f8fafc;
+            --bg-card-hover: #f1f5f9;
+            --bg-input: #e2e8f0;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(2, 132, 199, 0.4);
+            --border-active: #0284c7;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
             --cyan: #0891b2;
-            --cyan-glow: rgba(8, 145, 178, 0.15);
+            --cyan-glow: rgba(8, 145, 178, 0.1);
             --blue: #0284c7;
-            --blue-glow: rgba(2, 132, 199, 0.15);
+            --blue-glow: rgba(2, 132, 199, 0.1);
             --green: #059669;
-            --green-glow: rgba(5, 150, 105, 0.15);
+            --green-glow: rgba(5, 150, 105, 0.1);
             --red: #e11d48;
-            --red-glow: rgba(225, 29, 72, 0.15);
+            --red-glow: rgba(225, 29, 72, 0.1);
             --purple: #9333ea;
-            --purple-glow: rgba(147, 51, 234, 0.15);
+            --purple-glow: rgba(147, 51, 234, 0.1);
             --orange: #ea580c;
-            --orange-glow: rgba(234, 88, 12, 0.15);
-            --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            --orange-glow: rgba(234, 88, 12, 0.1);
+            --shadow-panel: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
+            background-color: var(--bg-base);
+            color: var(--text-primary);
             min-height: 100vh;
-            padding-bottom: 100px;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(at 0% 0%, rgba(56, 189, 248, 0.07) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(192, 132, 252, 0.05) 0px, transparent 50%);
-            background-attachment: fixed;
-            transition: background 0.3s ease;
+            display: flex;
+            overflow: hidden;
+            font-size: 13px;
         }
 
         .mono {
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ==================== SPLASH / INTRO SCREEN ==================== */
-        #splash-screen {
-            position: fixed;
-            inset: 0;
-            background: #020408;
-            z-index: 9999;
+        /* ==================== 2. MASAÜSTÜ SIDEBAR (SOL MENÜ) ==================== */
+        aside.sidebar {
+            width: 250px;
+            background-color: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
             display: flex;
             flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 14px;
+            flex-shrink: 0;
+            z-index: 50;
+        }
+
+        .sidebar-brand {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 28px;
-            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            gap: 12px;
+            padding: 4px 8px 20px;
+            border-bottom: 1px solid var(--border);
         }
 
-        #splash-screen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            transform: scale(1.04);
-            pointer-events: none;
-        }
-
-        .splash-glow-box {
-            position: relative;
-            width: 96px;
-            height: 96px;
-            background: rgba(15, 23, 42, 0.8);
-            border-radius: 28px;
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
+            border: 1px solid var(--border-hover);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            box-shadow: 0 0 40px rgba(56, 189, 248, 0.3), inset 0 0 20px rgba(56, 189, 248, 0.1);
-            font-size: 42px;
-            animation: pulseGlow 2.5s infinite alternate;
+            font-size: 18px;
+            box-shadow: 0 0 15px var(--blue-glow);
         }
 
-        @keyframes pulseGlow {
-            from { transform: translateY(0) scale(1); box-shadow: 0 0 30px rgba(56, 189, 248, 0.2); }
-            to { transform: translateY(-4px) scale(1.03); box-shadow: 0 0 60px rgba(56, 189, 248, 0.5); }
+        .brand-text h1 {
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            background: linear-gradient(90deg, var(--text-primary), var(--blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
-        .splash-bar-wrap {
-            width: 280px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            height: 5px;
-            overflow: hidden;
-            position: relative;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .brand-text p {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--blue);
+            letter-spacing: 1px;
         }
 
-        .splash-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #38bdf8, #818cf8, #c084fc);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.8);
-            transition: width 0.05s linear;
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-top: 20px;
         }
 
-        /* ==================== LAYOUT CONTAINER ==================== */
-        .app-container {
-            max-width: 740px;
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+            background-color: rgba(255, 255, 255, 0.04);
+        }
+
+        .nav-item.active {
+            color: var(--blue);
+            background: var(--blue-glow);
+            border-color: rgba(56, 189, 248, 0.3);
+            box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.1);
+        }
+
+        .sidebar-bottom {
+            border-top: 1px solid var(--border);
+            padding-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .api-status-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        /* ==================== 3. ANA GÖVDE VE TOPBAR ==================== */
+        main.main-viewport {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            overflow-x: hidden;
+            background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.03), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.03), transparent 40%);
+        }
+
+        header.top-ribbon {
+            background-color: var(--bg-panel);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            backdrop-filter: blur(10px);
+        }
+
+        .ribbon-kpis {
+            display: flex;
+            align-items: center;
+            gap: 28px;
+        }
+
+        .kpi-unit {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .kpi-title {
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .kpi-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .ribbon-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-pro {
+            background: linear-gradient(135deg, var(--blue), #6366f1);
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .btn-pro:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+        }
+
+        .select-terminal {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .select-terminal:hover {
+            border-color: var(--border-hover);
+        }
+
+        /* ==================== 4. İÇERİK IZGARASI (DESKTOP WORKSPACE) ==================== */
+        .workspace {
+            padding: 24px 28px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 1720px;
             margin: 0 auto;
-            padding: 14px 16px;
+            width: 100%;
         }
 
-        /* ==================== MODERN GLASSPHONE TOPBAR ==================== */
-        .glass-header {
-            background: var(--bg-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            padding: 12px 18px;
+        /* Zaman Dilimi ve Kontrol Çubuğu */
+        .controls-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 8px 16px;
+            box-shadow: var(--shadow-panel);
+        }
+
+        .timeframe-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-tf {
+            background: none;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-tf:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-card);
+        }
+
+        .btn-tf.active {
+            color: var(--blue);
+            background: var(--blue-glow);
+            border-color: rgba(56, 189, 248, 0.3);
+        }
+
+        .months-dropdown-bar {
+            display: flex;
+            gap: 4px;
+            overflow-x: auto;
+            padding-top: 6px;
+        }
+
+        .month-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            font-size: 10px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .month-btn.active {
+            background: var(--purple);
+            color: #fff;
+            border-color: var(--purple);
+        }
+
+        /* Canlı Pozisyonlar Geniş Masaüstü Paneli */
+        .panel-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 20px;
+            box-shadow: var(--shadow-panel);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .positions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 12px;
+        }
+
+        .pos-card-desktop {
+            background: var(--bg-card);
+            border: 1px solid var(--border-hover);
+            border-radius: 10px;
+            padding: 12px 16px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
         }
 
-        .header-brand {
+        .pos-card-desktop::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--blue);
+        }
+
+        .pos-pnl-pill {
+            font-size: 14px;
+            font-weight: 800;
+            padding: 6px 12px;
+            border-radius: 8px;
+        }
+
+        /* ==================== 5. ÇOK SÜTUNLU COIN STRATEJİ KARTLARI ==================== */
+        .coin-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
+            gap: 20px;
+        }
+
+        .coin-pro-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow-panel);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .coin-pro-card:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.6);
+        }
+
+        .coin-pro-card.in-pos-win {
+            border-color: rgba(16, 185, 129, 0.5) !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
+        }
+
+        .coin-pro-card.in-pos-loss {
+            border-color: rgba(244, 63, 94, 0.5) !important;
+            box-shadow: 0 0 25px rgba(244, 63, 94, 0.15);
+        }
+
+        .card-head-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .coin-identity {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .brand-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(192, 132, 252, 0.2));
-            border: 1px solid var(--border-glass-glow);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-        }
-
-        .brand-title {
-            font-size: 16px;
+        .coin-name {
+            font-size: 20px;
             font-weight: 900;
-            letter-spacing: 2px;
-            background: linear-gradient(90deg, #ffffff, var(--blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
         }
 
-        .btn-action-primary {
-            background: linear-gradient(135deg, var(--blue), #6366f1);
-            color: #ffffff;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
-            transition: all 0.2s ease;
-        }
-
-        .btn-action-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.5);
-        }
-
-        .btn-action-primary:active { transform: translateY(1px); }
-
-        .select-custom {
-            background: var(--bg-surface-elevated);
-            color: var(--text-main);
-            border: 1px solid var(--border-glass);
-            padding: 6px 10px;
-            border-radius: 10px;
-            font-size: 11px;
-            font-weight: 700;
-            outline: none;
-            cursor: pointer;
-            transition: border 0.2s;
-        }
-
-        .select-custom:hover { border-color: var(--blue); }
-
-        /* ==================== PORTFOLIO TERMINAL CARD ==================== */
-        .cyber-card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: 22px;
-            padding: 20px;
-            box-shadow: var(--card-shadow);
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .cyber-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
-        }
-
-        .portfolio-grid {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 16px;
-            align-items: flex-start;
-            margin-bottom: 16px;
-        }
-
-        .balance-label {
-            font-size: 10px;
-            font-weight: 800;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 4px;
-        }
-
-        .slot-pill {
-            font-size: 9px;
-            font-weight: 800;
-            background: rgba(56, 189, 248, 0.15);
+        .badge-interval {
+            background: var(--blue-glow);
             color: var(--blue);
-            padding: 2px 7px;
-            border-radius: 8px;
             border: 1px solid rgba(56, 189, 248, 0.3);
-        }
-
-        .balance-main {
-            font-size: 32px;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-            background: linear-gradient(180deg, #ffffff 40%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .gain-badge-box {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-
-        .usdt-gain-text {
-            font-size: 18px;
-            font-weight: 900;
-        }
-
-        .pill-cluster {
-            display: flex;
-            gap: 5px;
-        }
-
-        .neon-pill {
-            font-size: 9px;
-            font-weight: 800;
-            padding: 3px 7px;
-            border-radius: 6px;
-            border: 1px solid transparent;
-        }
-
-        /* Sinyal Bekleme Çubuğu */
-        .pending-queue-banner {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(251, 146, 60, 0.1);
-            border: 1px solid rgba(251, 146, 60, 0.3);
-            padding: 8px 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--orange);
-            margin-bottom: 14px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        /* Zaman Çubuğu */
-        .timeframe-track {
-            display: flex;
-            gap: 6px;
-            overflow-x: auto;
-            padding-bottom: 4px;
-            scrollbar-width: none;
-        }
-        .timeframe-track::-webkit-scrollbar { display: none; }
-
-        .timeframe-btn {
-            background: var(--bg-surface-elevated);
-            color: var(--text-muted);
-            border: 1px solid var(--border-glass);
-            padding: 6px 14px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .timeframe-btn:hover {
-            color: var(--text-main);
-            border-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .timeframe-btn.active {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2));
-            color: var(--blue);
-            border-color: var(--blue);
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
-        }
-
-        .months-drawer {
-            display: flex;
-            gap: 5px;
-            overflow-x: auto;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px dashed var(--border-glass);
-            scrollbar-width: none;
-        }
-        .months-drawer::-webkit-scrollbar { display: none; }
-
-        .month-chip {
-            background: var(--bg-card-sub);
-            color: var(--text-muted);
-            border: 1px solid var(--border-glass);
-            padding: 4px 10px;
-            border-radius: 8px;
             font-size: 10px;
             font-weight: 700;
-            cursor: pointer;
-            white-space: nowrap;
-            transition: all 0.2s;
-        }
-
-        .month-chip.active {
-            background: var(--purple);
-            color: #ffffff;
-            border-color: var(--purple);
-            box-shadow: 0 0 10px rgba(192, 132, 252, 0.4);
-        }
-
-        /* ==================== CANLI POZİSYONLAR & SON İŞLEMLER ==================== */
-        .section-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .section-tag {
-            font-size: 12px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .active-pos-card {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass-glow);
-            border-radius: 16px;
-            padding: 12px 16px;
-            display: grid;
-            grid-template-columns: 1fr 1fr auto;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.1);
-            animation: glowBorder 2s infinite alternate ease-in-out;
-        }
-
-        @keyframes glowBorder {
-            from { border-color: rgba(56, 189, 248, 0.2); }
-            to { border-color: rgba(56, 189, 248, 0.6); box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
-        }
-
-        .pnl-pill-large {
-            font-size: 13px;
-            font-weight: 900;
-            padding: 6px 12px;
-            border-radius: 12px;
-        }
-
-        /* Akordeon İşlemler Tablosu */
-        .accordion-btn {
-            width: 100%;
-            background: none;
-            border: none;
-            color: var(--text-main);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 0;
-            font-size: 12px;
-            font-weight: 800;
-            cursor: pointer;
-            border-top: 1px solid var(--border-glass);
-            margin-top: 10px;
-        }
-
-        .trades-list-drawer {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .trades-list-drawer.open {
-            max-height: 500px;
-            overflow-y: auto;
-            padding-top: 8px;
-        }
-
-        .trade-item-row {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            border-radius: 10px;
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 11px;
-        }
-
-        /* ==================== ANİMASYONLU COIN ANALİZ KARTLARI ==================== */
-        .cards-stream {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .coin-terminal-card {
-            background: var(--bg-surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-glass);
-            border-radius: 22px;
-            padding: 18px;
-            box-shadow: var(--card-shadow);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
-        }
-
-        .coin-terminal-card:hover {
-            border-color: rgba(255, 255, 255, 0.16);
-            transform: translateY(-2px);
-        }
-
-        .coin-terminal-card.in-pos-win {
-            border-color: rgba(16, 185, 129, 0.6) !important;
-            box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
-        }
-
-        .coin-terminal-card.in-pos-loss {
-            border-color: rgba(244, 63, 94, 0.6) !important;
-            box-shadow: 0 0 25px rgba(244, 63, 94, 0.2);
-        }
-
-        .card-top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-
-        .pair-title-box {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .pair-name {
-            font-size: 18px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-        }
-
-        .tag-tf {
-            font-size: 9px;
-            font-weight: 800;
-            padding: 2px 6px;
+            padding: 2px 8px;
             border-radius: 6px;
-            background: rgba(56, 189, 248, 0.12);
-            color: var(--blue);
-            border: 1px solid rgba(56, 189, 248, 0.2);
         }
 
-        .card-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-circle-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-        }
-
-        .btn-circle-icon:hover {
-            color: var(--text-main);
-            background: rgba(255, 255, 255, 0.1);
-            transform: scale(1.05);
-        }
-
-        .btn-expand-arrow {
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .btn-expand-arrow.open {
-            transform: rotate(180deg);
-        }
-
-        .price-hero-row {
+        .card-price-block {
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            margin-bottom: 12px;
+            background: var(--bg-card);
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
         }
 
-        .price-large {
+        .live-price-text {
             font-size: 24px;
             font-weight: 900;
             display: inline-block;
             padding: 2px 6px;
-            border-radius: 8px;
-            transition: background 0.2s ease;
+            border-radius: 6px;
+            transition: background 0.25s ease;
         }
 
         .flash-up { background: rgba(16, 185, 129, 0.3) !important; color: var(--green); }
         .flash-down { background: rgba(244, 63, 94, 0.3) !important; color: var(--red); }
 
-        .hilo-row {
+        .price-meta-hilo {
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text-muted);
+            margin-top: 4px;
             display: flex;
             gap: 8px;
-            margin-top: 4px;
-            padding-left: 6px;
         }
 
-        .badges-right-box {
-            display: flex;
-            gap: 6px;
-            align-items: center;
-        }
-
-        .rsi-badge {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            padding: 6px 10px;
+        /* RSI Spektrum Çubuğu */
+        .spectrum-bar-wrap {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
             border-radius: 10px;
-            text-align: right;
-        }
-
-        .pos-badge {
-            padding: 6px 12px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 900;
-        }
-
-        /* ==================== AKORDEON İÇERİĞİ (ANİMASYONLU GENİŞLEYEN ALAN) ==================== */
-        .card-expand-drawer {
-            max-height: 0;
-            opacity: 0;
-            overflow: hidden;
-            transition: max-height 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .card-expand-drawer.open {
-            max-height: 1400px;
-            opacity: 1;
-            padding-top: 14px;
-            border-top: 1px solid var(--border-glass);
-        }
-
-        /* Spektrum Bar */
-        .spectrum-container {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 10px 14px;
+            padding: 8px 12px;
         }
 
         .spectrum-track {
             height: 6px;
-            background: linear-gradient(90deg, #f43f5e 0%, rgba(244, 63, 94, 0.2) 30%, rgba(148, 163, 184, 0.1) 35%, rgba(148, 163, 184, 0.1) 65%, rgba(16, 185, 129, 0.2) 70%, #10b981 100%);
+            background: linear-gradient(90deg, #f43f5e 0%, rgba(244, 63, 94, 0.2) 28%, rgba(148, 163, 184, 0.1) 32%, rgba(148, 163, 184, 0.1) 68%, rgba(16, 185, 129, 0.2) 72%, #10b981 100%);
             border-radius: 4px;
             position: relative;
-            margin: 8px 0 6px;
+            margin: 6px 0 4px;
         }
 
         .spectrum-pointer {
@@ -702,645 +583,561 @@
             border-radius: 50%;
             background: #ffffff;
             border: 2px solid var(--blue);
-            box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
-            transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+            transition: left 0.2s ease;
         }
 
-        /* Sparkline Çizim Alanı */
-        .sparkline-card {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            border-radius: 14px;
-            padding: 10px 14px;
-            position: relative;
+        /* Sparkline Çizim Kutuları */
+        .charts-double-deck {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
 
-        .sparkline-meta {
+        .sparkline-box-desktop {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sparkline-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            font-size: 10px;
-            font-weight: 800;
-            margin-bottom: 6px;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text-muted);
         }
 
-        canvas.sparkline-canvas {
+        canvas.spark-canvas {
             width: 100%;
-            height: 64px;
+            height: 55px;
             display: block;
-            cursor: crosshair;
         }
 
-        /* Metrik Karoları */
-        .metrics-tri-grid {
+        /* Canlı Metrik Karoları */
+        .metrics-quad-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
         }
 
-        .metric-block {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            padding: 10px;
+        .metric-cell {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 8px 10px;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
         }
 
-        .metric-block span {
+        .metric-cell span {
             font-size: 9px;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .metric-block strong {
-            font-size: 14px;
-            font-weight: 900;
+        .metric-cell strong {
+            font-size: 13px;
+            font-weight: 800;
         }
 
-        /* Strateji Parametreleri Formu */
-        .strategy-box {
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            border-radius: 16px;
-            padding: 14px;
-            display: flex;
+        /* Akordeon ve Gelişmiş Ayarlar */
+        .card-expand-drawer {
+            display: none;
             flex-direction: column;
             gap: 12px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
         }
 
-        .stepper-row {
+        .card-expand-drawer.open {
+            display: flex;
+        }
+
+        .stepper-pro-row {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
         }
 
-        .stepper-field {
+        .stepper-group {
             display: flex;
             flex-direction: column;
             gap: 4px;
         }
 
-        .stepper-field label {
+        .stepper-group label {
             font-size: 8px;
             font-weight: 800;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .stepper-ctrl {
+        .stepper-input-box {
             display: flex;
             align-items: center;
-            background: var(--bg-card-sub);
-            border: 1px solid var(--border-glass);
-            border-radius: 8px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 6px;
             overflow: hidden;
         }
 
-        .stepper-ctrl button {
+        .stepper-input-box button {
             background: none;
             border: none;
-            color: var(--text-main);
-            padding: 6px;
-            font-weight: 900;
+            color: var(--text-primary);
+            padding: 6px 8px;
+            font-weight: 800;
             font-size: 11px;
             cursor: pointer;
-            width: 26px;
         }
 
-        .stepper-ctrl button:hover { background: rgba(255, 255, 255, 0.1); }
+        .stepper-input-box button:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
 
-        .stepper-ctrl input {
+        .stepper-input-box input {
             width: 100%;
             background: none;
             border: none;
-            color: var(--text-main);
+            color: var(--text-primary);
             text-align: center;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 700;
             outline: none;
         }
 
-        /* ==================== AYLIK PERFORMANS TABLOSU ==================== */
-        .monthly-table {
+        /* ==================== 6. VERİ TABLOLARI & LOGLAR ==================== */
+        .data-table-wrap {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.pro-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 11px;
-            margin-top: 6px;
-        }
-
-        .monthly-table th {
+            font-size: 12px;
             text-align: left;
-            padding: 6px 8px;
+        }
+
+        table.pro-table th {
+            padding: 10px 14px;
             color: var(--text-muted);
-            font-size: 9px;
-            font-weight: 800;
-            border-bottom: 1px solid var(--border-glass);
-        }
-
-        .monthly-table td {
-            padding: 6px 8px;
-            border-bottom: 1px solid var(--border-glass);
-        }
-
-        /* ==================== TAB BAR ==================== */
-        .cyber-tabbar {
-            position: fixed;
-            bottom: 14px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: calc(100% - 32px);
-            max-width: 500px;
-            background: var(--bg-surface);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            display: flex;
-            justify-content: space-around;
-            padding: 8px 12px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
-            z-index: 1000;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
             font-size: 10px;
-            font-weight: 800;
-            cursor: pointer;
-            padding: 6px 14px;
-            border-radius: 12px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            font-weight: 700;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
         }
 
-        .tab-btn:hover { color: var(--text-main); }
-
-        .tab-btn.active {
-            color: var(--blue);
-            background: rgba(56, 189, 248, 0.12);
+        table.pro-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
         }
 
-        .tab-btn span.tab-icon { font-size: 16px; }
+        table.pro-table tbody tr:hover {
+            background-color: var(--bg-card-hover);
+        }
 
-        /* ==================== ANİMASYONLU MODAL SİSTEMİ ==================== */
-        .modal-overlay {
+        /* ==================== 7. MASAÜSTÜ MODAL SİSTEMİ ==================== */
+        .modal-backdrop {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.8);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 9990;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 16px;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s ease;
         }
 
-        .modal-overlay.open {
+        .modal-backdrop.open {
             opacity: 1;
             visibility: visible;
         }
 
-        .modal-window {
-            background: var(--bg-surface);
-            border: 1px solid var(--border-glass);
-            border-radius: 24px;
+        .modal-dialog {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             width: 100%;
-            max-width: 520px;
-            max-height: 88vh;
-            overflow-y: auto;
+            max-width: 540px;
             padding: 24px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-            transform: scale(0.94) translateY(20px);
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
+            transform: scale(0.95);
+            transition: transform 0.2s ease;
         }
 
-        .modal-overlay.open .modal-window {
-            transform: scale(1) translateY(0);
+        .modal-backdrop.open .modal-dialog {
+            transform: scale(1);
         }
 
-        .modal-title-row {
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 18px;
+            margin-bottom: 20px;
         }
 
-        .input-group {
+        .form-group {
             display: flex;
             flex-direction: column;
             gap: 6px;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
         }
 
-        .input-group label {
+        .form-group label {
             font-size: 10px;
             font-weight: 800;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .cyber-input {
-            width: 100%;
-            background: var(--bg-surface-elevated);
-            border: 1px solid var(--border-glass);
-            color: var(--text-main);
+        .form-control-pro {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
             padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 800;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
             outline: none;
-            transition: border 0.2s;
+            width: 100%;
         }
 
-        .cyber-input:focus { border-color: var(--blue); }
+        .form-control-pro:focus {
+            border-color: var(--blue);
+        }
 
-        .hide-tab { display: none !important; }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+        .hide-tab {
+            display: none !important;
         }
     </style>
 </head>
 <body>
 
-    <!-- ==================== SPLASH SCREEN ==================== -->
-    <div id="splash-screen">
-        <div class="splash-glow-box">🦅</div>
-        <div style="text-align: center;">
-            <div style="font-size: 28px; font-weight: 900; letter-spacing: 4px; color: #fff;">KUZGUN</div>
-            <div class="mono" style="font-size: 11px; font-weight: 800; letter-spacing: 2px; color: var(--blue); margin-top: 4px;">DYNAMIC CLOUD TERMINAL</div>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
-            <div class="splash-bar-wrap">
-                <div class="splash-bar-fill" id="splash-fill"></div>
-            </div>
-            <div class="mono" style="font-size: 10px; color: var(--text-muted);" id="splash-status-text">Binance Veri Hattı Başlatılıyor...</div>
-        </div>
-    </div>
-
-    <!-- ==================== MAIN APP ==================== -->
-    <div class="app-container">
-
-        <!-- HEADER -->
-        <header class="glass-header">
-            <div class="header-brand">
-                <div class="brand-icon">🦅</div>
-                <div>
-                    <div class="brand-title">KUZGUN</div>
-                    <div class="mono" style="font-size: 8px; font-weight: 800; color: var(--blue); letter-spacing: 1px;">WEB TERMINAL v1.5</div>
+    <!-- ==================== SOL MASAÜSTÜ SIDEBAR ==================== -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-brand">
+                <div class="brand-logo">🦅</div>
+                <div class="brand-text">
+                    <h1>KUZGUN PRO</h1>
+                    <p class="mono">CLOUD TERMINAL</p>
                 </div>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-                <select class="select-custom" id="theme-selector" onchange="App.setTheme(this.value)">
-                    <option value="oled">OLED Siyah</option>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" onclick="App.switchTab('terminal', this)">
+                    <span>⚡</span> <span>Dashboard Terminal</span>
+                </button>
+                <button class="nav-item" onclick="App.switchTab('trades', this)">
+                    <span>📜</span> <span>İşlem Defteri</span>
+                </button>
+                <button class="nav-item" onclick="App.switchTab('alarms', this)">
+                    <span>🔔</span> <span>Alarmlar & Bot</span>
+                </button>
+                <button class="nav-item" onclick="App.switchTab('settings', this)">
+                    <span>⚙️</span> <span>Sistem Ayarları</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="sidebar-bottom">
+            <div class="api-status-card">
+                <div>
+                    <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">BAĞLANTI DURUMU</div>
+                    <div style="font-size: 11px; font-weight: 800; margin-top: 2px;">
+                        <span class="status-dot"></span>Binance Canlı Hat
+                    </div>
+                </div>
+                <span class="mono" style="font-size: 10px; color: var(--green);">24ms</span>
+            </div>
+
+            <div style="font-size: 10px; color: var(--text-muted); text-align: center;" class="mono">
+                codemso by mehmetsalihok[cite: 21]
+            </div>
+        </div>
+    </aside>
+
+    <!-- ==================== SAĞ GENİŞ EKRAN GÖVDESİ ==================== -->
+    <main class="main-viewport">
+
+        <!-- ÜST KPI VE KONTROL ŞERİDİ -->
+        <header class="top-ribbon">
+            <div class="ribbon-kpis">
+                <div class="kpi-unit">
+                    <span class="kpi-title">Bileşik Portföy Sermayesi</span>
+                    <span class="kpi-val mono" id="top-total-balance">$1000.00 USDT</span>
+                </div>
+                <div style="width: 1px; height: 28px; background: var(--border);"></div>
+                <div class="kpi-unit">
+                    <span class="kpi-title">Eşzamanlı Slotlar</span>
+                    <span class="kpi-val mono" id="top-slots-badge" style="color: var(--blue);">0 / 2 Pozisyon</span>
+                </div>
+                <div style="width: 1px; height: 28px; background: var(--border);"></div>
+                <div class="kpi-unit">
+                    <span class="kpi-title" id="kpi-timeframe-label">Bugün Net Kâr / Zarar</span>
+                    <span class="kpi-val mono" id="top-net-gain" style="color: var(--green);">+$0.00 USDT (+0.00%)</span>
+                </div>
+            </div>
+
+            <div class="ribbon-actions">
+                <select class="select-terminal" id="theme-selector" onchange="App.setTheme(this.value)">
                     <option value="dark">Karanlık Mod</option>
+                    <option value="oled">OLED Siyah</option>
                     <option value="light">Aydınlık Mod</option>
                 </select>
-                <select class="select-custom mono" id="year-selector" onchange="App.setYear(this.value)">
+                <select class="select-terminal mono" id="year-selector" onchange="App.setYear(this.value)">
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
                 </select>
-                <button class="btn-action-primary" onclick="ModalManager.open('add-coin')">
-                    <span>➕</span> Ekle
+                <button class="btn-pro" onclick="ModalManager.open('add-coin')">
+                    <span>➕</span> Yeni Parite Ekle
                 </button>
             </div>
         </header>
 
-        <!-- ==================== SEKME 1: TERMINAL ==================== -->
-        <main id="tab-terminal">
-            
-            <!-- BİLEŞİK PORTFÖY HERO KARTI -->
-            <section class="cyber-card">
-                <div class="portfolio-grid">
-                    <div>
-                        <div class="balance-label">
-                            <span>BİLEŞİK SERMAYE</span>
-                            <span class="slot-pill mono" id="portfolio-slots-badge">0/2 SLOT</span>
-                        </div>
-                        <div class="balance-main mono" id="total-compounded-balance">$1000.00</div>
-                    </div>
-                    <div class="gain-badge-box">
-                        <span style="font-size: 10px; font-weight: 800; color: var(--text-muted);" id="timeframe-label-gain">Bugün Net Kazanç</span>
-                        <div class="usdt-gain-text mono" id="timeframe-usdt-gain" style="color: var(--green);">+$0.00</div>
-                        <div class="pill-cluster">
-                            <span class="neon-pill mono" id="timeframe-netpnl-badge" style="background: rgba(16, 185, 129, 0.15); color: var(--green);">Net: +0.00%</span>
-                            <span class="neon-pill mono" id="timeframe-initpnl-badge" style="background: rgba(56, 189, 248, 0.15); color: var(--blue);">Kasa: +0.00%</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- ÇALIŞMA ALANI (WORKSPACE) -->
+        <div class="workspace">
 
-                <!-- Bekleyen İskontolu Sinyal Rozeti -->
-                <div class="pending-queue-banner mono" id="pending-signals-bar" style="display: none;">
-                    <span>⏳</span> Bekleme Listesinde <span id="pending-count">0</span> Sinyal Var: <strong id="pending-coins-list" style="color: #fff;"></strong>
-                </div>
-
-                <!-- Zaman Dilimi Çubuğu -->
-                <div class="timeframe-track">
-                    <button class="timeframe-btn active" onclick="App.setTimeframe('today', this)">Bugün</button>
-                    <button class="timeframe-btn" onclick="App.setTimeframe('week', this)">Bu Hafta</button>
-                    <button class="timeframe-btn" onclick="App.setTimeframe('month', this)">Bu Ay</button>
-                    <button class="timeframe-btn" onclick="App.setTimeframe('selectMonth', this)">Ay Seç</button>
-                    <button class="timeframe-btn" onclick="ModalManager.open('custom-range')">Özel Aralık</button>
-                </div>
-
-                <div class="months-drawer" id="months-selection-bar" style="display: none;">
-                    <!-- 12 Ay Butonları -->
-                </div>
-            </section>
-
-            <!-- AÇIK POZİSYONLAR VE İŞLEM GEÇMİŞİ -->
-            <section class="cyber-card">
-                <div class="section-header-row">
-                    <div class="section-tag" style="color: var(--blue);">
-                        <span>⚡</span> Canlı Açık Pozisyonlar
-                    </div>
-                    <span class="slot-pill mono" id="active-positions-count-badge">0 Aktif</span>
-                </div>
-
-                <div id="active-positions-container">
-                    <div style="text-align: center; padding: 12px; font-size: 11px; color: var(--text-muted);">
-                        Şu an açık pozisyon bulunmuyor.
-                    </div>
-                </div>
-
-                <!-- Son İşlemler Akordeon -->
-                <button class="accordion-btn" onclick="App.toggleRecentTrades()">
-                    <span class="section-tag"><span>🕒</span> Son Tamamlanan İşlemler</span>
-                    <span class="mono" style="font-size: 10px; color: var(--text-muted);" id="trades-count-label">0 İşlem ▼</span>
-                </button>
-                <div class="trades-list-drawer" id="recent-trades-drawer"></div>
-            </section>
-
-            <!-- COIN ANALİZ KARTLARI LİSTESİ -->
-            <section class="cards-stream" id="coin-cards-container">
-                <!-- Dinamik Kartlar -->
-            </section>
-        </main>
-
-        <!-- ==================== SEKME 2: ALARMLAR ==================== -->
-        <main id="tab-alarms" class="hide-tab">
-            <section class="cyber-card">
-                <div class="section-header-row">
-                    <div class="section-tag"><span>🔔</span> COIN RSI ALARMLARI</div>
-                    <button class="btn-action-primary" style="padding: 5px 10px; font-size: 10px;" onclick="ModalManager.open('custom-alarm')">
-                        + Özel Alarm
-                    </button>
-                </div>
-                <div id="alarms-coin-list" style="display: flex; flex-direction: column; gap: 8px;"></div>
-            </section>
-
-            <section class="cyber-card">
-                <div class="section-tag" style="margin-bottom: 14px;"><span>⚙️</span> BİLDİRİM & KANALLAR</div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 12px; font-weight: 800;">Alım Sinyali Bildirimleri</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">RSI dip kırılımında Telegram + Ses</div>
-                        </div>
-                        <input type="checkbox" id="notif-buy-toggle" checked onchange="Storage.set('notif_buy', this.checked)">
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 12px; font-weight: 800;">Satım / Kâr Bildirimleri</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">Hedef veya RSI tepede bildirim ilet</div>
-                        </div>
-                        <input type="checkbox" id="notif-sell-toggle" checked onchange="Storage.set('notif_sell', this.checked)">
-                    </div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 12px; font-weight: 800;">Sistem Ses Efektleri</div>
-                            <div style="font-size: 10px; color: var(--text-muted);">Web Audio sinyal synthesizer</div>
-                        </div>
-                        <input type="checkbox" id="notif-sound-toggle" checked onchange="Storage.set('notif_sound', this.checked)">
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- ==================== SEKME 3: AYARLAR ==================== -->
-        <main id="tab-settings" class="hide-tab">
-            <section class="cyber-card">
-                <div class="section-tag" style="margin-bottom: 14px;"><span>💰</span> SERMAYE VE ZAMAN YÖNETİMİ</div>
+            <!-- ==================== SEKME 1: DASHBOARD TERMINAL ==================== -->
+            <div id="tab-terminal">
                 
-                <div class="input-group">
-                    <label>BAŞLANGIÇ SERMAYESİ (USDT)</label>
-                    <input type="number" step="0.01" class="cyber-input mono" id="setting-balance-input" value="1000.00" onchange="App.updateBalance(this.value)">
-                </div>
+                <!-- ZAMAN DİLİMİ VE FİLTRE ÇUBUĞU -->
+                <div class="controls-toolbar" style="margin-bottom: 20px;">
+                    <div class="timeframe-group">
+                        <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); margin-right: 6px;">PORTFÖY PERİYODU:</span>
+                        <button class="btn-tf active" onclick="App.setTimeframe('today', this)">Bugün</button>
+                        <button class="btn-tf" onclick="App.setTimeframe('week', this)">Bu Hafta</button>
+                        <button class="btn-tf" onclick="App.setTimeframe('month', this)">Bu Ay</button>
+                        <button class="btn-tf" onclick="App.setTimeframe('selectMonth', this)">Ay Seç</button>
+                        <button class="btn-tf" onclick="ModalManager.open('custom-range')">Özel Tarih Aralığı</button>
+                    </div>
 
-                <div class="input-group">
-                    <label>EŞZAMANLI SLOT LİMİTİ</label>
-                    <input type="number" min="1" max="5" class="cyber-input mono" id="setting-slots-input" value="2" onchange="App.updateSlots(this.value)">
-                </div>
-
-                <div class="input-group">
-                    <label>SERMAYE BAŞLANGIÇ ZAMANI</label>
-                    <input type="datetime-local" class="cyber-input mono" id="setting-start-time" onchange="App.updateStartTime(this.value)">
-                    <div style="display: flex; gap: 4px; overflow-x: auto; margin-top: 6px;">
-                        <button class="timeframe-btn" onclick="App.setQuickDate('now')">Şimdi</button>
-                        <button class="timeframe-btn" onclick="App.setQuickDate('today')">Bugün 00:00</button>
-                        <button class="timeframe-btn" onclick="App.setQuickDate('24h')">24s Önce</button>
-                        <button class="timeframe-btn" onclick="App.setQuickDate('3d')">3 Gün Önce</button>
-                        <button class="timeframe-btn" onclick="App.setQuickDate('yearStart')">Yıl Başı</button>
+                    <div id="months-bar-container" style="display: none;">
+                        <div class="months-dropdown-bar" id="months-selection-bar"></div>
                     </div>
                 </div>
-            </section>
 
-            <section class="cyber-card">
-                <div class="section-tag" style="margin-bottom: 14px;"><span>✈️</span> TELEGRAM SİNYAL BOTU</div>
-                <div class="input-group">
-                    <label>TELEGRAM CHAT ID</label>
-                    <input type="text" class="cyber-input mono" id="setting-telegram-chatid" value="1059064615" onchange="Storage.set('telegram_chat_id', this.value)">
+                <!-- BEKLEMEDEKİ SİNYALLER BİLGİ ŞERİDİ -->
+                <div id="pending-banner" style="display: none; background: var(--orange-glow); border: 1px solid rgba(249, 115, 22, 0.3); padding: 10px 16px; border-radius: 10px; margin-bottom: 20px; align-items: center; justify-content: space-between;">
+                    <div style="color: var(--orange); font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 8px;">
+                        <span>⏳</span> Slotlar Dolu Olduğu İçin Bekleme Kuyruğunda Olan İskontolu Sinyaller:
+                        <strong id="pending-coins-text" style="color: #fff;" class="mono"></strong>
+                    </div>
+                    <span class="mono" style="font-size: 11px; font-weight: 800; color: var(--orange);">Kuyruk Aktif</span>
                 </div>
-            </section>
 
-            <section class="cyber-card">
-                <div class="section-tag" style="margin-bottom: 10px;"><span>ℹ️</span> SİSTEM BİLGİSİ</div>
-                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 6px;">
-                    <span style="color: var(--text-muted);">Terminal:</span>
-                    <strong class="mono">v1.5.0 Cyber Engine</strong>
+                <!-- AÇIK POZİSYONLAR BÖLÜMÜ -->
+                <div class="panel-box" style="margin-bottom: 20px;">
+                    <div class="panel-header">
+                        <div class="panel-title" style="color: var(--blue);">
+                            <span>⚡</span> CANLI AÇIK POZİSYONLAR
+                        </div>
+                        <span class="mono" style="font-size: 11px; font-weight: 700; color: var(--text-muted);" id="active-count-label">0 Pozisyon</span>
+                    </div>
+                    <div class="positions-grid" id="active-positions-container">
+                        <div style="padding: 12px; color: var(--text-muted); font-size: 12px;">Şu an açık pozisyon bulunmuyor.</div>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; font-size: 11px;">
-                    <span style="color: var(--text-muted);">Geliştirici İmzası:</span>
-                    <strong class="mono" style="color: var(--blue);">codemso by mehmetsalihok</strong>
+
+                <!-- COIN STRATEJİ ANALİZ KARTLARI (ÇOKLU SÜTUN) -->
+                <div class="coin-cards-grid" id="coin-cards-grid">
+                    <!-- Dinamik Parite Kartları -->
                 </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- ==================== FLOATING TAB BAR ==================== -->
-    <nav class="cyber-tabbar">
-        <button class="tab-btn active" onclick="App.switchTab('terminal', this)">
-            <span class="tab-icon">⚡</span>
-            <span>Terminal</span>
-        </button>
-        <button class="tab-btn" onclick="App.switchTab('alarms', this)">
-            <span class="tab-icon">🔔</span>
-            <span>Alarmlar</span>
-        </button>
-        <button class="tab-btn" onclick="App.switchTab('settings', this)">
-            <span class="tab-icon">⚙️</span>
-            <span>Ayarlar</span>
-        </button>
-    </nav>
-
-    <!-- ==================== MODAL: COIN EKLE ==================== -->
-    <div class="modal-overlay" id="modal-add-coin">
-        <div class="modal-window">
-            <div class="modal-title-row">
-                <div style="font-size: 16px; font-weight: 900;">Yeni Parite Ekle</div>
-                <button class="btn-circle-icon" onclick="ModalManager.close('add-coin')">✕</button>
             </div>
 
-            <div class="input-group">
-                <label>COIN / PARİTE (USDT)</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="add-symbol-val" class="cyber-input mono" placeholder="Örn: FLOKI, ASTER, BTC" style="text-transform: uppercase;">
-                    <button class="btn-action-primary" onclick="App.verifyBinanceSymbol()">Onayla</button>
+            <!-- ==================== SEKME 2: İŞLEM DEFTERİ & ANALİTİK ==================== -->
+            <div id="tab-trades" class="hide-tab">
+                <div class="panel-box">
+                    <div class="panel-header">
+                        <div class="panel-title"><span>📜</span> TAMAMLANAN TÜM İŞLEMLER VE SİNYAL LOGLARI</div>
+                    </div>
+                    <div class="data-table-wrap">
+                        <table class="pro-table">
+                            <thead>
+                                <tr>
+                                    <th>Parite</th>
+                                    <th>Sinyal / Neden</th>
+                                    <th>Giriş Fiyatı</th>
+                                    <th>Çıkış Fiyatı</th>
+                                    <th>PnL (%)</th>
+                                    <th>Kazanç (USDT)</th>
+                                    <th>Kapanış Zamanı</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trades-table-body">
+                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Henüz işlem kaydı yok.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-                <div id="add-verify-status" style="font-size: 11px; margin-top: 4px;"></div>
+            </div>
+
+            <!-- ==================== SEKME 3: ALARMLAR & BOT ==================== -->
+            <div id="tab-alarms" class="hide-tab">
+                <div class="panel-box" style="margin-bottom: 20px;">
+                    <div class="panel-header">
+                        <div class="panel-title"><span>🔔</span> PARİTE BAZLI CANLI RSI ALARM LİSTESİ</div>
+                    </div>
+                    <div id="alarms-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                </div>
+
+                <div class="panel-box">
+                    <div class="panel-header">
+                        <div class="panel-title"><span>✈️</span> TELEGRAM BİLDİRİM VE SİNYAL BOTU</div>
+                    </div>
+                    <div style="max-width: 600px; display: flex; flex-direction: column; gap: 14px;">
+                        <div class="form-group">
+                            <label>Telegram Chat ID</label>
+                            <input type="text" class="form-control-pro mono" id="setting-telegram-chatid" value="1059064615" onchange="Storage.set('telegram_chat_id', this.value)">[cite: 21]
+                        </div>
+                        <button class="btn-pro" style="align-self: flex-start;" onclick="App.testTelegram()">
+                            Test Bildirimi Gönder
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ==================== SEKME 4: SİSTEM AYARLARI ==================== -->
+            <div id="tab-settings" class="hide-tab">
+                <div class="panel-box" style="max-width: 700px;">
+                    <div class="panel-header">
+                        <div class="panel-title"><span>💰</span> SERMAYE VE KASA YÖNETİMİ</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>BAŞLANGIÇ SERMAYESİ (USDT)</label>
+                        <input type="number" step="0.01" class="form-control-pro mono" id="setting-balance-input" value="1000.00" onchange="App.updateBalance(this.value)">[cite: 21]
+                    </div>
+
+                    <div class="form-group">
+                        <label>EŞZAMANLI SLOT LİMİTİ (MAKSİMUM AÇIK POZİSYON)</label>
+                        <input type="number" min="1" max="5" class="form-control-pro mono" id="setting-slots-input" value="2" onchange="App.updateSlots(this.value)">[cite: 21]
+                    </div>
+
+                    <div class="form-group">
+                        <label>SERMAYE BAŞLANGIÇ TARİHİ</label>
+                        <input type="datetime-local" class="form-control-pro mono" id="setting-start-time" onchange="App.updateStartTime(this.value)">
+                        <div style="display: flex; gap: 6px; margin-top: 8px;">
+                            <button class="btn-tf" onclick="App.setQuickDate('now')">Şimdi</button>[cite: 21]
+                            <button class="btn-tf" onclick="App.setQuickDate('today')">Bugün 00:00</button>[cite: 21]
+                            <button class="btn-tf" onclick="App.setQuickDate('24h')">24s Önce</button>[cite: 21]
+                            <button class="btn-tf" onclick="App.setQuickDate('3d')">3 Gün Önce</button>[cite: 21]
+                            <button class="btn-tf" onclick="App.setQuickDate('yearStart')">Yıl Başı</button>[cite: 21]
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ==================== MODAL: YENİ PARİTE EKLE ==================== -->
+    <div class="modal-backdrop" id="modal-add-coin">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 style="font-size: 16px; font-weight: 800;">Yeni Parite & Strateji Ekle</h3>
+                <button onclick="ModalManager.close('add-coin')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px;">✕</button>
+            </div>
+
+            <div class="form-group">
+                <label>Coin / Sembol (Binance USDT Çifti)</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="add-symbol-input" class="form-control-pro mono" placeholder="Örn: FLOKI, ASTER, ETH" style="text-transform: uppercase;">
+                    <button class="btn-pro" onclick="App.verifyBinanceSymbol()">Doğrula</button>
+                </div>
+                <div id="verify-status" style="font-size: 11px; margin-top: 4px;"></div>
             </div>
 
             <div id="add-coin-form-body" style="display: none;">
-                <div class="input-group">
-                    <label>ZAMAN DİLİMİ</label>
-                    <select class="cyber-input mono" id="add-interval-val">
-                        <option value="5m">5m</option>
-                        <option value="15m" selected>15m</option>
-                        <option value="30m">30m</option>
-                        <option value="1h">1h</option>
-                        <option value="4h">4h</option>
+                <div class="form-group">
+                    <label>Zaman Dilimi</label>
+                    <select class="form-control-pro mono" id="add-interval-input">
+                        <option value="5m">5 Dakika (5m)</option>
+                        <option value="15m" selected>15 Dakika (15m)</option>
+                        <option value="30m">30 Dakika (30m)</option>
+                        <option value="1h">1 Saat (1h)</option>
+                        <option value="4h">4 Saat (4h)</option>
                     </select>
                 </div>
 
-                <div class="stepper-row" style="margin-bottom: 12px;">
-                    <div class="stepper-field">
-                        <label>RSI PERİYOT</label>
-                        <input type="number" id="add-rsi-length" class="cyber-input mono" value="14">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                    <div class="form-group">
+                        <label>RSI Periyot</label>
+                        <input type="number" id="add-rsi-length" class="form-control-pro mono" value="14">
                     </div>
-                    <div class="stepper-field">
-                        <label>RSI AL</label>
-                        <input type="number" id="add-buy-rsi" class="cyber-input mono" value="25">
+                    <div class="form-group">
+                        <label>RSI Al Limit</label>
+                        <input type="number" id="add-buy-rsi" class="form-control-pro mono" value="25">
                     </div>
-                    <div class="stepper-field">
-                        <label>RSI SAT</label>
-                        <input type="number" id="add-sell-rsi" class="cyber-input mono" value="75">
-                    </div>
-                </div>
-
-                <div class="stepper-row" style="margin-bottom: 16px;">
-                    <div class="stepper-field">
-                        <label>HEDEF KÂR (%)</label>
-                        <input type="number" step="0.5" id="add-profit-target" class="cyber-input mono" value="4.0">
-                    </div>
-                    <div class="stepper-field">
-                        <label>AYLIK KİLİT (%)</label>
-                        <input type="number" step="0.5" id="add-monthly-cap" class="cyber-input mono" value="3.0">
+                    <div class="form-group">
+                        <label>RSI Sat Limit</label>
+                        <input type="number" id="add-sell-rsi" class="form-control-pro mono" value="75">
                     </div>
                 </div>
 
-                <button class="btn-action-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="App.saveNewCoinCard()">
-                    Kartı Ekle ve Yayına Al
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+                    <div class="form-group">
+                        <label>Hedef Kâr (%)</label>
+                        <input type="number" step="0.5" id="add-profit-target" class="form-control-pro mono" value="4.0">
+                    </div>
+                    <div class="form-group">
+                        <label>Aylık Kilit (%)</label>
+                        <input type="number" step="0.5" id="add-monthly-cap" class="form-control-pro mono" value="3.0">
+                    </div>
+                </div>
+
+                <button class="btn-pro" style="width: 100%; justify-content: center; padding: 12px;" onclick="App.saveNewCoinCard()">
+                    Pariteyi Terminale Ekle
                 </button>
             </div>
         </div>
     </div>
 
     <!-- ==================== MODAL: STRATEJİ SİHİRBAZI ==================== -->
-    <div class="modal-overlay" id="modal-optimizer">
-        <div class="modal-window">
-            <div class="modal-title-row">
-                <div style="font-size: 16px; font-weight: 900;">STRATEJİ SİHİRBAZI</div>
-                <button class="btn-circle-icon" onclick="ModalManager.close('optimizer')">✕</button>
+    <div class="modal-backdrop" id="modal-optimizer">
+        <div class="modal-dialog" style="max-width: 580px;">
+            <div class="modal-header">
+                <h3 style="font-size: 16px; font-weight: 800;">STRATEJİ SİHİRBAZI OPTİMİZASYONU</h3>
+                <button onclick="ModalManager.close('optimizer')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px;">✕</button>
             </div>
             <div id="optimizer-render-box"></div>
         </div>
     </div>
 
-    <!-- ==================== MODAL: MALİYET REVİZE ==================== -->
-    <div class="modal-overlay" id="modal-edit-entry">
-        <div class="modal-window">
-            <div class="modal-title-row">
-                <div style="font-size: 16px; font-weight: 900;">Gerçekleşen Alım Fiyatı</div>
-                <button class="btn-circle-icon" onclick="ModalManager.close('edit-entry')">✕</button>
+    <!-- ==================== MODAL: MANUEL MALİYET REVİZE ==================== -->
+    <div class="modal-backdrop" id="modal-edit-entry">
+        <div class="modal-dialog" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 style="font-size: 16px; font-weight: 800;">Maliyet Fiyatını Revize Et</h3>
+                <button onclick="ModalManager.close('edit-entry')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px;">✕</button>
             </div>
-            <div class="input-group">
-                <label>FİYAT ($)</label>
-                <input type="number" step="0.00000001" id="manual-entry-input" class="cyber-input mono" placeholder="Örn: 0.1234">
+            <div class="form-group">
+                <label>Gerçekleşen Giriş Fiyatı ($)</label>
+                <input type="number" step="0.00000001" id="manual-entry-input" class="form-control-pro mono" placeholder="0.00">
             </div>
-            <button class="btn-action-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="App.saveManualEntryPrice()">
-                Fiyatı Güncelle ve Hesapla
+            <button class="btn-pro" style="width: 100%; justify-content: center; padding: 10px;" onclick="App.saveManualEntryPrice()">
+                Fiyatı Güncelle
             </button>
         </div>
     </div>
 
-    <!-- ==================== MODAL: ÖZEL TARİH ARALIĞI ==================== -->
-    <div class="modal-overlay" id="modal-custom-range">
-        <div class="modal-window">
-            <div class="modal-title-row">
-                <div style="font-size: 16px; font-weight: 900;">Özel Tarih Aralığı</div>
-                <button class="btn-circle-icon" onclick="ModalManager.close('custom-range')">✕</button>
-            </div>
-            <div class="input-group">
-                <label>BAŞLANGIÇ TARİHİ</label>
-                <input type="date" id="custom-start-date" class="cyber-input mono">
-            </div>
-            <div class="input-group">
-                <label>BİTİŞ TARİHİ</label>
-                <input type="date" id="custom-end-date" class="cyber-input mono">
-            </div>
-            <button class="btn-action-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="App.applyCustomRange()">
-                Uygula ve Hesapla
-            </button>
-        </div>
-    </div>
-
-    <!-- ==================== MODAL: ÖZEL ALARM ==================== -->
-    <div class="modal-overlay" id="modal-custom-alarm">
-        <div class="modal-window">
-            <div class="modal-title-row">
-                <div style="font-size: 16px; font-weight: 900;">Özel Alarm Kur</div>
-                <button class="btn-circle-icon" onclick="ModalManager.close('custom-alarm')">✕</button>
-            </div>
-            <div class="input-group">
-                <label>COIN SEÇİMİ</label>
-                <select class="cyber-input mono" id="alarm-coin-select"></select>
-            </div>
-            <div class="input-group">
-                <label>ALARM TİPİ</label>
-                <select class="cyber-input" id="alarm-type-select">
-                    <option value="rsiBuy">RSI Alım Dipten Kırılım</option>
-                    <option value="rsiSell">RSI Satım Tepeden Kırılım</option>
-                    <option value="priceTarget">Hedef Fiyat Ulaşımı</option>
-                </select>
-            </div>
-            <div class="input-group">
-                <label>TETİKLENME SEVİYESİ</label>
-                <input type="number" step="0.01" class="cyber-input mono" id="alarm-target-val" placeholder="Örn: 25.0 veya 0.612">
-            </div>
-            <button class="btn-action-primary" style="width: 100%; justify-content: center; padding: 12px;" onclick="App.saveCustomAlarm()">
-                Alarmı Kaydet
-            </button>
-        </div>
-    </div>
-
-    <!-- ==================== JAVASCRIPT ENGINE ==================== -->
+    <!-- ==================== JAVASCRIPT ÇEKİRDEK MOTORU ==================== -->
     <script>
-        /* ==================== 1. STORAGE & CLOUD SYNC ==================== */
+        /* ==================== 1. STORAGE ==================== */
         const Storage = {
-            prefix: 'kuzgun_cyber_',
+            prefix: 'kuzgun_desktop_',
             get(key, fallback) {
                 const item = localStorage.getItem(this.prefix + key);
                 if (!item) return fallback;
@@ -1351,39 +1148,37 @@
             }
         };
 
-        /* ==================== 2. WEB AUDIO SYNTHESIZER ==================== */
-        const AudioFX = {
+        /* ==================== 2. WEB AUDIO SES SENTEZLEYİCİ ==================== */
+        const SoundEngine = {
             ctx: null,
             init() {
                 if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
             },
             playBuy() {
-                if (!Storage.get('notif_sound', true)) return;
                 this.init();
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, t); // C5
-                osc.frequency.exponentialRampToValueAtTime(1046.50, t + 0.2); // C6
-                gain.gain.setValueAtTime(0.2, t);
-                gain.gain.linearRampToValueAtTime(0, t + 0.35);
+                osc.frequency.setValueAtTime(523.25, t);
+                osc.frequency.exponentialRampToValueAtTime(1046.50, t + 0.15);
+                gain.gain.setValueAtTime(0.15, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.3);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(t); osc.stop(t + 0.35);
+                osc.start(t); osc.stop(t + 0.3);
             },
             playSell() {
-                if (!Storage.get('notif_sound', true)) return;
                 this.init();
                 const t = this.ctx.currentTime;
                 const osc = this.ctx.createOscillator();
                 const gain = this.ctx.createGain();
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(880, t);
-                osc.frequency.exponentialRampToValueAtTime(440, t + 0.25);
-                gain.gain.setValueAtTime(0.2, t);
-                gain.gain.linearRampToValueAtTime(0, t + 0.4);
+                osc.frequency.exponentialRampToValueAtTime(440, t + 0.2);
+                gain.gain.setValueAtTime(0.15, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.35);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(t); osc.stop(t + 0.4);
+                osc.start(t); osc.stop(t + 0.35);
             }
         };
 
@@ -1454,7 +1249,7 @@
             }
         };
 
-        /* ==================== 5. ANA UYGULAMA STATE & ENGINE ==================== */
+        /* ==================== 5. ANA TERMINAL ENGINE ==================== */
         const App = {
             configs: [],
             candlesData: {},
@@ -1470,7 +1265,7 @@
             livePnLs: {},
             activePositions: [],
             pendingSignals: [],
-            tradesHistory: {},
+            globalTrades: [],
             
             selectedYear: "2026",
             selectedTimeframe: "today",
@@ -1484,8 +1279,8 @@
 
             async init() {
                 this.configs = Storage.get('configs', [
-                    { id: '1', symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5, secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 15, secondarySellRsi: 85, isNotificationEnabled: true },
-                    { id: '2', symbol: 'BTCUSDT', interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0, secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 20, secondarySellRsi: 80, isNotificationEnabled: true }
+                    { id: '1', symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5, secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 15, secondarySellRsi: 85, isNotificationEnabled: true },[cite: 25]
+                    { id: '2', symbol: 'BTCUSDT', interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0, secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 20, secondarySellRsi: 80, isNotificationEnabled: true }[cite: 25]
                 ]);
 
                 this.userBalance = parseFloat(Storage.get('user_balance', 1000.0));
@@ -1494,31 +1289,15 @@
 
                 document.getElementById('setting-balance-input').value = this.userBalance.toFixed(2);
                 document.getElementById('setting-slots-input').value = this.maxSlots;
+
                 this.renderMonthsBar();
 
-                await this.runSplashSequence();
-                setInterval(() => this.liveTickerLoop(), 1200);
-            },
-
-            async runSplashSequence() {
-                const fill = document.getElementById('splash-fill');
-                const status = document.getElementById('splash-status-text');
-
-                fill.style.width = '30%';
-                status.innerText = 'Binance Verileri Çekiliyor...';
-                
                 for (let config of this.configs) {
                     await this.loadCandles(config);
                 }
 
-                fill.style.width = '75%';
-                status.innerText = 'Portföy & Çift RSI Motoru Hazırlanıyor...';
                 this.runUnifiedPortfolioEngine();
-
-                fill.style.width = '100%';
-                status.innerText = 'Cyber Terminal Aktif!';
-                await new Promise(r => setTimeout(r, 400));
-                document.getElementById('splash-screen').classList.add('hidden');
+                setInterval(() => this.liveTickerLoop(), 1200);
             },
 
             async loadCandles(config) {
@@ -1542,6 +1321,7 @@
                 let runningBalance = this.userBalance;
                 const manualPrices = Storage.get('manual_prices', {});
                 let allCandleMaps = {}, allRsiMaps = {}, allTimestamps = new Set();
+                let allCompletedTrades = [];
 
                 this.configs.forEach(cfg => {
                     const cList = this.candlesData[cfg.id] || [];
@@ -1579,15 +1359,27 @@
                         const r = allRsiMaps[cid]?.[t];
                         if (!c || r === undefined) return;
 
-                        let exit = false, pnl = 0;
-                        if (c.high >= p.targetPrice) { exit = true; pnl = p.profitTarget; }
-                        else if (r >= p.sellRsi) { exit = true; pnl = ((c.close - p.entryPrice) / p.entryPrice) * 100; }
+                        let exit = false, pnl = 0, reason = "";
+                        if (c.high >= p.targetPrice) { exit = true; pnl = p.profitTarget; reason = `Kâr (%${p.profitTarget})`; }
+                        else if (r >= p.sellRsi) { exit = true; pnl = ((c.close - p.entryPrice) / p.entryPrice) * 100; reason = `RSI Sat (${r.toFixed(1)})`; }
 
                         if (exit) {
                             delete activePos[cid];
-                            if (c.rawTime >= this.portfolioStartDateMs) runningBalance += p.allocatedUSD * (pnl / 100);
+                            if (c.rawTime >= this.portfolioStartDateMs) {
+                                runningBalance += p.allocatedUSD * (pnl / 100);
+                            }
                             monthlyPnL[cid] = monthlyPnL[cid] || {};
                             monthlyPnL[cid][mKey] = (monthlyPnL[cid][mKey] || 0) + pnl;
+
+                            allCompletedTrades.unshift({
+                                symbol: p.symbol,
+                                reason: reason,
+                                entryPrice: p.entryPrice,
+                                exitPrice: p.entryPrice * (1 + pnl / 100),
+                                pnl: pnl,
+                                gainUSD: p.allocatedUSD * (pnl / 100),
+                                exitTime: c.rawTime
+                            });
                         }
                     });
 
@@ -1646,7 +1438,7 @@
                         this.livePnLs[cfg.id] = pnl;
 
                         liveGain += pos.allocatedUSD * (pnl / 100);
-                        this.activePositions.push({ configId: cfg.id, symbol: cfg.symbol, entryPrice: entryP, targetPrice: this.targetPrices[cfg.id], livePnl: pnl, entryTime: pos.entryTime });
+                        this.activePositions.push({ configId: cfg.id, symbol: cfg.symbol, entryPrice: entryP, targetPrice: this.targetPrices[cfg.id], livePnl: pnl, entryTime: pos.entryTime, allocatedUSD: pos.allocatedUSD });
                     } else {
                         this.isPositions[cfg.id] = false;
                         this.entryPrices[cfg.id] = null;
@@ -1657,6 +1449,8 @@
 
                 this.compoundedBalance = runningBalance + liveGain;
                 this.pendingSignals = pendingQ;
+                this.globalTrades = allCompletedTrades;
+
                 this.renderAll();
             },
 
@@ -1669,7 +1463,7 @@
                         const oldP = this.lastPrices[cfg.id];
                         this.lastPrices[cfg.id] = price;
 
-                        const el = document.getElementById(`price-hero-${cfg.id}`);
+                        const el = document.getElementById(`price-val-${cfg.id}`);
                         if (el && oldP) {
                             if (price > oldP) { el.classList.add('flash-up'); setTimeout(() => el.classList.remove('flash-up'), 250); }
                             else if (price < oldP) { el.classList.add('flash-down'); setTimeout(() => el.classList.remove('flash-down'), 250); }
@@ -1687,7 +1481,7 @@
                         }
                     } catch(e) {}
                 }
-                this.renderHeader();
+                this.renderHeaderKPIs();
             },
 
             closePosition(configId, exitPrice, reason) {
@@ -1696,273 +1490,208 @@
 
                 const entryP = this.entryPrices[configId];
                 const pnl = ((exitPrice - entryP) / entryP) * 100;
-                const trade = { id: Date.now(), symbol: cfg.symbol, entryPrice: entryP, exitPrice: exitPrice, pnl: pnl, reason: reason, exitTime: Date.now() };
 
-                const trades = Storage.get('live_trades', []);
-                trades.unshift(trade);
-                Storage.set('live_trades', trades);
-
-                const manual = Storage.get('manual_prices', {});
-                delete manual[configId];
-                Storage.set('manual_prices', manual);
-
-                AudioFX.playSell();
-                this.sendTelegramMessage(`🔴 <b>SATIM / KÂR SİNYALİ!</b>\n\n<b>Coin:</b> #${cfg.symbol.replace('USDT','')}\n<b>Çıkış:</b> $${exitPrice}\n<b>PnL:</b> ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%\n<b>Neden:</b> ${reason}`);
+                SoundEngine.playSell();
+                this.sendTelegramMessage(`🔴 <b>SATIM / KÂR SİNYALİ!</b>\n\n<b>Coin:</b> #${cfg.symbol.replace('USDT','')}\n<b>Çıkış:</b> $${exitPrice}\n<b>PnL:</b> ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%\n<b>Neden:</b> ${reason}`);[cite: 17, 24]
                 this.runUnifiedPortfolioEngine();
             },
 
-            /* ==================== 6. UI RENDER ==================== */
+            /* ==================== 6. UI RENDER METODLARI ==================== */
             renderAll() {
-                this.renderHeader();
-                this.renderActivePositions();
-                this.renderCardsStream();
+                this.renderHeaderKPIs();
+                this.renderActivePositionsPanel();
+                this.renderCoinCardsGrid();
+                this.renderTradesTable();
                 this.renderAlarmsTab();
             },
 
-            renderHeader() {
-                document.getElementById('total-compounded-balance').innerText = '$' + this.compoundedBalance.toFixed(2);
-                document.getElementById('portfolio-slots-badge').innerText = `${this.activePositions.length}/${this.maxSlots} SLOT`;
+            renderHeaderKPIs() {
+                document.getElementById('top-total-balance').innerText = '$' + this.compoundedBalance.toFixed(2) + ' USDT';
+                document.getElementById('top-slots-badge').innerText = `${this.activePositions.length} / ${this.maxSlots} Pozisyon`;
 
-                const pBar = document.getElementById('pending-signals-bar');
-                if (this.pendingSignals.length > 0) {
-                    pBar.style.display = 'flex';
-                    document.getElementById('pending-count').innerText = this.pendingSignals.length;
-                    document.getElementById('pending-coins-list').innerText = this.pendingSignals.map(p => p.symbol.replace('USDT','')).join(', ');
-                } else { pBar.style.display = 'none'; }
+                let totGainUSD = 0;
+                let totPnlSum = 0;
 
-                let totLiveGainUSD = 0, totLivePnl = 0;
                 this.activePositions.forEach(p => {
-                    totLiveGainUSD += (this.compoundedBalance / this.maxSlots) * (p.livePnl / 100);
-                    totLivePnl += p.livePnl;
+                    totGainUSD += p.allocatedUSD * (p.livePnl / 100);
+                    totPnlSum += p.livePnl;
                 });
 
-                const gEl = document.getElementById('timeframe-usdt-gain');
-                gEl.innerText = (totLiveGainUSD >= 0 ? '+$' : '-$') + Math.abs(totLiveGainUSD).toFixed(2);
-                gEl.style.color = totLiveGainUSD >= 0 ? 'var(--green)' : 'var(--red)';
+                const gainEl = document.getElementById('top-net-gain');
+                gainEl.innerText = (totGainUSD >= 0 ? '+$' : '-$') + Math.abs(totGainUSD).toFixed(2) + ` USDT (${totPnlSum >= 0 ? '+' : ''}${totPnlSum.toFixed(2)}%)`;
+                gainEl.style.color = totGainUSD >= 0 ? 'var(--green)' : 'var(--red)';
 
-                const nEl = document.getElementById('timeframe-netpnl-badge');
-                nEl.innerText = `Net: ${totLivePnl >= 0 ? '+' : ''}${totLivePnl.toFixed(2)}%`;
-                nEl.style.color = totLivePnl >= 0 ? 'var(--green)' : 'var(--red)';
-                nEl.style.background = totLivePnl >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)';
+                const pBanner = document.getElementById('pending-banner');
+                if (this.pendingSignals.length > 0) {
+                    pBanner.style.display = 'flex';
+                    document.getElementById('pending-coins-text').innerText = this.pendingSignals.map(p => p.symbol.replace('USDT','')).join(', ');
+                } else {
+                    pBanner.style.display = 'none';
+                }
             },
 
-            renderActivePositions() {
+            renderActivePositionsPanel() {
                 const container = document.getElementById('active-positions-container');
-                document.getElementById('active-positions-count-badge').innerText = `${this.activePositions.length} Aktif`;
+                document.getElementById('active-count-label').innerText = `${this.activePositions.length} Aktif Pozisyon`;
 
                 if (this.activePositions.length === 0) {
-                    container.innerHTML = `<div style="text-align:center; padding:12px; font-size:11px; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</div>`;
+                    container.innerHTML = `<div style="padding: 12px; color: var(--text-muted); font-size: 12px;">Şu an açık pozisyon bulunmuyor.</div>`;
                     return;
                 }
 
                 container.innerHTML = this.activePositions.map(pos => `
-                    <div class="active-pos-card">
+                    <div class="pos-card-desktop">
                         <div>
-                            <div style="font-size:14px; font-weight:900;">${pos.symbol.replace('USDT','')}</div>
-                            <div class="mono" style="font-size:10px; color:var(--text-muted);">Giriş: ${formatCryptoPrice(pos.entryPrice)}</div>
+                            <div style="font-size: 15px; font-weight: 900;">${pos.symbol.replace('USDT','')}</div>
+                            <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                Giriş: ${formatCryptoPrice(pos.entryPrice)} → Hedef: <strong style="color: var(--green);">${formatCryptoPrice(pos.targetPrice)}</strong>
+                            </div>
                         </div>
-                        <div>
-                            <div class="mono" style="font-size:11px; font-weight:800; color:var(--green);">Hedef: ${formatCryptoPrice(pos.targetPrice)}</div>
-                            <div class="mono" style="font-size:9px; color:var(--text-muted);">Anlık: ${formatCryptoPrice(this.lastPrices[pos.configId])}</div>
-                        </div>
-                        <div class="pnl-pill-large mono" style="background:${pos.livePnl >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)'}; color:${pos.livePnl >= 0 ? 'var(--green)' : 'var(--red)'};">
+                        <div class="pos-pnl-pill mono" style="background: ${pos.livePnl >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'}; color: ${pos.livePnl >= 0 ? 'var(--green)' : 'var(--red)'};">
                             ${pos.livePnl >= 0 ? '+' : ''}${pos.livePnl.toFixed(2)}%
                         </div>
                     </div>
                 `).join('');
             },
 
-            renderCardsStream() {
-                const container = document.getElementById('coin-cards-container');
-                container.innerHTML = this.configs.map(cfg => {
-                    const p = this.lastPrices[cfg.id] || 0;
+            renderCoinCardsGrid() {
+                const grid = document.getElementById('coin-cards-grid');
+                grid.innerHTML = this.configs.map(cfg => {
+                    const price = this.lastPrices[cfg.id] || 0;
                     const rsi = this.currentRSIs[cfg.id] || 50;
                     const isPos = this.isPositions[cfg.id];
                     const pnl = this.livePnLs[cfg.id] || 0;
 
-                    let glowClass = isPos ? (pnl >= 0 ? 'in-pos-win' : 'in-pos-loss') : '';
+                    let posClass = isPos ? (pnl >= 0 ? 'in-pos-win' : 'in-pos-loss') : '';
 
                     return `
-                        <div class="coin-terminal-card ${glowClass}" id="card-${cfg.id}">
-                            <div class="card-top-bar">
-                                <div class="pair-title-box">
-                                    <span class="pair-name">${cfg.symbol.replace('USDT','')}</span>
-                                    <span class="tag-tf mono">${cfg.interval} • RSI(${cfg.rsiLength})</span>
+                        <div class="coin-pro-card ${posClass}" id="card-${cfg.id}">
+                            <div class="card-head-row">
+                                <div class="coin-identity">
+                                    <span class="coin-name">${cfg.symbol.replace('USDT','')}</span>
+                                    <span class="badge-interval mono">${cfg.interval} • RSI(${cfg.rsiLength})</span>
                                 </div>
-                                <div class="card-controls">
-                                    <button class="btn-circle-icon" onclick="App.deleteCard('${cfg.id}')">🗑️</button>
-                                    <button class="btn-circle-icon btn-expand-arrow" id="arrow-${cfg.id}" onclick="App.toggleCardExpand('${cfg.id}')">▼</button>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="btn-tf" onclick="App.toggleCardDetails('${cfg.id}')">⚙️ Strateji</button>
+                                    <button class="btn-tf" style="color: var(--red);" onclick="App.deleteCard('${cfg.id}')">🗑️</button>
                                 </div>
                             </div>
 
-                            <div class="price-hero-row">
+                            <div class="card-price-block">
                                 <div>
-                                    <div class="price-large mono" id="price-hero-${cfg.id}">${formatCryptoPrice(p)}</div>
-                                    <div class="hilo-row mono">
-                                        <span>Y: <strong style="color:var(--green);">${formatCryptoPrice(this.high24h[cfg.id])}</strong></span>
+                                    <div class="live-price-text mono" id="price-val-${cfg.id}">${formatCryptoPrice(price)}</div>
+                                    <div class="price-meta-hilo mono">
+                                        <span>24h Yüksek: <strong style="color: var(--green);">${formatCryptoPrice(this.high24h[cfg.id])}</strong></span>[cite: 8]
                                         <span>•</span>
-                                        <span>D: <strong style="color:var(--red);">${formatCryptoPrice(this.low24h[cfg.id])}</strong></span>
+                                        <span>24h Düşük: <strong style="color: var(--red);">${formatCryptoPrice(this.low24h[cfg.id])}</strong></span>[cite: 8]
                                     </div>
                                 </div>
-                                <div class="badges-right-box">
-                                    <div class="rsi-badge">
-                                        <div style="font-size:8px; font-weight:800; color:var(--text-muted);">RSI</div>
-                                        <div class="mono" style="font-size:13px; font-weight:900; color:${rsi <= cfg.buyRsi ? 'var(--red)' : (rsi >= cfg.sellRsi ? 'var(--green)' : 'var(--text-muted)')};">
-                                            ${rsi.toFixed(1)}
-                                        </div>
+                                <div style="text-align: right;">
+                                    <div class="mono" style="font-size: 16px; font-weight: 900; color: ${rsi <= cfg.buyRsi ? 'var(--red)' : (rsi >= cfg.sellRsi ? 'var(--green)' : 'var(--text-muted)')};">
+                                        RSI ${rsi.toFixed(1)}
                                     </div>
-                                    <div class="pos-badge mono" style="background:${isPos ? (pnl >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)') : 'var(--bg-surface-elevated)'}; color:${isPos ? (pnl >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text-muted)'};">
-                                        ${isPos ? (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%' : 'NÖTR'}
+                                    <div class="mono" style="font-size: 11px; font-weight: 700; color: ${isPos ? (pnl >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text-muted)'}; margin-top: 2px;">
+                                        ${isPos ? `POZİSYON: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%` : 'NÖTR'}[cite: 8]
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- ANİMASYONLU DETAY PANELİ -->
+                            <!-- Spektrum Bar -->
+                            <div class="spectrum-bar-wrap">
+                                <div class="spectrum-track">
+                                    <div class="spectrum-pointer" style="left: ${Math.min(Math.max(rsi, 0), 100)}%;"></div>[cite: 20]
+                                </div>
+                                <div style="display: flex; justify-content: space-between; font-size: 9px; font-weight: 800;" class="mono">
+                                    <span style="color: var(--red);">AL DİP: ≤${cfg.buyRsi}</span>[cite: 4]
+                                    <span style="color: var(--green);">SAT TEPE: ≥${cfg.sellRsi}</span>[cite: 4]
+                                </div>
+                            </div>
+
+                            <!-- Çift Sparkline Çizimi -->
+                            <div class="charts-double-deck">
+                                <div class="sparkline-box-desktop">
+                                    <div class="sparkline-header mono">
+                                        <span>${cfg.interval.toUpperCase()} RSI(${cfg.rsiLength}) STRATEJİ</span>[cite: 8]
+                                        <span style="color: var(--cyan);">CANLI</span>
+                                    </div>
+                                    <canvas class="spark-canvas" id="canvas-prim-${cfg.id}"></canvas>
+                                </div>
+                                <div class="sparkline-box-desktop">
+                                    <div class="sparkline-header mono">
+                                        <span>${cfg.secondaryInterval.toUpperCase()} RSI(${cfg.secondaryRsiLength}) TREND</span>[cite: 8]
+                                        <span style="color: var(--purple);">İKİNCİL</span>
+                                    </div>
+                                    <canvas class="spark-canvas" id="canvas-sec-${cfg.id}"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Metrik Karoları -->
+                            <div class="metrics-quad-row">
+                                <div class="metric-cell"><span>Win Rate</span><strong class="mono" style="color: var(--green);">94%</strong></div>[cite: 8]
+                                <div class="metric-cell"><span>Ort. Süre</span><strong class="mono" style="color: var(--blue);">4.2s</strong></div>[cite: 8]
+                                <div class="metric-cell"><span>Max Seri</span><strong class="mono" style="color: var(--orange);">7 Kazanç</strong></div>[cite: 8]
+                            </div>
+
+                            <!-- Akordeon Strateji Paneli -->
                             <div class="card-expand-drawer" id="drawer-${cfg.id}">
-                                <!-- Spektrum -->
-                                <div class="spectrum-container">
-                                    <div class="spectrum-track">
-                                        <div class="spectrum-pointer" style="left:${Math.min(Math.max(rsi, 0), 100)}%;"></div>
+                                <div style="font-size: 11px; font-weight: 800; color: var(--blue);">BİRİNCİL VE İKİNCİL RSI AYARLARI</div>
+                                <div class="stepper-pro-row">
+                                    <div class="stepper-group">
+                                        <label>RSI Al Limit</label>
+                                        <div class="stepper-input-box mono">
+                                            <button onclick="App.adj('${cfg.id}', 'buyRsi', -1)">-</button>
+                                            <input type="text" value="${cfg.buyRsi}" readonly>
+                                            <button onclick="App.adj('${cfg.id}', 'buyRsi', 1)">+</button>
+                                        </div>
                                     </div>
-                                    <div style="display:flex; justify-content:space-between; font-size:9px; font-weight:800;" class="mono">
-                                        <span style="color:var(--red);">AL: ${cfg.buyRsi}</span>
-                                        <span style="color:var(--green);">SAT: ${cfg.sellRsi}</span>
+                                    <div class="stepper-group">
+                                        <label>RSI Sat Limit</label>
+                                        <div class="stepper-input-box mono">
+                                            <button onclick="App.adj('${cfg.id}', 'sellRsi', -1)">-</button>
+                                            <input type="text" value="${cfg.sellRsi}" readonly>
+                                            <button onclick="App.adj('${cfg.id}', 'sellRsi', 1)">+</button>
+                                        </div>
+                                    </div>
+                                    <div class="stepper-group">
+                                        <label>Hedef Kâr (%)</label>
+                                        <div class="stepper-input-box mono">
+                                            <button onclick="App.adj('${cfg.id}', 'profitTarget', -0.5)">-</button>
+                                            <input type="text" value="${cfg.profitTarget}" readonly>
+                                            <button onclick="App.adj('${cfg.id}', 'profitTarget', 0.5)">+</button>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- Birincil Sparkline -->
-                                <div class="sparkline-card">
-                                    <div class="sparkline-meta mono">
-                                        <span style="color:var(--cyan);">${cfg.interval.toUpperCase()} RSI(${cfg.rsiLength}) BİRİNCİL STRATEJİ</span>
-                                        <span id="spark-tip-primary-${cfg.id}">Canlı: ${rsi.toFixed(1)}</span>
-                                    </div>
-                                    <canvas class="sparkline-canvas" id="canvas-primary-${cfg.id}"></canvas>
-                                </div>
-
-                                <!-- İkincil Sparkline -->
-                                <div class="sparkline-card">
-                                    <div class="sparkline-meta mono">
-                                        <span style="color:var(--purple);">${cfg.secondaryInterval.toUpperCase()} RSI(${cfg.secondaryRsiLength}) İKİNCİL TREND</span>
-                                        <span id="spark-tip-secondary-${cfg.id}">Trend</span>
-                                    </div>
-                                    <canvas class="sparkline-canvas" id="canvas-secondary-${cfg.id}"></canvas>
-                                </div>
-
-                                <!-- Metrikler -->
-                                <div class="metrics-tri-grid">
-                                    <div class="metric-block"><span>Win Rate</span><strong class="mono" style="color:var(--green);" id="metric-wr-${cfg.id}">92%</strong></div>
-                                    <div class="metric-block"><span>Ort. Süre</span><strong class="mono" style="color:var(--blue);" id="metric-dur-${cfg.id}">4.5s</strong></div>
-                                    <div class="metric-block"><span>Max Seri</span><strong class="mono" style="color:var(--orange);" id="metric-str-${cfg.id}">6</strong></div>
-                                </div>
-
-                                <!-- Strateji Parametreleri Stepper -->
-                                <div class="strategy-box">
-                                    <div style="font-size:10px; font-weight:900; color:var(--blue);">BİRİNCİL STRATEJİ PARAMETRELERİ</div>
-                                    <div class="stepper-row">
-                                        <div class="stepper-field">
-                                            <label>RSI PERİYOT</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'rsiLength', -1)">-</button>
-                                                <input type="text" value="${cfg.rsiLength}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'rsiLength', 1)">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="stepper-field">
-                                            <label>RSI AL</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'buyRsi', -1)">-</button>
-                                                <input type="text" value="${cfg.buyRsi}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'buyRsi', 1)">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="stepper-field">
-                                            <label>RSI SAT</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'sellRsi', -1)">-</button>
-                                                <input type="text" value="${cfg.sellRsi}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'sellRsi', 1)">+</button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div style="font-size:10px; font-weight:900; color:var(--purple); margin-top:4px;">İKİNCİL MANUEL RSI BANDI</div>
-                                    <div class="stepper-row">
-                                        <div class="stepper-field">
-                                            <label>RSI PERİYOT</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'secondaryRsiLength', -1)">-</button>
-                                                <input type="text" value="${cfg.secondaryRsiLength}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'secondaryRsiLength', 1)">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="stepper-field">
-                                            <label>RSI AL</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'secondaryBuyRsi', -1)">-</button>
-                                                <input type="text" value="${cfg.secondaryBuyRsi}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'secondaryBuyRsi', 1)">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="stepper-field">
-                                            <label>RSI SAT</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'secondarySellRsi', -1)">-</button>
-                                                <input type="text" value="${cfg.secondarySellRsi}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'secondarySellRsi', 1)">+</button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="stepper-row" style="margin-top:4px;">
-                                        <div class="stepper-field">
-                                            <label>HEDEF KÂR (%)</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'profitTarget', -0.5)">-</button>
-                                                <input type="text" value="${cfg.profitTarget}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'profitTarget', 0.5)">+</button>
-                                            </div>
-                                        </div>
-                                        <div class="stepper-field">
-                                            <label>AY KİLİT (%)</label>
-                                            <div class="stepper-ctrl mono">
-                                                <button onclick="App.adjVal('${cfg.id}', 'monthlyCap', -0.5)">-</button>
-                                                <input type="text" value="${cfg.monthlyCap}" readonly>
-                                                <button onclick="App.adjVal('${cfg.id}', 'monthlyCap', 0.5)">+</button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <button class="btn-action-primary" style="justify-content:center; padding:10px; margin-top:6px;" onclick="App.runOptimizer('${cfg.id}')">
-                                        <span>🪄</span> Strateji Sihirbazını Çalıştır
+                                <div style="display: flex; gap: 8px; margin-top: 6px;">
+                                    <button class="btn-pro" style="flex: 1; justify-content: center;" onclick="App.runOptimizer('${cfg.id}')">
+                                        <span>🪄</span> Sihirbazı Çalıştır[cite: 8]
                                     </button>
+                                    ${isPos ? `
+                                        <button class="btn-tf" onclick="App.openEditEntry('${cfg.id}')">
+                                            ✏️ Maliyet Revize
+                                        </button>
+                                    ` : ''}
                                 </div>
-
-                                ${isPos ? `
-                                    <button class="btn-action-primary" style="background:var(--bg-card-sub); justify-content:center;" onclick="App.openEditEntry('${cfg.id}')">
-                                        ✏️ Gerçekleşen Alım Fiyatını Revize Et
-                                    </button>
-                                ` : ''}
                             </div>
                         </div>
                     `;
                 }).join('');
 
                 this.configs.forEach(cfg => {
-                    this.renderSparkline(cfg.id, 'primary', cfg.buyRsi, cfg.sellRsi, '#06b6d4');
-                    this.renderSparkline(cfg.id, 'secondary', cfg.secondaryBuyRsi, cfg.secondarySellRsi, '#c084fc');
+                    this.drawSparkline(cfg.id, 'prim', cfg.buyRsi, cfg.sellRsi, '#06b6d4');
+                    this.drawSparkline(cfg.id, 'sec', cfg.secondaryBuyRsi, cfg.secondarySellRsi, '#a855f7');
                 });
             },
 
-            renderSparkline(configId, type, buyR, sellR, color) {
-                const canvas = document.getElementById(`canvas-${type}-${configId}`);
+            drawSparkline(id, type, buyR, sellR, color) {
+                const canvas = document.getElementById(`canvas-${type}-${id}`);
                 if (!canvas) return;
 
-                const candles = type === 'primary' ? this.candlesData[configId] : this.secondaryCandlesData[configId];
+                const candles = type === 'prim' ? this.candlesData[id] : this.secondaryCandlesData[id];
                 if (!candles || candles.length === 0) return;
 
-                const cfg = this.configs.find(c => c.id === configId);
-                const period = type === 'primary' ? cfg.rsiLength : cfg.secondaryRsiLength;
-
+                const cfg = this.configs.find(c => c.id === id);
+                const period = type === 'prim' ? cfg.rsiLength : cfg.secondaryRsiLength;
                 const closes = candles.map(c => c.close);
                 const rsiVals = RSIEngine.calculateHistory(closes, period).filter(v => v !== null).slice(-48);
                 if (rsiVals.length < 2) return;
@@ -1980,8 +1709,7 @@
                 const buyY = h * (1 - buyR / 100);
                 const sellY = h * (1 - sellR / 100);
 
-                // Eşik Çizgileri
-                ctx.setLineDash([3, 3]);
+                ctx.setLineDash([2, 2]);
                 ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
                 ctx.beginPath(); ctx.moveTo(0, buyY); ctx.lineTo(w, buyY); ctx.stroke();
 
@@ -1989,34 +1717,66 @@
                 ctx.beginPath(); ctx.moveTo(0, sellY); ctx.lineTo(w, sellY); ctx.stroke();
                 ctx.setLineDash([]);
 
-                // RSI Eğrisi
                 ctx.strokeStyle = color;
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
-                rsiVals.forEach((val, i) => {
+                rsiVals.forEach((v, i) => {
                     const x = (i / (rsiVals.length - 1)) * w;
-                    const y = h * (1 - Math.min(Math.max(val, 0), 100) / 100);
+                    const y = h * (1 - Math.min(Math.max(v, 0), 100) / 100);
                     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
                 });
                 ctx.stroke();
             },
 
-            toggleCardExpand(id) {
-                const drawer = document.getElementById(`drawer-${id}`);
-                const arrow = document.getElementById(`arrow-${id}`);
-                if (drawer) {
-                    drawer.classList.toggle('open');
-                    arrow.classList.toggle('open');
-                    if (drawer.classList.contains('open')) {
-                        setTimeout(() => {
-                            this.renderSparkline(id, 'primary', this.configs.find(c => c.id === id).buyRsi, this.configs.find(c => c.id === id).sellRsi, '#06b6d4');
-                            this.renderSparkline(id, 'secondary', this.configs.find(c => c.id === id).secondaryBuyRsi, this.configs.find(c => c.id === id).secondarySellRsi, '#c084fc');
-                        }, 50);
-                    }
+            renderTradesTable() {
+                const tbody = document.getElementById('trades-table-body');
+                if (this.globalTrades.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Henüz işlem kaydı yok.</td></tr>`;
+                    return;
                 }
+
+                tbody.innerHTML = this.globalTrades.slice(0, 50).map(t => {
+                    const dateStr = new Date(t.exitTime).toLocaleString('tr-TR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                    return `
+                        <tr>
+                            <td><strong class="mono">${t.symbol.replace('USDT','')}</strong></td>
+                            <td><span style="font-size: 11px; color: var(--text-muted);">${t.reason}</span></td>
+                            <td class="mono">${formatCryptoPrice(t.entryPrice)}</td>
+                            <td class="mono">${formatCryptoPrice(t.exitPrice)}</td>
+                            <td class="mono" style="font-weight: 800; color: ${t.pnl >= 0 ? 'var(--green)' : 'var(--red)'};">
+                                ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
+                            </td>
+                            <td class="mono" style="font-weight: 700; color: ${t.gainUSD >= 0 ? 'var(--green)' : 'var(--red)'};">
+                                ${t.gainUSD >= 0 ? '+$' : '-$'}${Math.abs(t.gainUSD).toFixed(2)}
+                            </td>
+                            <td class="mono" style="color: var(--text-muted);">${dateStr}</td>
+                        </tr>
+                    `;
+                }).join('');
             },
 
-            adjVal(id, field, delta) {
+            renderAlarmsTab() {
+                const container = document.getElementById('alarms-list-container');
+                container.innerHTML = this.configs.map(cfg => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border);">
+                        <div>
+                            <strong style="font-size: 14px;">${cfg.symbol.replace('USDT','')}</strong>
+                            <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                                AL EŞİĞİ: ≤${cfg.buyRsi} • SAT EŞİĞİ: ≥${cfg.sellRsi} • CANLI RSI: ${(this.currentRSIs[cfg.id] || 50).toFixed(1)}[cite: 4]
+                            </div>
+                        </div>
+                        <input type="checkbox" ${cfg.isNotificationEnabled ? 'checked' : ''} onchange="App.toggleNotif('${cfg.id}', this.checked)">
+                    </div>
+                `).join('');
+            },
+
+            /* ==================== 7. ETKİLEŞİM VE YARDIMCI FONKSİYONLAR ==================== */
+            toggleCardDetails(id) {
+                const drawer = document.getElementById(`drawer-${id}`);
+                if (drawer) drawer.classList.toggle('open');
+            },
+
+            adj(id, field, delta) {
                 const cfg = this.configs.find(c => c.id === id);
                 if (!cfg) return;
                 cfg[field] = Math.max(0.5, Number((cfg[field] + delta).toFixed(1)));
@@ -2024,7 +1784,67 @@
                 this.runUnifiedPortfolioEngine();
             },
 
-            /* ==================== 7. SİHİRBAZ & YARDIMCILAR ==================== */
+            async verifyBinanceSymbol() {
+                let sym = document.getElementById('add-symbol-input').value.toUpperCase().trim();
+                if (!sym.endsWith('USDT')) sym += 'USDT';
+                const status = document.getElementById('verify-status');
+                status.innerText = 'Binance tahtası taranıyor...';
+                status.style.color = 'var(--text-muted)';
+                try {
+                    const p = await BinanceAPI.fetchPrice(sym);
+                    status.innerText = `✓ Doğrulandı: $${p}`;
+                    status.style.color = 'var(--green)';
+                    document.getElementById('add-coin-form-body').style.display = 'block';
+                    this.tempVerified = sym;
+                } catch(e) {
+                    status.innerText = '✗ Binance üzerinde bulunamadı!';
+                    status.style.color = 'var(--red)';
+                }
+            },
+
+            saveNewCoinCard() {
+                const newCard = {
+                    id: Date.now().toString(),
+                    symbol: this.tempVerified,
+                    interval: document.getElementById('add-interval-input').value,
+                    rsiLength: parseInt(document.getElementById('add-rsi-length').value),
+                    buyRsi: parseFloat(document.getElementById('add-buy-rsi').value),
+                    sellRsi: parseFloat(document.getElementById('add-sell-rsi').value),
+                    profitTarget: parseFloat(document.getElementById('add-profit-target').value),
+                    monthlyCap: parseFloat(document.getElementById('add-monthly-cap').value),
+                    secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 15, secondarySellRsi: 85,
+                    isNotificationEnabled: true
+                };
+                this.configs.push(newCard);
+                Storage.set('configs', this.configs);
+                ModalManager.close('add-coin');
+                this.loadCandles(newCard).then(() => this.runUnifiedPortfolioEngine());
+            },
+
+            deleteCard(id) {
+                if (!confirm('Bu pariteyi silmek istediğinize emin misiniz?')) return;
+                this.configs = this.configs.filter(c => c.id !== id);
+                Storage.set('configs', this.configs);
+                this.runUnifiedPortfolioEngine();
+            },
+
+            openEditEntry(id) {
+                this.activeEditingConfigId = id;
+                document.getElementById('manual-entry-input').value = this.entryPrices[id] || '';
+                ModalManager.open('edit-entry');
+            },
+
+            saveManualEntryPrice() {
+                const val = parseFloat(document.getElementById('manual-entry-input').value);
+                if (val > 0 && this.activeEditingConfigId) {
+                    const dict = Storage.get('manual_prices', {});
+                    dict[this.activeEditingConfigId] = val;
+                    Storage.set('manual_prices', dict);
+                    ModalManager.close('edit-entry');
+                    this.runUnifiedPortfolioEngine();
+                }
+            },
+
             async runOptimizer(id) {
                 const cfg = this.configs.find(c => c.id === id);
                 const candles = this.candlesData[id];
@@ -2032,8 +1852,8 @@
 
                 ModalManager.open('optimizer');
                 document.getElementById('optimizer-render-box').innerHTML = `
-                    <div style="text-align:center; padding:24px;" class="mono">
-                        <div style="color:var(--blue); font-size:14px; font-weight:800;">En İdeal Kombinasyon Taranıyor...</div>
+                    <div style="text-align: center; padding: 20px;" class="mono">
+                        <div style="color: var(--blue); font-size: 14px; font-weight: 800;">Strateji Sihirbazı En İdeal Kombinasyonu Arıyor...</div>
                     </div>
                 `;
 
@@ -2069,19 +1889,19 @@
 
                     if (best) {
                         document.getElementById('optimizer-render-box').innerHTML = `
-                            <div style="display:flex; flex-direction:column; gap:10px;">
-                                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Önerilen RSI Al:</span> <strong class="mono" style="color:var(--blue);">${best.b}</strong></div>
-                                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Önerilen RSI Sat:</span> <strong class="mono" style="color:var(--orange);">${best.s}</strong></div>
-                                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Win Rate:</span> <strong class="mono" style="color:var(--green);">${best.wr}%</strong></div>
-                                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Toplam İşlem:</span> <strong class="mono">${best.tot} İşlem</strong></div>
-                                <div style="display:flex; justify-content:space-between; font-size:12px;"><span>Net Kazanç:</span> <strong class="mono" style="color:var(--green);">+${best.pnl}%</strong></div>
-                                <button class="btn-action-primary" style="justify-content:center; padding:12px; margin-top:10px;" onclick="App.applyOpt('${cfg.id}', ${best.b}, ${best.s})">
-                                    Uygula ve Kaydet
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                <div style="display: flex; justify-content: space-between;"><span>Önerilen RSI Al:</span> <strong class="mono" style="color: var(--blue);">${best.b}</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Önerilen RSI Sat:</span> <strong class="mono" style="color: var(--orange);">${best.s}</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Win Rate:</span> <strong class="mono" style="color: var(--green);">${best.wr}%</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Toplam İşlem:</span> <strong class="mono">${best.tot} İşlem</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Net Toplam Kâr:</span> <strong class="mono" style="color: var(--green);">+${best.pnl}%</strong></div>
+                                <button class="btn-pro" style="justify-content: center; padding: 12px; margin-top: 10px;" onclick="App.applyOpt('${cfg.id}', ${best.b}, ${best.s})">
+                                    Parametreleri Uygula ve Kaydet
                                 </button>
                             </div>
                         `;
                     }
-                }, 80);
+                }, 100);
             },
 
             applyOpt(id, b, s) {
@@ -2094,44 +1914,27 @@
                 }
             },
 
-            renderAlarmsTab() {
-                const container = document.getElementById('alarms-coin-list');
-                container.innerHTML = this.configs.map(cfg => `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface-elevated); padding:10px 14px; border-radius:12px; border:1px solid var(--border-glass);">
-                        <div>
-                            <div style="font-size:13px; font-weight:900;">${cfg.symbol.replace('USDT','')}</div>
-                            <div class="mono" style="font-size:10px; color:var(--text-muted);">AL: ≤${cfg.buyRsi} • SAT: ≥${cfg.sellRsi} • Canlı: ${(this.currentRSIs[cfg.id] || 50).toFixed(1)}</div>
-                        </div>
-                        <input type="checkbox" ${cfg.isNotificationEnabled ? 'checked' : ''} onchange="App.toggleNotif('${cfg.id}', this.checked)">
-                    </div>
-                `).join('');
-
-                const select = document.getElementById('alarm-coin-select');
-                if (select) {
-                    select.innerHTML = this.configs.map(c => `<option value="${c.symbol}">${c.symbol}</option>`).join('');
-                }
-            },
-
-            toggleNotif(id, enabled) {
-                const cfg = this.configs.find(c => c.id === id);
-                if (cfg) { cfg.isNotificationEnabled = enabled; Storage.set('configs', this.configs); }
-            },
-
             sendTelegramMessage(text) {
-                const chatId = Storage.get('telegram_chat_id', '1059064615');
-                const botToken = '8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0';
+                const chatId = Storage.get('telegram_chat_id', '1059064615');[cite: 24]
+                const botToken = '8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0';[cite: 24]
                 if (!chatId) return;
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {[cite: 24]
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })
+                    body: JSON.stringify({ chat_id: chatId, text: text, parse_mode: 'HTML' })[cite: 24]
                 }).catch(e => console.error(e));
             },
 
+            testTelegram() {
+                this.sendTelegramMessage('🦅 <b>KUZGUN PRO TERMINAL</b>\n\nTelegram bağlantısı başarıyla sağlandı!');
+                alert('Test mesajı Telegram adresinize gönderildi.');
+            },
+
             switchTab(tabId, btn) {
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 document.getElementById('tab-terminal').classList.add('hide-tab');
+                document.getElementById('tab-trades').classList.add('hide-tab');
                 document.getElementById('tab-alarms').classList.add('hide-tab');
                 document.getElementById('tab-settings').classList.add('hide-tab');
                 document.getElementById(`tab-${tabId}`).classList.remove('hide-tab');
@@ -2144,7 +1947,7 @@
 
             setYear(y) {
                 this.selectedYear = y;
-                this.runSplashSequence();
+                this.init();
             },
 
             updateBalance(val) {
@@ -2160,104 +1963,27 @@
             },
 
             renderMonthsBar() {
-                const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+                const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];[cite: 11]
                 const bar = document.getElementById('months-selection-bar');
                 bar.innerHTML = months.map((m, i) => `
-                    <button class="month-chip ${i + 1 === this.selectedMonthIndex ? 'active' : ''}" onclick="App.selectMonth(${i + 1}, this)">${m}</button>
+                    <button class="month-btn ${i + 1 === this.selectedMonthIndex ? 'active' : ''}" onclick="App.selectMonth(${i + 1}, this)">${m}</button>
                 `).join('');
             },
 
             setTimeframe(tf, btn) {
                 this.selectedTimeframe = tf;
-                document.querySelectorAll('.timeframe-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.btn-tf').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                document.getElementById('months-selection-bar').style.display = tf === 'selectMonth' ? 'flex' : 'none';
-                this.renderHeader();
+                document.getElementById('months-bar-container').style.display = tf === 'selectMonth' ? 'block' : 'none';
+                document.getElementById('kpi-timeframe-label').innerText = `${btn.innerText} Net Kâr / Zarar`;
+                this.renderHeaderKPIs();
             },
 
             selectMonth(mIdx, btn) {
                 this.selectedMonthIndex = mIdx;
-                document.querySelectorAll('.month-chip').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                this.renderHeader();
-            },
-
-            async verifyBinanceSymbol() {
-                let sym = document.getElementById('add-symbol-val').value.toUpperCase().trim();
-                if (!sym.endsWith('USDT')) sym += 'USDT';
-                const status = document.getElementById('add-verify-status');
-                status.innerText = 'Binance üzerinde doğrulanıyor...';
-                status.style.color = 'var(--text-muted)';
-                try {
-                    const p = await BinanceAPI.fetchPrice(sym);
-                    status.innerText = `✓ Doğrulandı: $${p}`;
-                    status.style.color = 'var(--green)';
-                    document.getElementById('add-coin-form-body').style.display = 'block';
-                    this.tempVerified = sym;
-                } catch(e) {
-                    status.innerText = '✗ Parite bulunamadı!';
-                    status.style.color = 'var(--red)';
-                }
-            },
-
-            saveNewCoinCard() {
-                const newCard = {
-                    id: Date.now().toString(),
-                    symbol: this.tempVerified,
-                    interval: document.getElementById('add-interval-val').value,
-                    rsiLength: parseInt(document.getElementById('add-rsi-length').value),
-                    buyRsi: parseFloat(document.getElementById('add-buy-rsi').value),
-                    sellRsi: parseFloat(document.getElementById('add-sell-rsi').value),
-                    profitTarget: parseFloat(document.getElementById('add-profit-target').value),
-                    monthlyCap: parseFloat(document.getElementById('add-monthly-cap').value),
-                    secondaryInterval: '1h', secondaryRsiLength: 14, secondaryBuyRsi: 15, secondarySellRsi: 85,
-                    isNotificationEnabled: true
-                };
-                this.configs.push(newCard);
-                Storage.set('configs', this.configs);
-                ModalManager.close('add-coin');
-                this.loadCandles(newCard).then(() => this.runUnifiedPortfolioEngine());
-            },
-
-            deleteCard(id) {
-                if (!confirm('Pariteyi silmek istiyor musunuz?')) return;
-                this.configs = this.configs.filter(c => c.id !== id);
-                Storage.set('configs', this.configs);
-                this.runUnifiedPortfolioEngine();
-            },
-
-            openEditEntry(id) {
-                this.activeEditingConfigId = id;
-                document.getElementById('manual-entry-input').value = this.entryPrices[id] || '';
-                ModalManager.open('edit-entry');
-            },
-
-            saveManualEntryPrice() {
-                const val = parseFloat(document.getElementById('manual-entry-input').value);
-                if (val > 0 && this.activeEditingConfigId) {
-                    const dict = Storage.get('manual_prices', {});
-                    dict[this.activeEditingConfigId] = val;
-                    Storage.set('manual_prices', dict);
-                    ModalManager.close('edit-entry');
-                    this.runUnifiedPortfolioEngine();
-                }
-            },
-
-            toggleRecentTrades() {
-                const drawer = document.getElementById('recent-trades-drawer');
-                const trades = Storage.get('live_trades', []);
-                drawer.classList.toggle('open');
-                if (drawer.classList.contains('open')) {
-                    if (trades.length === 0) drawer.innerHTML = `<div style="text-align:center; padding:8px; font-size:10px; color:var(--text-muted);">Henüz işlem kaydı yok.</div>`;
-                    else {
-                        drawer.innerHTML = trades.slice(0, 10).map(t => `
-                            <div class="trade-item-row">
-                                <div><strong>${t.symbol.replace('USDT','')}</strong> <span style="color:var(--text-muted); font-size:9px;">${t.reason}</span></div>
-                                <div class="mono" style="font-weight:900; color:${t.pnl >= 0 ? 'var(--green)' : 'var(--red)'};">${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%</div>
-                            </div>
-                        `).join('');
-                    }
-                }
+                this.renderHeaderKPIs();
             }
         };
 
@@ -2269,7 +1995,7 @@
 
         // Başlat
         document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = Storage.get('theme', 'oled');
+            const savedTheme = Storage.get('theme', 'dark');
             document.getElementById('theme-selector').value = savedTheme;
             App.setTheme(savedTheme);
             App.init();
