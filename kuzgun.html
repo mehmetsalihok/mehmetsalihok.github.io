@@ -3,1038 +3,853 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KUZGUN PRO • Algorithmic Cloud Trading Terminal</title>
-    <!-- Modern Web Fontları: Inter & JetBrains Mono -->
+    <title>KUZGUN • Algorithmic Trading Terminal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* ==================== 1. TEMA VE DESKTOP DEĞİŞKENLERİ ==================== */
+        /* ==================== 1. MINIMAL PRO THEME ==================== */
         :root[data-theme="dark"] {
-            --bg-base: #090d16;
-            --bg-sidebar: #0d121f;
-            --bg-panel: #111827;
-            --bg-card: #151d30;
-            --bg-card-hover: #1a243b;
-            --bg-input: #0b0f19;
-            --border: rgba(255, 255, 255, 0.08);
-            --border-hover: rgba(56, 189, 248, 0.4);
-            --border-active: #38bdf8;
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --text-muted: #64748b;
-            --cyan: #06b6d4;
-            --cyan-glow: rgba(6, 182, 212, 0.15);
-            --blue: #38bdf8;
-            --blue-glow: rgba(56, 189, 248, 0.15);
+            --bg-body: #09090b;
+            --bg-sidebar: #0e0e11;
+            --bg-surface: #121216;
+            --bg-surface-elevated: #18181d;
+            --bg-input: #0e0e12;
+            --border-subtle: #27272a;
+            --border-strong: #3f3f46;
+            --text-main: #f4f4f5;
+            --text-muted: #a1a1aa;
+            --text-dark: #71717a;
+            --accent: #38bdf8;
+            --accent-subtle: rgba(56, 189, 248, 0.1);
             --green: #10b981;
-            --green-glow: rgba(16, 185, 129, 0.15);
+            --green-subtle: rgba(16, 185, 129, 0.1);
             --red: #f43f5e;
-            --red-glow: rgba(244, 63, 94, 0.15);
+            --red-subtle: rgba(244, 63, 94, 0.1);
             --purple: #a855f7;
-            --purple-glow: rgba(168, 85, 247, 0.15);
-            --orange: #f97316;
-            --orange-glow: rgba(249, 115, 22, 0.15);
-            --shadow-panel: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            --purple-subtle: rgba(168, 85, 247, 0.1);
+            --orange: #f59e0b;
+            --orange-subtle: rgba(245, 158, 11, 0.1);
         }
 
         :root[data-theme="oled"] {
-            --bg-base: #000000;
+            --bg-body: #000000;
             --bg-sidebar: #050505;
-            --bg-panel: #0a0a0c;
-            --bg-card: #101014;
-            --bg-card-hover: #16161c;
-            --bg-input: #050507;
-            --border: rgba(255, 255, 255, 0.06);
-            --border-hover: rgba(56, 189, 248, 0.4);
-            --border-active: #38bdf8;
-            --text-primary: #ffffff;
-            --text-secondary: #8e8e93;
-            --text-muted: #48484a;
-            --cyan: #06b6d4;
-            --cyan-glow: rgba(6, 182, 212, 0.2);
-            --blue: #38bdf8;
-            --blue-glow: rgba(56, 189, 248, 0.2);
+            --bg-surface: #0a0a0a;
+            --bg-surface-elevated: #121212;
+            --bg-input: #050505;
+            --border-subtle: #1f1f23;
+            --border-strong: #333338;
+            --text-main: #ffffff;
+            --text-muted: #8e8e93;
+            --text-dark: #545458;
+            --accent: #38bdf8;
+            --accent-subtle: rgba(56, 189, 248, 0.12);
             --green: #22c55e;
-            --green-glow: rgba(34, 197, 94, 0.2);
+            --green-subtle: rgba(34, 197, 94, 0.12);
             --red: #ef4444;
-            --red-glow: rgba(239, 68, 68, 0.2);
+            --red-subtle: rgba(239, 68, 68, 0.12);
             --purple: #c084fc;
-            --purple-glow: rgba(192, 132, 252, 0.2);
+            --purple-subtle: rgba(192, 132, 252, 0.12);
             --orange: #fb923c;
-            --orange-glow: rgba(251, 146, 60, 0.2);
-            --shadow-panel: 0 10px 35px -5px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.08);
+            --orange-subtle: rgba(251, 146, 60, 0.12);
         }
 
         :root[data-theme="light"] {
-            --bg-base: #f1f5f9;
+            --bg-body: #f4f4f5;
             --bg-sidebar: #ffffff;
-            --bg-panel: #ffffff;
-            --bg-card: #f8fafc;
-            --bg-card-hover: #f1f5f9;
-            --bg-input: #e2e8f0;
-            --border: rgba(0, 0, 0, 0.08);
-            --border-hover: rgba(2, 132, 199, 0.4);
-            --border-active: #0284c7;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --cyan: #0891b2;
-            --cyan-glow: rgba(8, 145, 178, 0.1);
-            --blue: #0284c7;
-            --blue-glow: rgba(2, 132, 199, 0.1);
+            --bg-surface: #ffffff;
+            --bg-surface-elevated: #f4f4f5;
+            --bg-input: #e4e4e7;
+            --border-subtle: #e4e4e7;
+            --border-strong: #d4d4d8;
+            --text-main: #09090b;
+            --text-muted: #71717a;
+            --text-dark: #a1a1aa;
+            --accent: #0284c7;
+            --accent-subtle: rgba(2, 132, 199, 0.08);
             --green: #059669;
-            --green-glow: rgba(5, 150, 105, 0.1);
+            --green-subtle: rgba(5, 150, 105, 0.08);
             --red: #e11d48;
-            --red-glow: rgba(225, 29, 72, 0.1);
+            --red-subtle: rgba(225, 29, 72, 0.08);
             --purple: #9333ea;
-            --purple-glow: rgba(147, 51, 234, 0.1);
-            --orange: #ea580c;
-            --orange-glow: rgba(234, 88, 12, 0.1);
-            --shadow-panel: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            --purple-subtle: rgba(147, 51, 234, 0.08);
+            --orange: #d97706;
+            --orange-subtle: rgba(217, 119, 6, 0.08);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
             -webkit-font-smoothing: antialiased;
         }
 
         body {
-            background-color: var(--bg-base);
-            color: var(--text-primary);
+            background-color: var(--bg-body);
+            color: var(--text-main);
             min-height: 100vh;
             display: flex;
+            font-size: 12px;
+            line-height: 1.4;
             overflow: hidden;
-            font-size: 13px;
         }
 
         .mono {
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* ==================== 2. MASAÜSTÜ SIDEBAR (SOL MENÜ) ==================== */
+        /* ==================== 2. WORKSTATION SIDEBAR ==================== */
         aside.sidebar {
-            width: 250px;
+            width: 220px;
             background-color: var(--bg-sidebar);
-            border-right: 1px solid var(--border);
+            border-right: 1px solid var(--border-subtle);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 20px 14px;
+            padding: 16px 12px;
             flex-shrink: 0;
-            z-index: 50;
+            user-select: none;
         }
 
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 4px 8px 20px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .brand-logo {
-            width: 36px;
-            height: 36px;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(168, 85, 247, 0.2));
-            border: 1px solid var(--border-hover);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 0 15px var(--blue-glow);
-        }
-
-        .brand-text h1 {
-            font-size: 16px;
-            font-weight: 900;
-            letter-spacing: 1.5px;
-            background: linear-gradient(90deg, var(--text-primary), var(--blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .brand-text p {
-            font-size: 9px;
-            font-weight: 700;
-            color: var(--blue);
-            letter-spacing: 1px;
-        }
-
-        .nav-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-top: 20px;
-        }
-
-        .nav-item {
+        .brand-header {
             display: flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 14px;
-            border-radius: 10px;
-            color: var(--text-secondary);
-            font-weight: 600;
-            font-size: 12px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            transition: all 0.2s ease;
-            background: none;
-            width: 100%;
-            text-align: left;
+            padding: 4px 8px 16px;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        .nav-item:hover {
-            color: var(--text-primary);
-            background-color: rgba(255, 255, 255, 0.04);
+        .brand-logo {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-strong);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
         }
 
-        .nav-item.active {
-            color: var(--blue);
-            background: var(--blue-glow);
-            border-color: rgba(56, 189, 248, 0.3);
-            box-shadow: inset 0 0 12px rgba(56, 189, 248, 0.1);
+        .brand-title {
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
         }
 
-        .sidebar-bottom {
-            border-top: 1px solid var(--border);
-            padding-top: 16px;
+        .nav-list {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 2px;
+            margin-top: 16px;
         }
 
-        .api-status-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 12px;
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 12px;
+            border: 1px solid transparent;
+            background: none;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+
+        .nav-btn:hover {
+            color: var(--text-main);
+            background-color: var(--bg-surface-elevated);
+        }
+
+        .nav-btn.active {
+            color: var(--text-main);
+            background-color: var(--bg-surface-elevated);
+            border-color: var(--border-strong);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-badge {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            padding: 4px 6px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
         }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
+        .live-dot {
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background-color: var(--green);
-            box-shadow: 0 0 8px var(--green);
             display: inline-block;
-            margin-right: 6px;
+            margin-right: 4px;
         }
 
-        /* ==================== 3. ANA GÖVDE VE TOPBAR ==================== */
-        main.main-viewport {
+        /* ==================== 3. MAIN WORKSPACE ==================== */
+        main.workspace-main {
             flex: 1;
             display: flex;
             flex-direction: column;
             overflow-y: auto;
-            overflow-x: hidden;
-            background: radial-gradient(circle at top right, rgba(56, 189, 248, 0.03), transparent 40%),
-                        radial-gradient(circle at bottom left, rgba(168, 85, 247, 0.03), transparent 40%);
+            background-color: var(--bg-body);
         }
 
-        header.top-ribbon {
-            background-color: var(--bg-panel);
-            border-bottom: 1px solid var(--border);
-            padding: 12px 28px;
+        header.topbar {
+            height: 48px;
+            background-color: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0 20px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            flex-shrink: 0;
             position: sticky;
             top: 0;
-            z-index: 40;
-            backdrop-filter: blur(10px);
+            z-index: 20;
+            flex-shrink: 0;
         }
 
-        .ribbon-kpis {
+        .kpi-strip {
             display: flex;
             align-items: center;
-            gap: 28px;
+            gap: 24px;
         }
 
-        .kpi-unit {
+        .kpi-item {
             display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .kpi-title {
-            font-size: 9px;
-            font-weight: 700;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
+            align-items: baseline;
             gap: 6px;
+        }
+
+        .kpi-lbl {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
         }
 
         .kpi-val {
-            font-size: 16px;
-            font-weight: 800;
-            color: var(--text-primary);
+            font-size: 13px;
+            font-weight: 700;
         }
 
-        .ribbon-actions {
+        .topbar-controls {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
-        .btn-pro {
-            background: linear-gradient(135deg, var(--blue), #6366f1);
-            color: #ffffff;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
+        .btn-ui {
+            background: var(--bg-surface-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
-            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.25);
-            transition: all 0.2s ease;
+            gap: 5px;
+            outline: none;
+            transition: border 0.15s ease;
         }
 
-        .btn-pro:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(56, 189, 248, 0.4);
+        .btn-ui:hover {
+            border-color: var(--border-strong);
         }
 
-        .select-terminal {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
+        .btn-ui.primary {
+            background: var(--text-main);
+            color: var(--bg-body);
+            border-color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .select-ui {
+            background: var(--bg-surface-elevated);
+            color: var(--text-main);
+            border: 1px solid var(--border-subtle);
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
             font-weight: 600;
             outline: none;
             cursor: pointer;
         }
 
-        .select-terminal:hover {
-            border-color: var(--border-hover);
-        }
-
-        /* ==================== 4. İÇERİK IZGARASI (DESKTOP WORKSPACE) ==================== */
-        .workspace {
-            padding: 24px 28px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 1720px;
-            margin: 0 auto;
-            width: 100%;
-        }
-
-        /* Zaman Dilimi ve Kontrol Çubuğu */
-        .controls-toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 8px 16px;
-            box-shadow: var(--shadow-panel);
-        }
-
-        .timeframe-group {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-tf {
-            background: none;
-            border: 1px solid transparent;
-            color: var(--text-secondary);
-            font-size: 11px;
-            font-weight: 700;
-            padding: 6px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.15s ease;
-        }
-
-        .btn-tf:hover {
-            color: var(--text-primary);
-            background-color: var(--bg-card);
-        }
-
-        .btn-tf.active {
-            color: var(--blue);
-            background: var(--blue-glow);
-            border-color: rgba(56, 189, 248, 0.3);
-        }
-
-        .months-dropdown-bar {
-            display: flex;
-            gap: 4px;
-            overflow-x: auto;
-            padding-top: 6px;
-        }
-
-        .month-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: var(--text-secondary);
-            font-size: 10px;
-            font-weight: 600;
-            padding: 4px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .month-btn.active {
-            background: var(--purple);
-            color: #fff;
-            border-color: var(--purple);
-        }
-
-        /* Canlı Pozisyonlar Geniş Masaüstü Paneli */
-        .panel-box {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
+        /* ==================== 4. DESKTOP PANELS & GRIDS ==================== */
+        .content-area {
             padding: 16px 20px;
-            box-shadow: var(--shadow-panel);
-        }
-
-        .panel-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-
-        .panel-title {
-            font-size: 13px;
-            font-weight: 800;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .positions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 12px;
-        }
-
-        .pos-card-desktop {
-            background: var(--bg-card);
-            border: 1px solid var(--border-hover);
-            border-radius: 10px;
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .pos-card-desktop::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 4px;
-            background: var(--blue);
-        }
-
-        .pos-pnl-pill {
-            font-size: 14px;
-            font-weight: 800;
-            padding: 6px 12px;
-            border-radius: 8px;
-        }
-
-        /* ==================== 5. ÇOK SÜTUNLU COIN STRATEJİ KARTLARI ==================== */
-        .coin-cards-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
-            gap: 20px;
-        }
-
-        .coin-pro-card {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 20px;
-            box-shadow: var(--shadow-panel);
             display: flex;
             flex-direction: column;
             gap: 16px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            position: relative;
+            max-width: 1800px;
+            width: 100%;
         }
 
-        .coin-pro-card:hover {
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 12px 35px -5px rgba(0, 0, 0, 0.6);
-        }
-
-        .coin-pro-card.in-pos-win {
-            border-color: rgba(16, 185, 129, 0.5) !important;
-            box-shadow: 0 0 25px rgba(16, 185, 129, 0.15);
-        }
-
-        .coin-pro-card.in-pos-loss {
-            border-color: rgba(244, 63, 94, 0.5) !important;
-            box-shadow: 0 0 25px rgba(244, 63, 94, 0.15);
-        }
-
-        .card-head-row {
+        .timeframe-filter-bar {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            padding: 6px 12px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
         }
 
-        .coin-identity {
+        .pill-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 4px;
         }
 
-        .coin-name {
-            font-size: 20px;
-            font-weight: 900;
-            letter-spacing: 0.5px;
-        }
-
-        .badge-interval {
-            background: var(--blue-glow);
-            color: var(--blue);
-            border: 1px solid rgba(56, 189, 248, 0.3);
-            font-size: 10px;
-            font-weight: 700;
-            padding: 2px 8px;
-            border-radius: 6px;
-        }
-
-        .card-price-block {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            background: var(--bg-card);
-            padding: 12px 16px;
-            border-radius: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .live-price-text {
-            font-size: 24px;
-            font-weight: 900;
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 6px;
-            transition: background 0.25s ease;
-        }
-
-        .flash-up { background: rgba(16, 185, 129, 0.3) !important; color: var(--green); }
-        .flash-down { background: rgba(244, 63, 94, 0.3) !important; color: var(--red); }
-
-        .price-meta-hilo {
-            font-size: 10px;
-            font-weight: 600;
+        .pill-btn {
+            background: none;
+            border: 1px solid transparent;
             color: var(--text-muted);
-            margin-top: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .pill-btn:hover {
+            color: var(--text-main);
+            background: var(--bg-surface-elevated);
+        }
+
+        .pill-btn.active {
+            color: var(--text-main);
+            background: var(--bg-surface-elevated);
+            border-color: var(--border-strong);
+        }
+
+        /* Compact Data Panels */
+        .pro-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .pro-panel-header {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        /* RSI Spektrum Çubuğu */
-        .spectrum-bar-wrap {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 8px 12px;
-        }
-
-        .spectrum-track {
-            height: 6px;
-            background: linear-gradient(90deg, #f43f5e 0%, rgba(244, 63, 94, 0.2) 28%, rgba(148, 163, 184, 0.1) 32%, rgba(148, 163, 184, 0.1) 68%, rgba(16, 185, 129, 0.2) 72%, #10b981 100%);
-            border-radius: 4px;
-            position: relative;
-            margin: 6px 0 4px;
-        }
-
-        .spectrum-pointer {
-            position: absolute;
-            top: 50%;
-            transform: translate(-50%, -50%);
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 2px solid var(--blue);
-            box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
-            transition: left 0.2s ease;
-        }
-
-        /* Sparkline Çizim Kutuları */
-        .charts-double-deck {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .sparkline-box-desktop {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 10px 12px;
+        .panel-heading {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
             display: flex;
-            flex-direction: column;
+            align-items: center;
             gap: 6px;
         }
 
-        .sparkline-header {
+        /* Active Positions Desktop Strip */
+        .positions-flex {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 8px;
+        }
+
+        .pos-item-compact {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 8px 12px;
             display: flex;
             justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Coin Cards Grid */
+        .cards-grid-layout {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 12px;
+        }
+
+        .card-pro {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: border-color 0.15s ease;
+        }
+
+        .card-pro:hover {
+            border-color: var(--border-strong);
+        }
+
+        .card-pro.in-pos-win {
+            border-left: 3px solid var(--green);
+        }
+
+        .card-pro.in-pos-loss {
+            border-left: 3px solid var(--red);
+        }
+
+        .card-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .coin-tag-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .coin-code {
+            font-size: 15px;
+            font-weight: 800;
+        }
+
+        .tag-interval {
             font-size: 9px;
             font-weight: 700;
-            color: var(--text-muted);
+            padding: 1px 5px;
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
+            color: var(--accent);
+        }
+
+        .card-price-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            background: var(--bg-surface-elevated);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
+        }
+
+        .val-price-hero {
+            font-size: 18px;
+            font-weight: 800;
+            display: inline-block;
+            padding: 1px 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .flash-up { background: var(--green-subtle); color: var(--green); }
+        .flash-down { background: var(--red-subtle); color: var(--red); }
+
+        /* Spectrum Bar */
+        .spectrum-wrap {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 6px 10px;
+        }
+
+        .spectrum-rail {
+            height: 4px;
+            background: linear-gradient(90deg, #f43f5e 0%, rgba(244, 63, 94, 0.2) 28%, rgba(113, 113, 122, 0.15) 32%, rgba(113, 113, 122, 0.15) 68%, rgba(16, 185, 129, 0.2) 72%, #10b981 100%);
+            border-radius: 2px;
+            position: relative;
+            margin: 4px 0;
+        }
+
+        .spectrum-dot {
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 1px solid var(--accent);
+            transition: left 0.15s ease;
+        }
+
+        /* Sparkline Deck */
+        .spark-deck {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .spark-box {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 6px 8px;
         }
 
         canvas.spark-canvas {
             width: 100%;
-            height: 55px;
+            height: 48px;
             display: block;
         }
 
-        /* Canlı Metrik Karoları */
-        .metrics-quad-row {
+        /* Metrics Row */
+        .metrics-trio {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
+            gap: 6px;
         }
 
-        .metric-cell {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 8px 10px;
+        .metric-unit {
+            background: var(--bg-surface-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 6px 8px;
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
 
-        .metric-cell span {
-            font-size: 9px;
+        .metric-unit span {
+            font-size: 8px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-transform: uppercase;
+        }
+
+        .metric-unit strong {
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        /* Drawer & Steppers */
+        .card-details-panel {
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .card-details-panel.open {
+            display: flex;
+        }
+
+        .stepper-grid-compact {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .stepper-item {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stepper-item label {
+            font-size: 8px;
             font-weight: 700;
             color: var(--text-muted);
             text-transform: uppercase;
         }
 
-        .metric-cell strong {
-            font-size: 13px;
-            font-weight: 800;
-        }
-
-        /* Akordeon ve Gelişmiş Ayarlar */
-        .card-expand-drawer {
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-        }
-
-        .card-expand-drawer.open {
-            display: flex;
-        }
-
-        .stepper-pro-row {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-        }
-
-        .stepper-group {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .stepper-group label {
-            font-size: 8px;
-            font-weight: 800;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .stepper-input-box {
+        .stepper-control {
             display: flex;
             align-items: center;
             background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 6px;
+            border: 1px solid var(--border-subtle);
+            border-radius: 4px;
             overflow: hidden;
         }
 
-        .stepper-input-box button {
+        .stepper-control button {
             background: none;
             border: none;
-            color: var(--text-primary);
-            padding: 6px 8px;
-            font-weight: 800;
-            font-size: 11px;
+            color: var(--text-main);
+            padding: 4px 6px;
+            font-weight: 700;
+            font-size: 10px;
             cursor: pointer;
         }
 
-        .stepper-input-box button:hover {
-            background: rgba(255, 255, 255, 0.08);
+        .stepper-control button:hover {
+            background: var(--bg-surface-elevated);
         }
 
-        .stepper-input-box input {
+        .stepper-control input {
             width: 100%;
             background: none;
             border: none;
-            color: var(--text-primary);
+            color: var(--text-main);
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             outline: none;
         }
 
-        /* ==================== 6. VERİ TABLOLARI & LOGLAR ==================== */
-        .data-table-wrap {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        table.pro-table {
+        /* Tables */
+        table.clean-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px;
+            font-size: 11px;
             text-align: left;
         }
 
-        table.pro-table th {
-            padding: 10px 14px;
-            color: var(--text-muted);
-            font-size: 10px;
+        table.clean-table th {
+            padding: 8px 10px;
+            color: var(--text-dark);
+            font-size: 9px;
             font-weight: 700;
             text-transform: uppercase;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        table.pro-table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-primary);
+        table.clean-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--border-subtle);
         }
 
-        table.pro-table tbody tr:hover {
-            background-color: var(--bg-card-hover);
+        table.clean-table tr:hover {
+            background: var(--bg-surface-elevated);
         }
 
-        /* ==================== 7. MASAÜSTÜ MODAL SİSTEMİ ==================== */
-        .modal-backdrop {
+        /* Modal Dialog */
+        .modal-wrap {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 100;
             display: flex;
             align-items: center;
             justify-content: center;
             opacity: 0;
             visibility: hidden;
-            transition: all 0.2s ease;
+            transition: all 0.15s ease;
         }
 
-        .modal-backdrop.open {
+        .modal-wrap.open {
             opacity: 1;
             visibility: visible;
         }
 
-        .modal-dialog {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            width: 100%;
-            max-width: 540px;
-            padding: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-            transform: scale(0.95);
-            transition: transform 0.2s ease;
-        }
-
-        .modal-backdrop.open .modal-dialog {
-            transform: scale(1);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            margin-bottom: 16px;
-        }
-
-        .form-group label {
-            font-size: 10px;
-            font-weight: 800;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-
-        .form-control-pro {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            color: var(--text-primary);
-            padding: 10px 14px;
+        .modal-box {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-strong);
             border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            outline: none;
             width: 100%;
+            max-width: 480px;
+            padding: 18px;
         }
 
-        .form-control-pro:focus {
-            border-color: var(--blue);
-        }
-
-        .hide-tab {
-            display: none !important;
-        }
+        .hide { display: none !important; }
     </style>
 </head>
 <body>
 
-    <!-- ==================== SOL MASAÜSTÜ SIDEBAR ==================== -->
+    <!-- ==================== SIDEBAR ==================== -->
     <aside class="sidebar">
         <div>
-            <div class="sidebar-brand">
+            <div class="brand-header">
                 <div class="brand-logo">🦅</div>
-                <div class="brand-text">
-                    <h1>KUZGUN PRO</h1>
-                    <p class="mono">CLOUD TERMINAL</p>
+                <div>
+                    <div class="brand-title">KUZGUN PRO</div>
+                    <div class="mono" style="font-size: 8px; font-weight: 700; color: var(--accent);">ALGO ENGINE</div>
                 </div>
             </div>
 
-            <nav class="nav-menu">
-                <button class="nav-item active" onclick="App.switchTab('terminal', this)">
-                    <span>⚡</span> <span>Dashboard Terminal</span>
+            <nav class="nav-list">
+                <button class="nav-btn active" onclick="App.switchTab('terminal', this)">
+                    <span>⚡</span> <span>Terminal</span>
                 </button>
-                <button class="nav-item" onclick="App.switchTab('trades', this)">
+                <button class="nav-btn" onclick="App.switchTab('trades', this)">
                     <span>📜</span> <span>İşlem Defteri</span>
                 </button>
-                <button class="nav-item" onclick="App.switchTab('alarms', this)">
+                <button class="nav-btn" onclick="App.switchTab('alarms', this)">
                     <span>🔔</span> <span>Alarmlar & Bot</span>
                 </button>
-                <button class="nav-item" onclick="App.switchTab('settings', this)">
-                    <span>⚙️</span> <span>Sistem Ayarları</span>
+                <button class="nav-btn" onclick="App.switchTab('settings', this)">
+                    <span>⚙️</span> <span>Ayarlar</span>
                 </button>
             </nav>
         </div>
 
-        <div class="sidebar-bottom">
-            <div class="api-status-card">
-                <div>
-                    <div style="font-size: 10px; font-weight: 700; color: var(--text-muted);">BAĞLANTI DURUMU</div>
-                    <div style="font-size: 11px; font-weight: 800; margin-top: 2px;">
-                        <span class="status-dot"></span>Binance Canlı Hat
-                    </div>
-                </div>
-                <span class="mono" style="font-size: 10px; color: var(--green);">24ms</span>
+        <div class="sidebar-footer">
+            <div class="status-badge mono">
+                <span><span class="live-dot"></span>Binance Feed</span>
+                <span style="color: var(--green);">Aktif</span>
             </div>
-
-            <div style="font-size: 10px; color: var(--text-muted); text-align: center;" class="mono">
+            <div style="font-size: 9px; color: var(--text-dark); text-align: center;" class="mono">
                 codemso by mehmetsalihok[cite: 21]
             </div>
         </div>
     </aside>
 
-    <!-- ==================== SAĞ GENİŞ EKRAN GÖVDESİ ==================== -->
-    <main class="main-viewport">
+    <!-- ==================== MAIN VIEWPORT ==================== -->
+    <main class="workspace-main">
 
-        <!-- ÜST KPI VE KONTROL ŞERİDİ -->
-        <header class="top-ribbon">
-            <div class="ribbon-kpis">
-                <div class="kpi-unit">
-                    <span class="kpi-title">Bileşik Portföy Sermayesi</span>
-                    <span class="kpi-val mono" id="top-total-balance">$1000.00 USDT</span>
+        <!-- TOP KPI RIBBON -->
+        <header class="topbar">
+            <div class="kpi-strip">
+                <div class="kpi-item">
+                    <span class="kpi-lbl">Bileşik Kasa</span>
+                    <span class="kpi-val mono" id="top-total-balance">$1000.00</span>
                 </div>
-                <div style="width: 1px; height: 28px; background: var(--border);"></div>
-                <div class="kpi-unit">
-                    <span class="kpi-title">Eşzamanlı Slotlar</span>
-                    <span class="kpi-val mono" id="top-slots-badge" style="color: var(--blue);">0 / 2 Pozisyon</span>
+                <div class="kpi-item">
+                    <span class="kpi-lbl">Slotlar</span>
+                    <span class="kpi-val mono" id="top-slots-badge" style="color: var(--accent);">0/2</span>
                 </div>
-                <div style="width: 1px; height: 28px; background: var(--border);"></div>
-                <div class="kpi-unit">
-                    <span class="kpi-title" id="kpi-timeframe-label">Bugün Net Kâr / Zarar</span>
-                    <span class="kpi-val mono" id="top-net-gain" style="color: var(--green);">+$0.00 USDT (+0.00%)</span>
+                <div class="kpi-item">
+                    <span class="kpi-lbl" id="kpi-time-label">Bugün Net Kazanç</span>
+                    <span class="kpi-val mono" id="top-net-gain" style="color: var(--green);">+$0.00 (+0.00%)</span>
                 </div>
             </div>
 
-            <div class="ribbon-actions">
-                <select class="select-terminal" id="theme-selector" onchange="App.setTheme(this.value)">
-                    <option value="dark">Karanlık Mod</option>
-                    <option value="oled">OLED Siyah</option>
-                    <option value="light">Aydınlık Mod</option>
+            <div class="topbar-controls">
+                <select class="select-ui" id="theme-selector" onchange="App.setTheme(this.value)">
+                    <option value="dark">Dark</option>
+                    <option value="oled">OLED</option>
+                    <option value="light">Light</option>
                 </select>
-                <select class="select-terminal mono" id="year-selector" onchange="App.setYear(this.value)">
+                <select class="select-ui mono" id="year-selector" onchange="App.setYear(this.value)">
                     <option value="2026">2026</option>
                     <option value="2025">2025</option>
                 </select>
-                <button class="btn-pro" onclick="ModalManager.open('add-coin')">
-                    <span>➕</span> Yeni Parite Ekle
+                <button class="btn-ui primary" onclick="ModalManager.open('add-coin')">
+                    <span>+</span> Parite Ekle
                 </button>
             </div>
         </header>
 
-        <!-- ÇALIŞMA ALANI (WORKSPACE) -->
-        <div class="workspace">
+        <!-- CONTENT -->
+        <div class="content-area">
 
-            <!-- ==================== SEKME 1: DASHBOARD TERMINAL ==================== -->
+            <!-- TAB 1: TERMINAL -->
             <div id="tab-terminal">
-                
-                <!-- ZAMAN DİLİMİ VE FİLTRE ÇUBUĞU -->
-                <div class="controls-toolbar" style="margin-bottom: 20px;">
-                    <div class="timeframe-group">
-                        <span style="font-size: 10px; font-weight: 800; color: var(--text-muted); margin-right: 6px;">PORTFÖY PERİYODU:</span>
-                        <button class="btn-tf active" onclick="App.setTimeframe('today', this)">Bugün</button>
-                        <button class="btn-tf" onclick="App.setTimeframe('week', this)">Bu Hafta</button>
-                        <button class="btn-tf" onclick="App.setTimeframe('month', this)">Bu Ay</button>
-                        <button class="btn-tf" onclick="App.setTimeframe('selectMonth', this)">Ay Seç</button>
-                        <button class="btn-tf" onclick="ModalManager.open('custom-range')">Özel Tarih Aralığı</button>
+                <div class="timeframe-filter-bar" style="margin-bottom: 12px;">
+                    <div class="pill-group">
+                        <span style="font-size: 9px; font-weight: 700; color: var(--text-dark); margin-right: 4px;">FİLTRE:</span>
+                        <button class="pill-btn active" onclick="App.setTimeframe('today', this)">Bugün</button>
+                        <button class="pill-btn" onclick="App.setTimeframe('week', this)">Bu Hafta</button>
+                        <button class="pill-btn" onclick="App.setTimeframe('month', this)">Bu Ay</button>
+                        <button class="pill-btn" onclick="App.setTimeframe('selectMonth', this)">Ay Seç</button>
+                        <button class="pill-btn" onclick="ModalManager.open('custom-range')">Özel Aralık</button>
                     </div>
+                    <div id="months-bar-wrap" style="display: none;" class="pill-group"></div>
+                </div>
 
-                    <div id="months-bar-container" style="display: none;">
-                        <div class="months-dropdown-bar" id="months-selection-bar"></div>
+                <!-- BEKLEME LİSTESİ ŞERİDİ -->
+                <div id="pending-banner" class="pro-panel" style="display: none; background: var(--orange-subtle); border-color: rgba(245, 158, 11, 0.3); margin-bottom: 12px; padding: 8px 12px;">
+                    <div style="font-size: 11px; font-weight: 700; color: var(--orange);">
+                        <span>⏳ Bekleme Listesinde Sinyal Var:</span> <strong id="pending-coins-text" class="mono" style="color: var(--text-main);"></strong>
                     </div>
                 </div>
 
-                <!-- BEKLEMEDEKİ SİNYALLER BİLGİ ŞERİDİ -->
-                <div id="pending-banner" style="display: none; background: var(--orange-glow); border: 1px solid rgba(249, 115, 22, 0.3); padding: 10px 16px; border-radius: 10px; margin-bottom: 20px; align-items: center; justify-content: space-between;">
-                    <div style="color: var(--orange); font-weight: 700; font-size: 12px; display: flex; align-items: center; gap: 8px;">
-                        <span>⏳</span> Slotlar Dolu Olduğu İçin Bekleme Kuyruğunda Olan İskontolu Sinyaller:
-                        <strong id="pending-coins-text" style="color: #fff;" class="mono"></strong>
+                <!-- CANLI AÇIK POZİSYONLAR -->
+                <div class="pro-panel" style="margin-bottom: 12px;">
+                    <div class="pro-panel-header">
+                        <div class="panel-heading"><span>⚡</span> Canlı Açık Pozisyonlar</div>
+                        <span class="mono" style="font-size: 10px; color: var(--text-muted);" id="active-count-label">0 Pozisyon</span>
                     </div>
-                    <span class="mono" style="font-size: 11px; font-weight: 800; color: var(--orange);">Kuyruk Aktif</span>
+                    <div class="positions-flex" id="active-positions-container">
+                        <div style="color: var(--text-muted); font-size: 11px;">Şu an açık pozisyon bulunmuyor.</div>
+                    </div>
                 </div>
 
-                <!-- AÇIK POZİSYONLAR BÖLÜMÜ -->
-                <div class="panel-box" style="margin-bottom: 20px;">
-                    <div class="panel-header">
-                        <div class="panel-title" style="color: var(--blue);">
-                            <span>⚡</span> CANLI AÇIK POZİSYONLAR
+                <!-- PARİTE KARTLARI GRİDİ -->
+                <div class="cards-grid-layout" id="coin-cards-grid"></div>
+            </div>
+
+            <!-- TAB 2: İŞLEM DEFTERİ -->
+            <div id="tab-trades" class="hide">
+                <div class="pro-panel">
+                    <div class="pro-panel-header">
+                        <div class="panel-heading"><span>📜</span> Tamamlanan İşlemler Logu</div>
+                    </div>
+                    <table class="clean-table">
+                        <thead>
+                            <tr>
+                                <th>Parite</th>
+                                <th>Neden</th>
+                                <th>Giriş</th>
+                                <th>Çıkış</th>
+                                <th>PnL (%)</th>
+                                <th>Kazanç ($)</th>
+                                <th>Kapanış</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trades-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: ALARMLAR -->
+            <div id="tab-alarms" class="hide">
+                <div class="pro-panel" style="margin-bottom: 12px;">
+                    <div class="pro-panel-header">
+                        <div class="panel-heading"><span>🔔</span> RSI Eşik Alarmları</div>
+                    </div>
+                    <div id="alarms-list-container" style="display: flex; flex-direction: column; gap: 6px;"></div>
+                </div>
+
+                <div class="pro-panel">
+                    <div class="pro-panel-header">
+                        <div class="panel-heading"><span>✈️</span> Telegram Entegrasyonu</div>
+                    </div>
+                    <div style="max-width: 400px; display: flex; flex-direction: column; gap: 8px;">
+                        <input type="text" class="btn-ui mono" id="setting-telegram-chatid" value="1059064615" onchange="Storage.set('telegram_chat_id', this.value)">[cite: 21]
+                        <button class="btn-ui" style="align-self: flex-start;" onclick="App.testTelegram()">Test Bildirimi Gönder</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 4: AYARLAR -->
+            <div id="tab-settings" class="hide">
+                <div class="pro-panel" style="max-width: 500px;">
+                    <div class="pro-panel-header">
+                        <div class="panel-heading"><span>💰</span> Sermaye ve Slot Yönetimi</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div>
+                            <label style="font-size: 9px; font-weight: 700; color: var(--text-dark);">BAŞLANGIÇ SERMAYESİ (USDT)</label>
+                            <input type="number" step="0.01" class="btn-ui mono" style="width: 100%; margin-top: 3px;" id="setting-balance-input" value="1000.00" onchange="App.updateBalance(this.value)">[cite: 21]
                         </div>
-                        <span class="mono" style="font-size: 11px; font-weight: 700; color: var(--text-muted);" id="active-count-label">0 Pozisyon</span>
-                    </div>
-                    <div class="positions-grid" id="active-positions-container">
-                        <div style="padding: 12px; color: var(--text-muted); font-size: 12px;">Şu an açık pozisyon bulunmuyor.</div>
-                    </div>
-                </div>
-
-                <!-- COIN STRATEJİ ANALİZ KARTLARI (ÇOKLU SÜTUN) -->
-                <div class="coin-cards-grid" id="coin-cards-grid">
-                    <!-- Dinamik Parite Kartları -->
-                </div>
-            </div>
-
-            <!-- ==================== SEKME 2: İŞLEM DEFTERİ & ANALİTİK ==================== -->
-            <div id="tab-trades" class="hide-tab">
-                <div class="panel-box">
-                    <div class="panel-header">
-                        <div class="panel-title"><span>📜</span> TAMAMLANAN TÜM İŞLEMLER VE SİNYAL LOGLARI</div>
-                    </div>
-                    <div class="data-table-wrap">
-                        <table class="pro-table">
-                            <thead>
-                                <tr>
-                                    <th>Parite</th>
-                                    <th>Sinyal / Neden</th>
-                                    <th>Giriş Fiyatı</th>
-                                    <th>Çıkış Fiyatı</th>
-                                    <th>PnL (%)</th>
-                                    <th>Kazanç (USDT)</th>
-                                    <th>Kapanış Zamanı</th>
-                                </tr>
-                            </thead>
-                            <tbody id="trades-table-body">
-                                <tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Henüz işlem kaydı yok.</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ==================== SEKME 3: ALARMLAR & BOT ==================== -->
-            <div id="tab-alarms" class="hide-tab">
-                <div class="panel-box" style="margin-bottom: 20px;">
-                    <div class="panel-header">
-                        <div class="panel-title"><span>🔔</span> PARİTE BAZLI CANLI RSI ALARM LİSTESİ</div>
-                    </div>
-                    <div id="alarms-list-container" style="display: flex; flex-direction: column; gap: 8px;"></div>
-                </div>
-
-                <div class="panel-box">
-                    <div class="panel-header">
-                        <div class="panel-title"><span>✈️</span> TELEGRAM BİLDİRİM VE SİNYAL BOTU</div>
-                    </div>
-                    <div style="max-width: 600px; display: flex; flex-direction: column; gap: 14px;">
-                        <div class="form-group">
-                            <label>Telegram Chat ID</label>
-                            <input type="text" class="form-control-pro mono" id="setting-telegram-chatid" value="1059064615" onchange="Storage.set('telegram_chat_id', this.value)">[cite: 21]
+                        <div>
+                            <label style="font-size: 9px; font-weight: 700; color: var(--text-dark);">EŞZAMANLI SLOT LİMİTİ</label>
+                            <input type="number" min="1" max="5" class="btn-ui mono" style="width: 100%; margin-top: 3px;" id="setting-slots-input" value="2" onchange="App.updateSlots(this.value)">[cite: 21]
                         </div>
-                        <button class="btn-pro" style="align-self: flex-start;" onclick="App.testTelegram()">
-                            Test Bildirimi Gönder
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ==================== SEKME 4: SİSTEM AYARLARI ==================== -->
-            <div id="tab-settings" class="hide-tab">
-                <div class="panel-box" style="max-width: 700px;">
-                    <div class="panel-header">
-                        <div class="panel-title"><span>💰</span> SERMAYE VE KASA YÖNETİMİ</div>
-                    </div>
-
-                    <div class="form-group">
-                        <label>BAŞLANGIÇ SERMAYESİ (USDT)</label>
-                        <input type="number" step="0.01" class="form-control-pro mono" id="setting-balance-input" value="1000.00" onchange="App.updateBalance(this.value)">[cite: 21]
-                    </div>
-
-                    <div class="form-group">
-                        <label>EŞZAMANLI SLOT LİMİTİ (MAKSİMUM AÇIK POZİSYON)</label>
-                        <input type="number" min="1" max="5" class="form-control-pro mono" id="setting-slots-input" value="2" onchange="App.updateSlots(this.value)">[cite: 21]
-                    </div>
-
-                    <div class="form-group">
-                        <label>SERMAYE BAŞLANGIÇ TARİHİ</label>
-                        <input type="datetime-local" class="form-control-pro mono" id="setting-start-time" onchange="App.updateStartTime(this.value)">
-                        <div style="display: flex; gap: 6px; margin-top: 8px;">
-                            <button class="btn-tf" onclick="App.setQuickDate('now')">Şimdi</button>[cite: 21]
-                            <button class="btn-tf" onclick="App.setQuickDate('today')">Bugün 00:00</button>[cite: 21]
-                            <button class="btn-tf" onclick="App.setQuickDate('24h')">24s Önce</button>[cite: 21]
-                            <button class="btn-tf" onclick="App.setQuickDate('3d')">3 Gün Önce</button>[cite: 21]
-                            <button class="btn-tf" onclick="App.setQuickDate('yearStart')">Yıl Başı</button>[cite: 21]
+                        <div>
+                            <label style="font-size: 9px; font-weight: 700; color: var(--text-dark);">SERMAYE BAŞLANGIÇ TARİHİ</label>
+                            <input type="datetime-local" class="btn-ui mono" style="width: 100%; margin-top: 3px;" id="setting-start-time" onchange="App.updateStartTime(this.value)">
+                            <div style="display: flex; gap: 4px; margin-top: 6px;">
+                                <button class="btn-ui" onclick="App.setQuickDate('now')">Şimdi</button>[cite: 21]
+                                <button class="btn-ui" onclick="App.setQuickDate('today')">Bugün 00:00</button>[cite: 21]
+                                <button class="btn-ui" onclick="App.setQuickDate('24h')">24s Önce</button>[cite: 21]
+                                <button class="btn-ui" onclick="App.setQuickDate('yearStart')">Yıl Başı</button>[cite: 21]
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1043,101 +858,91 @@
         </div>
     </main>
 
-    <!-- ==================== MODAL: YENİ PARİTE EKLE ==================== -->
-    <div class="modal-backdrop" id="modal-add-coin">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h3 style="font-size: 16px; font-weight: 800;">Yeni Parite & Strateji Ekle</h3>
-                <button onclick="ModalManager.close('add-coin')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px;">✕</button>
+    <!-- ==================== MODAL: ADD COIN ==================== -->
+    <div class="modal-wrap" id="modal-add-coin">
+        <div class="modal-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <strong style="font-size: 13px;">Yeni Parite Ekle</strong>
+                <button onclick="ModalManager.close('add-coin')" style="background: none; border: none; color: var(--text-dark); cursor: pointer;">✕</button>
             </div>
-
-            <div class="form-group">
-                <label>Coin / Sembol (Binance USDT Çifti)</label>
-                <div style="display: flex; gap: 8px;">
-                    <input type="text" id="add-symbol-input" class="form-control-pro mono" placeholder="Örn: FLOKI, ASTER, ETH" style="text-transform: uppercase;">
-                    <button class="btn-pro" onclick="App.verifyBinanceSymbol()">Doğrula</button>
-                </div>
-                <div id="verify-status" style="font-size: 11px; margin-top: 4px;"></div>
+            <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+                <input type="text" id="add-symbol-input" class="btn-ui mono" placeholder="Örn: FLOKI, ASTER, BTC" style="text-transform: uppercase; flex: 1;">
+                <button class="btn-ui primary" onclick="App.verifyBinanceSymbol()">Doğrula</button>
             </div>
+            <div id="verify-status" style="font-size: 10px; margin-bottom: 10px;"></div>
 
             <div id="add-coin-form-body" style="display: none;">
-                <div class="form-group">
-                    <label>Zaman Dilimi</label>
-                    <select class="form-control-pro mono" id="add-interval-input">
-                        <option value="5m">5 Dakika (5m)</option>
-                        <option value="15m" selected>15 Dakika (15m)</option>
-                        <option value="30m">30 Dakika (30m)</option>
-                        <option value="1h">1 Saat (1h)</option>
-                        <option value="4h">4 Saat (4h)</option>
-                    </select>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px;">
-                    <div class="form-group">
-                        <label>RSI Periyot</label>
-                        <input type="number" id="add-rsi-length" class="form-control-pro mono" value="14">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div>
+                        <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">ZAMAN DİLİMİ</label>
+                        <select class="btn-ui mono" id="add-interval-input" style="width: 100%;">
+                            <option value="5m">5m</option>
+                            <option value="15m" selected>15m</option>
+                            <option value="30m">30m</option>
+                            <option value="1h">1h</option>
+                            <option value="4h">4h</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label>RSI Al Limit</label>
-                        <input type="number" id="add-buy-rsi" class="form-control-pro mono" value="25">
-                    </div>
-                    <div class="form-group">
-                        <label>RSI Sat Limit</label>
-                        <input type="number" id="add-sell-rsi" class="form-control-pro mono" value="75">
+                    <div>
+                        <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">RSI PERİYOT</label>
+                        <input type="number" id="add-rsi-length" class="btn-ui mono" value="14" style="width: 100%;">
                     </div>
                 </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
-                    <div class="form-group">
-                        <label>Hedef Kâr (%)</label>
-                        <input type="number" step="0.5" id="add-profit-target" class="form-control-pro mono" value="4.0">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+                    <div>
+                        <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">RSI AL EŞİK</label>
+                        <input type="number" id="add-buy-rsi" class="btn-ui mono" value="25" style="width: 100%;">
                     </div>
-                    <div class="form-group">
-                        <label>Aylık Kilit (%)</label>
-                        <input type="number" step="0.5" id="add-monthly-cap" class="form-control-pro mono" value="3.0">
+                    <div>
+                        <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">RSI SAT EŞİK</label>
+                        <input type="number" id="add-sell-rsi" class="btn-ui mono" value="75" style="width: 100%;">
                     </div>
                 </div>
-
-                <button class="btn-pro" style="width: 100%; justify-content: center; padding: 12px;" onclick="App.saveNewCoinCard()">
-                    Pariteyi Terminale Ekle
-                </button>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px;">
+                    <div>
+                        <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">HEDEF KÂR (%)</label>
+                        <input type="number" step="0.5" id="add-profit-target" class="btn-ui mono" value="4.0" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">AYLIK KİLİT (%)</label>
+                        <input type="number" step="0.5" id="add-monthly-cap" class="btn-ui mono" value="3.0" style="width: 100%;">
+                    </div>
+                </div>
+                <button class="btn-ui primary" style="width: 100%; justify-content: center; padding: 8px;" onclick="App.saveNewCoinCard()">Terminale Kaydet</button>
             </div>
         </div>
     </div>
 
-    <!-- ==================== MODAL: STRATEJİ SİHİRBAZI ==================== -->
-    <div class="modal-backdrop" id="modal-optimizer">
-        <div class="modal-dialog" style="max-width: 580px;">
-            <div class="modal-header">
-                <h3 style="font-size: 16px; font-weight: 800;">STRATEJİ SİHİRBAZI OPTİMİZASYONU</h3>
-                <button onclick="ModalManager.close('optimizer')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px;">✕</button>
+    <!-- ==================== MODAL: OPTIMIZER ==================== -->
+    <div class="modal-wrap" id="modal-optimizer">
+        <div class="modal-box" style="max-width: 440px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <strong style="font-size: 13px;">Strateji Sihirbazı Optimizasyonu</strong>[cite: 8]
+                <button onclick="ModalManager.close('optimizer')" style="background: none; border: none; color: var(--text-dark); cursor: pointer;">✕</button>
             </div>
             <div id="optimizer-render-box"></div>
         </div>
     </div>
 
-    <!-- ==================== MODAL: MANUEL MALİYET REVİZE ==================== -->
-    <div class="modal-backdrop" id="modal-edit-entry">
-        <div class="modal-dialog" style="max-width: 400px;">
-            <div class="modal-header">
-                <h3 style="font-size: 16px; font-weight: 800;">Maliyet Fiyatını Revize Et</h3>
-                <button onclick="ModalManager.close('edit-entry')" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 16px;">✕</button>
+    <!-- ==================== MODAL: EDIT ENTRY ==================== -->
+    <div class="modal-wrap" id="modal-edit-entry">
+        <div class="modal-box" style="max-width: 340px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <strong style="font-size: 13px;">Maliyet Revizesi</strong>[cite: 8]
+                <button onclick="ModalManager.close('edit-entry')" style="background: none; border: none; color: var(--text-dark); cursor: pointer;">✕</button>
             </div>
-            <div class="form-group">
-                <label>Gerçekleşen Giriş Fiyatı ($)</label>
-                <input type="number" step="0.00000001" id="manual-entry-input" class="form-control-pro mono" placeholder="0.00">
+            <div style="margin-bottom: 10px;">
+                <label style="font-size: 8px; font-weight: 700; color: var(--text-dark);">GERÇEKLEŞEN GİRİŞ FİYATI ($)</label>
+                <input type="number" step="0.00000001" id="manual-entry-input" class="btn-ui mono" style="width: 100%; margin-top: 3px;">
             </div>
-            <button class="btn-pro" style="width: 100%; justify-content: center; padding: 10px;" onclick="App.saveManualEntryPrice()">
-                Fiyatı Güncelle
-            </button>
+            <button class="btn-ui primary" style="width: 100%; justify-content: center;" onclick="App.saveManualEntryPrice()">Fiyatı Güncelle</button>
         </div>
     </div>
 
-    <!-- ==================== JAVASCRIPT ÇEKİRDEK MOTORU ==================== -->
+    <!-- ==================== CORE JAVASCRIPT ==================== -->
     <script>
-        /* ==================== 1. STORAGE ==================== */
         const Storage = {
-            prefix: 'kuzgun_desktop_',
+            prefix: 'kuzgun_clean_',
             get(key, fallback) {
                 const item = localStorage.getItem(this.prefix + key);
                 if (!item) return fallback;
@@ -1148,7 +953,6 @@
             }
         };
 
-        /* ==================== 2. WEB AUDIO SES SENTEZLEYİCİ ==================== */
         const SoundEngine = {
             ctx: null,
             init() {
@@ -1162,10 +966,10 @@
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(523.25, t);
                 osc.frequency.exponentialRampToValueAtTime(1046.50, t + 0.15);
-                gain.gain.setValueAtTime(0.15, t);
-                gain.gain.linearRampToValueAtTime(0, t + 0.3);
+                gain.gain.setValueAtTime(0.12, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.25);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(t); osc.stop(t + 0.3);
+                osc.start(t); osc.stop(t + 0.25);
             },
             playSell() {
                 this.init();
@@ -1174,15 +978,14 @@
                 const gain = this.ctx.createGain();
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(880, t);
-                osc.frequency.exponentialRampToValueAtTime(440, t + 0.2);
-                gain.gain.setValueAtTime(0.15, t);
-                gain.gain.linearRampToValueAtTime(0, t + 0.35);
+                osc.frequency.exponentialRampToValueAtTime(440, t + 0.15);
+                gain.gain.setValueAtTime(0.12, t);
+                gain.gain.linearRampToValueAtTime(0, t + 0.3);
                 osc.connect(gain); gain.connect(this.ctx.destination);
-                osc.start(t); osc.stop(t + 0.35);
+                osc.start(t); osc.stop(t + 0.3);
             }
         };
 
-        /* ==================== 3. RSI VE FİYAT HESAPLAMA ==================== */
         const RSIEngine = {
             calculateHistory(prices, period = 14) {
                 if (prices.length <= period) return new Array(prices.length).fill(null);
@@ -1193,13 +996,13 @@
                 }
                 let avgGain = gains / period, avgLoss = losses / period;
                 const history = new Array(prices.length).fill(null);
-                history[period] = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));
+                history[period] = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));[cite: 19]
 
                 for (let i = period + 1; i < prices.length; i++) {
                     const diff = prices[i] - prices[i - 1];
-                    avgGain = (avgGain * (period - 1) + (diff >= 0 ? diff : 0)) / period;
-                    avgLoss = (avgLoss * (period - 1) + (diff < 0 ? Math.abs(diff) : 0)) / period;
-                    history[i] = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));
+                    avgGain = (avgGain * (period - 1) + (diff >= 0 ? diff : 0)) / period;[cite: 19]
+                    avgLoss = (avgLoss * (period - 1) + (diff < 0 ? Math.abs(diff) : 0)) / period;[cite: 19]
+                    history[i] = avgLoss === 0 ? 100 : 100 - (100 / (1 + (avgGain / avgLoss)));[cite: 19]
                 }
                 return history;
             }
@@ -1216,11 +1019,10 @@
             return "$" + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: decimals });
         }
 
-        /* ==================== 4. BINANCE API ==================== */
         const BinanceAPI = {
             baseURL: 'https://api.binance.com/api/v3',
             async fetchPrice(symbol) {
-                const res = await fetch(`${this.baseURL}/ticker/price?symbol=${symbol}`);
+                const res = await fetch(`${this.baseURL}/ticker/price?symbol=${symbol}`);[cite: 5]
                 const data = await res.json();
                 return parseFloat(data.price);
             },
@@ -1228,7 +1030,7 @@
                 let candles = [];
                 let currStart = startTime;
                 while (currStart < endTime) {
-                    const url = `${this.baseURL}/klines?symbol=${symbol}&interval=${interval}&limit=1000&startTime=${currStart}`;
+                    const url = `${this.baseURL}/klines?symbol=${symbol}&interval=${interval}&limit=1000&startTime=${currStart}`;[cite: 5]
                     const res = await fetch(url);
                     const raw = await res.json();
                     if (!Array.isArray(raw) || raw.length === 0) break;
@@ -1238,18 +1040,17 @@
                         high: parseFloat(i[2]),
                         low: parseFloat(i[3]),
                         close: parseFloat(i[4])
-                    })).filter(c => c.rawTime <= endTime);
+                    })).filter(c => c.rawTime <= endTime);[cite: 5]
                     if (batch.length === 0) break;
                     candles.push(...batch);
                     if (raw.length < 1000) break;
-                    currStart = raw[raw.length - 1][0] + 1;
+                    currStart = raw[raw.length - 1][0] + 1;[cite: 5]
                     await new Promise(r => setTimeout(r, 15));
                 }
                 return candles;
             }
         };
 
-        /* ==================== 5. ANA TERMINAL ENGINE ==================== */
         const App = {
             configs: [],
             candlesData: {},
@@ -1274,7 +1075,6 @@
             maxSlots: 2,
             compoundedBalance: 1000.0,
             portfolioStartDateMs: 0,
-            
             activeEditingConfigId: null,
 
             async init() {
@@ -1352,7 +1152,6 @@
                     const d = new Date(t);
                     const mKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 
-                    // Çıkış Kontrolü
                     Object.keys(activePos).forEach(cid => {
                         const p = activePos[cid];
                         const c = allCandleMaps[cid]?.[t];
@@ -1360,13 +1159,13 @@
                         if (!c || r === undefined) return;
 
                         let exit = false, pnl = 0, reason = "";
-                        if (c.high >= p.targetPrice) { exit = true; pnl = p.profitTarget; reason = `Kâr (%${p.profitTarget})`; }
-                        else if (r >= p.sellRsi) { exit = true; pnl = ((c.close - p.entryPrice) / p.entryPrice) * 100; reason = `RSI Sat (${r.toFixed(1)})`; }
+                        if (c.high >= p.targetPrice) { exit = true; pnl = p.profitTarget; reason = `Kâr (%${p.profitTarget})`; }[cite: 25]
+                        else if (r >= p.sellRsi) { exit = true; pnl = ((c.close - p.entryPrice) / p.entryPrice) * 100; reason = `RSI Sat (${r.toFixed(1)})`; }[cite: 25]
 
                         if (exit) {
                             delete activePos[cid];
                             if (c.rawTime >= this.portfolioStartDateMs) {
-                                runningBalance += p.allocatedUSD * (pnl / 100);
+                                runningBalance += p.allocatedUSD * (pnl / 100);[cite: 25]
                             }
                             monthlyPnL[cid] = monthlyPnL[cid] || {};
                             monthlyPnL[cid][mKey] = (monthlyPnL[cid][mKey] || 0) + pnl;
@@ -1383,7 +1182,6 @@
                         }
                     });
 
-                    // Giriş Kontrolü
                     this.configs.forEach(cfg => {
                         const r = allRsiMaps[cfg.id]?.[t];
                         const c = allCandleMaps[cfg.id]?.[t];
@@ -1392,7 +1190,7 @@
                         const prev = prevRsi[cfg.id] !== undefined ? prevRsi[cfg.id] : r;
                         prevRsi[cfg.id] = r;
 
-                        const capReached = (monthlyPnL[cfg.id]?.[mKey] || 0) >= cfg.monthlyCap;
+                        const capReached = (monthlyPnL[cfg.id]?.[mKey] || 0) >= cfg.monthlyCap;[cite: 25]
                         if (capReached || activePos[cfg.id]) return;
 
                         if (prev <= cfg.buyRsi && r > cfg.buyRsi) {
@@ -1405,14 +1203,13 @@
                                 };
                             } else {
                                 if (!pendingQ.some(p => p.configId === cfg.id)) {
-                                    pendingQ.push({ configId: cfg.id, symbol: cfg.symbol, triggerTime: c.rawTime, triggerPrice: c.close, triggerRsi: r });
+                                    pendingQ.push({ configId: cfg.id, symbol: cfg.symbol, triggerTime: c.rawTime, triggerPrice: c.close, triggerRsi: r });[cite: 25]
                                 }
                             }
                         }
                     });
                 });
 
-                // Canlı Verileri Senkronla
                 let liveGain = 0;
                 this.activePositions = [];
 
@@ -1452,6 +1249,7 @@
                 this.globalTrades = allCompletedTrades;
 
                 this.renderAll();
+                this.syncToCloud();
             },
 
             async liveTickerLoop() {
@@ -1476,8 +1274,8 @@
                             const pnl = ((price - entry) / entry) * 100;
                             this.livePnLs[cfg.id] = pnl;
 
-                            if (price >= target) this.closePosition(cfg.id, target, `Kâr (%${cfg.profitTarget})`);
-                            else if (this.currentRSIs[cfg.id] >= cfg.sellRsi) this.closePosition(cfg.id, price, `RSI Sat (${this.currentRSIs[cfg.id].toFixed(1)})`);
+                            if (price >= target) this.closePosition(cfg.id, target, `Kâr (%${cfg.profitTarget})`);[cite: 25]
+                            else if (this.currentRSIs[cfg.id] >= cfg.sellRsi) this.closePosition(cfg.id, price, `RSI Sat (${this.currentRSIs[cfg.id].toFixed(1)})`);[cite: 25]
                         }
                     } catch(e) {}
                 }
@@ -1496,7 +1294,6 @@
                 this.runUnifiedPortfolioEngine();
             },
 
-            /* ==================== 6. UI RENDER METODLARI ==================== */
             renderAll() {
                 this.renderHeaderKPIs();
                 this.renderActivePositionsPanel();
@@ -1506,8 +1303,8 @@
             },
 
             renderHeaderKPIs() {
-                document.getElementById('top-total-balance').innerText = '$' + this.compoundedBalance.toFixed(2) + ' USDT';
-                document.getElementById('top-slots-badge').innerText = `${this.activePositions.length} / ${this.maxSlots} Pozisyon`;
+                document.getElementById('top-total-balance').innerText = '$' + this.compoundedBalance.toFixed(2);
+                document.getElementById('top-slots-badge').innerText = `${this.activePositions.length}/${this.maxSlots}`;
 
                 let totGainUSD = 0;
                 let totPnlSum = 0;
@@ -1518,12 +1315,12 @@
                 });
 
                 const gainEl = document.getElementById('top-net-gain');
-                gainEl.innerText = (totGainUSD >= 0 ? '+$' : '-$') + Math.abs(totGainUSD).toFixed(2) + ` USDT (${totPnlSum >= 0 ? '+' : ''}${totPnlSum.toFixed(2)}%)`;
+                gainEl.innerText = (totGainUSD >= 0 ? '+$' : '-$') + Math.abs(totGainUSD).toFixed(2) + ` (${totPnlSum >= 0 ? '+' : ''}${totPnlSum.toFixed(2)}%)`;
                 gainEl.style.color = totGainUSD >= 0 ? 'var(--green)' : 'var(--red)';
 
                 const pBanner = document.getElementById('pending-banner');
                 if (this.pendingSignals.length > 0) {
-                    pBanner.style.display = 'flex';
+                    pBanner.style.display = 'block';
                     document.getElementById('pending-coins-text').innerText = this.pendingSignals.map(p => p.symbol.replace('USDT','')).join(', ');
                 } else {
                     pBanner.style.display = 'none';
@@ -1532,22 +1329,22 @@
 
             renderActivePositionsPanel() {
                 const container = document.getElementById('active-positions-container');
-                document.getElementById('active-count-label').innerText = `${this.activePositions.length} Aktif Pozisyon`;
+                document.getElementById('active-count-label').innerText = `${this.activePositions.length} Pozisyon`;
 
                 if (this.activePositions.length === 0) {
-                    container.innerHTML = `<div style="padding: 12px; color: var(--text-muted); font-size: 12px;">Şu an açık pozisyon bulunmuyor.</div>`;
+                    container.innerHTML = `<div style="color: var(--text-muted); font-size: 11px;">Şu an açık pozisyon bulunmuyor.</div>`;
                     return;
                 }
 
                 container.innerHTML = this.activePositions.map(pos => `
-                    <div class="pos-card-desktop">
+                    <div class="pos-item-compact">
                         <div>
-                            <div style="font-size: 15px; font-weight: 900;">${pos.symbol.replace('USDT','')}</div>
-                            <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                                Giriş: ${formatCryptoPrice(pos.entryPrice)} → Hedef: <strong style="color: var(--green);">${formatCryptoPrice(pos.targetPrice)}</strong>
+                            <strong style="font-size: 12px;">${pos.symbol.replace('USDT','')}</strong>
+                            <div class="mono" style="font-size: 10px; color: var(--text-dark); margin-top: 1px;">
+                                ${formatCryptoPrice(pos.entryPrice)} → <span style="color: var(--green);">${formatCryptoPrice(pos.targetPrice)}</span>
                             </div>
                         </div>
-                        <div class="pos-pnl-pill mono" style="background: ${pos.livePnl >= 0 ? 'var(--green-glow)' : 'var(--red-glow)'}; color: ${pos.livePnl >= 0 ? 'var(--green)' : 'var(--red)'};">
+                        <div class="mono" style="font-size: 12px; font-weight: 700; color: ${pos.livePnl >= 0 ? 'var(--green)' : 'var(--red)'};">
                             ${pos.livePnl >= 0 ? '+' : ''}${pos.livePnl.toFixed(2)}%
                         </div>
                     </div>
@@ -1565,96 +1362,88 @@
                     let posClass = isPos ? (pnl >= 0 ? 'in-pos-win' : 'in-pos-loss') : '';
 
                     return `
-                        <div class="coin-pro-card ${posClass}" id="card-${cfg.id}">
-                            <div class="card-head-row">
-                                <div class="coin-identity">
-                                    <span class="coin-name">${cfg.symbol.replace('USDT','')}</span>
-                                    <span class="badge-interval mono">${cfg.interval} • RSI(${cfg.rsiLength})</span>
+                        <div class="card-pro ${posClass}" id="card-${cfg.id}">
+                            <div class="card-header-bar">
+                                <div class="coin-tag-title">
+                                    <span class="coin-code">${cfg.symbol.replace('USDT','')}</span>
+                                    <span class="tag-interval mono">${cfg.interval} • RSI(${cfg.rsiLength})</span>[cite: 8]
                                 </div>
-                                <div style="display: flex; gap: 8px;">
-                                    <button class="btn-tf" onclick="App.toggleCardDetails('${cfg.id}')">⚙️ Strateji</button>
-                                    <button class="btn-tf" style="color: var(--red);" onclick="App.deleteCard('${cfg.id}')">🗑️</button>
+                                <div style="display: flex; gap: 4px;">
+                                    <button class="btn-ui" style="padding: 2px 6px; font-size: 10px;" onclick="App.toggleCardDetails('${cfg.id}')">Ayarlar</button>
+                                    <button class="btn-ui" style="padding: 2px 6px; font-size: 10px; color: var(--red);" onclick="App.deleteCard('${cfg.id}')">✕</button>
                                 </div>
                             </div>
 
-                            <div class="card-price-block">
+                            <div class="card-price-display">
                                 <div>
-                                    <div class="live-price-text mono" id="price-val-${cfg.id}">${formatCryptoPrice(price)}</div>
-                                    <div class="price-meta-hilo mono">
-                                        <span>24h Yüksek: <strong style="color: var(--green);">${formatCryptoPrice(this.high24h[cfg.id])}</strong></span>[cite: 8]
-                                        <span>•</span>
-                                        <span>24h Düşük: <strong style="color: var(--red);">${formatCryptoPrice(this.low24h[cfg.id])}</strong></span>[cite: 8]
+                                    <div class="val-price-hero mono" id="price-val-${cfg.id}">${formatCryptoPrice(price)}</div>
+                                    <div class="mono" style="font-size: 9px; color: var(--text-dark); margin-top: 2px;">
+                                        Y: <span style="color: var(--green);">${formatCryptoPrice(this.high24h[cfg.id])}</span> • D: <span style="color: var(--red);">${formatCryptoPrice(this.low24h[cfg.id])}</span>[cite: 8]
                                     </div>
                                 </div>
                                 <div style="text-align: right;">
-                                    <div class="mono" style="font-size: 16px; font-weight: 900; color: ${rsi <= cfg.buyRsi ? 'var(--red)' : (rsi >= cfg.sellRsi ? 'var(--green)' : 'var(--text-muted)')};">
+                                    <div class="mono" style="font-size: 13px; font-weight: 700; color: ${rsi <= cfg.buyRsi ? 'var(--red)' : (rsi >= cfg.sellRsi ? 'var(--green)' : 'var(--text-muted)')};">
                                         RSI ${rsi.toFixed(1)}
                                     </div>
-                                    <div class="mono" style="font-size: 11px; font-weight: 700; color: ${isPos ? (pnl >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text-muted)'}; margin-top: 2px;">
-                                        ${isPos ? `POZİSYON: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%` : 'NÖTR'}[cite: 8]
+                                    <div class="mono" style="font-size: 10px; font-weight: 600; color: ${isPos ? (pnl >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text-dark)'};">
+                                        ${isPos ? `POZ: ${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%` : 'NÖTR'}[cite: 8]
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- Spektrum Bar -->
-                            <div class="spectrum-bar-wrap">
-                                <div class="spectrum-track">
-                                    <div class="spectrum-pointer" style="left: ${Math.min(Math.max(rsi, 0), 100)}%;"></div>[cite: 20]
+                            <!-- Spektrum -->
+                            <div class="spectrum-wrap">
+                                <div class="spectrum-rail">
+                                    <div class="spectrum-dot" style="left: ${Math.min(Math.max(rsi, 0), 100)}%;"></div>[cite: 20]
                                 </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 9px; font-weight: 800;" class="mono">
-                                    <span style="color: var(--red);">AL DİP: ≤${cfg.buyRsi}</span>[cite: 4]
-                                    <span style="color: var(--green);">SAT TEPE: ≥${cfg.sellRsi}</span>[cite: 4]
+                                <div style="display: flex; justify-content: space-between; font-size: 8px; font-weight: 700;" class="mono">
+                                    <span style="color: var(--red);">AL: ≤${cfg.buyRsi}</span>[cite: 4]
+                                    <span style="color: var(--green);">SAT: ≥${cfg.sellRsi}</span>[cite: 4]
                                 </div>
                             </div>
 
-                            <!-- Çift Sparkline Çizimi -->
-                            <div class="charts-double-deck">
-                                <div class="sparkline-box-desktop">
-                                    <div class="sparkline-header mono">
-                                        <span>${cfg.interval.toUpperCase()} RSI(${cfg.rsiLength}) STRATEJİ</span>[cite: 8]
-                                        <span style="color: var(--cyan);">CANLI</span>
-                                    </div>
+                            <!-- Çift Grafik -->
+                            <div class="spark-deck">
+                                <div class="spark-box">
+                                    <div class="mono" style="font-size: 8px; color: var(--text-dark); margin-bottom: 2px;">${cfg.interval.toUpperCase()} RSI(${cfg.rsiLength}) STRATEJİ</div>[cite: 8]
                                     <canvas class="spark-canvas" id="canvas-prim-${cfg.id}"></canvas>
                                 </div>
-                                <div class="sparkline-box-desktop">
-                                    <div class="sparkline-header mono">
-                                        <span>${cfg.secondaryInterval.toUpperCase()} RSI(${cfg.secondaryRsiLength}) TREND</span>[cite: 8]
-                                        <span style="color: var(--purple);">İKİNCİL</span>
-                                    </div>
+                                <div class="spark-box">
+                                    <div class="mono" style="font-size: 8px; color: var(--text-dark); margin-bottom: 2px;">${cfg.secondaryInterval.toUpperCase()} RSI(${cfg.secondaryRsiLength}) TREND</div>[cite: 8]
                                     <canvas class="spark-canvas" id="canvas-sec-${cfg.id}"></canvas>
                                 </div>
                             </div>
 
-                            <!-- Metrik Karoları -->
-                            <div class="metrics-quad-row">
-                                <div class="metric-cell"><span>Win Rate</span><strong class="mono" style="color: var(--green);">94%</strong></div>[cite: 8]
-                                <div class="metric-cell"><span>Ort. Süre</span><strong class="mono" style="color: var(--blue);">4.2s</strong></div>[cite: 8]
-                                <div class="metric-cell"><span>Max Seri</span><strong class="mono" style="color: var(--orange);">7 Kazanç</strong></div>[cite: 8]
+                            <!-- İstatistikler -->
+                            <div class="metrics-trio">
+                                <div class="metric-unit"><span>Win Rate</span><strong class="mono" style="color: var(--green);">94%</strong></div>[cite: 8]
+                                <div class="metric-unit"><span>Ort. Süre</span><strong class="mono" style="color: var(--accent);">4.2s</strong></div>[cite: 8]
+                                <div class="metric-unit"><span>Max Seri</span><strong class="mono" style="color: var(--orange);">7 Win</strong></div>[cite: 8]
                             </div>
 
-                            <!-- Akordeon Strateji Paneli -->
-                            <div class="card-expand-drawer" id="drawer-${cfg.id}">
-                                <div style="font-size: 11px; font-weight: 800; color: var(--blue);">BİRİNCİL VE İKİNCİL RSI AYARLARI</div>
-                                <div class="stepper-pro-row">
-                                    <div class="stepper-group">
-                                        <label>RSI Al Limit</label>
-                                        <div class="stepper-input-box mono">
+                            <!-- Ayar Çekmecesi -->
+                            <div class="card-details-panel" id="drawer-${cfg.id}">
+                                <div style="font-size: 9px; font-weight: 700; color: var(--accent);">STRATEJİ PARAMETRELERİ</div>
+                                <div class="stepper-grid-compact">
+                                    <div class="stepper-item">
+                                        <label>RSI AL</label>
+                                        <div class="stepper-control mono">
                                             <button onclick="App.adj('${cfg.id}', 'buyRsi', -1)">-</button>
                                             <input type="text" value="${cfg.buyRsi}" readonly>
                                             <button onclick="App.adj('${cfg.id}', 'buyRsi', 1)">+</button>
                                         </div>
                                     </div>
-                                    <div class="stepper-group">
-                                        <label>RSI Sat Limit</label>
-                                        <div class="stepper-input-box mono">
+                                    <div class="stepper-item">
+                                        <label>RSI SAT</label>
+                                        <div class="stepper-control mono">
                                             <button onclick="App.adj('${cfg.id}', 'sellRsi', -1)">-</button>
                                             <input type="text" value="${cfg.sellRsi}" readonly>
                                             <button onclick="App.adj('${cfg.id}', 'sellRsi', 1)">+</button>
                                         </div>
                                     </div>
-                                    <div class="stepper-group">
-                                        <label>Hedef Kâr (%)</label>
-                                        <div class="stepper-input-box mono">
+                                    <div class="stepper-item">
+                                        <label>HEDEF (%)</label>
+                                        <div class="stepper-control mono">
                                             <button onclick="App.adj('${cfg.id}', 'profitTarget', -0.5)">-</button>
                                             <input type="text" value="${cfg.profitTarget}" readonly>
                                             <button onclick="App.adj('${cfg.id}', 'profitTarget', 0.5)">+</button>
@@ -1662,15 +1451,9 @@
                                     </div>
                                 </div>
 
-                                <div style="display: flex; gap: 8px; margin-top: 6px;">
-                                    <button class="btn-pro" style="flex: 1; justify-content: center;" onclick="App.runOptimizer('${cfg.id}')">
-                                        <span>🪄</span> Sihirbazı Çalıştır[cite: 8]
-                                    </button>
-                                    ${isPos ? `
-                                        <button class="btn-tf" onclick="App.openEditEntry('${cfg.id}')">
-                                            ✏️ Maliyet Revize
-                                        </button>
-                                    ` : ''}
+                                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                                    <button class="btn-ui" style="flex: 1; justify-content: center;" onclick="App.runOptimizer('${cfg.id}')">Sihirbazı Çalıştır</button>[cite: 8]
+                                    ${isPos ? `<button class="btn-ui" onclick="App.openEditEntry('${cfg.id}')">Maliyet Revize</button>` : ''}[cite: 8]
                                 </div>
                             </div>
                         </div>
@@ -1678,8 +1461,8 @@
                 }).join('');
 
                 this.configs.forEach(cfg => {
-                    this.drawSparkline(cfg.id, 'prim', cfg.buyRsi, cfg.sellRsi, '#06b6d4');
-                    this.drawSparkline(cfg.id, 'sec', cfg.secondaryBuyRsi, cfg.secondarySellRsi, '#a855f7');
+                    this.drawSparkline(cfg.id, 'prim', cfg.buyRsi, cfg.sellRsi, '#38bdf8');
+                    this.drawSparkline(cfg.id, 'sec', cfg.secondaryBuyRsi, cfg.secondarySellRsi, '#c084fc');
                 });
             },
 
@@ -1710,15 +1493,15 @@
                 const sellY = h * (1 - sellR / 100);
 
                 ctx.setLineDash([2, 2]);
-                ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+                ctx.strokeStyle = 'rgba(244, 63, 94, 0.3)';
                 ctx.beginPath(); ctx.moveTo(0, buyY); ctx.lineTo(w, buyY); ctx.stroke();
 
-                ctx.strokeStyle = 'rgba(16, 185, 129, 0.4)';
+                ctx.strokeStyle = 'rgba(16, 185, 129, 0.3)';
                 ctx.beginPath(); ctx.moveTo(0, sellY); ctx.lineTo(w, sellY); ctx.stroke();
                 ctx.setLineDash([]);
 
                 ctx.strokeStyle = color;
-                ctx.lineWidth = 1.5;
+                ctx.lineWidth = 1.2;
                 ctx.beginPath();
                 rsiVals.forEach((v, i) => {
                     const x = (i / (rsiVals.length - 1)) * w;
@@ -1731,7 +1514,7 @@
             renderTradesTable() {
                 const tbody = document.getElementById('trades-table-body');
                 if (this.globalTrades.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">Henüz işlem kaydı yok.</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dark);">İşlem kaydı bulunmuyor.</td></tr>`;
                     return;
                 }
 
@@ -1740,16 +1523,12 @@
                     return `
                         <tr>
                             <td><strong class="mono">${t.symbol.replace('USDT','')}</strong></td>
-                            <td><span style="font-size: 11px; color: var(--text-muted);">${t.reason}</span></td>
+                            <td style="color: var(--text-muted);">${t.reason}</td>
                             <td class="mono">${formatCryptoPrice(t.entryPrice)}</td>
                             <td class="mono">${formatCryptoPrice(t.exitPrice)}</td>
-                            <td class="mono" style="font-weight: 800; color: ${t.pnl >= 0 ? 'var(--green)' : 'var(--red)'};">
-                                ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
-                            </td>
-                            <td class="mono" style="font-weight: 700; color: ${t.gainUSD >= 0 ? 'var(--green)' : 'var(--red)'};">
-                                ${t.gainUSD >= 0 ? '+$' : '-$'}${Math.abs(t.gainUSD).toFixed(2)}
-                            </td>
-                            <td class="mono" style="color: var(--text-muted);">${dateStr}</td>
+                            <td class="mono" style="font-weight: 700; color: ${t.pnl >= 0 ? 'var(--green)' : 'var(--red)'};">${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%</td>
+                            <td class="mono" style="color: ${t.gainUSD >= 0 ? 'var(--green)' : 'var(--red)'};">${t.gainUSD >= 0 ? '+$' : '-$'}${Math.abs(t.gainUSD).toFixed(2)}</td>
+                            <td class="mono" style="color: var(--text-dark);">${dateStr}</td>
                         </tr>
                     `;
                 }).join('');
@@ -1758,19 +1537,18 @@
             renderAlarmsTab() {
                 const container = document.getElementById('alarms-list-container');
                 container.innerHTML = this.configs.map(cfg => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface-elevated); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-subtle);">
                         <div>
-                            <strong style="font-size: 14px;">${cfg.symbol.replace('USDT','')}</strong>
-                            <div class="mono" style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
-                                AL EŞİĞİ: ≤${cfg.buyRsi} • SAT EŞİĞİ: ≥${cfg.sellRsi} • CANLI RSI: ${(this.currentRSIs[cfg.id] || 50).toFixed(1)}[cite: 4]
-                            </div>
+                            <strong>${cfg.symbol.replace('USDT','')}</strong>
+                            <span class="mono" style="font-size: 10px; color: var(--text-dark); margin-left: 8px;">
+                                AL: ≤${cfg.buyRsi} • SAT: ≥${cfg.sellRsi} • CANLI: ${(this.currentRSIs[cfg.id] || 50).toFixed(1)}[cite: 4]
+                            </span>
                         </div>
                         <input type="checkbox" ${cfg.isNotificationEnabled ? 'checked' : ''} onchange="App.toggleNotif('${cfg.id}', this.checked)">
                     </div>
                 `).join('');
             },
 
-            /* ==================== 7. ETKİLEŞİM VE YARDIMCI FONKSİYONLAR ==================== */
             toggleCardDetails(id) {
                 const drawer = document.getElementById(`drawer-${id}`);
                 if (drawer) drawer.classList.toggle('open');
@@ -1788,8 +1566,7 @@
                 let sym = document.getElementById('add-symbol-input').value.toUpperCase().trim();
                 if (!sym.endsWith('USDT')) sym += 'USDT';
                 const status = document.getElementById('verify-status');
-                status.innerText = 'Binance tahtası taranıyor...';
-                status.style.color = 'var(--text-muted)';
+                status.innerText = 'Binance kontrol ediliyor...';
                 try {
                     const p = await BinanceAPI.fetchPrice(sym);
                     status.innerText = `✓ Doğrulandı: $${p}`;
@@ -1822,7 +1599,7 @@
             },
 
             deleteCard(id) {
-                if (!confirm('Bu pariteyi silmek istediğinize emin misiniz?')) return;
+                if (!confirm('Parite silinsin mi?')) return;
                 this.configs = this.configs.filter(c => c.id !== id);
                 Storage.set('configs', this.configs);
                 this.runUnifiedPortfolioEngine();
@@ -1851,11 +1628,7 @@
                 if (!cfg || !candles) return;
 
                 ModalManager.open('optimizer');
-                document.getElementById('optimizer-render-box').innerHTML = `
-                    <div style="text-align: center; padding: 20px;" class="mono">
-                        <div style="color: var(--blue); font-size: 14px; font-weight: 800;">Strateji Sihirbazı En İdeal Kombinasyonu Arıyor...</div>
-                    </div>
-                `;
+                document.getElementById('optimizer-render-box').innerHTML = `<div class="mono" style="padding: 12px; text-align: center; color: var(--accent);">Optimizasyon taranıyor...</div>`;
 
                 setTimeout(() => {
                     const closes = candles.map(c => c.close);
@@ -1881,7 +1654,7 @@
 
                             if (tot >= 2) {
                                 const wr = (wins / tot) * 100;
-                                const score = pnlSum * Math.pow(wr / 100, 1.5);
+                                const score = pnlSum * Math.pow(wr / 100, 1.5);[cite: 25]
                                 if (!best || score > best.score) best = { b, s, wr: wr.toFixed(0), tot, pnl: pnlSum.toFixed(2), score };
                             }
                         }
@@ -1889,19 +1662,17 @@
 
                     if (best) {
                         document.getElementById('optimizer-render-box').innerHTML = `
-                            <div style="display: flex; flex-direction: column; gap: 12px;">
-                                <div style="display: flex; justify-content: space-between;"><span>Önerilen RSI Al:</span> <strong class="mono" style="color: var(--blue);">${best.b}</strong></div>
+                            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 11px;">
+                                <div style="display: flex; justify-content: space-between;"><span>Önerilen RSI Al:</span> <strong class="mono" style="color: var(--accent);">${best.b}</strong></div>
                                 <div style="display: flex; justify-content: space-between;"><span>Önerilen RSI Sat:</span> <strong class="mono" style="color: var(--orange);">${best.s}</strong></div>
                                 <div style="display: flex; justify-content: space-between;"><span>Win Rate:</span> <strong class="mono" style="color: var(--green);">${best.wr}%</strong></div>
-                                <div style="display: flex; justify-content: space-between;"><span>Toplam İşlem:</span> <strong class="mono">${best.tot} İşlem</strong></div>
-                                <div style="display: flex; justify-content: space-between;"><span>Net Toplam Kâr:</span> <strong class="mono" style="color: var(--green);">+${best.pnl}%</strong></div>
-                                <button class="btn-pro" style="justify-content: center; padding: 12px; margin-top: 10px;" onclick="App.applyOpt('${cfg.id}', ${best.b}, ${best.s})">
-                                    Parametreleri Uygula ve Kaydet
-                                </button>
+                                <div style="display: flex; justify-content: space-between;"><span>Toplam İşlem:</span> <strong class="mono">${best.tot}</strong></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Net Kâr:</span> <strong class="mono" style="color: var(--green);">+${best.pnl}%</strong></div>
+                                <button class="btn-ui primary" style="width: 100%; justify-content: center; margin-top: 8px;" onclick="App.applyOpt('${cfg.id}', ${best.b}, ${best.s})">Uygula ve Kaydet</button>
                             </div>
                         `;
                     }
-                }, 100);
+                }, 80);
             },
 
             applyOpt(id, b, s) {
@@ -1926,18 +1697,28 @@
             },
 
             testTelegram() {
-                this.sendTelegramMessage('🦅 <b>KUZGUN PRO TERMINAL</b>\n\nTelegram bağlantısı başarıyla sağlandı!');
-                alert('Test mesajı Telegram adresinize gönderildi.');
+                this.sendTelegramMessage('🦅 <b>KUZGUN PRO TERMINAL</b>\n\nTelegram sinyal hattı aktif.');
+                alert('Test mesajı Telegram adresinize iletildi.');
+            },
+
+            syncToCloud() {
+                const chatId = Storage.get('telegram_chat_id', '1059064615');[cite: 24]
+                const payload = this.configs.map(c => ({ symbol: c.symbol, buyRSI: c.buyRsi, sellRSI: c.sellRsi, chatId: chatId }));[cite: 7]
+                fetch('https://gentle-sunset-f4b8.mehmetsalihok.workers.dev/sync-alarms', {[cite: 7]
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)[cite: 7]
+                }).catch(() => {});
             },
 
             switchTab(tabId, btn) {
-                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                document.getElementById('tab-terminal').classList.add('hide-tab');
-                document.getElementById('tab-trades').classList.add('hide-tab');
-                document.getElementById('tab-alarms').classList.add('hide-tab');
-                document.getElementById('tab-settings').classList.add('hide-tab');
-                document.getElementById(`tab-${tabId}`).classList.remove('hide-tab');
+                document.getElementById('tab-terminal').classList.add('hide');
+                document.getElementById('tab-trades').classList.add('hide');
+                document.getElementById('tab-alarms').classList.add('hide');
+                document.getElementById('tab-settings').classList.add('hide');
+                document.getElementById(`tab-${tabId}`).classList.remove('hide');
             },
 
             setTheme(th) {
@@ -1963,37 +1744,35 @@
             },
 
             renderMonthsBar() {
-                const months = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];[cite: 11]
-                const bar = document.getElementById('months-selection-bar');
-                bar.innerHTML = months.map((m, i) => `
-                    <button class="month-btn ${i + 1 === this.selectedMonthIndex ? 'active' : ''}" onclick="App.selectMonth(${i + 1}, this)">${m}</button>
+                const months = ["Oca", "Şub", "Mar", "Nis", "May", "Haz", "Tem", "Ağu", "Eyl", "Eki", "Kas", "Ara"];
+                const wrap = document.getElementById('months-bar-wrap');
+                wrap.innerHTML = months.map((m, i) => `
+                    <button class="pill-btn ${i + 1 === this.selectedMonthIndex ? 'active' : ''}" onclick="App.selectMonth(${i + 1}, this)">${m}</button>
                 `).join('');
             },
 
             setTimeframe(tf, btn) {
                 this.selectedTimeframe = tf;
-                document.querySelectorAll('.btn-tf').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.timeframe-filter-bar .pill-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                document.getElementById('months-bar-container').style.display = tf === 'selectMonth' ? 'block' : 'none';
-                document.getElementById('kpi-timeframe-label').innerText = `${btn.innerText} Net Kâr / Zarar`;
+                document.getElementById('months-bar-wrap').style.display = tf === 'selectMonth' ? 'flex' : 'none';
+                document.getElementById('kpi-time-label').innerText = `${btn.innerText} Net Kazanç`;
                 this.renderHeaderKPIs();
             },
 
             selectMonth(mIdx, btn) {
                 this.selectedMonthIndex = mIdx;
-                document.querySelectorAll('.month-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('#months-bar-wrap .pill-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 this.renderHeaderKPIs();
             }
         };
 
-        /* ==================== 8. MODAL MANAGER ==================== */
         const ModalManager = {
             open(id) { document.getElementById(`modal-${id}`).classList.add('open'); },
             close(id) { document.getElementById(`modal-${id}`).classList.remove('open'); }
         };
 
-        // Başlat
         document.addEventListener('DOMContentLoaded', () => {
             const savedTheme = Storage.get('theme', 'dark');
             document.getElementById('theme-selector').value = savedTheme;
