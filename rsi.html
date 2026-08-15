@@ -932,7 +932,7 @@
       <div class="brand-group">
         <span class="brand-title">CODEMSO TERMİNAL</span>
         <span class="brand-subtitle">STRATEJİ RADARI</span>
-        <span class="brand-version">v2.8.2/mehmetsalihok</span>
+        <span class="brand-version">v2.9.0/mehmetsalihok</span>
       </div>
 
       <div class="header-actions">
@@ -1137,6 +1137,39 @@
     </div>
   </div>
 
+
+  <!-- 30 SANİYELİK CANLI İŞLEM UYARISI -->
+  <div class="trade-signal-overlay" id="trade-signal-overlay" role="alertdialog" aria-modal="true" aria-live="assertive">
+    <div class="trade-signal-card" id="trade-signal-card">
+      <button class="trade-signal-close" type="button" onclick="closeTradeSignalAlert()" aria-label="Uyarıyı kapat">×</button>
+      <div class="trade-signal-icon" id="trade-signal-icon">↗</div>
+      <div class="trade-signal-kicker" id="trade-signal-kicker">ALIM SİNYALİ</div>
+      <h2 class="trade-signal-symbol" id="trade-signal-symbol">BTC</h2>
+      <div class="trade-signal-price" id="trade-signal-price">$--.--</div>
+      <div class="trade-signal-message" id="trade-signal-message">Yeni pozisyon girişi algılandı.</div>
+
+      <div class="trade-signal-meta">
+        <div class="trade-signal-meta-box">
+          <span>İşlem</span>
+          <b id="trade-signal-action">LONG GİRİŞ</b>
+        </div>
+        <div class="trade-signal-meta-box">
+          <span id="trade-signal-detail-label">RSI</span>
+          <b id="trade-signal-detail">--</b>
+        </div>
+        <div class="trade-signal-meta-box">
+          <span>Zaman</span>
+          <b id="trade-signal-time">--:--:--</b>
+        </div>
+      </div>
+
+      <div class="trade-signal-countdown">
+        <div class="trade-signal-progress"><i id="trade-signal-progress"></i></div>
+        <div class="trade-signal-seconds" id="trade-signal-seconds">30 sn</div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // OTURUM KONTROLÜ
     if (localStorage.getItem('codemso_auth') !== 'true') {
@@ -1153,6 +1186,14 @@
     let lastPrices = [];
     let tempOptimizerResult = null;
 
+    // Canlı sinyal uyarıları: ilk yüklemede geçmiş işlemler için alarm üretmez,
+    // sadece sayfa açıkken oluşan yeni giriş / çıkışları yakalar.
+    let liveSignalTrackers = [];
+    let tradeAlertCloseTimer = null;
+    let tradeAlertCountdownTimer = null;
+    let tradeAlertSoundTimer = null;
+    let sharedAudioContext = null;
+
     let coinsConfig = [
       { symbol: 'ASTERUSDT', interval: '30m', rsiLength: 8, buyRsi: 20, sellRsi: 85, profitTarget: 4.0, monthlyCap: 2.5, color: '#0284c7' },
       { symbol: 'BTCUSDT',   interval: '30m', rsiLength: 10, buyRsi: 25, sellRsi: 75, profitTarget: 2.0, monthlyCap: 3.0, color: '#eab308' }
@@ -1166,13 +1207,37 @@
       { symbol: 'AVAXUSDT',  interval: '30m', rsiLength: 10, buyAlarm: 22, sellAlarm: 80, currentRsi: null }
     ];
 
+    function getPriceDisplayDecimals(val) {
+      const num = Math.abs(Number(val));
+      if (!Number.isFinite(num)) return 2;
+      if (num >= 1000) return 2;
+      if (num >= 100) return 2;
+      if (num >= 10) return 2;
+      if (num >= 1) return 3;
+      if (num >= 0.1) return 3;
+      if (num >= 0.01) return 4;
+      if (num >= 0.001) return 5;
+      if (num >= 0.0001) return 6;
+      if (num >= 0.00001) return 7;
+      return 8;
+    }
+
+    function roundPriceForDisplay(val) {
+      const num = Number(val);
+      if (!Number.isFinite(num)) return num;
+      const decimals = getPriceDisplayDecimals(num);
+      const factor = Math.pow(10, decimals);
+      return Math.round((num + Number.EPSILON) * factor) / factor;
+    }
+
     function formatPrice(val) {
       if (val === null || val === undefined || isNaN(val)) return '--.--';
       const num = Number(val);
-      if (num < 0.0001) return '$' + num.toFixed(8);
-      if (num < 0.01) return '$' + num.toFixed(6);
-      if (num < 1) return '$' + num.toFixed(4);
-      return '$' + num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const decimals = getPriceDisplayDecimals(num);
+      return '$' + num.toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+      });
     }
 
     function formatNum(val, dec = 2) {
@@ -1210,22 +1275,230 @@
       saveConfig();
     }
 
-    function playBeepSound() {
+    function getSharedAudioContext() {
       try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (!sharedAudioContext) {
+          sharedAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (sharedAudioContext.state === 'suspended') {
+          sharedAudioContext.resume().catch(() => {});
+        }
+        return sharedAudioContext;
+      } catch(e) {
+        return null;
+      }
+    }
+
+    function playTone(frequency, startDelay = 0, duration = 0.18, volume = 0.12, type = 'sine') {
+      const audioCtx = getSharedAudioContext();
+      if (!audioCtx) return;
+      try {
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
+        const startAt = audioCtx.currentTime + startDelay;
+        const endAt = startAt + duration;
+
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.25);
+        osc.type = type;
+        osc.frequency.setValueAtTime(frequency, startAt);
+        gain.gain.setValueAtTime(0.0001, startAt);
+        gain.gain.exponentialRampToValueAtTime(volume, startAt + 0.025);
+        gain.gain.exponentialRampToValueAtTime(0.0001, endAt);
+
+        osc.start(startAt);
+        osc.stop(endAt + 0.02);
       } catch(e) {}
     }
 
-    function playTestSound() { playBeepSound(); }
+    function playBeepSound() {
+      playTone(880, 0, 0.22, 0.13);
+    }
+
+    function playTradeSignalSound(type = 'buy') {
+      if (type === 'buy') {
+        playTone(620, 0.00, 0.16, 0.14, 'sine');
+        playTone(820, 0.18, 0.18, 0.14, 'sine');
+        playTone(1040, 0.38, 0.22, 0.13, 'sine');
+      } else {
+        playTone(980, 0.00, 0.16, 0.14, 'triangle');
+        playTone(760, 0.18, 0.18, 0.14, 'triangle');
+        playTone(520, 0.38, 0.24, 0.13, 'triangle');
+      }
+    }
+
+    function playTestSound() {
+      playTradeSignalSound('buy');
+    }
+
+    function closeTradeSignalAlert() {
+      const overlay = document.getElementById('trade-signal-overlay');
+      if (overlay) overlay.classList.remove('active');
+      document.body.style.overflow = '';
+
+      if (tradeAlertCloseTimer) clearTimeout(tradeAlertCloseTimer);
+      if (tradeAlertCountdownTimer) clearInterval(tradeAlertCountdownTimer);
+      if (tradeAlertSoundTimer) clearInterval(tradeAlertSoundTimer);
+
+      tradeAlertCloseTimer = null;
+      tradeAlertCountdownTimer = null;
+      tradeAlertSoundTimer = null;
+    }
+
+    function showTradeSignalAlert(payload) {
+      const overlay = document.getElementById('trade-signal-overlay');
+      const card = document.getElementById('trade-signal-card');
+      if (!overlay || !card || !payload) return;
+
+      closeTradeSignalAlert();
+
+      const isBuy = payload.type === 'buy';
+      card.classList.toggle('sell', !isBuy);
+
+      const symbol = (payload.symbol || '').replace('USDT', '');
+      const kickerEl = document.getElementById('trade-signal-kicker');
+      const iconEl = document.getElementById('trade-signal-icon');
+      const symbolEl = document.getElementById('trade-signal-symbol');
+      const priceEl = document.getElementById('trade-signal-price');
+      const msgEl = document.getElementById('trade-signal-message');
+      const actionEl = document.getElementById('trade-signal-action');
+      const detailLabelEl = document.getElementById('trade-signal-detail-label');
+      const detailEl = document.getElementById('trade-signal-detail');
+      const timeEl = document.getElementById('trade-signal-time');
+      const secondsEl = document.getElementById('trade-signal-seconds');
+      const progressEl = document.getElementById('trade-signal-progress');
+
+      if (kickerEl) kickerEl.innerText = isBuy ? 'ALIM SİNYALİ' : 'ÇIKIŞ SİNYALİ';
+      if (iconEl) iconEl.innerText = isBuy ? '↗' : '↘';
+      if (symbolEl) symbolEl.innerText = symbol || 'COIN';
+      if (priceEl) priceEl.innerText = formatPrice(payload.price);
+      if (msgEl) {
+        msgEl.innerText = isBuy
+          ? `${symbol} için yeni LONG giriş sinyali oluştu.`
+          : `${symbol} pozisyonu için çıkış sinyali oluştu.`;
+      }
+      if (actionEl) actionEl.innerText = isBuy ? 'LONG GİRİŞ' : 'POZİSYON ÇIKIŞ';
+
+      if (detailLabelEl) detailLabelEl.innerText = isBuy ? 'RSI / Hedef' : 'Sonuç / Neden';
+      if (detailEl) {
+        if (isBuy) {
+          const rsiPart = Number.isFinite(payload.rsi) ? `RSI ${formatNum(payload.rsi, 1)}` : 'RSI --';
+          const targetPart = Number.isFinite(payload.targetPrice) ? ` → ${formatPrice(payload.targetPrice)}` : '';
+          detailEl.innerText = `${rsiPart}${targetPart}`;
+        } else {
+          const pnlPart = Number.isFinite(payload.pnl) ? `${payload.pnl >= 0 ? '+' : ''}${formatNum(payload.pnl, 2)}%` : '';
+          const reasonPart = payload.reason ? ` · ${payload.reason}` : '';
+          detailEl.innerText = `${pnlPart}${reasonPart}` || 'Çıkış';
+        }
+      }
+
+      if (timeEl) {
+        timeEl.innerText = new Date().toLocaleTimeString('tr-TR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit'
+        });
+      }
+
+      let remaining = 30;
+      if (secondsEl) secondsEl.innerText = `${remaining} sn`;
+      if (progressEl) progressEl.style.transform = 'scaleX(1)';
+
+      overlay.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      playTradeSignalSound(isBuy ? 'buy' : 'sell');
+
+      // Uyarı açık kaldığı sürece sesi aralıklı tekrarlar.
+      tradeAlertSoundTimer = setInterval(() => {
+        playTradeSignalSound(isBuy ? 'buy' : 'sell');
+      }, 5000);
+
+      tradeAlertCountdownTimer = setInterval(() => {
+        remaining--;
+        if (secondsEl) secondsEl.innerText = `${Math.max(remaining, 0)} sn`;
+        if (progressEl) progressEl.style.transform = `scaleX(${Math.max(remaining, 0) / 30})`;
+      }, 1000);
+
+      tradeAlertCloseTimer = setTimeout(closeTradeSignalAlert, 30000);
+    }
+
+    function resetLiveSignalTracker(slotIndex) {
+      liveSignalTrackers[slotIndex] = null;
+    }
+
+    function processLiveSignalAlert(slotIndex, state) {
+      // Geçmiş yıl backtestlerinde alarm üretme.
+      if (String(SELECTED_YEAR) !== String(new Date().getFullYear())) return;
+
+      if (!liveSignalTrackers[slotIndex]) {
+        liveSignalTrackers[slotIndex] = {
+          initialized: false,
+          seenKeys: new Set()
+        };
+      }
+
+      const tracker = liveSignalTrackers[slotIndex];
+      const candidates = [];
+
+      const lastTrade = state.trades && state.trades.length
+        ? state.trades[state.trades.length - 1]
+        : null;
+
+      if (lastTrade) {
+        candidates.push({
+          key: `SELL:${state.symbol}:${lastTrade.exitTime}`,
+          time: lastTrade.exitTime,
+          payload: {
+            type: 'sell',
+            symbol: state.symbol,
+            price: lastTrade.exitPrice,
+            pnl: lastTrade.pnl,
+            reason: lastTrade.reason
+          }
+        });
+      }
+
+      if (state.inPosition && state.entryTime) {
+        candidates.push({
+          key: `BUY:${state.symbol}:${state.entryTime}`,
+          time: state.entryTime,
+          payload: {
+            type: 'buy',
+            symbol: state.symbol,
+            price: state.entryPrice,
+            rsi: state.currentRSI,
+            targetPrice: state.targetPrice
+          }
+        });
+      }
+
+      // İlk hesaplamada mevcut / geçmiş sinyalleri sadece baz al; alarm gösterme.
+      if (!tracker.initialized) {
+        candidates.forEach(item => tracker.seenKeys.add(item.key));
+        tracker.initialized = true;
+        return;
+      }
+
+      candidates.sort((a, b) => a.time - b.time);
+
+      candidates.forEach(item => {
+        if (!tracker.seenKeys.has(item.key)) {
+          tracker.seenKeys.add(item.key);
+          showTradeSignalAlert(item.payload);
+        }
+      });
+
+      // Set'in yıllarca büyümesini önle.
+      if (tracker.seenKeys.size > 100) {
+        tracker.seenKeys = new Set(candidates.map(item => item.key));
+      }
+    }
+
+    // Tarayıcıların otomatik ses kısıtlamasına karşı ilk kullanıcı etkileşiminde
+    // AudioContext'i hazır hale getirir.
+    document.addEventListener('pointerdown', () => {
+      getSharedAudioContext();
+    }, { once: true });
 
     function loadSavedConfig() {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -1344,6 +1617,7 @@
       cardTradesHistory.splice(slotIndex, 1);
       cardActivePositions.splice(slotIndex, 1);
       lastPrices.splice(slotIndex, 1);
+      liveSignalTrackers.splice(slotIndex, 1);
 
       saveConfig();
       renderCardsHTML();
@@ -1961,6 +2235,7 @@
       if (tfLabelEl) tfLabelEl.innerText = `${coinsConfig[slotIndex].interval} | RSI(${coinsConfig[slotIndex].rsiLength})`;
 
       saveConfig();
+      resetLiveSignalTracker(slotIndex);
 
       if (symbolChanged || intervalChanged || !candlesData[slotIndex] || candlesData[slotIndex].length === 0) {
         candlesData[slotIndex] = [];
@@ -1976,6 +2251,7 @@
       if (sumLabel) sumLabel.innerText = SELECTED_YEAR;
       saveConfig();
       candlesData = [];
+      liveSignalTrackers = [];
       renderCardsHTML();
     }
 
@@ -2016,7 +2292,10 @@
       if (loaderEl) loaderEl.innerText = 'Yükleniyor...';
 
       const yearStart = new Date(`${SELECTED_YEAR}-01-01T00:00:00Z`).getTime();
-      const yearEnd = SELECTED_YEAR === '2026' ? Date.now() : new Date(`${SELECTED_YEAR}-12-31T23:59:59Z`).getTime();
+      const currentYear = String(new Date().getFullYear());
+      const yearEnd = String(SELECTED_YEAR) === currentYear
+        ? Date.now()
+        : new Date(`${SELECTED_YEAR}-12-31T23:59:59Z`).getTime();
 
       let allCandles = [];
       let startTime = yearStart;
@@ -2097,16 +2376,19 @@
           const targetPrice = entryPrice * (1 + coin.profitTarget / 100);
 
           let exited = false;
+          let exitPrice = c.close;
           let pnl = 0;
           let reason = '';
 
           if (c.high >= targetPrice) {
             exited = true;
-            pnl = coin.profitTarget;
+            exitPrice = targetPrice;
+            pnl = ((exitPrice - entryPrice) / entryPrice) * 100;
             reason = `Kâr (%${coin.profitTarget})`;
           } else if (rsiVal >= coin.sellRsi) {
             exited = true;
-            pnl = ((c.close - entryPrice) / entryPrice) * 100;
+            exitPrice = c.close;
+            pnl = ((exitPrice - entryPrice) / entryPrice) * 100;
             reason = `RSI Sat (${formatNum(rsiVal, 1)})`;
           }
 
@@ -2114,7 +2396,7 @@
             inPosition = false;
             const isWin = pnl >= 0;
 
-            trades.push({ entryTime, exitTime: c.rawTime, entryPrice, exitPrice: c.close, pnl, isWin, reason });
+            trades.push({ entryTime, exitTime: c.rawTime, entryPrice, exitPrice, pnl, isWin, reason });
 
             const curM = monthlyStats[monthKey];
             curM.trades++;
@@ -2183,7 +2465,7 @@
       const livePnlEl = document.getElementById(`live-pnl-${slotIndex}`);
       const targetEl = document.getElementById(`target-${slotIndex}`);
 
-      const targetP = entryPrice * (1 + coin.profitTarget / 100);
+      const targetP = roundPriceForDisplay(entryPrice * (1 + coin.profitTarget / 100));
       const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
 
       if (inPosition) {
@@ -2211,6 +2493,16 @@
 
         cardActivePositions[slotIndex] = { inPosition: false };
       }
+
+      processLiveSignalAlert(slotIndex, {
+        symbol: coin.symbol,
+        inPosition,
+        entryTime,
+        entryPrice,
+        currentRSI,
+        targetPrice: targetP,
+        trades
+      });
 
       const mTable = document.getElementById(`table-monthly-${slotIndex}`);
       let totT = 0, totW = 0, totL = 0, totPnl = 0;
@@ -2284,17 +2576,32 @@
 
       setInterval(() => {
         coinsConfig.forEach((coin, slotIndex) => {
-          if (candlesData[slotIndex] && candlesData[slotIndex].length > 0 && SELECTED_YEAR === '2026') {
-            fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${coin.symbol}`)
+          const isCurrentYear = String(SELECTED_YEAR) === String(new Date().getFullYear());
+          if (candlesData[slotIndex] && candlesData[slotIndex].length > 0 && isCurrentYear) {
+            fetch(`https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=2`)
               .then(res => res.json())
               .then(data => {
-                const livePrice = parseFloat(data.price);
+                if (!Array.isArray(data) || data.length === 0) return;
+
                 const candles = candlesData[slotIndex];
-                const lastCandle = candles[candles.length - 1];
-                
-                lastCandle.close = livePrice;
-                if (livePrice > lastCandle.high) lastCandle.high = livePrice;
-                if (livePrice < lastCandle.low) lastCandle.low = livePrice;
+
+                data.forEach(k => {
+                  const liveCandle = {
+                    rawTime: k[0],
+                    open: parseFloat(k[1]),
+                    high: parseFloat(k[2]),
+                    low: parseFloat(k[3]),
+                    close: parseFloat(k[4])
+                  };
+
+                  const lastCandle = candles[candles.length - 1];
+
+                  if (lastCandle && lastCandle.rawTime === liveCandle.rawTime) {
+                    Object.assign(lastCandle, liveCandle);
+                  } else if (!lastCandle || liveCandle.rawTime > lastCandle.rawTime) {
+                    candles.push(liveCandle);
+                  }
+                });
 
                 runBacktestAndRender(slotIndex);
               }).catch(e => console.warn(e));
@@ -2304,6 +2611,16 @@
 
       setInterval(fetchRadarRSIAll, 1000);
     }
+
+    window.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeTradeSignalAlert();
+    });
+
+    document.getElementById('trade-signal-overlay')?.addEventListener('click', (event) => {
+      if (event.target && event.target.id === 'trade-signal-overlay') {
+        closeTradeSignalAlert();
+      }
+    });
 
     window.onload = function() {
       initApp();
