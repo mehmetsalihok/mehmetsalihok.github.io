@@ -7,28 +7,30 @@
 
   <style>
     :root {
-      --bg-main: #0a0e17;
-      --bg-panel: #101623;
-      --bg-sub: #161f31;
-      --bg-input: #0c111c;
-      --border-main: #202b40;
-      --border-sub: #2d3c58;
+      --bg-main: #0c1017;
+      --bg-card: #151b26;
+      --bg-sub: #1b2332;
+      --bg-input: #0f141f;
+      --border-main: #242f44;
+      --border-sub: #2d3b55;
       --border-focus: #0284c7;
       --text-main: #f1f5f9;
-      --text-muted: #8899b5;
+      --text-muted: #8fa0bc;
       --accent: #0284c7;
       --accent-hover: #0369a1;
       --green: #10b981;
       --green-bg: rgba(16, 185, 129, 0.12);
       --red: #f43f5e;
       --red-bg: rgba(244, 63, 94, 0.12);
-      --neutral: #eab308;
-      --neutral-bg: rgba(234, 179, 8, 0.12);
+      --neutral: #f59e0b;
+      --radius: 8px;
+      --radius-sm: 5px;
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.25);
     }
 
     body.light-mode {
-      --bg-main: #f1f5f9;
-      --bg-panel: #ffffff;
+      --bg-main: #edf2f7;
+      --bg-card: #ffffff;
       --bg-sub: #f8fafc;
       --bg-input: #ffffff;
       --border-main: #cbd5e1;
@@ -43,19 +45,19 @@
       --red: #e11d48;
       --red-bg: rgba(225, 29, 72, 0.1);
       --neutral: #d97706;
-      --neutral-bg: rgba(217, 119, 6, 0.1);
+      --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
     }
 
     body.oled-mode {
       --bg-main: #000000;
-      --bg-panel: #0a0a0a;
-      --bg-sub: #121212;
+      --bg-card: #0a0a0c;
+      --bg-sub: #121216;
       --bg-input: #000000;
-      --border-main: #222222;
-      --border-sub: #333333;
+      --border-main: #202025;
+      --border-sub: #2c2c34;
       --border-focus: #38bdf8;
       --text-main: #ffffff;
-      --text-muted: #737373;
+      --text-muted: #787885;
       --accent: #0284c7;
       --accent-hover: #0369a1;
       --green: #22c55e;
@@ -63,13 +65,12 @@
       --red: #ef4444;
       --red-bg: rgba(239, 68, 68, 0.12);
       --neutral: #eab308;
-      --neutral-bg: rgba(234, 179, 8, 0.12);
+      --shadow-sm: none;
     }
 
     * {
       box-sizing: border-box;
       font-family: Arial, Helvetica, sans-serif !important;
-      border-radius: 0;
       margin: 0;
       padding: 0;
     }
@@ -77,190 +78,201 @@
     body {
       background-color: var(--bg-main);
       color: var(--text-main);
-      padding: 8px;
-      font-size: 11px;
-      line-height: 1.35;
+      padding: 12px;
+      font-size: 12.5px;
+      line-height: 1.4;
       font-variant-numeric: tabular-nums;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
 
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: var(--bg-main); }
-    ::-webkit-scrollbar-thumb { background: var(--border-main); }
+    ::-webkit-scrollbar-thumb { background: var(--border-main); border-radius: 4px; }
 
-    .app-viewport {
+    .app-container {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      max-width: 1850px;
+      gap: 12px;
+      max-width: 1800px;
       margin: 0 auto;
     }
 
-    /* ÜST KONTROL ÇUBUĞU */
-    .top-command-bar {
-      background: var(--bg-panel);
+    /* ÜST KONTROL PANELİ */
+    .top-header {
+      background: var(--bg-card);
       border: 1px solid var(--border-main);
-      padding: 6px 12px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 10px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .brand-meta {
+    .brand-group {
       display: flex;
       align-items: baseline;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .brand-name {
-      font-size: 13px;
+    .brand-title {
+      font-size: 14px;
       font-weight: 700;
-      letter-spacing: 0.8px;
+      letter-spacing: 0.6px;
       color: var(--text-main);
     }
 
-    .brand-tag {
-      font-size: 9px;
+    .brand-subtitle {
+      font-size: 11px;
       color: var(--accent);
       font-weight: 700;
-      letter-spacing: 0.5px;
+      border-left: 1px solid var(--border-main);
+      padding-left: 10px;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
 
-    .brand-ver {
-      font-size: 9px;
+    .brand-version {
+      font-size: 10.5px;
       color: var(--text-muted);
-      letter-spacing: 0.3px;
+      border-left: 1px solid var(--border-main);
+      padding-left: 10px;
     }
 
-    .command-actions {
+    .header-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
       flex-wrap: wrap;
     }
 
-    .btn-terminal {
+    .btn-main {
       background: var(--accent);
       color: #ffffff;
       border: 1px solid var(--accent);
-      padding: 4px 10px;
-      font-size: 10px;
+      padding: 6px 14px;
+      font-size: 11.5px;
       font-weight: 700;
+      border-radius: var(--radius-sm);
       cursor: pointer;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.3px;
       transition: all 0.15s ease;
     }
 
-    .btn-terminal:hover:not(:disabled) {
+    .btn-main:hover:not(:disabled) {
       background: var(--accent-hover);
       border-color: var(--accent-hover);
     }
 
-    .btn-terminal:disabled {
+    .btn-main:disabled {
       background: var(--border-main);
       border-color: var(--border-sub);
       color: var(--text-muted);
       cursor: not-allowed;
     }
 
-    .control-select, .control-btn {
+    .select-control, .btn-secondary {
       background: var(--bg-input);
       border: 1px solid var(--border-main);
       color: var(--text-main);
-      padding: 4px 8px;
-      font-size: 10px;
+      padding: 5px 10px;
+      font-size: 11.5px;
       font-weight: 700;
+      border-radius: var(--radius-sm);
       outline: none;
       cursor: pointer;
+      transition: border-color 0.15s ease;
     }
 
-    .control-select:hover, .control-btn:hover {
+    .select-control:hover, .btn-secondary:hover {
       border-color: var(--border-focus);
     }
 
-    /* TELEMETRİ / POZİSYON & SON İŞLEMLER DECK */
+    /* TELEMETRİ / GENEL POZİSYONLAR DECK */
     .telemetry-deck {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 8px;
+      gap: 10px;
     }
 
-    @media (min-width: 992px) {
+    @media (min-width: 1024px) {
       .telemetry-deck {
         grid-template-columns: 1fr 1fr;
       }
     }
 
-    .telemetry-panel {
-      background: var(--bg-panel);
+    .telemetry-card {
+      background: var(--bg-card);
       border: 1px solid var(--border-main);
-      padding: 8px 10px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 10px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
     }
 
-    .panel-header {
+    .panel-headline {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-sub);
-      padding-bottom: 4px;
+      padding-bottom: 6px;
     }
 
-    .panel-title {
-      font-size: 10px;
+    .panel-headline span:first-child {
+      font-size: 11.5px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
       color: var(--accent);
     }
 
-    .panel-meta {
-      font-size: 9px;
+    .panel-headline span:last-child {
+      font-size: 10.5px;
       color: var(--text-muted);
       font-weight: 700;
     }
 
-    /* ÇALIŞMA ALANI DÜZENİ */
-    .workspace-layout {
+    /* ANA ÇALIŞMA ALANI */
+    .workspace-grid {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
     }
 
     @media (min-width: 1280px) {
-      .workspace-layout {
+      .workspace-grid {
         display: grid;
-        grid-template-columns: 1fr 440px;
+        grid-template-columns: 1fr 460px;
         align-items: start;
       }
     }
 
-    /* ANALİZ KARTLARI */
+    /* KART IZGARASI */
     .card-deck {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 8px;
+      grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+      gap: 12px;
     }
 
-    .terminal-card {
-      background: var(--bg-panel);
+    .pro-card {
+      background: var(--bg-card);
       border: 1px solid var(--border-main);
-      padding: 8px 10px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 8px;
       position: relative;
-      animation: moduleIn 0.2s ease-out forwards;
+      animation: cardFadeIn 0.2s ease-out forwards;
       transition: border-color 0.15s ease;
     }
 
-    @keyframes moduleIn {
+    @keyframes cardFadeIn {
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
@@ -271,245 +283,250 @@
       transition: all 0.2s ease !important;
     }
 
-    .card-topbar {
+    .card-header-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: var(--bg-sub);
-      padding: 4px 6px;
+      padding: 5px 8px;
       border: 1px solid var(--border-sub);
+      border-radius: var(--radius-sm);
     }
 
-    .symbol-pill-group {
+    .symbol-selector-wrap {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 8px;
     }
 
     .color-picker {
       -webkit-appearance: none;
       appearance: none;
-      width: 14px;
-      height: 14px;
+      width: 18px;
+      height: 18px;
       border: 1px solid var(--border-sub);
+      border-radius: 4px;
       background: transparent;
       cursor: pointer;
       padding: 0;
+      vertical-align: middle;
     }
     .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
-    .color-picker::-webkit-color-swatch { border: none; }
+    .color-picker::-webkit-color-swatch { border: none; border-radius: 3px; }
 
-    .symbol-input {
+    .symbol-text-input {
       background: var(--bg-input);
       border: 1px solid var(--border-sub);
       color: var(--text-main);
-      font-size: 11px;
+      font-size: 13px;
       font-weight: 700;
-      padding: 2px 5px;
-      width: 100px;
+      padding: 3px 8px;
+      width: 110px;
       text-transform: uppercase;
       outline: none;
+      border-radius: var(--radius-sm);
     }
 
-    .symbol-input:focus {
+    .symbol-text-input:focus {
       border-color: var(--border-focus);
     }
 
-    .card-meta-right {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-    }
-
-    .btn-delete-card {
+    .btn-remove {
       background: transparent;
       border: 1px solid var(--border-sub);
       color: var(--text-muted);
-      font-size: 9px;
+      font-size: 10.5px;
       font-weight: 700;
-      padding: 2px 6px;
+      padding: 3px 8px;
       cursor: pointer;
-      text-transform: uppercase;
+      border-radius: var(--radius-sm);
+      transition: all 0.15s ease;
     }
 
-    .btn-delete-card:hover {
+    .btn-remove:hover {
       border-color: var(--red);
       color: var(--red);
       background: var(--red-bg);
     }
 
-    /* FİYAT BÖLÜMÜ */
-    .ticker-display {
+    .price-strip {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      padding: 4px 2px;
+      align-items: baseline;
+      padding: 4px 0 2px 0;
       border-bottom: 1px solid var(--border-sub);
     }
 
-    .ticker-price {
-      font-size: 19px;
+    .price-value {
+      font-size: 21px;
       font-weight: 700;
       letter-spacing: -0.5px;
     }
 
-    .ticker-timeframe {
-      font-size: 9px;
+    .tf-badge {
+      font-size: 11px;
       color: var(--text-muted);
       font-weight: 700;
-      text-transform: uppercase;
     }
 
-    /* VERİ GRIDLERİ */
     .metric-grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 4px;
+      gap: 6px;
     }
 
     .metric-grid-3 {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 4px;
+      gap: 6px;
     }
 
-    .metric-tile {
+    .metric-box {
       background: var(--bg-sub);
       border: 1px solid var(--border-sub);
-      padding: 4px 6px;
+      border-radius: var(--radius-sm);
+      padding: 6px 8px;
       text-align: center;
       display: flex;
       flex-direction: column;
-      gap: 1px;
+      gap: 2px;
     }
 
-    .metric-label {
-      font-size: 8px;
+    .metric-title {
+      font-size: 9.5px;
       color: var(--text-muted);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
     }
 
-    .metric-value {
-      font-size: 12px;
+    .metric-data {
+      font-size: 13px;
       font-weight: 700;
     }
 
-    .position-monitor-strip {
+    .position-track-box {
       background: var(--bg-input);
       border: 1px solid var(--border-sub);
-      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
       display: flex;
       justify-content: space-between;
-      font-size: 10px;
+      font-size: 11.5px;
     }
 
-    /* PARAMETRE PANELİ */
-    .config-matrix {
+    .config-box {
       background: var(--bg-sub);
       border: 1px solid var(--border-sub);
-      padding: 6px;
+      border-radius: var(--radius-sm);
+      padding: 8px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px 6px;
+      gap: 6px 8px;
     }
 
-    .config-field {
+    .config-group {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 3px;
     }
 
-    .config-field label {
-      font-size: 8px;
+    .config-group label {
+      font-size: 9.5px;
       color: var(--text-muted);
       font-weight: 700;
       text-transform: uppercase;
     }
 
-    .config-field input, .config-field select {
+    .config-group input, .config-group select {
       background: var(--bg-input);
       border: 1px solid var(--border-sub);
       color: var(--text-main);
-      padding: 3px 4px;
-      font-size: 10px;
+      padding: 4px 6px;
+      font-size: 11.5px;
       font-weight: 700;
+      border-radius: 4px;
       outline: none;
       width: 100%;
     }
 
-    .config-field input:focus, .config-field select:focus {
+    .config-group input:focus, .config-group select:focus {
       border-color: var(--border-focus);
     }
 
-    .btn-optimizer {
+    .btn-wizard {
       grid-column: span 3;
       background: var(--bg-input);
       border: 1px solid var(--accent);
       color: var(--accent);
-      padding: 4px;
-      font-size: 9px;
+      padding: 6px;
+      font-size: 11px;
       font-weight: 700;
+      border-radius: 4px;
       cursor: pointer;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       margin-top: 2px;
+      transition: all 0.15s ease;
     }
 
-    .btn-optimizer:hover {
+    .btn-wizard:hover {
       background: var(--accent);
       color: #ffffff;
     }
 
-    /* SAĞ PANEL / RADAR DOCK */
-    .sidebar-dock {
-      background: var(--bg-panel);
+    /* SAĞ PANEL / RADAR */
+    .sidebar-panel {
+      background: var(--bg-card);
       border: 1px solid var(--border-main);
-      padding: 8px 10px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
       position: sticky;
-      top: 8px;
+      top: 12px;
     }
 
-    .radar-add-row {
+    .radar-input-group {
       display: flex;
-      gap: 4px;
+      gap: 6px;
     }
 
-    .radar-add-row input, .radar-add-row select {
+    .radar-input-group input, .radar-input-group select {
       background: var(--bg-input);
       border: 1px solid var(--border-sub);
       color: var(--text-main);
-      font-size: 10px;
+      font-size: 11.5px;
       font-weight: 700;
-      padding: 4px 6px;
+      padding: 5px 8px;
+      border-radius: var(--radius-sm);
       outline: none;
     }
 
-    .radar-add-row input:focus, .radar-add-row select:focus {
+    .radar-input-group input:focus, .radar-input-group select:focus {
       border-color: var(--border-focus);
     }
 
     /* TABLOLAR */
-    .data-table, .watchlist-table {
+    .watchlist-table, .data-table {
       width: 100%;
-      border-collapse: collapse;
-      font-size: 10px;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 11.5px;
     }
 
-    .data-table th, .data-table td,
-    .watchlist-table th, .watchlist-table td {
-      padding: 4px 4px;
+    .watchlist-table th, .watchlist-table td,
+    .data-table th, .data-table td {
+      padding: 6px 6px;
       border-bottom: 1px solid var(--border-sub);
       text-align: center;
     }
 
-    .data-table th, .watchlist-table th {
+    .watchlist-table th, .data-table th {
       color: var(--text-muted);
-      font-size: 8px;
+      font-size: 9.5px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
@@ -521,14 +538,15 @@
     }
 
     .alarm-input {
-      width: 34px;
-      padding: 2px;
-      font-size: 10px;
+      width: 40px;
+      padding: 3px;
+      font-size: 11px;
       border: 1px solid var(--border-sub);
       background: var(--bg-input);
       color: var(--text-main);
       text-align: center;
       font-weight: 700;
+      border-radius: 3px;
       outline: none;
     }
 
@@ -537,46 +555,48 @@
     }
 
     .select-mini {
-      padding: 2px 4px;
-      font-size: 9px;
+      padding: 3px 4px;
+      font-size: 10.5px;
       border: 1px solid var(--border-sub);
       background: var(--bg-input);
       color: var(--text-main);
       font-weight: 700;
+      border-radius: 3px;
       outline: none;
     }
 
-    .btn-row-action {
+    .action-btn {
       background: var(--bg-input);
       border: 1px solid var(--border-sub);
       color: var(--text-main);
-      font-size: 8px;
+      font-size: 9.5px;
       font-weight: 700;
-      padding: 2px 4px;
+      padding: 3px 6px;
+      border-radius: 3px;
       cursor: pointer;
-      text-transform: uppercase;
+      transition: all 0.15s ease;
     }
 
-    .btn-row-action:hover {
+    .action-btn:hover {
       border-color: var(--border-focus);
       color: var(--accent);
     }
 
-    .btn-row-action.delete-action:hover {
+    .action-btn.red-btn:hover {
       border-color: var(--red);
       color: var(--red);
       background: var(--red-bg);
     }
 
     .drawer-toggle {
-      font-size: 9px;
+      font-size: 10.5px;
       font-weight: 700;
       display: flex;
       justify-content: space-between;
       align-items: center;
       cursor: pointer;
       user-select: none;
-      padding: 4px 0;
+      padding: 6px 0 2px 0;
       border-top: 1px solid var(--border-sub);
       color: var(--text-muted);
       text-transform: uppercase;
@@ -589,7 +609,7 @@
 
     .collapsible-content {
       display: none;
-      margin-top: 2px;
+      margin-top: 4px;
     }
 
     .csv-btn {
@@ -598,7 +618,7 @@
       border: none;
       cursor: pointer;
       font-weight: 700;
-      font-size: 8px;
+      font-size: 10px;
       text-transform: uppercase;
       padding: 0;
     }
@@ -618,41 +638,43 @@
       z-index: 9999;
     }
 
-    .modal-box {
-      background: var(--bg-panel);
+    .modal-card {
+      background: var(--bg-card);
       border: 1px solid var(--border-main);
-      padding: 14px;
-      width: 320px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      padding: 16px;
+      width: 350px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
 
-    .modal-header {
+    .modal-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
       border-bottom: 1px solid var(--border-sub);
-      padding-bottom: 6px;
+      padding-bottom: 8px;
     }
 
     .modal-title {
-      font-size: 11px;
+      font-size: 12.5px;
       font-weight: 700;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 0.6px;
+      letter-spacing: 0.5px;
     }
 
-    /* ANİMASYON VE RENKLER */
-    @keyframes pulseActive {
+    /* ANİMASYON VE RENK YARDIMCILARI */
+    @keyframes pulseRow {
       0% { background-color: var(--green-bg); }
       50% { background-color: transparent; }
       100% { background-color: var(--green-bg); }
     }
 
     .flashing-row {
-      animation: pulseActive 2.5s infinite ease-in-out;
+      animation: pulseRow 2.8s infinite ease-in-out;
     }
 
     .alarm-triggered {
@@ -664,41 +686,40 @@
     .red { color: var(--red); font-weight: 700; }
     .neutral { color: var(--neutral); font-weight: 700; }
 
-    .status-badge {
-      font-size: 8px;
+    .loader-status {
+      font-size: 10px;
       font-weight: 700;
       color: var(--accent);
       text-transform: uppercase;
-      letter-spacing: 0.4px;
     }
   </style>
 </head>
 <body class="light-mode">
 
-  <div class="app-viewport" id="main-app">
+  <div class="app-container" id="main-app">
     
-    <!-- ÜST KONTROL BAR -->
-    <header class="top-command-bar">
-      <div class="brand-meta">
-        <span class="brand-name">CODEMSO TERMINAL</span>
-        <span class="brand-tag">STRATEJI RADARI</span>
-        <span class="brand-ver">v2.8.2/mehmetsalihok</span>
+    <!-- ÜST KONTROL ÇUBUĞU -->
+    <header class="top-header">
+      <div class="brand-group">
+        <span class="brand-title">CODEMSO TERMİNAL</span>
+        <span class="brand-subtitle">STRATEJİ RADARI</span>
+        <span class="brand-version">v2.8.2/mehmetsalihok</span>
       </div>
 
-      <div class="command-actions">
-        <button class="btn-terminal" id="btn-add-card" onclick="addNewCard()">+ Kart Ekle (<span id="card-count-label">2</span>/8)</button>
+      <div class="header-actions">
+        <button class="btn-main" id="btn-add-card" onclick="addNewCard()">+ Kart Ekle (<span id="card-count-label">2</span>/8)</button>
         
-        <select class="control-select" id="theme-select" onchange="changeTheme(this.value)">
-          <option value="light" selected>Gunduz Modu</option>
+        <select class="select-control" id="theme-select" onchange="changeTheme(this.value)">
+          <option value="light" selected>Gündüz Modu</option>
           <option value="dark">Gece Modu</option>
-          <option value="oled">Zifiri Karanlik (OLED)</option>
+          <option value="oled">Zifiri Karanlık (OLED)</option>
         </select>
 
-        <button class="control-btn" onclick="playTestSound()">Ses Testi</button>
+        <button class="btn-secondary" onclick="playTestSound()">Ses Testi</button>
 
-        <div style="display: flex; align-items: center; gap: 4px;">
-          <label style="font-weight:700; font-size:9px; color:var(--text-muted)">YIL:</label>
-          <select id="global-year" class="control-select" onchange="changeGlobalYear()">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <label style="font-weight:700; font-size:10.5px; color:var(--text-muted)">YIL:</label>
+          <select id="global-year" class="select-control" onchange="changeGlobalYear()">
             <option value="2026">2026</option>
             <option value="2025">2025</option>
           </select>
@@ -706,63 +727,63 @@
       </div>
     </header>
 
-    <!-- TELEMETRİ / DECK (CANLI POZİSYONLAR & GLOBAL İŞLEMLER) -->
+    <!-- TELEMETRİ / GENEL POZİSYONLAR & İŞLEM GEÇMİŞİ -->
     <section class="telemetry-deck">
-      <div class="telemetry-panel" style="border-top: 2px solid var(--accent);">
-        <div class="panel-header">
-          <span class="panel-title">Canli Acik Pozisyonlar</span>
-          <span class="panel-meta" id="active-pos-count-label">0 Acik Pozisyon</span>
+      <div class="telemetry-card" style="border-top: 3px solid var(--accent);">
+        <div class="panel-headline">
+          <span>AÇIK POZİSYONLAR (CANLI)</span>
+          <span id="active-pos-count-label">0 Açık Pozisyon</span>
         </div>
-        <table class="data-table">
+        <table class="watchlist-table">
           <thead>
             <tr>
               <th style="text-align: left;">Coin</th>
-              <th>Giris Fiyati</th>
-              <th>Canli PnL</th>
-              <th>Hedef Cikis</th>
+              <th>Giriş Fiyatı</th>
+              <th>Canlı PnL (%)</th>
+              <th>Hedef Çıkış</th>
             </tr>
           </thead>
           <tbody id="active-positions-tbody">
-            <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Su an acik pozisyon bulunmuyor.</td></tr>
+            <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>
           </tbody>
         </table>
       </div>
 
-      <div class="telemetry-panel" style="border-top: 2px solid var(--border-focus);">
-        <div class="panel-header">
-          <span class="panel-title">Son 10 Tamamlanan Islem (Global)</span>
-          <span class="panel-meta">Gercek Zamanli</span>
+      <div class="telemetry-card" style="border-top: 3px solid var(--border-focus);">
+        <div class="panel-headline">
+          <span>SON 10 TAMAMLANAN İŞLEM (GLOBAL)</span>
+          <span>Gerçek Zamanlı</span>
         </div>
-        <table class="data-table">
+        <table class="watchlist-table">
           <thead>
             <tr>
               <th style="text-align: left;">Coin</th>
-              <th>Giris</th>
-              <th>Cikis</th>
-              <th>Net Kar</th>
+              <th>Giriş</th>
+              <th>Çıkış</th>
+              <th>Net Kâr (%)</th>
               <th>Neden / Zaman</th>
             </tr>
           </thead>
           <tbody id="global-trades-tbody">
-            <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henuz islem kaydi bulunmuyor.</td></tr>
+            <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz işlem kaydı bulunmuyor.</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- ÇALIŞMA ALANI (KARTLAR + RADAR DOCK) -->
-    <main class="workspace-layout">
+    <!-- ANA ÇALIŞMA ALANI (KARTLAR + RADAR DOCK) -->
+    <main class="workspace-grid">
       <section class="card-deck" id="grid-container"></section>
 
-      <aside class="sidebar-dock">
+      <aside class="sidebar-panel">
         <div>
-          <div class="panel-header" style="margin-bottom: 6px;">
-            <span class="panel-title">Canli RSI Radar (1s)</span>
-            <span class="panel-meta" id="radar-update-time">CANLI</span>
+          <div class="panel-headline" style="margin-bottom: 8px;">
+            <span>CANLI RSI RADAR (1s)</span>
+            <span id="radar-update-time">Canlı</span>
           </div>
 
-          <div class="radar-add-row" style="margin-bottom: 6px;">
-            <input type="text" id="new-radar-coin" placeholder="ORN: FLOKI" style="flex:1; text-transform:uppercase;">
+          <div class="radar-input-group" style="margin-bottom: 8px;">
+            <input type="text" id="new-radar-coin" placeholder="Örn: FLOKI" style="flex:1; text-transform:uppercase;">
             <select id="new-radar-tf" class="select-mini">
               <option value="5m">5m</option>
               <option value="15m">15m</option>
@@ -770,8 +791,8 @@
               <option value="1h">1h</option>
               <option value="4h">4h</option>
             </select>
-            <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:36px;">
-            <button class="btn-terminal" style="padding:4px 8px;" onclick="addRadarCoin()">Ekle</button>
+            <input type="number" id="new-radar-len" value="8" placeholder="RSI" style="width:42px;">
+            <button class="btn-main" style="padding:5px 10px;" onclick="addRadarCoin()">Ekle</button>
           </div>
 
           <table class="watchlist-table">
@@ -781,9 +802,9 @@
                 <th>TF</th>
                 <th>Per.</th>
                 <th>RSI</th>
-                <th>Min (&le;)</th>
-                <th>Max (&ge;)</th>
-                <th>Sira</th>
+                <th>Min (≤)</th>
+                <th>Max (≥)</th>
+                <th>Sıra</th>
                 <th>Sil</th>
               </tr>
             </thead>
@@ -791,16 +812,16 @@
           </table>
         </div>
 
-        <div style="border-top: 1px solid var(--border-sub); padding-top: 8px;">
-          <div class="panel-header" style="margin-bottom: 6px;">
-            <span class="panel-title">Kart Performans Ozeti (<span id="summary-year-label">2026</span>)</span>
+        <div style="border-top: 1px solid var(--border-sub); padding-top: 10px;">
+          <div class="panel-headline" style="margin-bottom: 8px;">
+            <span>KART PERFORMANS ÖZETİ (<span id="summary-year-label">2026</span>)</span>
           </div>
           <table class="watchlist-table">
             <thead>
               <tr>
                 <th style="text-align: left;">Coin</th>
-                <th>Bu Ay</th>
-                <th>Yillik Toplam</th>
+                <th>Bu Ay (%)</th>
+                <th>Yıllık Toplam (%)</th>
               </tr>
             </thead>
             <tbody id="summary-tbody"></tbody>
@@ -813,76 +834,76 @@
 
   <!-- SİTE İÇİ KART EKLEME MODALI -->
   <div class="modal-overlay" id="add-card-modal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <span class="modal-title">Yeni Kart Ekle</span>
-        <button onclick="closeAddCardModal()" class="btn-delete-card">Kapat</button>
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">YENİ KART EKLE</span>
+        <button onclick="closeAddCardModal()" class="btn-remove">Kapat</button>
       </div>
 
-      <div style="font-size:10px; color:var(--text-muted);">
-        Analiz edilecek kripto ciftini girin:
+      <div style="font-size:11px; color:var(--text-muted);">
+        Analiz etmek istediğiniz coin sembolünü girin:
       </div>
 
-      <div style="background:var(--bg-sub); padding:8px; border:1px solid var(--border-sub);">
-        <div class="config-field">
-          <label for="new-card-symbol-input">Coin Sembolu:</label>
-          <input type="text" id="new-card-symbol-input" placeholder="ORN: BTC, ETH, SOL" style="text-transform: uppercase;" onkeyup="handleAddCardKeyPress(event)">
+      <div style="background:var(--bg-sub); padding:10px; border:1px solid var(--border-sub); border-radius:var(--radius-sm);">
+        <div class="config-group">
+          <label for="new-card-symbol-input">Coin Sembolü:</label>
+          <input type="text" id="new-card-symbol-input" placeholder="Örn: BTC, ETH, SOL" style="text-transform: uppercase;" onkeyup="handleAddCardKeyPress(event)">
         </div>
       </div>
 
-      <div style="display:flex; gap:6px;">
-        <button class="btn-terminal" style="flex:1; padding:6px;" onclick="confirmAddNewCard()">Ekle</button>
-        <button class="control-btn" style="padding:6px 12px;" onclick="closeAddCardModal()">Iptal</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-main" style="flex:1; padding:8px;" onclick="confirmAddNewCard()">Ekle</button>
+        <button class="btn-secondary" style="padding:8px 14px;" onclick="closeAddCardModal()">İptal</button>
       </div>
     </div>
   </div>
 
   <!-- STRATEJİ SİHİRBAZI MODALI -->
   <div class="modal-overlay" id="optimizer-modal">
-    <div class="modal-box">
-      <div class="modal-header">
-        <span class="modal-title">Strateji Sihirbazi</span>
-        <button onclick="closeOptimizerModal()" class="btn-delete-card">Kapat</button>
+    <div class="modal-card">
+      <div class="modal-head">
+        <span class="modal-title">STRATEJİ SİHİRBAZI</span>
+        <button onclick="closeOptimizerModal()" class="btn-remove">Kapat</button>
       </div>
 
-      <div style="font-size:10px; color:var(--text-muted); font-weight:700;" id="opt-coin-title">
+      <div style="font-size:11px; color:var(--text-muted); font-weight:700;" id="opt-coin-title">
         Coin Analiz Ediliyor...
       </div>
 
-      <div style="background:var(--bg-sub); padding:8px; border:1px solid var(--border-sub); display:flex; flex-direction:column; gap:5px; font-size:10px;">
+      <div style="background:var(--bg-sub); padding:10px; border:1px solid var(--border-sub); border-radius:var(--radius-sm); display:flex; flex-direction:column; gap:6px; font-size:11.5px;">
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted);">Hedef Kar Orani:</span>
+          <span style="color:var(--text-muted);">Hedef Kâr Oranı:</span>
           <b id="opt-target-profit" class="green">%1.0</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted);">Onerilen RSI Al:</span>
+          <span style="color:var(--text-muted);">Önerilen RSI Al:</span>
           <b id="opt-best-buy" style="color:var(--accent);">--</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted);">Onerilen RSI Sat:</span>
+          <span style="color:var(--text-muted);">Önerilen RSI Sat:</span>
           <b id="opt-best-sell" style="color:var(--neutral);">--</b>
         </div>
-        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-sub); padding-top:4px;">
+        <div style="display:flex; justify-content:space-between; border-top:1px dashed var(--border-sub); padding-top:5px;">
           <span style="color:var(--text-muted);">Win Rate:</span>
           <b id="opt-best-winrate" class="green">--%</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted);">Kayip Islem:</span>
-          <b id="opt-best-loss" class="red">0 Kayip</b>
+          <span style="color:var(--text-muted);">Kayıp İşlem:</span>
+          <b id="opt-best-loss" class="red">0 Kayıp</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted);">Toplam Islem:</span>
-          <b id="opt-best-trades">0 Islem</b>
+          <span style="color:var(--text-muted);">Toplam İşlem:</span>
+          <b id="opt-best-trades">0 İşlem</b>
         </div>
         <div style="display:flex; justify-content:space-between;">
-          <span style="color:var(--text-muted);">Net Toplam Kar:</span>
+          <span style="color:var(--text-muted);">Net Toplam Kâr:</span>
           <b id="opt-best-pnl" class="green">--%</b>
         </div>
       </div>
 
-      <div style="display:flex; gap:6px;">
-        <button class="btn-terminal" style="flex:1; padding:6px;" onclick="applyOptimizerResult()">Uygula ve Kaydet</button>
-        <button class="control-btn" style="padding:6px 12px;" onclick="closeOptimizerModal()">Vazgec</button>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-main" style="flex:1; padding:8px;" onclick="applyOptimizerResult()">Uygula ve Kaydet</button>
+        <button class="btn-secondary" style="padding:8px 14px;" onclick="closeOptimizerModal()">Vazgeç</button>
       </div>
     </div>
   </div>
@@ -1011,7 +1032,7 @@
 
     function addNewCard() {
       if (coinsConfig.length >= 8) {
-        alert('Maksimum 8 adet analiz karti ekleyebilirsiniz!');
+        alert('Maksimum 8 adet analiz kartı ekleyebilirsiniz!');
         return;
       }
 
@@ -1028,7 +1049,7 @@
 
       let val = input.value.trim();
       if (!val) {
-        alert('Lutfen gecerli bir coin sembolu girin!');
+        alert('Lütfen geçerli bir coin sembolü girin!');
         return;
       }
 
@@ -1065,14 +1086,14 @@
 
     function removeCard(slotIndex) {
       if (coinsConfig.length <= 1) {
-        alert('En az 1 adet analiz karti bulunmalidir!');
+        alert('En az 1 adet analiz kartı bulunmalıdır!');
         return;
       }
 
       const coin = coinsConfig[slotIndex];
       const coinName = coin ? coin.symbol.replace('USDT', '') : 'Bu';
 
-      if (!confirm(`${coinName} kartini silmek istediginize emin misiniz?`)) {
+      if (!confirm(`${coinName} kartını silmek istediğinize emin misiniz?`)) {
         return;
       }
 
@@ -1113,57 +1134,57 @@
       coinsConfig.forEach((coin, i) => {
         const cardColor = coin.color || '#0284c7';
         const cardHTML = `
-          <div class="terminal-card" id="card-${i}" style="border-top: 3px solid ${cardColor};">
-            <div class="card-topbar">
-              <div class="symbol-pill-group">
-                <input type="color" class="color-picker" value="${cardColor}" id="card-color-${i}" onchange="updateCardColor(${i}, this.value)" title="Renk Secimi">
-                <input type="text" class="symbol-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
+          <div class="pro-card" id="card-${i}" style="border-top: 3px solid ${cardColor};">
+            <div class="card-header-bar">
+              <div class="symbol-selector-wrap">
+                <input type="color" class="color-picker" value="${cardColor}" id="card-color-${i}" onchange="updateCardColor(${i}, this.value)" title="Kart Vurgu Rengini Değiştir">
+                <input type="text" class="symbol-text-input" value="${coin.symbol}" id="coin-symbol-${i}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="card-meta-right">
-                <span class="status-badge" id="loader-${i}">YUKLENIYOR</span>
-                <button class="btn-delete-card" onclick="removeCard(${i})" title="Karti Sil">Sil</button>
+              <div style="display:flex; align-items:center; gap:6px;">
+                <span class="loader-status" id="loader-${i}">Yükleniyor...</span>
+                <button class="btn-remove" onclick="removeCard(${i})" title="Kartı Sil">Sil</button>
               </div>
             </div>
 
-            <div class="ticker-display">
-              <span class="ticker-price" id="price-${i}">--.--</span>
-              <span class="ticker-timeframe" id="tf-label-${i}">${coin.interval} | RSI(${coin.rsiLength})</span>
+            <div class="price-strip">
+              <span class="price-value" id="price-${i}">--.--</span>
+              <span class="tf-badge" id="tf-label-${i}">${coin.interval} | RSI(${coin.rsiLength})</span>
             </div>
 
             <div class="metric-grid-2">
-              <div class="metric-tile">
-                <span class="metric-label">Anlik RSI</span>
-                <span class="metric-value neutral" id="rsi-${i}">--,--</span>
+              <div class="metric-box">
+                <span class="metric-title">Anlık RSI</span>
+                <span class="metric-data neutral" id="rsi-${i}">--,--</span>
               </div>
-              <div class="metric-tile">
-                <span class="metric-label">Pozisyon Durumu</span>
-                <span class="metric-value" id="pos-${i}">Notr</span>
+              <div class="metric-box">
+                <span class="metric-title">Pozisyon Durumu</span>
+                <span class="metric-data" id="pos-${i}">Nötr</span>
               </div>
             </div>
 
-            <div class="position-monitor-strip">
-              <span>Giris: <b id="entry-${i}">-</b></span>
-              <span>PnL: <b id="live-pnl-${i}">0,00%</b></span>
+            <div class="position-track-box">
+              <span>Giriş: <b id="entry-${i}">-</b></span>
+              <span>Canlı PnL: <b id="live-pnl-${i}">0,00%</b></span>
               <span>Hedef: <b id="target-${i}" class="green">-</b></span>
             </div>
 
             <div class="metric-grid-3">
-              <div class="metric-tile">
-                <span class="metric-label">Win Rate</span>
-                <span class="metric-value green" id="win-rate-${i}">0%</span>
+              <div class="metric-box">
+                <span class="metric-title">Win Rate</span>
+                <span class="metric-data green" id="win-rate-${i}">0%</span>
               </div>
-              <div class="metric-tile">
-                <span class="metric-label">Ort. Sure</span>
-                <span class="metric-value" id="avg-time-${i}">-</span>
+              <div class="metric-box">
+                <span class="metric-title">Ort. Süre</span>
+                <span class="metric-data" id="avg-time-${i}">-</span>
               </div>
-              <div class="metric-tile">
-                <span class="metric-label">Max Seri</span>
-                <span class="metric-value green" id="max-streak-${i}">0</span>
+              <div class="metric-box">
+                <span class="metric-title">Max Seri</span>
+                <span class="metric-data green" id="max-streak-${i}">0</span>
               </div>
             </div>
 
-            <div class="config-matrix">
-              <div class="config-field">
+            <div class="config-box">
+              <div class="config-group">
                 <label>TF:</label>
                 <select id="setting-interval-${i}" onchange="updateCoinSetting(${i})">
                   <option value="5m" ${coin.interval==='5m'?'selected':''}>5m</option>
@@ -1173,48 +1194,48 @@
                   <option value="4h" ${coin.interval==='4h'?'selected':''}>4h</option>
                 </select>
               </div>
-              <div class="config-field">
+              <div class="config-group">
                 <label>RSI Per.:</label>
                 <input type="number" id="setting-rsiLength-${i}" value="${coin.rsiLength}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="config-field">
+              <div class="config-group">
                 <label>RSI Al:</label>
                 <input type="number" id="setting-buyRsi-${i}" value="${coin.buyRsi}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="config-field">
+              <div class="config-group">
                 <label>RSI Sat:</label>
                 <input type="number" id="setting-sellRsi-${i}" value="${coin.sellRsi}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="config-field">
-                <label>Kar (%):</label>
+              <div class="config-group">
+                <label>Kâr (%):</label>
                 <input type="number" step="0.1" id="setting-profitTarget-${i}" value="${coin.profitTarget}" onchange="updateCoinSetting(${i})">
               </div>
-              <div class="config-field">
+              <div class="config-group">
                 <label>Ay Kilit (%):</label>
                 <input type="number" step="0.5" id="setting-monthlyCap-${i}" value="${coin.monthlyCap}" onchange="updateCoinSetting(${i})">
               </div>
 
-              <button class="btn-optimizer" onclick="runAutoOptimizer(${i})">Sihirbaz (Ideal RSI Bul)</button>
+              <button class="btn-wizard" onclick="runAutoOptimizer(${i})">Sihirbaz (En İdeal RSI'ı Bul)</button>
             </div>
 
             <div class="drawer-toggle" onclick="toggleAccordion('acc-monthly-${i}')">
-              <span>Aylik Performans Tablosu (${SELECTED_YEAR})</span>
-              <span>[+]</span>
+              <span>Aylık Performans Tablosu (${SELECTED_YEAR})</span>
+              <span>▼</span>
             </div>
             <div class="collapsible-content" id="acc-monthly-${i}">
-              <table class="data-table">
-                <thead><tr><th>Ay</th><th>Isl.</th><th>Win</th><th>Loss</th><th>Net Kar (%)</th></tr></thead>
+              <table class="watchlist-table">
+                <thead><tr><th>Ay</th><th>İşl.</th><th>Win</th><th>Loss</th><th>Net Kâr (%)</th></tr></thead>
                 <tbody id="table-monthly-${i}"></tbody>
               </table>
             </div>
 
             <div class="drawer-toggle">
-              <span onclick="toggleAccordion('acc-trades-${i}')">Son Islemler Logu [+]</span>
-              <button class="csv-btn" onclick="exportTradesCSV(${i})">[CSV INDIR]</button>
+              <span onclick="toggleAccordion('acc-trades-${i}')">Son İşlemler Logu ▼</span>
+              <button class="csv-btn" onclick="exportTradesCSV(${i})">[CSV İndir]</button>
             </div>
             <div class="collapsible-content" id="acc-trades-${i}">
-              <table class="data-table">
-                <thead><tr><th>Giris</th><th>Cikis</th><th>Net (%)</th><th>Neden</th></tr></thead>
+              <table class="watchlist-table">
+                <thead><tr><th>Giriş</th><th>Çıkış</th><th>Net (%)</th><th>Neden</th></tr></thead>
                 <tbody id="table-trades-${i}"></tbody>
               </table>
             </div>
@@ -1226,7 +1247,7 @@
       for (let i = 0; i < coinsConfig.length; i++) {
         if (candlesData[i] && candlesData[i].length > 0) {
           const loaderEl = document.getElementById(`loader-${i}`);
-          if (loaderEl) loaderEl.innerText = 'CANLI';
+          if (loaderEl) loaderEl.innerText = 'Canlı';
           runBacktestAndRender(i);
         } else {
           loadCoinData(i);
@@ -1239,7 +1260,7 @@
       const candles = candlesData[slotIndex];
 
       if (!candles || candles.length === 0) {
-        alert('Lutfen once coinin verilerinin yuklenmesini bekleyin!');
+        alert('Lütfen önce coinin verilerinin yüklenmesini bekleyin!');
         return;
       }
 
@@ -1325,7 +1346,7 @@
       }
 
       if (!bestCandidate) {
-        alert('Bu coin ve zaman dilimi icin karli bir RSI kombinasyonu bulunamadi.');
+        alert('Bu coin ve zaman dilimi için kârlı bir RSI kombinasyonu bulunamadı.');
         return;
       }
 
@@ -1351,10 +1372,10 @@
       if (wrEl) wrEl.innerText = `%${bestCandidate.winRate}`;
 
       const lossEl = document.getElementById('opt-best-loss');
-      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayip`;
+      if (lossEl) lossEl.innerText = `${bestCandidate.lossCount} Kayıp`;
 
       const tradesEl = document.getElementById('opt-best-trades');
-      if (tradesEl) tradesEl.innerText = `${bestCandidate.totalTrades} Islem`;
+      if (tradesEl) tradesEl.innerText = `${bestCandidate.totalTrades} İşlem`;
 
       const pnlEl = document.getElementById('opt-best-pnl');
       if (pnlEl) pnlEl.innerText = `${bestCandidate.totPnl >= 0 ? '+' : ''}${bestCandidate.totPnl.toFixed(2)}%`;
@@ -1422,10 +1443,10 @@
           <td><input type="number" class="alarm-input" value="${item.buyAlarm}" onchange="updateRadarItem(${index}, 'buyAlarm', this.value)"></td>
           <td><input type="number" class="alarm-input" value="${item.sellAlarm}" onchange="updateRadarItem(${index}, 'sellAlarm', this.value)"></td>
           <td>
-            <button class="btn-row-action" onclick="moveRadarCoin(${index}, -1)">Yukari</button>
-            <button class="btn-row-action" onclick="moveRadarCoin(${index}, 1)">Asagi</button>
+            <button class="action-btn" onclick="moveRadarCoin(${index}, -1)">▲</button>
+            <button class="action-btn" onclick="moveRadarCoin(${index}, 1)">▼</button>
           </td>
-          <td><button class="btn-row-action delete-action" onclick="removeRadarCoin(${index})">Sil</button></td>
+          <td><button class="action-btn red-btn" onclick="removeRadarCoin(${index})">Sil</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -1475,11 +1496,11 @@
 
       const activeList = cardActivePositions.filter(p => p && p.inPosition);
 
-      if (countLabel) countLabel.innerText = `${activeList.length} Acik Pozisyon`;
+      if (countLabel) countLabel.innerText = `${activeList.length} Açık Pozisyon`;
 
       if (posTbody) {
         if (activeList.length === 0) {
-          posTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Su an acik pozisyon bulunmuyor.</td></tr>';
+          posTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>';
         } else {
           const placeholder = posTbody.querySelector('td[colspan="4"]');
           if (placeholder) posTbody.innerHTML = '';
@@ -1539,7 +1560,7 @@
       if (tradesTbody) {
         tradesTbody.innerHTML = '';
         if (last10.length === 0) {
-          tradesTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henuz tamamlanan islem bulunmuyor.</td></tr>';
+          tradesTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz tamamlanan işlem bulunmuyor.</td></tr>';
         } else {
           last10.forEach(t => {
             const tr = document.createElement('tr');
@@ -1572,7 +1593,7 @@
       const trades = cardTradesHistory[slotIndex] || [];
 
       if (trades.length === 0) {
-        alert('Indirilecek islem kaydi bulunamadi!');
+        alert('İndirilecek işlem kaydı bulunamadı!');
         return;
       }
 
@@ -1763,7 +1784,7 @@
       if (!coin) return;
 
       const loaderEl = document.getElementById(`loader-${slotIndex}`);
-      if (loaderEl) loaderEl.innerText = 'YUKLENIYOR';
+      if (loaderEl) loaderEl.innerText = 'Yükleniyor...';
 
       const yearStart = new Date(`${SELECTED_YEAR}-01-01T00:00:00Z`).getTime();
       const yearEnd = SELECTED_YEAR === '2026' ? Date.now() : new Date(`${SELECTED_YEAR}-12-31T23:59:59Z`).getTime();
@@ -1795,7 +1816,7 @@
       }
 
       candlesData[slotIndex] = allCandles;
-      if (loaderEl) loaderEl.innerText = 'CANLI';
+      if (loaderEl) loaderEl.innerText = 'Canlı';
       runBacktestAndRender(slotIndex);
     }
 
@@ -1807,7 +1828,7 @@
       const loaderEl = document.getElementById(`loader-${slotIndex}`);
 
       if (!candles || candles.length === 0) {
-        if (loaderEl) loaderEl.innerText = 'HATA';
+        if (loaderEl) loaderEl.innerText = 'Hata / Geçersiz Coin';
         return;
       }
 
@@ -1853,7 +1874,7 @@
           if (c.high >= targetPrice) {
             exited = true;
             pnl = coin.profitTarget;
-            reason = `Kar (%${coin.profitTarget})`;
+            reason = `Kâr (%${coin.profitTarget})`;
           } else if (rsiVal >= coin.sellRsi) {
             exited = true;
             pnl = ((c.close - entryPrice) / entryPrice) * 100;
@@ -1937,7 +1958,7 @@
       const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
 
       if (inPosition) {
-        if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'metric-value green'; }
+        if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'metric-data green'; }
         if (entryEl) entryEl.innerText = formatPrice(entryPrice);
         if (targetEl) targetEl.innerText = formatPrice(targetP);
 
@@ -1954,7 +1975,7 @@
           livePnl
         };
       } else {
-        if (posEl) { posEl.innerText = 'Notr'; posEl.className = 'metric-value neutral'; }
+        if (posEl) { posEl.innerText = 'Nötr'; posEl.className = 'metric-data neutral'; }
         if (entryEl) entryEl.innerText = '-';
         if (livePnlEl) { livePnlEl.innerText = '0,00%'; livePnlEl.className = ''; }
         if (targetEl) targetEl.innerText = '-';
