@@ -330,6 +330,291 @@
     white-space: nowrap;
   }
 
+
+  /* ===== PROFESYONEL POZİSYON YÖNETİMİ ===== */
+  .telemetry-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border-sub);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--bg-input) 42%, transparent);
+  }
+
+  .positions-table,
+  .history-table {
+    min-width: 700px;
+  }
+
+  .positions-table th,
+  .history-table th {
+    background: color-mix(in srgb, var(--bg-sub) 86%, transparent);
+  }
+
+  .positions-table tbody tr,
+  .history-table tbody tr {
+    transition: background-color .18s ease, box-shadow .18s ease;
+  }
+
+  .positions-table tbody tr:hover,
+  .history-table tbody tr:hover {
+    background: var(--bg-hover);
+  }
+
+  .position-symbol-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 90px;
+  }
+
+  .position-live-dot {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: var(--green);
+    box-shadow: 0 0 0 4px var(--green-bg), 0 0 14px color-mix(in srgb, var(--green) 58%, transparent);
+  }
+
+  .position-symbol-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.25;
+  }
+
+  .position-symbol-meta b {
+    font-size: 12px;
+    letter-spacing: .04em;
+  }
+
+  .position-symbol-meta small,
+  .price-stack small,
+  .trade-time-stack small {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+
+  .price-stack {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .price-stack > b {
+    font-size: 12px;
+  }
+
+  .entry-edit-btn {
+    border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--border-main));
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 7px;
+    padding: 3px 7px;
+    font-size: 9px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all .16s ease;
+  }
+
+  .entry-edit-btn:hover {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent-soft) 74%, var(--bg-hover));
+    transform: translateY(-1px);
+  }
+
+  .manual-entry-badge {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid color-mix(in srgb, var(--neutral) 38%, transparent);
+    background: var(--neutral-bg);
+    color: var(--neutral);
+    border-radius: 999px;
+    padding: 2px 6px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .08em;
+  }
+
+  .pnl-pill {
+    display: inline-flex;
+    min-width: 66px;
+    justify-content: center;
+    padding: 5px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .02em;
+  }
+
+  .pnl-pill.positive { color: var(--green); background: var(--green-bg); }
+  .pnl-pill.negative { color: var(--red); background: var(--red-bg); }
+
+  .history-row-recent24 {
+    background: rgba(56, 189, 248, .075);
+    box-shadow: inset 3px 0 0 #38bdf8;
+  }
+
+  .history-row-recent48 {
+    background: rgba(249, 115, 22, .075);
+    box-shadow: inset 3px 0 0 #f97316;
+  }
+
+  .history-row-recent24:hover { background: rgba(56, 189, 248, .13) !important; }
+  .history-row-recent48:hover { background: rgba(249, 115, 22, .13) !important; }
+
+  .history-age-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 999px;
+    padding: 3px 7px;
+    font-size: 8px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    white-space: nowrap;
+  }
+
+  .history-age-badge.blue {
+    color: #38bdf8;
+    background: rgba(56, 189, 248, .10);
+    border: 1px solid rgba(56, 189, 248, .20);
+  }
+
+  .history-age-badge.orange {
+    color: #f97316;
+    background: rgba(249, 115, 22, .10);
+    border: 1px solid rgba(249, 115, 22, .20);
+  }
+
+  .trade-time-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 142px;
+    line-height: 1.3;
+  }
+
+  .trade-time-stack b {
+    font-size: 10px;
+    color: var(--text-soft);
+  }
+
+  .history-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 2px;
+  }
+
+  .history-legend {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .legend-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 999px;
+    background: var(--border-main);
+  }
+
+  .legend-dot.blue { background: #38bdf8; }
+  .legend-dot.orange { background: #f97316; }
+
+  .history-pagination {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .page-btn {
+    min-width: 30px;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--border-main);
+    border-radius: 8px;
+    background: var(--bg-input);
+    color: var(--text-soft);
+    font-size: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+
+  .page-btn:hover:not(:disabled),
+  .page-btn.active {
+    border-color: color-mix(in srgb, var(--accent) 65%, var(--border-main));
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .page-btn:disabled {
+    opacity: .38;
+    cursor: not-allowed;
+  }
+
+  .pagination-label {
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 800;
+    min-width: 54px;
+    text-align: center;
+  }
+
+  .entry-revision-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .entry-revision-stat {
+    padding: 10px;
+    border: 1px solid var(--border-sub);
+    border-radius: 10px;
+    background: var(--bg-sub);
+  }
+
+  .entry-revision-stat span {
+    display: block;
+    color: var(--text-muted);
+    font-size: 9px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 3px;
+  }
+
+  .entry-revision-stat b {
+    font-size: 12px;
+  }
+
+  .entry-revision-note {
+    color: var(--text-muted);
+    font-size: 10px;
+    line-height: 1.55;
+    padding: 9px 10px;
+    border-left: 2px solid var(--accent);
+    background: var(--accent-soft);
+    border-radius: 0 8px 8px 0;
+  }
+
   /* ===== ANA ÇALIŞMA ALANI ===== */
   .workspace-grid {
     display: grid;
@@ -932,7 +1217,7 @@
       <div class="brand-group">
         <span class="brand-title">CODEMSO TERMİNAL</span>
         <span class="brand-subtitle">STRATEJİ RADARI</span>
-        <span class="brand-version">v2.9.0/mehmetsalihok</span>
+        <span class="brand-version">v3.0.0/mehmetsalihok</span>
       </div>
 
       <div class="header-actions">
@@ -960,43 +1245,58 @@
     <section class="telemetry-deck">
       <div class="telemetry-card" style="border-top: 3px solid var(--accent);">
         <div class="panel-headline">
-          <span>AÇIK POZİSYONLAR (CANLI)</span>
+          <span>AÇIK POZİSYONLAR · CANLI YÖNETİM</span>
           <span id="active-pos-count-label">0 Açık Pozisyon</span>
         </div>
-        <table class="watchlist-table">
-          <thead>
-            <tr>
-              <th style="text-align: left;">Coin</th>
-              <th>Giriş Fiyatı</th>
-              <th>Canlı PnL (%)</th>
-              <th>Hedef Çıkış</th>
-            </tr>
-          </thead>
-          <tbody id="active-positions-tbody">
-            <tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>
-          </tbody>
-        </table>
+        <div class="telemetry-table-wrap">
+          <table class="watchlist-table positions-table">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Coin</th>
+                <th>Giriş / Maliyet</th>
+                <th>Canlı Fiyat</th>
+                <th>Canlı PnL</th>
+                <th>Strateji Hedefi</th>
+                <th>Giriş Zamanı</th>
+              </tr>
+            </thead>
+            <tbody id="active-positions-tbody">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div class="telemetry-card" style="border-top: 3px solid var(--border-focus);">
         <div class="panel-headline">
-          <span>SON 10 TAMAMLANAN İŞLEM (GLOBAL)</span>
-          <span>Gerçek Zamanlı</span>
+          <span>SON 50 TAMAMLANAN İŞLEM · GLOBAL</span>
+          <span id="global-trades-range-label">0 kayıt</span>
         </div>
-        <table class="watchlist-table">
-          <thead>
-            <tr>
-              <th style="text-align: left;">Coin</th>
-              <th>Giriş</th>
-              <th>Çıkış</th>
-              <th>Net Kâr (%)</th>
-              <th>Neden / Zaman</th>
-            </tr>
-          </thead>
-          <tbody id="global-trades-tbody">
-            <tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz işlem kaydı bulunmuyor.</td></tr>
-          </tbody>
-        </table>
+        <div class="telemetry-table-wrap">
+          <table class="watchlist-table history-table">
+            <thead>
+              <tr>
+                <th style="text-align: left;">Coin</th>
+                <th>Giriş</th>
+                <th>Çıkış</th>
+                <th>Net Kâr</th>
+                <th>Neden</th>
+                <th>Tarih / Saat</th>
+              </tr>
+            </thead>
+            <tbody id="global-trades-tbody">
+              <tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Henüz işlem kaydı bulunmuyor.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="history-footer">
+          <div class="history-legend">
+            <span class="legend-item"><i class="legend-dot blue"></i> Son 24 saat</span>
+            <span class="legend-item"><i class="legend-dot orange"></i> 24–48 saat</span>
+            <span class="legend-item"><i class="legend-dot"></i> 48 saatten eski</span>
+          </div>
+          <div class="history-pagination" id="global-trades-pagination"></div>
+        </div>
       </div>
     </section>
 
@@ -1138,6 +1438,50 @@
   </div>
 
 
+  <!-- AÇIK POZİSYON GİRİŞ / MALİYET REVİZYONU -->
+  <div class="modal-overlay" id="entry-revision-modal">
+    <div class="modal-card" style="width:min(440px, calc(100vw - 28px));">
+      <div class="modal-head">
+        <span class="modal-title">GİRİŞ FİYATI / MALİYET REVİZYONU</span>
+        <button type="button" onclick="closeEntryRevisionModal()" class="btn-remove">Kapat</button>
+      </div>
+
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+        <div>
+          <div style="font-size:10px; color:var(--text-muted); font-weight:800; text-transform:uppercase; letter-spacing:.08em;">Pozisyon</div>
+          <div id="entry-revision-symbol" style="font-size:20px; font-weight:900; letter-spacing:-.02em;">--</div>
+        </div>
+        <span class="manual-entry-badge" id="entry-revision-status">SİNYAL MALİYETİ</span>
+      </div>
+
+      <div class="entry-revision-summary">
+        <div class="entry-revision-stat">
+          <span>Strateji Girişi</span>
+          <b id="entry-revision-signal-price">--</b>
+        </div>
+        <div class="entry-revision-stat">
+          <span>Canlı Fiyat</span>
+          <b id="entry-revision-live-price">--</b>
+        </div>
+      </div>
+
+      <div class="config-group">
+        <label for="entry-revision-input">Gerçek / Ortalama Giriş Fiyatın</label>
+        <input type="number" step="any" min="0" id="entry-revision-input" placeholder="Örn: 0.602">
+      </div>
+
+      <div class="entry-revision-note">
+        Bu revizyon canlı PnL ve gerçekleşen işlem maliyet hesabında kullanılır. RSI/backtest motorunun geçmiş sinyal girişini geriye dönük değiştirmez.
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-main" style="flex:1; min-width:130px;" onclick="saveEntryRevision()">Revizyonu Kaydet</button>
+        <button class="btn-secondary" id="entry-revision-reset-btn" style="min-width:110px;" onclick="resetEntryRevision()">Sinyale Sıfırla</button>
+        <button class="btn-secondary" onclick="closeEntryRevisionModal()">İptal</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 30 SANİYELİK CANLI İŞLEM UYARISI -->
   <div class="trade-signal-overlay" id="trade-signal-overlay" role="alertdialog" aria-modal="true" aria-live="assertive">
     <div class="trade-signal-card" id="trade-signal-card">
@@ -1185,6 +1529,15 @@
     let cardActivePositions = [];
     let lastPrices = [];
     let tempOptimizerResult = null;
+
+    // Kullanıcının gerçek/ortalama maliyet revizyonları ve canlı olay zamanları.
+    // Anahtar, coin + strateji giriş/çıkış mum zamanından üretilir.
+    let manualEntryOverrides = {};
+    let liveExecutionTimes = {};
+    let entryRevisionSlotIndex = null;
+    let globalTradesPage = 1;
+    const GLOBAL_TRADES_LIMIT = 50;
+    const GLOBAL_TRADES_PER_PAGE = 10;
 
     // Canlı sinyal uyarıları: ilk yüklemede geçmiş işlemler için alarm üretmez,
     // sadece sayfa açıkken oluşan yeni giriş / çıkışları yakalar.
@@ -1243,6 +1596,37 @@
     function formatNum(val, dec = 2) {
       if (val === null || val === undefined || isNaN(val)) return '--,--';
       return Number(val).toFixed(dec).replace('.', ',');
+    }
+
+
+    function formatDateTimeMinute(timestamp) {
+      if (!timestamp || !Number.isFinite(Number(timestamp))) return '--';
+      return new Intl.DateTimeFormat('tr-TR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      }).format(new Date(Number(timestamp))).replace(',', '');
+    }
+
+    function getManualEntryKey(symbol, entryTime) {
+      return `${symbol}:${Number(entryTime)}`;
+    }
+
+    function getLiveEventKey(type, symbol, rawTime) {
+      return `${type}:${symbol}:${Number(rawTime)}`;
+    }
+
+    function getEffectiveEntryPrice(symbol, entryTime, signalEntryPrice) {
+      const override = manualEntryOverrides[getManualEntryKey(symbol, entryTime)];
+      const price = override ? Number(override.price) : NaN;
+      return Number.isFinite(price) && price > 0 ? price : Number(signalEntryPrice);
+    }
+
+    function getDisplayEventTime(type, symbol, rawTime) {
+      return Number(liveExecutionTimes[getLiveEventKey(type, symbol, rawTime)]) || Number(rawTime);
     }
 
     function parseVal(val, defaultVal = 0) {
@@ -1393,11 +1777,7 @@
       }
 
       if (timeEl) {
-        timeEl.innerText = new Date().toLocaleTimeString('tr-TR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit'
-        });
+        timeEl.innerText = formatDateTimeMinute(Date.now());
       }
 
       let remaining = 30;
@@ -1484,6 +1864,10 @@
       candidates.forEach(item => {
         if (!tracker.seenKeys.has(item.key)) {
           tracker.seenKeys.add(item.key);
+          if (!liveExecutionTimes[item.key]) {
+            liveExecutionTimes[item.key] = Date.now();
+            saveConfig();
+          }
           showTradeSignalAlert(item.payload);
         }
       });
@@ -1509,6 +1893,8 @@
           if (parsed.coinsConfig && parsed.coinsConfig.length > 0) coinsConfig = parsed.coinsConfig;
           if (parsed.radarWatchlist) radarWatchlist = parsed.radarWatchlist;
           if (parsed.year) SELECTED_YEAR = parsed.year;
+          if (parsed.manualEntryOverrides && typeof parsed.manualEntryOverrides === 'object') manualEntryOverrides = parsed.manualEntryOverrides;
+          if (parsed.liveExecutionTimes && typeof parsed.liveExecutionTimes === 'object') liveExecutionTimes = parsed.liveExecutionTimes;
           if (parsed.theme) {
             activeTheme = parsed.theme;
           }
@@ -1528,7 +1914,9 @@
         coinsConfig,
         radarWatchlist,
         year: SELECTED_YEAR,
-        theme: activeTheme
+        theme: activeTheme,
+        manualEntryOverrides,
+        liveExecutionTimes
       }));
     }
 
@@ -1992,51 +2380,141 @@
       tbody.appendChild(totalTr);
     }
 
+    function openEntryRevisionModal(slotIndex) {
+      const p = cardActivePositions[slotIndex];
+      const modal = document.getElementById('entry-revision-modal');
+      if (!p || !p.inPosition || !modal) return;
+
+      entryRevisionSlotIndex = slotIndex;
+      const key = getManualEntryKey(p.symbol, p.entryTime);
+      const override = manualEntryOverrides[key];
+      const effectivePrice = getEffectiveEntryPrice(p.symbol, p.entryTime, p.signalEntryPrice);
+
+      const symbolEl = document.getElementById('entry-revision-symbol');
+      const signalEl = document.getElementById('entry-revision-signal-price');
+      const liveEl = document.getElementById('entry-revision-live-price');
+      const inputEl = document.getElementById('entry-revision-input');
+      const statusEl = document.getElementById('entry-revision-status');
+      const resetBtn = document.getElementById('entry-revision-reset-btn');
+
+      if (symbolEl) symbolEl.innerText = p.symbol.replace('USDT', '');
+      if (signalEl) signalEl.innerText = formatPrice(p.signalEntryPrice);
+      if (liveEl) liveEl.innerText = formatPrice(p.currentPrice);
+      if (inputEl) inputEl.value = Number(effectivePrice).toString();
+      if (statusEl) statusEl.innerText = override ? 'REVİZE MALİYET' : 'SİNYAL MALİYETİ';
+      if (resetBtn) resetBtn.disabled = !override;
+
+      modal.style.display = 'flex';
+      setTimeout(() => inputEl?.focus(), 50);
+    }
+
+    function closeEntryRevisionModal() {
+      const modal = document.getElementById('entry-revision-modal');
+      if (modal) modal.style.display = 'none';
+      entryRevisionSlotIndex = null;
+    }
+
+    function saveEntryRevision() {
+      if (entryRevisionSlotIndex === null) return;
+      const p = cardActivePositions[entryRevisionSlotIndex];
+      const inputEl = document.getElementById('entry-revision-input');
+      if (!p || !p.inPosition || !inputEl) return;
+
+      const price = parseVal(inputEl.value, NaN);
+      if (!Number.isFinite(price) || price <= 0) {
+        alert('Lütfen 0’dan büyük geçerli bir giriş fiyatı girin.');
+        return;
+      }
+
+      manualEntryOverrides[getManualEntryKey(p.symbol, p.entryTime)] = {
+        price,
+        updatedAt: Date.now(),
+        signalPrice: p.signalEntryPrice
+      };
+      const slot = entryRevisionSlotIndex;
+      saveConfig();
+      closeEntryRevisionModal();
+      runBacktestAndRender(slot);
+    }
+
+    function resetEntryRevision() {
+      if (entryRevisionSlotIndex === null) return;
+      const p = cardActivePositions[entryRevisionSlotIndex];
+      if (!p || !p.inPosition) return;
+
+      delete manualEntryOverrides[getManualEntryKey(p.symbol, p.entryTime)];
+      const slot = entryRevisionSlotIndex;
+      saveConfig();
+      closeEntryRevisionModal();
+      runBacktestAndRender(slot);
+    }
+
+    function changeGlobalTradesPage(page) {
+      const pageNum = Number(page);
+      if (!Number.isFinite(pageNum)) return;
+      globalTradesPage = Math.max(1, Math.floor(pageNum));
+      renderGlobalPositionsAndHistory();
+    }
+
+    function renderGlobalTradesPagination(totalRows) {
+      const holder = document.getElementById('global-trades-pagination');
+      if (!holder) return;
+
+      const pageCount = Math.max(1, Math.ceil(totalRows / GLOBAL_TRADES_PER_PAGE));
+      globalTradesPage = Math.min(Math.max(globalTradesPage, 1), pageCount);
+
+      let html = `<button class="page-btn" ${globalTradesPage <= 1 ? 'disabled' : ''} onclick="changeGlobalTradesPage(${globalTradesPage - 1})">‹</button>`;
+      for (let p = 1; p <= pageCount; p++) {
+        html += `<button class="page-btn ${p === globalTradesPage ? 'active' : ''}" onclick="changeGlobalTradesPage(${p})">${p}</button>`;
+      }
+      html += `<button class="page-btn" ${globalTradesPage >= pageCount ? 'disabled' : ''} onclick="changeGlobalTradesPage(${globalTradesPage + 1})">›</button>`;
+      html += `<span class="pagination-label">${globalTradesPage}/${pageCount}</span>`;
+      holder.innerHTML = html;
+    }
+
     function renderGlobalPositionsAndHistory() {
       const posTbody = document.getElementById('active-positions-tbody');
       const countLabel = document.getElementById('active-pos-count-label');
       const tradesTbody = document.getElementById('global-trades-tbody');
+      const rangeLabel = document.getElementById('global-trades-range-label');
 
       const activeList = cardActivePositions.filter(p => p && p.inPosition);
-
       if (countLabel) countLabel.innerText = `${activeList.length} Açık Pozisyon`;
 
       if (posTbody) {
+        posTbody.innerHTML = '';
         if (activeList.length === 0) {
-          posTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>';
+          posTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Şu an açık pozisyon bulunmuyor.</td></tr>';
         } else {
-          const placeholder = posTbody.querySelector('td[colspan="4"]');
-          if (placeholder) posTbody.innerHTML = '';
-
-          const activeSymbols = new Set(activeList.map(p => p.symbol));
-
-          Array.from(posTbody.children).forEach(tr => {
-            if (tr.dataset.symbol && !activeSymbols.has(tr.dataset.symbol)) {
-              tr.remove();
-            }
-          });
-
           activeList.forEach(p => {
-            let tr = posTbody.querySelector(`tr[data-symbol="${p.symbol}"]`);
-            const pnlClass = p.livePnl >= 0 ? 'green' : 'red';
-            const htmlContent = `
-              <td style="text-align: left;"><b>${p.symbol.replace('USDT', '')}</b></td>
-              <td>${formatPrice(p.entryPrice)}</td>
-              <td class="${pnlClass}"><b>${formatNum(p.livePnl, 2)}%</b></td>
-              <td class="green"><b>${formatPrice(p.targetPrice)}</b></td>
-            `;
+            const tr = document.createElement('tr');
+            const effectiveEntry = getEffectiveEntryPrice(p.symbol, p.entryTime, p.signalEntryPrice);
+            const livePnl = ((p.currentPrice - effectiveEntry) / effectiveEntry) * 100;
+            const pnlTone = livePnl >= 0 ? 'positive' : 'negative';
+            const override = manualEntryOverrides[getManualEntryKey(p.symbol, p.entryTime)];
+            const entryDisplayTime = getDisplayEventTime('BUY', p.symbol, p.entryTime);
 
-            if (!tr) {
-              tr = document.createElement('tr');
-              tr.className = 'flashing-row';
-              tr.dataset.symbol = p.symbol;
-              tr.innerHTML = htmlContent;
-              posTbody.appendChild(tr);
-            } else {
-              if (tr.innerHTML !== htmlContent) {
-                tr.innerHTML = htmlContent;
-              }
-            }
+            tr.dataset.symbol = p.symbol;
+            tr.innerHTML = `
+              <td style="text-align:left;">
+                <div class="position-symbol-wrap">
+                  <span class="position-live-dot"></span>
+                  <span class="position-symbol-meta"><b>${p.symbol.replace('USDT', '')}</b><small>LONG · CANLI</small></span>
+                </div>
+              </td>
+              <td>
+                <div class="price-stack">
+                  <b>${formatPrice(effectiveEntry)}</b>
+                  ${override ? '<span class="manual-entry-badge">REVİZE</span>' : ''}
+                  <button class="entry-edit-btn" type="button" onclick="openEntryRevisionModal(${p.slotIndex})">Düzenle</button>
+                </div>
+              </td>
+              <td><b>${formatPrice(p.currentPrice)}</b></td>
+              <td><span class="pnl-pill ${pnlTone}">${livePnl >= 0 ? '+' : ''}${formatNum(livePnl, 2)}%</span></td>
+              <td><div class="price-stack"><b class="green">${formatPrice(p.targetPrice)}</b><small>strateji</small></div></td>
+              <td><div class="trade-time-stack"><b>${formatDateTimeMinute(entryDisplayTime)}</b><small>${liveExecutionTimes[getLiveEventKey('BUY', p.symbol, p.entryTime)] ? 'canlı yakalama zamanı' : 'mum zamanı'}</small></div></td>
+            `;
+            posTbody.appendChild(tr);
           });
         }
       }
@@ -2045,50 +2523,75 @@
       coinsConfig.forEach((coin, idx) => {
         const trades = cardTradesHistory[idx] || [];
         trades.forEach(t => {
+          const effectiveEntry = getEffectiveEntryPrice(coin.symbol, t.entryTime, t.entryPrice);
+          const actualPnl = ((t.exitPrice - effectiveEntry) / effectiveEntry) * 100;
           allTrades.push({
             symbol: coin.symbol,
-            entryPrice: t.entryPrice,
+            signalEntryPrice: t.entryPrice,
+            entryPrice: effectiveEntry,
             exitPrice: t.exitPrice,
-            pnl: t.pnl,
+            pnl: actualPnl,
             reason: t.reason,
-            exitTime: t.exitTime
+            entryTime: t.entryTime,
+            exitTime: t.exitTime,
+            displayEntryTime: getDisplayEventTime('BUY', coin.symbol, t.entryTime),
+            displayExitTime: getDisplayEventTime('SELL', coin.symbol, t.exitTime),
+            isEntryRevised: effectiveEntry !== Number(t.entryPrice)
           });
         });
       });
 
-      allTrades.sort((a, b) => b.exitTime - a.exitTime);
-      const last10 = allTrades.slice(0, 10);
+      allTrades.sort((a, b) => b.displayExitTime - a.displayExitTime);
+      const last50 = allTrades.slice(0, GLOBAL_TRADES_LIMIT);
+      const totalRows = last50.length;
+      const totalPages = Math.max(1, Math.ceil(totalRows / GLOBAL_TRADES_PER_PAGE));
+      globalTradesPage = Math.min(Math.max(globalTradesPage, 1), totalPages);
+      const startIndex = (globalTradesPage - 1) * GLOBAL_TRADES_PER_PAGE;
+      const pageRows = last50.slice(startIndex, startIndex + GLOBAL_TRADES_PER_PAGE);
       const nowMs = Date.now();
+
+      if (rangeLabel) {
+        if (totalRows === 0) rangeLabel.innerText = '0 kayıt';
+        else rangeLabel.innerText = `${startIndex + 1}–${Math.min(startIndex + pageRows.length, totalRows)} / ${totalRows}`;
+      }
 
       if (tradesTbody) {
         tradesTbody.innerHTML = '';
-        if (last10.length === 0) {
-          tradesTbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Henüz tamamlanan işlem bulunmuyor.</td></tr>';
+        if (pageRows.length === 0) {
+          tradesTbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--text-muted);">Henüz tamamlanan işlem bulunmuyor.</td></tr>';
         } else {
-          last10.forEach(t => {
+          pageRows.forEach(t => {
             const tr = document.createElement('tr');
-            const pnlClass = t.pnl >= 0 ? 'green' : 'red';
-            const dateStr = new Date(t.exitTime).toLocaleString('tr-TR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-            const diffHours = (nowMs - t.exitTime) / (1000 * 60 * 60);
-            let timeColorStyle = '';
+            const diffHours = Math.max(0, (nowMs - t.displayExitTime) / (1000 * 60 * 60));
+            let ageBadge = '';
             if (diffHours <= 24) {
-              timeColorStyle = 'color: #0284c7;';
-            } else if (diffHours > 24 && diffHours <= 48) {
-              timeColorStyle = 'color: #ea580c;';
+              tr.className = 'history-row-recent24';
+              ageBadge = '<span class="history-age-badge blue">SON 24 SAAT</span>';
+            } else if (diffHours <= 48) {
+              tr.className = 'history-row-recent48';
+              ageBadge = '<span class="history-age-badge orange">24–48 SAAT</span>';
             }
 
             tr.innerHTML = `
-              <td style="text-align: left;"><b style="${timeColorStyle}">${t.symbol.replace('USDT', '')}</b></td>
-              <td style="${timeColorStyle}">${formatPrice(t.entryPrice)}</td>
-              <td style="${timeColorStyle}">${formatPrice(t.exitPrice)}</td>
-              <td class="${pnlClass}" style="${timeColorStyle}"><b>${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</b></td>
-              <td style="${timeColorStyle}">${t.reason} (${dateStr})</td>
+              <td style="text-align:left;"><b>${t.symbol.replace('USDT', '')}</b>${ageBadge ? `<div style="margin-top:4px;">${ageBadge}</div>` : ''}</td>
+              <td><div class="price-stack"><b>${formatPrice(t.entryPrice)}</b>${t.isEntryRevised ? '<span class="manual-entry-badge">REVİZE</span>' : ''}</div></td>
+              <td><b>${formatPrice(t.exitPrice)}</b></td>
+              <td><span class="pnl-pill ${t.pnl >= 0 ? 'positive' : 'negative'}">${t.pnl >= 0 ? '+' : ''}${formatNum(t.pnl, 2)}%</span></td>
+              <td>${t.reason}</td>
+              <td>
+                <div class="trade-time-stack">
+                  <b>G: ${formatDateTimeMinute(t.displayEntryTime)}</b>
+                  <b>Ç: ${formatDateTimeMinute(t.displayExitTime)}</b>
+                  <small>${liveExecutionTimes[getLiveEventKey('SELL', t.symbol, t.exitTime)] ? 'canlı çıkış zamanı' : 'mum zamanı'}</small>
+                </div>
+              </td>
             `;
             tradesTbody.appendChild(tr);
           });
         }
       }
+
+      renderGlobalTradesPagination(totalRows);
     }
 
     function exportTradesCSV(slotIndex) {
@@ -2466,11 +2969,12 @@
       const targetEl = document.getElementById(`target-${slotIndex}`);
 
       const targetP = roundPriceForDisplay(entryPrice * (1 + coin.profitTarget / 100));
-      const livePnl = ((currentPrice - entryPrice) / entryPrice) * 100;
+      const effectiveLiveEntry = inPosition ? getEffectiveEntryPrice(coin.symbol, entryTime, entryPrice) : entryPrice;
+      const livePnl = inPosition ? ((currentPrice - effectiveLiveEntry) / effectiveLiveEntry) * 100 : 0;
 
       if (inPosition) {
         if (posEl) { posEl.innerText = 'LONG'; posEl.className = 'metric-data green'; }
-        if (entryEl) entryEl.innerText = formatPrice(entryPrice);
+        if (entryEl) entryEl.innerText = formatPrice(effectiveLiveEntry);
         if (targetEl) targetEl.innerText = formatPrice(targetP);
 
         if (livePnlEl) {
@@ -2480,8 +2984,12 @@
 
         cardActivePositions[slotIndex] = {
           inPosition: true,
+          slotIndex,
           symbol: coin.symbol,
-          entryPrice,
+          entryTime,
+          signalEntryPrice: entryPrice,
+          entryPrice: getEffectiveEntryPrice(coin.symbol, entryTime, entryPrice),
+          currentPrice,
           targetPrice: targetP,
           livePnl
         };
@@ -2613,7 +3121,13 @@
     }
 
     window.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape') closeTradeSignalAlert();
+      if (event.key === 'Escape') {
+        closeTradeSignalAlert();
+        closeEntryRevisionModal();
+      }
+      if (event.key === 'Enter' && document.getElementById('entry-revision-modal')?.style.display === 'flex') {
+        saveEntryRevision();
+      }
     });
 
     document.getElementById('trade-signal-overlay')?.addEventListener('click', (event) => {
