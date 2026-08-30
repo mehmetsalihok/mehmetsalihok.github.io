@@ -66,7 +66,7 @@
                 </nav>
             </div>
 
-            <!-- Sağ: Sade ve Kompakt Ticker Satırı -->
+            <!-- Sağ: Sade Ticker Satırı -->
             <div class="flex items-center space-x-3.5 text-xs shrink-0">
                 <div class="flex items-baseline space-x-1.5">
                     <span class="text-slate-400 font-medium text-[10px] tracking-wider uppercase">PORTFÖY:</span>
@@ -146,10 +146,10 @@
                 <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 items-start"></div>
             </section>
 
-            <!-- SAĞ KONSOL: YENİLENMİŞ KURUMSAL KARTLAR (3 Kolon) -->
+            <!-- SAĞ KONSOL: POZİSYONLAR & SİNYAL RADARI (3 Kolon) -->
             <aside class="xl:col-span-3 space-y-3.5">
                 
-                <!-- 1. KART: CANLI POZİSYONLAR -->
+                <!-- Canlı Pozisyonlar -->
                 <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-3">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                         <div class="flex items-center space-x-2">
@@ -166,7 +166,7 @@
                     <div id="activePositionsList" class="space-y-2"></div>
                 </div>
 
-                <!-- 2. KART: SİNYAL RADARI -->
+                <!-- Sinyal Radarı -->
                 <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-3">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
                         <div class="flex items-center space-x-2">
@@ -286,7 +286,7 @@
                         </div>
                     </div>
 
-                    <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
+                    <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-md flex items-center justify-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
@@ -430,16 +430,35 @@
             return (totalMonthPnl + 0.001) >= coin.monthlyCap;
         }
 
-        // 🧠 PARİTE İÇİN MİNİ SİMÜLASYON MOTORU (AYLIK TABLO & İŞLEM GEÇMİŞİ)
+        // 🎯 2026 YILININ TÜM AYLARINI (OCAK - AĞUSTOS) KAPSAYAN SİMÜLASYON MOTORU
         function runCardBacktest(coin) {
-            if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 10)) return;
+            const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+            const currentYear = 2026;
+            const currentMonthIdx = 7; // Ağustos (0-indexli 7)
+
+            // Yıl başından şuana kadarki tüm ayları sıfır tabanla başlat
+            const monthlyMap = {};
+            for (let m = 0; m <= currentMonthIdx; m++) {
+                const mKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+                monthlyMap[mKey] = {
+                    monthKey: mKey,
+                    name: monthNames[m],
+                    trades: 0,
+                    pnl: 0,
+                    isLocked: false
+                };
+            }
+
+            if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 10)) {
+                coin.simMonthlyStats = Object.values(monthlyMap).reverse();
+                coin.simLastTrades = [];
+                return;
+            }
 
             const closes = coin.rawCandles.map(c => c.close);
             const rsiVals = calculateRSIHistory(closes, coin.rsiLength);
             
-            const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
             let inPos = false, entryP = 0, entryT = 0;
-            const monthlyMap = {};
             const trades = [];
 
             for (let i = coin.rsiLength + 1; i < coin.rawCandles.length; i++) {
@@ -512,6 +531,7 @@
                 }
             }
 
+            // Ağustos'tan Ocak'a doğru sıralı döküm
             coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
             coin.simLastTrades = trades.slice(-10).reverse();
         }
@@ -523,8 +543,8 @@
             }
             if (!terminalState.coins || terminalState.coins.length === 0) {
                 terminalState.coins = [
-                    { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeTab: 'monthly' },
-                    { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeTab: 'monthly' }
+                    { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeTab: 'strategy' },
+                    { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeTab: 'strategy' }
                 ];
                 saveCoins();
             }
@@ -579,8 +599,7 @@
                 const endTime = Date.now();
                 let all = [];
 
-                // 2026 yılının tüm geçmişini indir
-                while (currentStart < endTime && all.length < 3000) {
+                while (currentStart < endTime && all.length < 5000) {
                     const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000&startTime=${currentStart}`;
                     const res = await fetch(url);
                     if (!res.ok) break;
@@ -923,7 +942,6 @@
             renderActivePositionsList();
         }
 
-        // 🎯 KART GENİŞLETME & SEKME YÖNETİMİ
         function toggleCardExpand(coinId) {
             const coin = terminalState.coins.find(c => c.id === coinId);
             if (!coin) return;
@@ -935,12 +953,71 @@
             renderSingleCard(coin);
         }
 
+        // 🎯 KAYAN SEKME DEĞİŞTİRİCİ
         function setCardTab(coinId, tab) {
             const coin = terminalState.coins.find(c => c.id === coinId);
             if (!coin) return;
             coin.activeTab = tab;
             saveCoins();
-            renderSingleCard(coin);
+
+            const sliderEl = document.getElementById(`slider-${coin.id}`);
+            if (sliderEl) {
+                const idx = tab === 'strategy' ? 0 : (tab === 'monthly' ? 1 : 2);
+                sliderEl.style.transform = `translateX(-${idx * 100}%)`;
+
+                // Buton stillerini güncelle
+                ['strategy', 'monthly', 'trades'].forEach(t => {
+                    const btn = document.getElementById(`tab-btn-${coin.id}-${t}`);
+                    if (btn) {
+                        if (t === tab) {
+                            btn.className = "flex-1 py-1 rounded-md bg-white text-slate-900 shadow-sm transition font-semibold";
+                        } else {
+                            btn.className = "flex-1 py-1 rounded-md text-slate-500 hover:text-slate-800 transition font-medium";
+                        }
+                    }
+                });
+            } else {
+                renderSingleCard(coin);
+            }
+        }
+
+        // 🎯 KARTIN KENDİ STRATEJİ DEĞERLERİNİ KAYDETME & YENİDEN HESAPLAMA
+        async function saveCardCustomStrategy(coinId) {
+            const coin = terminalState.coins.find(c => c.id === coinId);
+            if (!coin) return;
+
+            const buyVal = parseFloat(document.getElementById(`input-buy-${coin.id}`).value);
+            const sellVal = parseFloat(document.getElementById(`input-sell-${coin.id}`).value);
+            const profitVal = parseFloat(document.getElementById(`input-profit-${coin.id}`).value);
+            const capVal = parseFloat(document.getElementById(`input-cap-${coin.id}`).value);
+            const intervalVal = document.getElementById(`select-interval-${coin.id}`).value;
+            const rsiLenVal = parseInt(document.getElementById(`input-rsiLen-${coin.id}`).value);
+
+            if (isNaN(buyVal) || isNaN(sellVal) || isNaN(profitVal) || isNaN(capVal)) {
+                alert("Lütfen tüm alanları geçerli sayılarla doldurun.");
+                return;
+            }
+
+            const intervalChanged = coin.interval !== intervalVal;
+
+            coin.buyRsi = buyVal;
+            coin.sellRsi = sellVal;
+            coin.profitTarget = profitVal;
+            coin.monthlyCap = capVal;
+            coin.interval = intervalVal;
+            coin.rsiLength = rsiLenVal;
+
+            saveCoins();
+
+            if (intervalChanged) {
+                await fetchInitialCandles(coin);
+                initBinanceWebSocket();
+            } else {
+                runCardBacktest(coin);
+                renderSingleCard(coin);
+            }
+
+            playChime(true);
         }
 
         // 🎯 DİNAMİK VE GENİŞLETİLEBİLİR KART FABRİKASI
@@ -994,94 +1071,134 @@
                 priceColorClass = coin.price > coin.prevPrice ? 'text-emerald-600' : 'text-rose-600';
             }
 
-            const activeTab = coin.activeTab || 'monthly';
+            const activeTab = coin.activeTab || 'strategy';
             const isExpanded = !!coin.isExpanded;
+            const tabIndex = activeTab === 'strategy' ? 0 : (activeTab === 'monthly' ? 1 : 2);
 
-            // 🎯 GENİŞLETİLMİŞ TAB İÇERİĞİ OLUŞTURMA
-            let tabContentHtml = '';
-            if (isExpanded) {
-                if (activeTab === 'strategy') {
-                    tabContentHtml = `
-                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
-                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/70">
-                                <span class="block text-[9px] text-slate-400 font-semibold mb-0.5">AL SİNYALİ</span>
-                                <strong class="text-emerald-600 font-bold tabular-nums">≤ ${coin.buyRsi}</strong>
+            // 1. PANEL: DÜZENLENEBİLİR STRATEJİ FORMU
+            const strategyPanelHtml = `
+                <div class="space-y-2.5 text-xs">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-semibold mb-0.5">Zaman Dilimi</label>
+                            <select id="select-interval-${coin.id}" class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-semibold text-slate-800 text-xs focus:outline-none focus:border-blue-500">
+                                <option value="5m" ${coin.interval === '5m' ? 'selected' : ''}>5 Dakika (5m)</option>
+                                <option value="15m" ${coin.interval === '15m' ? 'selected' : ''}>15 Dakika (15m)</option>
+                                <option value="30m" ${coin.interval === '30m' ? 'selected' : ''}>30 Dakika (30m)</option>
+                                <option value="1h" ${coin.interval === '1h' ? 'selected' : ''}>1 Saat (1h)</option>
+                                <option value="4h" ${coin.interval === '4h' ? 'selected' : ''}>4 Saat (4h)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-semibold mb-0.5">RSI Periyodu</label>
+                            <input type="number" id="input-rsiLen-${coin.id}" value="${coin.rsiLength}" min="2" max="50"
+                                class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-semibold text-slate-800 text-xs focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-semibold mb-0.5">AL Sinyali (RSI ≤)</label>
+                            <input type="number" id="input-buy-${coin.id}" value="${coin.buyRsi}" step="1"
+                                class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-bold text-emerald-600 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-semibold mb-0.5">SAT Sinyali (RSI ≥)</label>
+                            <input type="number" id="input-sell-${coin.id}" value="${coin.sellRsi}" step="1"
+                                class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-bold text-rose-600 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-semibold mb-0.5">Hedef Kâr (%)</label>
+                            <input type="number" id="input-profit-${coin.id}" value="${coin.profitTarget}" step="0.1"
+                                class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-bold text-blue-600 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
+                        </div>
+                        <div>
+                            <label class="block text-slate-500 text-[10px] font-semibold mb-0.5">Aylık Kilit Limiti (%)</label>
+                            <input type="number" id="input-cap-${coin.id}" value="${coin.monthlyCap}" step="0.1"
+                                class="w-full px-2 py-1 bg-slate-50 border border-slate-200 rounded font-bold text-indigo-600 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
+                        </div>
+                    </div>
+
+                    <button onclick="saveCardCustomStrategy('${coin.id}')" class="w-full py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs shadow-sm transition flex items-center justify-center space-x-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Kaydet ve Yeniden Simüle Et</span>
+                    </button>
+                </div>
+            `;
+
+            // 2. PANEL: YIL BAŞINDAN BUGÜNE KADAR TÜM AYLARIN TABLOSU
+            const months = coin.simMonthlyStats || [];
+            let monthlyRowsHtml = '';
+            let totalPnl = 0;
+            let totalTrades = 0;
+
+            if (months.length === 0) {
+                monthlyRowsHtml = `<p class="py-4 text-center text-xs text-slate-400 font-medium">Aylık veri hesaplanıyor...</p>`;
+            } else {
+                totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
+                totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
+
+                monthlyRowsHtml = months.map(m => `
+                    <div class="flex items-center justify-between py-1.5 px-2.5 rounded-lg hover:bg-slate-50 text-xs transition border border-transparent hover:border-slate-100">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-semibold text-slate-800 w-16">${m.name}</span>
+                            <span class="text-[10px] text-slate-400 tabular-nums">${m.trades} İşlem</span>
+                            ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-600 font-semibold border border-indigo-100">Kilitlendi</span>` : ''}
+                        </div>
+                        <span class="font-bold tabular-nums text-xs ${m.pnl >= 0 ? (m.pnl === 0 ? 'text-slate-400' : 'text-emerald-600') : 'text-rose-600'}">
+                            ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
+                        </span>
+                    </div>
+                `).join('');
+            }
+
+            const monthlyPanelHtml = `
+                <div class="space-y-1">
+                    <div class="space-y-0.5 max-h-56 overflow-y-auto pr-1 divide-y divide-slate-100">
+                        ${monthlyRowsHtml}
+                    </div>
+                    <div class="pt-2 border-t border-slate-200 flex items-center justify-between px-2 text-xs font-bold">
+                        <span class="text-slate-700">Toplam (${totalTrades} İşlem):</span>
+                        <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                            ${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%
+                        </span>
+                    </div>
+                </div>
+            `;
+
+            // 3. PANEL: SON 10 İŞLEM DÖKÜMÜ
+            const trades = coin.simLastTrades || [];
+            let tradesRowsHtml = '';
+
+            if (trades.length === 0) {
+                tradesRowsHtml = `<p class="py-6 text-center text-xs text-slate-400 font-medium">Bu stratejiyle kapanan işlem bulunamadı.</p>`;
+            } else {
+                tradesRowsHtml = trades.map(t => `
+                    <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                        <div class="space-y-0.5">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-semibold text-slate-800 text-[11px]">${t.reason}</span>
+                                <span class="text-[10px] text-blue-600 font-medium">• ${t.duration}</span>
                             </div>
-                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/70">
-                                <span class="block text-[9px] text-slate-400 font-semibold mb-0.5">SAT SİNYALİ</span>
-                                <strong class="text-rose-600 font-bold tabular-nums">≥ ${coin.sellRsi}</strong>
-                            </div>
-                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/70">
-                                <span class="block text-[9px] text-slate-400 font-semibold mb-0.5">HEDEF / KİLİT</span>
-                                <strong class="text-blue-600 font-bold tabular-nums">%${coin.profitTarget} / %${coin.monthlyCap}</strong>
+                            <div class="text-[10px] text-slate-400 tabular-nums">
+                                ${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)} <span class="text-slate-300">(${t.dateStr})</span>
                             </div>
                         </div>
-                    `;
-                } else if (activeTab === 'monthly') {
-                    const months = coin.simMonthlyStats || [];
-                    if (months.length === 0) {
-                        tabContentHtml = `<p class="py-4 text-center text-xs text-slate-400 font-medium">Aylık veri hesaplanıyor...</p>`;
-                    } else {
-                        const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
-                        const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
-
-                        const rows = months.map(m => `
-                            <div class="flex items-center justify-between py-1 px-2 rounded hover:bg-slate-50 text-xs">
-                                <div class="flex items-center space-x-2">
-                                    <span class="font-semibold text-slate-800 w-16">${m.name}</span>
-                                    <span class="text-[10px] text-slate-400">${m.trades} İşlem</span>
-                                    ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-600 font-semibold">Kilitlendi</span>` : ''}
-                                </div>
-                                <span class="font-bold tabular-nums ${m.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
-                                    ${m.pnl >= 0 ? '+' : ''}${m.pnl.toFixed(1)}%
-                                </span>
-                            </div>
-                        `).join('');
-
-                        tabContentHtml = `
-                            <div class="space-y-1 divide-y divide-slate-100">
-                                <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1">
-                                    ${rows}
-                                </div>
-                                <div class="pt-2 flex items-center justify-between px-2 text-xs font-bold">
-                                    <span class="text-slate-700">Toplam (${totalTrades} İşlem):</span>
-                                    <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
-                                        ${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%
-                                    </span>
-                                </div>
-                            </div>
-                        `;
-                    }
-                } else if (activeTab === 'trades') {
-                    const trades = coin.simLastTrades || [];
-                    if (trades.length === 0) {
-                        tabContentHtml = `<p class="py-4 text-center text-xs text-slate-400 font-medium">Kayıtlı geçmiş işlem bulunmuyor.</p>`;
-                    } else {
-                        const rows = trades.map(t => `
-                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
-                                <div class="space-y-0.5">
-                                    <div class="flex items-center space-x-1.5">
-                                        <span class="font-semibold text-slate-800 text-[11px]">${t.reason}</span>
-                                        <span class="text-[10px] text-blue-600 font-medium">• ${t.duration}</span>
-                                    </div>
-                                    <div class="text-[10px] text-slate-400 tabular-nums">
-                                        ${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)} <span class="text-slate-300">(${t.dateStr})</span>
-                                    </div>
-                                </div>
-                                <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
-                                    ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
-                                </span>
-                            </div>
-                        `).join('');
-
-                        tabContentHtml = `
-                            <div class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
-                                ${rows}
-                            </div>
-                        `;
-                    }
-                }
+                        <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
+                            ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
+                        </span>
+                    </div>
+                `).join('');
             }
+
+            const tradesPanelHtml = `
+                <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                    ${tradesRowsHtml}
+                </div>
+            `;
 
             const htmlContent = `
                 <!-- KART BAŞLIĞI -->
@@ -1146,23 +1263,27 @@
                     </div>
                 </div>
 
-                <!-- GENİŞLETİLMİŞ DETAY ALANI (SEKMELİ) -->
+                <!-- GENİŞLETİLMİŞ VE KAYAN SEKME ALANI -->
                 ${isExpanded ? `
                     <div class="pt-3 border-t border-slate-100 space-y-3">
                         <!-- SEKME BUTONLARI -->
                         <div class="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg text-xs font-semibold text-slate-600">
-                            <button onclick="setCardTab('${coin.id}', 'strategy')" class="flex-1 py-1 rounded-md transition ${activeTab === 'strategy' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}">Strateji</button>
-                            <button onclick="setCardTab('${coin.id}', 'monthly')" class="flex-1 py-1 rounded-md transition ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}">Aylık Tablo</button>
-                            <button onclick="setCardTab('${coin.id}', 'trades')" class="flex-1 py-1 rounded-md transition ${activeTab === 'trades' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}">Son 10 İşlem</button>
+                            <button id="tab-btn-${coin.id}-strategy" onclick="setCardTab('${coin.id}', 'strategy')" class="flex-1 py-1 rounded-md transition ${activeTab === 'strategy' ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-800 font-medium'}">Strateji</button>
+                            <button id="tab-btn-${coin.id}-monthly" onclick="setCardTab('${coin.id}', 'monthly')" class="flex-1 py-1 rounded-md transition ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-800 font-medium'}">Aylık Tablo</button>
+                            <button id="tab-btn-${coin.id}-trades" onclick="setCardTab('${coin.id}', 'trades')" class="flex-1 py-1 rounded-md transition ${activeTab === 'trades' ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-800 font-medium'}">Son 10 İşlem</button>
                         </div>
 
-                        <!-- SEKME İÇERİĞİ -->
-                        <div class="pt-1">
-                            ${tabContentHtml}
+                        <!-- 🎯 KAYAN ANİMASYONLU İÇERİK KAPSAYICISI (SLIDING CAROUSEL) -->
+                        <div class="overflow-hidden w-full relative pt-1">
+                            <div id="slider-${coin.id}" class="flex w-full transition-transform duration-300 ease-in-out" style="transform: translateX(-${tabIndex * 100}%);">
+                                <div class="w-full shrink-0 px-0.5">${strategyPanelHtml}</div>
+                                <div class="w-full shrink-0 px-0.5">${monthlyPanelHtml}</div>
+                                <div class="w-full shrink-0 px-0.5">${tradesPanelHtml}</div>
+                            </div>
                         </div>
                     </div>
                 ` : `
-                    <!-- DARALTILMIŞ STRATEJİ ŞERİDİ -->
+                    <!-- DARALTILMIŞ STATİK ŞERİT -->
                     <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
                         <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
                             <span class="block text-[8px] text-slate-400 font-semibold">AL SİNYALİ</span>
@@ -1490,10 +1611,10 @@
             elHistoryContainer.innerHTML = terminalState.closedTrades.map(t => {
                 const isWin = t.pnlPercent >= 0;
                 return `
-                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-center justify-between text-xs">
+                    <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-3 flex items-center justify-between text-xs">
                         <div class="space-y-1">
                             <div class="flex items-center space-x-2">
-                                <span class="font-bold text-slate-900 text-sm">${t.displaySymbol}</span>
+                                <span class="font-bold text-slate-900 text-sm tracking-tight">${t.displaySymbol}</span>
                                 <span class="text-[10px] px-1.5 py-0.5 rounded ${isWin ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'} font-semibold">
                                     ${t.reason}
                                 </span>
