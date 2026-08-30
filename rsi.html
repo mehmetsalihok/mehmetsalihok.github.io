@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KUZGUN Pro Terminal — Dynamic Cloud Engine</title>
+    <!-- Google Fonts: Inter (Modern Apple / Finans Arayüz Fontu) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -19,15 +24,23 @@
                         brandIndigo: '#4f46e5'
                     },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'Menlo', 'Consolas', 'monospace']
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        mono: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] // Eski daktilo fontunu engeller
                     }
                 }
             }
         }
     </script>
     <style>
-        .tabular-nums { font-variant-numeric: tabular-nums; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+            letter-spacing: -0.01em;
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum";
+        }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #080b11; }
         ::-webkit-scrollbar-thumb { background: #1c2433; border-radius: 3px; }
@@ -43,29 +56,29 @@
             
             <div class="flex items-center space-x-6">
                 <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-md shadow-blue-500/20 tracking-tighter">
+                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-md shadow-blue-500/20">
                         KZ
                     </div>
                     <div>
                         <div class="flex items-center space-x-2">
-                            <h1 class="font-extrabold text-sm tracking-wide text-white leading-none">KUZGUN</h1>
-                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 tracking-widest uppercase">PRO WEB</span>
+                            <h1 class="font-bold text-sm tracking-tight text-white leading-none">KUZGUN</h1>
+                            <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 tracking-wider uppercase">PRO WEB</span>
                         </div>
-                        <p class="text-[10px] font-mono text-slate-400 mt-0.5 leading-none">PORTFOLIO ALGO ENGINE</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5 leading-none">PORTFOLIO ALGO ENGINE</p>
                     </div>
                 </div>
 
                 <nav class="hidden md:flex items-center space-x-1 border-l border-surfaceBorder pl-6">
-                    <button class="px-3 py-1.5 rounded-md text-xs font-semibold bg-surfaceHover text-blue-400 border border-surfaceBorder">Terminal</button>
-                    <button onclick="openAddCoinModal()" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Strateji Sihirbazı</button>
-                    <button onclick="openHistoryModal()" class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">İşlem Günlüğü</button>
+                    <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surfaceHover text-blue-400 border border-surfaceBorder">Terminal</button>
+                    <button onclick="openAddCoinModal()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Strateji Sihirbazı</button>
+                    <button onclick="openHistoryModal()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">İşlem Günlüğü</button>
                 </nav>
             </div>
 
             <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
+                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
                     <span class="text-slate-400 font-medium text-[11px]">SLOT:</span>
-                    <select id="slotSelector" onchange="changeMaxSlots(this.value)" class="bg-surface text-blue-400 font-bold px-1.5 py-0.5 rounded border border-surfaceBorder focus:outline-none cursor-pointer">
+                    <select id="slotSelector" onchange="changeMaxSlots(this.value)" class="bg-surface text-blue-400 font-semibold px-1.5 py-0.5 rounded border border-surfaceBorder focus:outline-none cursor-pointer">
                         <option value="1">1 Slot</option>
                         <option value="2" selected>2 Slot</option>
                         <option value="3">3 Slot</option>
@@ -73,19 +86,20 @@
                     </select>
                 </div>
 
-                <div class="hidden lg:flex items-center space-x-2 px-3 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
+                <div class="hidden lg:flex items-center space-x-2 px-3 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
                     <span class="text-slate-400 font-medium">BTC/USDT:</span>
-                    <span id="liveBtcPrice" class="font-bold text-slate-200 tabular-nums price-transition">$---.--</span>
+                    <span id="liveBtcPrice" class="font-semibold text-slate-200 tabular-nums price-transition">$---.--</span>
                 </div>
 
-                <div class="flex items-center space-x-2 px-3 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
+                <div class="flex items-center space-x-2 px-3 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span class="text-slate-400 font-medium">USDT/TRY:</span>
-                    <span id="liveTryRate" class="font-bold text-emerald-400 tabular-nums">₺--.--</span>
+                    <span id="liveTryRate" class="font-semibold text-emerald-400 tabular-nums">₺--.--</span>
                 </div>
 
-                <div class="hidden sm:flex items-center space-x-1.5 text-[11px] font-mono text-slate-400 px-2 py-1 bg-surfaceHover rounded border border-surfaceBorder">
+                <div class="hidden sm:flex items-center space-x-1.5 text-[11px] text-slate-400 px-2 py-1 bg-surfaceHover rounded-lg border border-surfaceBorder">
                     <span id="wsStatusDot" class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                    <span class="text-slate-400 font-medium">BINANCE WS:</span>
                     <span id="wsStatusText" class="text-amber-400 font-semibold">CONNECTING</span>
                 </div>
             </div>
@@ -100,40 +114,40 @@
             
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Bileşik Portföy</span>
-                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">CANLI</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Bileşik Portföy</span>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">CANLI</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span id="portfolioUsd" class="text-3xl font-extrabold font-mono tabular-nums tracking-tight text-white">$1,000.00</span>
-                        <span class="text-xs font-bold text-slate-400">USDT</span>
+                        <span id="portfolioUsd" class="text-3xl font-bold tabular-nums tracking-tight text-white">$1,000.00</span>
+                        <span class="text-xs font-semibold text-slate-400">USDT</span>
                     </div>
-                    <div class="flex items-center space-x-1.5 text-xs font-mono text-slate-400">
+                    <div class="flex items-center space-x-1.5 text-xs text-slate-400">
                         <span>≈</span>
-                        <span id="portfolioTry" class="font-semibold text-slate-200 tabular-nums text-sm">₺--.--</span>
+                        <span id="portfolioTry" class="font-medium text-slate-200 tabular-nums text-sm">₺--.--</span>
                         <span class="text-[10px]">TRY</span>
                     </div>
                 </div>
 
                 <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
-                    <span>Başlangıç: <strong class="text-slate-300 font-mono">$1,000.00</strong></span>
-                    <span id="totalGrowthBadge" class="text-emerald-400 font-mono font-semibold">+%0.00 Büyüme</span>
+                    <span>Başlangıç: <strong class="text-slate-300 font-medium">$1,000.00</strong></span>
+                    <span id="totalGrowthBadge" class="text-emerald-400 font-semibold tabular-nums">+%0.00 Büyüme</span>
                 </div>
             </div>
 
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Slot Kapasitesi</span>
-                    <span id="slotStatusBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2 BOŞTA</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Slot Kapasitesi</span>
+                    <span id="slotStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2 BOŞTA</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span id="slotCountDisplay" class="text-3xl font-extrabold font-mono tabular-nums text-white">0 / 2</span>
-                        <span class="text-xs font-bold text-slate-400">SLOT DOLU</span>
+                        <span id="slotCountDisplay" class="text-3xl font-bold tabular-nums text-white">0 / 2</span>
+                        <span class="text-xs font-semibold text-slate-400">SLOT DOLU</span>
                     </div>
-                    <div class="text-xs font-mono text-slate-400">
+                    <div class="text-xs text-slate-400">
                         Slot Başı Bütçe: <strong id="slotBudget" class="text-slate-200 font-semibold tabular-nums">$500.00</strong>
                     </div>
                 </div>
@@ -145,47 +159,47 @@
 
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Net Kazanç</span>
-                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-surfaceBorder">CANLI PnL</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Net Kazanç</span>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-surfaceBorder">CANLI PnL</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span id="netGainUsd" class="text-3xl font-extrabold font-mono tabular-nums text-emerald-400">+$0.00</span>
-                        <span id="netGainTry" class="text-xs font-mono font-semibold text-emerald-400/80 tabular-nums">(+₺0.00)</span>
+                        <span id="netGainUsd" class="text-3xl font-bold tabular-nums text-emerald-400">+$0.00</span>
+                        <span id="netGainTry" class="text-xs font-semibold text-emerald-400/80 tabular-nums">(+₺0.00)</span>
                     </div>
-                    <div class="text-xs font-mono text-slate-400">
-                        Top. Kâr: <span id="netGainPercent" class="text-emerald-400 font-bold">%0.00</span>
+                    <div class="text-xs text-slate-400">
+                        Top. Kâr: <span id="netGainPercent" class="text-emerald-400 font-bold tabular-nums">%0.00</span>
                     </div>
                 </div>
 
-                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder font-mono">
+                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
                     <span>Ana Paraya Oran:</span>
-                    <span id="initialGainPercent" class="text-blue-400 font-bold">+%0.00</span>
+                    <span id="initialGainPercent" class="text-blue-400 font-semibold tabular-nums">+%0.00</span>
                 </div>
             </div>
 
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kilit & Risk Durumu</span>
-                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">KÂR KORUMA</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Kilit & Risk Durumu</span>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">KÂR KORUMA</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span id="lockedCoinsCount" class="text-3xl font-extrabold font-mono tabular-nums text-indigo-400">0</span>
-                        <span class="text-xs font-bold text-slate-400">AY KİLİTLİ COİN</span>
+                        <span id="lockedCoinsCount" class="text-3xl font-bold tabular-nums text-indigo-400">0</span>
+                        <span class="text-xs font-semibold text-slate-400">AY KİLİTLİ COİN</span>
                     </div>
-                    <div class="text-xs font-mono text-slate-400">
+                    <div class="text-xs text-slate-400">
                         Kilitlenen pariteler o ay dinlenmeye alınır.
                     </div>
                 </div>
 
                 <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
-                    <button onclick="openHistoryModal()" class="text-blue-400 hover:text-blue-300 font-mono font-semibold text-left">
+                    <button onclick="openHistoryModal()" class="text-blue-400 hover:text-blue-300 font-medium text-left">
                         <span id="closedTradesCount">0 Kapalı İşlem</span> →
                     </button>
-                    <span class="text-slate-500 font-mono text-[10px]">Realtime WS</span>
+                    <span class="text-slate-500 text-[10px]">Realtime WS</span>
                 </div>
             </div>
         </section>
@@ -196,16 +210,16 @@
             <section class="xl:col-span-9 space-y-4">
                 <div class="flex flex-wrap items-center justify-between gap-3 bg-surface border border-surfaceBorder p-3.5 rounded-xl">
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2">Görünüm:</span>
-                        <button onclick="filterCards('all')" id="btnFilterAll" class="px-3 py-1 rounded text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
-                        <button onclick="filterCards('position')" id="btnFilterPos" class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Pozisyondakiler</button>
-                        <button onclick="filterCards('locked')" id="btnFilterLocked" class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Kilitlenenler</button>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-2">Görünüm:</span>
+                        <button onclick="filterCards('all')" id="btnFilterAll" class="px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
+                        <button onclick="filterCards('position')" id="btnFilterPos" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Pozisyondakiler</button>
+                        <button onclick="filterCards('locked')" id="btnFilterLocked" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Kilitlenenler</button>
                     </div>
 
                     <div class="flex items-center space-x-3">
-                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm transition">
+                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            <span>🪄 Yeni Coin & Strateji Sihirbazı</span>
+                            <span>Yeni Coin & Strateji Sihirbazı</span>
                         </button>
                     </div>
                 </div>
@@ -218,9 +232,9 @@
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
                         <div class="flex items-center space-x-2">
                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
-                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Canlı Pozisyonlar</h2>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-200">Canlı Pozisyonlar</h2>
                         </div>
-                        <span id="activePositionsCountBadge" class="text-[10px] font-mono text-slate-400">0 Slot</span>
+                        <span id="activePositionsCountBadge" class="text-[10px] text-slate-400">0 Slot</span>
                     </div>
                     <div id="activePositionsList" class="space-y-2.5"></div>
                 </div>
@@ -229,9 +243,9 @@
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
                         <div class="flex items-center space-x-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Sinyal Radarı</h2>
+                            <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-200">Sinyal Radarı</h2>
                         </div>
-                        <span id="pendingSignalsCountBadge" class="text-[10px] font-mono text-amber-400 font-bold">0 Bekleyen</span>
+                        <span id="pendingSignalsCountBadge" class="text-[10px] text-amber-400 font-semibold">0 Bekleyen</span>
                     </div>
                     <div id="pendingSignalsList" class="space-y-2"></div>
                 </div>
@@ -239,13 +253,13 @@
         </div>
     </main>
 
-    <!-- 4️⃣ 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I (TAM YIL BACKTEST MOTORU) -->
+    <!-- 4️⃣ 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I -->
     <div id="addCoinModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-surface border border-surfaceBorder rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             
             <div class="flex items-center justify-between border-b border-surfaceBorder pb-3">
                 <div class="flex items-center space-x-2">
-                    <div class="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold">
+                    <div class="w-7 h-7 rounded-lg bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs">
                         🪄
                     </div>
                     <div>
@@ -253,20 +267,20 @@
                         <p class="text-[11px] text-slate-400">2026 yılı tüm verisi taranarak en kârlı AL/SAT değerleri bulunur.</p>
                     </div>
                 </div>
-                <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+                <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-white text-sm font-semibold">✕</button>
             </div>
 
             <div class="space-y-3 text-xs">
                 <div>
-                    <label class="block text-slate-400 font-semibold mb-1">Coin Sembolü</label>
+                    <label class="block text-slate-400 font-medium mb-1">Coin Sembolü</label>
                     <input type="text" id="wizardSymbolInput" value="ASTER" placeholder="Örn: ASTER, SOL, PEPE, AVAX" required
-                        class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono font-bold text-white focus:outline-none focus:border-blue-500 uppercase">
+                        class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-semibold text-white focus:outline-none focus:border-blue-500 uppercase">
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-slate-400 font-semibold mb-1">Zaman Dilimi</label>
-                        <select id="wizardIntervalInput" class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
+                        <label class="block text-slate-400 font-medium mb-1">Zaman Dilimi</label>
+                        <select id="wizardIntervalInput" class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg text-white font-medium focus:outline-none focus:border-blue-500">
                             <option value="5m">5 Dakika (5m)</option>
                             <option value="15m">15 Dakika (15m)</option>
                             <option value="30m" selected>30 Dakika (30m)</option>
@@ -275,69 +289,74 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-slate-400 font-semibold mb-1">RSI Periyodu (Uzunluk)</label>
+                        <label class="block text-slate-400 font-medium mb-1">RSI Periyodu (Uzunluk)</label>
                         <input type="number" id="wizardRsiLengthInput" value="7" min="2" max="50" required
-                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg text-white font-medium focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="block text-slate-400 font-semibold mb-1">Hedef Kâr (%)</label>
+                        <label class="block text-slate-400 font-medium mb-1">Hedef Kâr (%)</label>
                         <input type="number" step="0.1" id="wizardProfitInput" value="0.7" required
-                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg text-white font-medium focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
-                        <label class="block text-slate-400 font-semibold mb-1">Aylık Kilit Limiti (%)</label>
+                        <label class="block text-slate-400 font-medium mb-1">Aylık Kilit Limiti (%)</label>
                         <input type="number" step="0.1" id="wizardCapInput" value="7.0" required
-                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-indigo-400 focus:outline-none focus:border-blue-500">
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg text-indigo-400 font-medium focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
 
-                <!-- Test Butonu ve İlerleme Çubuğu -->
-                <button onclick="runWizardForNewCoin()" id="btnWizardRun" class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-sm transition flex items-center justify-center space-x-2">
-                    <span>🪄 2026 Yılının Tüm Mumlarını Tara & Optimize Et</span>
+                <button onclick="runWizardForNewCoin()" id="btnWizardRun" class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-sm transition flex items-center justify-center space-x-2">
+                    <span>2026 Yılının Tüm Mumlarını Tara & Optimize Et</span>
                 </button>
-                <p id="wizardLoadingStatus" class="hidden text-center font-mono text-[11px] text-blue-400 animate-pulse"></p>
+                <p id="wizardLoadingStatus" class="hidden text-center text-[11px] text-blue-400 animate-pulse font-medium"></p>
 
-                <!-- Sihirbaz Sonuç & Onay Alanı -->
+                <!-- 🎯 GÖRSELDEKİ GİBİ MODERN TİPOGRAFİYE SAHİP SİHİRBAZ SONUÇ KUTUSU -->
                 <div id="wizardResultCard" class="hidden bg-brandDark border border-surfaceBorder rounded-xl p-4 space-y-3">
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2">
                         <div class="flex items-center space-x-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span id="wizardResultSymbol" class="font-bold text-white text-sm">ASTER/USDT (30m | RSI 7)</span>
-                        </div>
-                        <span id="wizardResultWinRate" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold font-mono text-xs">%100</span>
-                    </div>
-
-                    <div class="space-y-1.5 font-mono text-xs pt-1">
-                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
-                            <span class="text-slate-400">Hedef Kâr Oranı:</span>
-                            <span id="wizardResultTargetDisplay" class="font-bold text-emerald-400">%0.7 (Ay Kilit: %7.0)</span>
-                        </div>
-                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
-                            <span class="text-slate-400">Önerilen RSI Al:</span>
-                            <span id="wizardResultBuyRsi" class="font-bold text-blue-400 text-sm">24</span>
-                        </div>
-                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
-                            <span class="text-slate-400">Önerilen RSI Sat:</span>
-                            <span id="wizardResultSellRsi" class="font-bold text-amber-400 text-sm">92</span>
-                        </div>
-                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
-                            <span class="text-slate-400">Kayıp İşlem Sayısı:</span>
-                            <span id="wizardResultLosses" class="font-bold text-emerald-400">0 Kayıp</span>
-                        </div>
-                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
-                            <span class="text-slate-400">Toplam İşlem Sayısı:</span>
-                            <span id="wizardResultTrades" class="font-bold text-white text-sm">81 İşlem</span>
-                        </div>
-                        <div class="flex justify-between py-1">
-                            <span class="text-slate-400">Geçmiş Net Toplam Kâr:</span>
-                            <span id="wizardResultPnl" class="font-bold text-emerald-400 text-sm">+56.33%</span>
+                            <span id="wizardResultSymbol" class="font-bold text-white text-sm">ASTERUSDT (30m | RSI 7)</span>
                         </div>
                     </div>
 
-                    <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition text-xs shadow-md flex items-center justify-center space-x-2">
+                    <div class="space-y-2 text-xs pt-1">
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300">Hedef Kâr Oranı:</span>
+                            <span id="wizardResultTargetDisplay" class="font-semibold text-emerald-400 tabular-nums">%0.7 (Ay Kilit: %7.0)</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300">Önerilen RSI Al:</span>
+                            <span id="wizardResultBuyRsi" class="font-semibold text-blue-400 text-sm tabular-nums">24</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300">Önerilen RSI Sat:</span>
+                            <span id="wizardResultSellRsi" class="font-semibold text-amber-400 text-sm tabular-nums">92</span>
+                        </div>
+                        
+                        <!-- Görseldeki Kesikli Çizgi -->
+                        <div class="border-t border-dashed border-surfaceBorder my-1"></div>
+
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300">Başarı Oranı (Win Rate):</span>
+                            <span id="wizardResultWinRate" class="font-semibold text-emerald-400 tabular-nums">%100</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300">Kayıp İşlem Sayısı:</span>
+                            <span id="wizardResultLosses" class="font-semibold text-rose-400 tabular-nums">0 Kayıp</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300">Toplam İşlem Sayısı:</span>
+                            <span id="wizardResultTrades" class="font-bold text-white text-sm tabular-nums">81 İşlem</span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-300">Geçmiş Net Toplam Kâr:</span>
+                            <span id="wizardResultPnl" class="font-bold text-emerald-400 text-sm tabular-nums">+56.33%</span>
+                        </div>
+                    </div>
+
+                    <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-md flex items-center justify-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
@@ -354,19 +373,19 @@
                     <h3 class="font-bold text-sm text-white">Kapanan İşlemler Günlüğü</h3>
                     <p class="text-[11px] text-slate-400">Algoritmanın kâr al veya RSI satışı ile kapattığı canlı işlemler.</p>
                 </div>
-                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+                <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white text-sm font-semibold">✕</button>
             </div>
 
             <div class="flex-1 overflow-y-auto space-y-2 pr-1" id="historyTradesContainer"></div>
 
-            <div class="pt-3 border-t border-surfaceBorder flex items-center justify-between text-xs font-mono">
-                <span id="historyStatsTotal" class="text-slate-400">Toplam: 0 İşlem</span>
-                <button onclick="clearHistory()" class="text-rose-400 hover:underline">Geçmişi Temizle</button>
+            <div class="pt-3 border-t border-surfaceBorder flex items-center justify-between text-xs">
+                <span id="historyStatsTotal" class="text-slate-400 font-medium">Toplam: 0 İşlem</span>
+                <button onclick="clearHistory()" class="text-rose-400 hover:underline font-semibold">Geçmişi Temizle</button>
             </div>
         </div>
     </div>
 
-    <!-- 6️⃣ JAVASCRIPT MOTORU: YIL BOYUNCA TARAMA VE SİMÜLASYON -->
+    <!-- 6️⃣ JAVASCRIPT: MOTOR, KİLİT MEKANİZMASI & SİHİRBAZ ENTEGRASYONU -->
     <script>
         const terminalState = {
             portfolioBaseUsd: 1000.00,
@@ -444,7 +463,6 @@
             } catch (e) {}
         }
 
-        // TAM VE HIZLI DİZİSEL WILDER'S RSI HESAPLAYICI
         function calculateRSIHistory(prices, period = 14) {
             const rsiValues = new Array(prices.length).fill(null);
             if (prices.length <= period) return rsiValues;
@@ -784,23 +802,23 @@
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
                                 <span class="font-bold text-sm text-white">${pos.displaySymbol}</span>
-                                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-bold border border-blue-500/20">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">
                                     %${pos.profitTarget.toFixed(1)} TP
                                 </span>
                             </div>
-                            <span class="font-mono font-bold text-xs ${isWin ? 'text-emerald-400' : 'text-rose-400'}">
+                            <span class="font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-400' : 'text-rose-400'}">
                                 ${isWin ? '+' : ''}${pnl.toFixed(2)}%
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-mono text-slate-400 bg-surface p-2 rounded">
-                            <div>Giriş: <span class="text-slate-200">${formatCryptoPrice(pos.entryPrice)}</span></div>
-                            <div>Hedef: <span class="text-emerald-400">${formatCryptoPrice(pos.targetPrice)}</span></div>
-                            <div>Anlık: <span class="text-white">${formatCryptoPrice(currentPrice)}</span></div>
-                            <div>Bütçe: <span class="text-slate-200">${fmtUsd(pos.allocatedUsd)}</span></div>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 bg-surface p-2 rounded">
+                            <div>Giriş: <span class="text-slate-200 tabular-nums font-medium">${formatCryptoPrice(pos.entryPrice)}</span></div>
+                            <div>Hedef: <span class="text-emerald-400 tabular-nums font-medium">${formatCryptoPrice(pos.targetPrice)}</span></div>
+                            <div>Anlık: <span class="text-white tabular-nums font-medium">${formatCryptoPrice(currentPrice)}</span></div>
+                            <div>Bütçe: <span class="text-slate-200 tabular-nums font-medium">${fmtUsd(pos.allocatedUsd)}</span></div>
                         </div>
 
-                        <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded bg-surfaceHover hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 text-xs font-bold border border-surfaceBorder transition">
+                        <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded-lg bg-surfaceHover hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 text-xs font-semibold border border-surfaceBorder transition">
                             Pozisyonu Kapat
                         </button>
                     </div>`;
@@ -824,14 +842,14 @@
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-2">
                             <span class="font-bold text-xs text-white">${item.displaySymbol}</span>
-                            <span class="text-[9px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-bold">RSI: ${item.triggerRsi.toFixed(1)}</span>
+                            <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-semibold tabular-nums">RSI: ${item.triggerRsi.toFixed(1)}</span>
                         </div>
-                        <button onclick="dismissPending('${item.id}')" class="text-slate-500 hover:text-rose-400 text-xs">✕</button>
+                        <button onclick="dismissPending('${item.id}')" class="text-slate-500 hover:text-rose-400 text-xs font-semibold">✕</button>
                     </div>
-                    <div class="text-[10px] font-mono text-slate-400">
-                        Tetiklenme: <strong class="text-slate-200">${formatCryptoPrice(item.triggerPrice)}</strong>
+                    <div class="text-[10px] text-slate-400">
+                        Tetiklenme: <strong class="text-slate-200 tabular-nums">${formatCryptoPrice(item.triggerPrice)}</strong>
                     </div>
-                    <button onclick="forceEnterFromPending('${item.id}')" class="w-full py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[11px] font-bold border border-blue-500/30 transition">
+                    <button onclick="forceEnterFromPending('${item.id}')" class="w-full py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[11px] font-semibold border border-blue-500/30 transition">
                         Slot Aç & Hemen Dahil Et
                     </button>
                 </div>
@@ -856,7 +874,7 @@
             elSlotBudget.textContent = fmtUsd(currentTotalUsd / terminalState.maxSlots);
             
             elNetGainUsd.textContent = `${netGainUsd >= 0 ? '+' : ''}${fmtUsd(netGainUsd)}`;
-            elNetGainUsd.className = `text-3xl font-extrabold font-mono tabular-nums ${netGainUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            elNetGainUsd.className = `text-3xl font-bold tabular-nums ${netGainUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
             elNetGainPercent.textContent = `%${netGainPct.toFixed(2)}`;
             elInitialGainPercent.textContent = `${netGainPct >= 0 ? '+' : ''}%${netGainPct.toFixed(2)}`;
 
@@ -875,13 +893,13 @@
             
             if (usedSlots === 0) {
                 elSlotStatusBadge.textContent = `${terminalState.maxSlots} BOŞTA`;
-                elSlotStatusBadge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
+                elSlotStatusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
             } else if (usedSlots < terminalState.maxSlots) {
                 elSlotStatusBadge.textContent = `${terminalState.maxSlots - usedSlots} BOŞ SLOT`;
-                elSlotStatusBadge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20';
+                elSlotStatusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20';
             } else {
                 elSlotStatusBadge.textContent = 'SLOTLAR DOLU';
-                elSlotStatusBadge.className = 'text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20';
+                elSlotStatusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20';
             }
 
             renderActivePositionsList();
@@ -908,26 +926,26 @@
             if (coin.rsi <= coin.buyRsi) {
                 rsiColor = 'text-emerald-400';
                 rsiBg = 'bg-emerald-500/10 border-emerald-500/20';
-                rsiLabel = 'AŞIRI SATIM (SİNYAL)';
+                rsiLabel = 'AŞIRI SATIM';
             } else if (coin.rsi >= coin.sellRsi) {
                 rsiColor = 'text-rose-400';
                 rsiBg = 'bg-rose-500/10 border-rose-500/20';
-                rsiLabel = 'AŞIRI ALIM (ÇIKIŞ)';
+                rsiLabel = 'AŞIRI ALIM';
             }
 
             let statusBadge = `
-                <span class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-slate-800 text-[9px] font-mono font-bold text-slate-400">
+                <span class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-slate-800 text-[9px] font-semibold text-slate-400">
                     <span>BOŞTA</span>
                 </span>`;
             if (isPos) {
                 statusBadge = `
-                    <span class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-mono font-bold">
+                    <span class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 text-[9px] font-semibold">
                         <span class="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></span>
                         <span>POZİSYONDA</span>
                     </span>`;
             } else if (isLocked) {
                 statusBadge = `
-                    <span class="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[9px] font-mono font-bold">
+                    <span class="flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-[9px] font-semibold">
                         <span>🔒 KİLİTLİ</span>
                     </span>`;
             }
@@ -940,19 +958,19 @@
             const htmlContent = `
                 <div class="flex items-center justify-between border-b border-surfaceBorder pb-3">
                     <div class="flex items-center space-x-2">
-                        <span class="font-extrabold text-base tracking-wide text-white">${coin.displaySymbol}</span>
-                        <span class="text-[10px] font-mono text-slate-400">/USDT</span>
-                        <span class="text-[9px] font-bold font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        <span class="font-bold text-base tracking-tight text-white">${coin.displaySymbol}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">/USDT</span>
+                        <span class="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
                             ${coin.interval} • RSI(${coin.rsiLength})
                         </span>
                     </div>
 
                     <div class="flex items-center space-x-2">
                         ${statusBadge}
-                        <button onclick="openWizardForExistingCoin('${coin.id}')" class="text-slate-400 hover:text-blue-400 p-1 rounded transition" title="Sihirbazla Yeniden Optimize Et">
+                        <button onclick="openWizardForExistingCoin('${coin.id}')" class="text-slate-400 hover:text-blue-400 p-1 rounded-lg transition" title="Sihirbazla Yeniden Optimize Et">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </button>
-                        <button onclick="deleteCoinCard('${coin.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded transition" title="Kartı Sil">
+                        <button onclick="deleteCoinCard('${coin.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded-lg transition" title="Kartı Sil">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
@@ -960,10 +978,10 @@
 
                 <div class="flex items-baseline justify-between pt-1">
                     <div>
-                        <div class="text-2xl font-extrabold font-mono tabular-nums tracking-tight price-transition ${priceColorClass}" id="price-${coin.id}">
+                        <div class="text-2xl font-bold tabular-nums tracking-tight price-transition ${priceColorClass}" id="price-${coin.id}">
                             ${formatCryptoPrice(coin.price)}
                         </div>
-                        <div class="flex items-center space-x-2 text-[10px] font-mono text-slate-400 mt-0.5">
+                        <div class="flex items-center space-x-2 text-[10px] text-slate-400 mt-0.5 font-medium">
                             <span>24s:</span>
                             <span class="text-rose-400 tabular-nums">${formatCryptoPrice(coin.low24)}</span>
                             <span>—</span>
@@ -972,11 +990,11 @@
                     </div>
 
                     <div class="flex flex-col items-end space-y-1">
-                        <div class="flex items-center space-x-1.5 px-2 py-1 rounded-md border ${rsiBg} text-xs font-mono">
-                            <span class="text-[9px] text-slate-400 font-bold">RSI</span>
-                            <span class="font-extrabold tabular-nums ${rsiColor}">${coin.rsi.toFixed(1)}</span>
+                        <div class="flex items-center space-x-1.5 px-2 py-1 rounded-lg border ${rsiBg} text-xs">
+                            <span class="text-[9px] text-slate-400 font-semibold">RSI</span>
+                            <span class="font-bold tabular-nums ${rsiColor}">${coin.rsi.toFixed(1)}</span>
                         </div>
-                        <span class="text-[8px] font-bold ${rsiColor}">${rsiLabel}</span>
+                        <span class="text-[8px] font-semibold ${rsiColor}">${rsiLabel}</span>
                     </div>
                 </div>
 
@@ -985,7 +1003,7 @@
                         <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 via-blue-500 to-rose-500 opacity-60"></div>
                         <div class="absolute h-full w-1.5 bg-white shadow-sm transition-all duration-300" style="left: ${Math.min(100, Math.max(0, coin.rsi))}%"></div>
                     </div>
-                    <div class="flex justify-between text-[8px] font-mono text-slate-500">
+                    <div class="flex justify-between text-[8px] text-slate-500 font-medium">
                         <span>0</span>
                         <span>AL ≤ ${coin.buyRsi}</span>
                         <span>SAT ≥ ${coin.sellRsi}</span>
@@ -993,18 +1011,18 @@
                     </div>
                 </div>
 
-                <div class="pt-2 border-t border-surfaceBorder grid grid-cols-3 gap-2 text-center text-xs font-mono">
-                    <div class="bg-brandDark/50 p-1.5 rounded border border-surfaceBorder/60">
-                        <span class="block text-[8px] text-slate-500 font-bold">AL SİNYALİ</span>
-                        <strong class="text-emerald-400 font-bold">≤ ${coin.buyRsi}</strong>
+                <div class="pt-2 border-t border-surfaceBorder grid grid-cols-3 gap-2 text-center text-xs">
+                    <div class="bg-brandDark/50 p-1.5 rounded-lg border border-surfaceBorder/60">
+                        <span class="block text-[8px] text-slate-500 font-semibold">AL SİNYALİ</span>
+                        <strong class="text-emerald-400 font-bold tabular-nums">≤ ${coin.buyRsi}</strong>
                     </div>
-                    <div class="bg-brandDark/50 p-1.5 rounded border border-surfaceBorder/60">
-                        <span class="block text-[8px] text-slate-500 font-bold">SAT SİNYALİ</span>
-                        <strong class="text-rose-400 font-bold">≥ ${coin.sellRsi}</strong>
+                    <div class="bg-brandDark/50 p-1.5 rounded-lg border border-surfaceBorder/60">
+                        <span class="block text-[8px] text-slate-500 font-semibold">SAT SİNYALİ</span>
+                        <strong class="text-rose-400 font-bold tabular-nums">≥ ${coin.sellRsi}</strong>
                     </div>
-                    <div class="bg-brandDark/50 p-1.5 rounded border border-surfaceBorder/60">
-                        <span class="block text-[8px] text-slate-500 font-bold">HEDEF / KİLİT</span>
-                        <strong class="text-blue-400 font-bold">%${coin.profitTarget} / %${coin.monthlyCap}</strong>
+                    <div class="bg-brandDark/50 p-1.5 rounded-lg border border-surfaceBorder/60">
+                        <span class="block text-[8px] text-slate-500 font-semibold">HEDEF / KİLİT</span>
+                        <strong class="text-blue-400 font-bold tabular-nums">%${coin.profitTarget} / %${coin.monthlyCap}</strong>
                     </div>
                 </div>
             `;
@@ -1029,13 +1047,12 @@
 
         function filterCards(type) {
             terminalState.activeFilter = type;
-            document.getElementById('btnFilterAll').className = type === 'all' ? 'px-3 py-1 rounded text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
-            document.getElementById('btnFilterPos').className = type === 'position' ? 'px-3 py-1 rounded text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
-            document.getElementById('btnFilterLocked').className = type === 'locked' ? 'px-3 py-1 rounded text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
+            document.getElementById('btnFilterAll').className = type === 'all' ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
+            document.getElementById('btnFilterPos').className = type === 'position' ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
+            document.getElementById('btnFilterLocked').className = type === 'locked' ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
             terminalState.coins.forEach(c => renderSingleCard(c));
         }
 
-        // 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I
         function openAddCoinModal() {
             wizardResultCard.classList.add('hidden');
             wizardLoadingStatus.classList.add('hidden');
@@ -1061,7 +1078,6 @@
             runWizardForNewCoin();
         }
 
-        // 🚀 BİNANCE'TEN 1 OCAK 2026'DAN İTİBAREN TÜM MUMLARI ÇEKEN VE SİMÜLE EDEN AKILLI SİHİRBAZ MOTORU
         async function runWizardForNewCoin() {
             let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
             if (!rawSym) {
@@ -1077,18 +1093,16 @@
 
             const btn = document.getElementById('btnWizardRun');
             wizardLoadingStatus.classList.remove('hidden');
-            wizardLoadingStatus.textContent = "2026 yılı mumları indiriliyor (Sayfalanıyor)...";
+            wizardLoadingStatus.textContent = "2026 yılı verisi Binance üzerinden çekiliyor...";
             btn.disabled = true;
 
             try {
-                // 1 Ocak 2026 UTC başlangıcı
                 let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
                 const endTime = Date.now();
                 let allCandles = [];
 
-                // Pagination (Tüm yılın mumlarını 1000'erli çekme)
                 while (currentStart < endTime) {
-                    wizardLoadingStatus.textContent = `2026 Verisi İndiriliyor: ${allCandles.length} mum indirildi...`;
+                    wizardLoadingStatus.textContent = `2026 Verisi İndiriliyor: ${allCandles.length} mum çekildi...`;
                     const url = `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000&startTime=${currentStart}`;
                     const res = await fetch(url);
                     if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
@@ -1104,7 +1118,7 @@
                                 high: parseFloat(item[2]),
                                 low: parseFloat(item[3]),
                                 close: parseFloat(item[4]),
-                                monthKey: new Date(item[0]).toISOString().slice(0, 7) // '2026-01', '2026-02' vb.
+                                monthKey: new Date(item[0]).toISOString().slice(0, 7)
                             });
                         }
                     }
@@ -1119,13 +1133,11 @@
 
                 wizardLoadingStatus.textContent = `${allCandles.length} adet mum üzerinde strateji hesaplanıyor...`;
 
-                // Tüm mumların kapanış fiyatları ve RSI serisi
                 const closePrices = allCandles.map(c => c.close);
                 const rsiValues = calculateRSIHistory(closePrices, rsiLength);
 
                 let bestCandidate = null;
 
-                // 🎯 IOS İLE BİREBİR AYNI GRID SEARCH TARAMASI: AL (12 - 40, adım 1) x SAT (60 - 95, adım 1)
                 for (let buy = 12; buy <= 40; buy += 1) {
                     for (let sell = 60; sell <= 95; sell += 1) {
                         
@@ -1148,14 +1160,12 @@
 
                             const isCapReached = (monthlyStats[mKey].pnl + 0.001) >= monthlyCap;
 
-                            // Alım Koşulu
                             if (!inPos && !isCapReached) {
                                 if (prevRsi <= buy && rsi > buy) {
                                     inPos = true;
                                     entryPrice = c.close;
                                 }
                             } 
-                            // Pozisyon Kapatma Koşulu
                             else if (inPos) {
                                 const targetPrice = entryPrice * (1.0 + profitTarget / 100.0);
                                 let exited = false;
@@ -1186,7 +1196,6 @@
 
                         if (totalTrades >= 1) {
                             const winRate = (winCount / totalTrades) * 100.0;
-                            // Swift Kuzgun formülü: score = totPnl * (winRate / 100)^1.5
                             const score = totPnl * Math.pow(winRate / 100.0, 1.5);
 
                             if (!bestCandidate || score > bestCandidate.score) {
@@ -1216,13 +1225,13 @@
                         monthlyCap: monthlyCap
                     };
 
-                    document.getElementById('wizardResultSymbol').textContent = `${terminalState.pendingWizardCandidate.displaySymbol}/USDT (${interval} | RSI ${rsiLength})`;
+                    document.getElementById('wizardResultSymbol').textContent = `${terminalState.pendingWizardCandidate.symbol} (${interval} | RSI ${rsiLength})`;
                     document.getElementById('wizardResultTargetDisplay').textContent = `%${profitTarget.toFixed(1)} (Ay Kilit: %${monthlyCap.toFixed(1)})`;
                     document.getElementById('wizardResultWinRate').textContent = `%${bestCandidate.winRate.toFixed(0)}`;
                     document.getElementById('wizardResultBuyRsi').textContent = `${bestCandidate.buyRsi}`;
                     document.getElementById('wizardResultSellRsi').textContent = `${bestCandidate.sellRsi}`;
                     document.getElementById('wizardResultLosses').textContent = `${bestCandidate.lossCount} Kayıp`;
-                    document.getElementById('wizardResultLosses').className = bestCandidate.lossCount === 0 ? 'font-bold text-rose-400' : 'font-bold text-rose-500';
+                    document.getElementById('wizardResultLosses').className = bestCandidate.lossCount === 0 ? 'font-semibold text-rose-400 tabular-nums' : 'font-semibold text-rose-500 tabular-nums';
                     document.getElementById('wizardResultTrades').textContent = `${bestCandidate.totalTrades} İşlem`;
                     document.getElementById('wizardResultPnl').textContent = `${bestCandidate.netPnl >= 0 ? '+' : ''}${bestCandidate.netPnl.toFixed(2)}%`;
 
@@ -1241,7 +1250,6 @@
             }
         }
 
-        // SİHİRBAZDAN KARTA EKLE
         async function confirmAndAddCoinFromWizard() {
             if (!terminalState.pendingWizardCandidate) return;
             const cand = terminalState.pendingWizardCandidate;
@@ -1325,25 +1333,25 @@
             elHistoryContainer.innerHTML = terminalState.closedTrades.map(t => {
                 const isWin = t.pnlPercent >= 0;
                 return `
-                    <div class="bg-brandDark/70 border border-surfaceBorder rounded-lg p-3 flex items-center justify-between text-xs font-mono">
+                    <div class="bg-brandDark/70 border border-surfaceBorder rounded-lg p-3 flex items-center justify-between text-xs">
                         <div class="space-y-1">
                             <div class="flex items-center space-x-2">
                                 <span class="font-bold text-white text-sm">${t.displaySymbol}</span>
-                                <span class="text-[10px] px-1.5 py-0.5 rounded ${isWin ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'} font-bold">
+                                <span class="text-[10px] px-1.5 py-0.5 rounded ${isWin ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'} font-semibold">
                                     ${t.reason}
                                 </span>
                             </div>
-                            <div class="text-[10px] text-slate-400">
-                                <span>${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</span>
+                            <div class="text-[10px] text-slate-400 font-medium">
+                                <span class="tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</span>
                                 <span class="text-slate-500">(${t.entryTimeStr} - ${t.exitTimeStr})</span>
                             </div>
                         </div>
 
                         <div class="text-right">
-                            <div class="font-bold text-sm ${isWin ? 'text-emerald-400' : 'text-rose-400'}">
+                            <div class="font-bold text-sm tabular-nums ${isWin ? 'text-emerald-400' : 'text-rose-400'}">
                                 ${isWin ? '+' : ''}${t.pnlPercent.toFixed(2)}%
                             </div>
-                            <div class="text-[10px] text-slate-400">
+                            <div class="text-[10px] text-slate-400 tabular-nums font-medium">
                                 ${t.pnlUsd >= 0 ? '+' : ''}${fmtUsd(t.pnlUsd)}
                             </div>
                         </div>
