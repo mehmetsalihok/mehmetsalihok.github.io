@@ -66,7 +66,7 @@
                 </nav>
             </div>
 
-            <!-- Sağ: Sade Ticker Satırı -->
+            <!-- Sağ: Sade ve Kompakt Ticker Satırı -->
             <div class="flex items-center space-x-3.5 text-xs shrink-0">
                 <div class="flex items-baseline space-x-1.5">
                     <span class="text-slate-400 font-medium text-[10px] tracking-wider uppercase">PORTFÖY:</span>
@@ -143,10 +143,10 @@
                 </div>
 
                 <!-- DİNAMİK KARTLAR -->
-                <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4"></div>
+                <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 items-start"></div>
             </section>
 
-            <!-- 🎯 SAĞ KONSOL: YENİLENMİŞ KURUMSAL KARTLAR (3 Kolon) -->
+            <!-- SAĞ KONSOL: YENİLENMİŞ KURUMSAL KARTLAR (3 Kolon) -->
             <aside class="xl:col-span-3 space-y-3.5">
                 
                 <!-- 1. KART: CANLI POZİSYONLAR -->
@@ -430,6 +430,92 @@
             return (totalMonthPnl + 0.001) >= coin.monthlyCap;
         }
 
+        // 🧠 PARİTE İÇİN MİNİ SİMÜLASYON MOTORU (AYLIK TABLO & İŞLEM GEÇMİŞİ)
+        function runCardBacktest(coin) {
+            if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 10)) return;
+
+            const closes = coin.rawCandles.map(c => c.close);
+            const rsiVals = calculateRSIHistory(closes, coin.rsiLength);
+            
+            const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+            let inPos = false, entryP = 0, entryT = 0;
+            const monthlyMap = {};
+            const trades = [];
+
+            for (let i = coin.rsiLength + 1; i < coin.rawCandles.length; i++) {
+                const c = coin.rawCandles[i];
+                const rsi = rsiVals[i];
+                const prevRsi = rsiVals[i - 1];
+                if (rsi === null || prevRsi === null) continue;
+
+                const mKey = c.monthKey;
+                if (!monthlyMap[mKey]) {
+                    const mParts = mKey.split('-');
+                    const mIdx = parseInt(mParts[1]) - 1;
+                    monthlyMap[mKey] = {
+                        monthKey: mKey,
+                        name: monthNames[mIdx] || mKey,
+                        trades: 0,
+                        pnl: 0,
+                        isLocked: false
+                    };
+                }
+
+                const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap;
+
+                if (!inPos && !isCapReached) {
+                    if (prevRsi <= coin.buyRsi && rsi > coin.buyRsi) {
+                        inPos = true;
+                        entryP = c.close;
+                        entryT = c.time;
+                    }
+                } else if (inPos) {
+                    const targetP = entryP * (1.0 + coin.profitTarget / 100.0);
+                    let exited = false, pnl = 0, reason = '';
+
+                    if (c.high >= targetP) {
+                        exited = true;
+                        pnl = coin.profitTarget;
+                        reason = `Kâr (%${coin.profitTarget.toFixed(1)})`;
+                    } else if (rsi >= coin.sellRsi) {
+                        exited = true;
+                        pnl = ((c.close - entryP) / entryP) * 100.0;
+                        reason = `RSI Sat (${rsi.toFixed(0)})`;
+                    }
+
+                    if (exited) {
+                        inPos = false;
+                        monthlyMap[mKey].trades++;
+                        monthlyMap[mKey].pnl += pnl;
+                        if ((monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap) {
+                            monthlyMap[mKey].isLocked = true;
+                        }
+
+                        const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
+                        const hours = Math.floor(diffSec / 3600);
+                        const mins = Math.floor((diffSec % 3600) / 60);
+                        const durStr = hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`;
+
+                        const exitD = new Date(c.time);
+                        const dateStr = `${exitD.getDate()} ${monthNames[exitD.getMonth()].slice(0, 3)} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
+
+                        trades.push({
+                            entryPrice: entryP,
+                            exitPrice: c.close,
+                            pnl: pnl,
+                            reason: reason,
+                            duration: durStr,
+                            dateStr: dateStr,
+                            isWin: pnl >= 0
+                        });
+                    }
+                }
+            }
+
+            coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+            coin.simLastTrades = trades.slice(-10).reverse();
+        }
+
         function loadStorage() {
             const savedCoins = localStorage.getItem('kuzgun_web_coins');
             if (savedCoins) {
@@ -437,9 +523,8 @@
             }
             if (!terminalState.coins || terminalState.coins.length === 0) {
                 terminalState.coins = [
-                    { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] },
-                    { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] },
-                    { id: 'c3', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '15m', rsiLength: 14, buyRsi: 24, sellRsi: 78, profitTarget: 4.0, monthlyCap: 12.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] }
+                    { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeTab: 'monthly' },
+                    { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeTab: 'monthly' }
                 ];
                 saveCoins();
             }
@@ -490,19 +575,46 @@
 
         async function fetchInitialCandles(coin) {
             try {
-                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=120`);
-                if (res.ok) {
-                    const data = await res.json();
-                    coin.candles = data.map(k => parseFloat(k[4]));
-                    coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
-                    coin.prevRsi = coin.rsi;
-                    
-                    const latest = coin.candles[coin.candles.length - 1];
-                    if (latest > 0) {
-                        coin.prevPrice = latest;
-                        coin.price = latest;
+                let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
+                const endTime = Date.now();
+                let all = [];
+
+                // 2026 yılının tüm geçmişini indir
+                while (currentStart < endTime && all.length < 3000) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000&startTime=${currentStart}`;
+                    const res = await fetch(url);
+                    if (!res.ok) break;
+                    const batch = await res.json();
+                    if (!batch || batch.length === 0) break;
+
+                    for (const item of batch) {
+                        if (item[0] <= endTime) {
+                            all.push({
+                                time: item[0],
+                                open: parseFloat(item[1]),
+                                high: parseFloat(item[2]),
+                                low: parseFloat(item[3]),
+                                close: parseFloat(item[4]),
+                                monthKey: new Date(item[0]).toISOString().slice(0, 7)
+                            });
+                        }
                     }
+                    if (batch.length < 1000) break;
+                    currentStart = batch[batch.length - 1][0] + 1;
                 }
+
+                coin.rawCandles = all;
+                coin.candles = all.map(c => c.close);
+                coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+                coin.prevRsi = coin.rsi;
+
+                const latest = coin.candles[coin.candles.length - 1];
+                if (latest > 0) {
+                    coin.prevPrice = latest;
+                    coin.price = latest;
+                }
+
+                runCardBacktest(coin);
             } catch (err) {
                 console.warn(`Mum çekilemedi [${coin.symbol}]:`, err.message);
             }
@@ -703,7 +815,6 @@
             renderPendingSignalsList();
         }
 
-        // 🎯 YENİLENMİŞ, SADE VE ŞIK LİSTE ÇİZİCİLERİ
         function renderActivePositionsList() {
             elActivePositionsCountBadge.textContent = `${terminalState.activePositions.length} / ${terminalState.maxSlots} Slot`;
             
@@ -812,6 +923,27 @@
             renderActivePositionsList();
         }
 
+        // 🎯 KART GENİŞLETME & SEKME YÖNETİMİ
+        function toggleCardExpand(coinId) {
+            const coin = terminalState.coins.find(c => c.id === coinId);
+            if (!coin) return;
+            coin.isExpanded = !coin.isExpanded;
+            if (coin.isExpanded && !coin.simMonthlyStats) {
+                runCardBacktest(coin);
+            }
+            saveCoins();
+            renderSingleCard(coin);
+        }
+
+        function setCardTab(coinId, tab) {
+            const coin = terminalState.coins.find(c => c.id === coinId);
+            if (!coin) return;
+            coin.activeTab = tab;
+            saveCoins();
+            renderSingleCard(coin);
+        }
+
+        // 🎯 DİNAMİK VE GENİŞLETİLEBİLİR KART FABRİKASI
         function renderSingleCard(coin) {
             let cardEl = document.getElementById(`card-${coin.id}`);
             const isPos = terminalState.activePositions.some(p => p.coinId === coin.id);
@@ -862,7 +994,97 @@
                 priceColorClass = coin.price > coin.prevPrice ? 'text-emerald-600' : 'text-rose-600';
             }
 
+            const activeTab = coin.activeTab || 'monthly';
+            const isExpanded = !!coin.isExpanded;
+
+            // 🎯 GENİŞLETİLMİŞ TAB İÇERİĞİ OLUŞTURMA
+            let tabContentHtml = '';
+            if (isExpanded) {
+                if (activeTab === 'strategy') {
+                    tabContentHtml = `
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/70">
+                                <span class="block text-[9px] text-slate-400 font-semibold mb-0.5">AL SİNYALİ</span>
+                                <strong class="text-emerald-600 font-bold tabular-nums">≤ ${coin.buyRsi}</strong>
+                            </div>
+                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/70">
+                                <span class="block text-[9px] text-slate-400 font-semibold mb-0.5">SAT SİNYALİ</span>
+                                <strong class="text-rose-600 font-bold tabular-nums">≥ ${coin.sellRsi}</strong>
+                            </div>
+                            <div class="bg-slate-50 p-2 rounded-lg border border-slate-200/70">
+                                <span class="block text-[9px] text-slate-400 font-semibold mb-0.5">HEDEF / KİLİT</span>
+                                <strong class="text-blue-600 font-bold tabular-nums">%${coin.profitTarget} / %${coin.monthlyCap}</strong>
+                            </div>
+                        </div>
+                    `;
+                } else if (activeTab === 'monthly') {
+                    const months = coin.simMonthlyStats || [];
+                    if (months.length === 0) {
+                        tabContentHtml = `<p class="py-4 text-center text-xs text-slate-400 font-medium">Aylık veri hesaplanıyor...</p>`;
+                    } else {
+                        const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
+                        const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
+
+                        const rows = months.map(m => `
+                            <div class="flex items-center justify-between py-1 px-2 rounded hover:bg-slate-50 text-xs">
+                                <div class="flex items-center space-x-2">
+                                    <span class="font-semibold text-slate-800 w-16">${m.name}</span>
+                                    <span class="text-[10px] text-slate-400">${m.trades} İşlem</span>
+                                    ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 text-indigo-600 font-semibold">Kilitlendi</span>` : ''}
+                                </div>
+                                <span class="font-bold tabular-nums ${m.pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                                    ${m.pnl >= 0 ? '+' : ''}${m.pnl.toFixed(1)}%
+                                </span>
+                            </div>
+                        `).join('');
+
+                        tabContentHtml = `
+                            <div class="space-y-1 divide-y divide-slate-100">
+                                <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1">
+                                    ${rows}
+                                </div>
+                                <div class="pt-2 flex items-center justify-between px-2 text-xs font-bold">
+                                    <span class="text-slate-700">Toplam (${totalTrades} İşlem):</span>
+                                    <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}">
+                                        ${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%
+                                    </span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else if (activeTab === 'trades') {
+                    const trades = coin.simLastTrades || [];
+                    if (trades.length === 0) {
+                        tabContentHtml = `<p class="py-4 text-center text-xs text-slate-400 font-medium">Kayıtlı geçmiş işlem bulunmuyor.</p>`;
+                    } else {
+                        const rows = trades.map(t => `
+                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 border border-slate-100 text-xs">
+                                <div class="space-y-0.5">
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="font-semibold text-slate-800 text-[11px]">${t.reason}</span>
+                                        <span class="text-[10px] text-blue-600 font-medium">• ${t.duration}</span>
+                                    </div>
+                                    <div class="text-[10px] text-slate-400 tabular-nums">
+                                        ${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)} <span class="text-slate-300">(${t.dateStr})</span>
+                                    </div>
+                                </div>
+                                <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}">
+                                    ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
+                                </span>
+                            </div>
+                        `).join('');
+
+                        tabContentHtml = `
+                            <div class="space-y-1.5 max-h-52 overflow-y-auto pr-1">
+                                ${rows}
+                            </div>
+                        `;
+                    }
+                }
+            }
+
             const htmlContent = `
+                <!-- KART BAŞLIĞI -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div class="flex items-center space-x-2">
                         <span class="font-bold text-base tracking-tight text-slate-900">${coin.displaySymbol}</span>
@@ -872,8 +1094,12 @@
                         </span>
                     </div>
 
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-1.5">
                         ${statusBadge}
+                        <button onclick="toggleCardExpand('${coin.id}')" class="px-2 py-1 rounded-md bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold transition flex items-center space-x-1">
+                            <span>${isExpanded ? 'Kapat' : 'Detay'}</span>
+                            <svg class="w-3 h-3 transition-transform ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
                         <button onclick="openWizardForExistingCoin('${coin.id}')" class="text-slate-400 hover:text-blue-600 p-1 rounded-lg transition" title="Sihirbazla Yeniden Optimize Et">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </button>
@@ -883,6 +1109,7 @@
                     </div>
                 </div>
 
+                <!-- ANLIK FİYAT VE RSI VİTRİNİ -->
                 <div class="flex items-baseline justify-between pt-1">
                     <div>
                         <div class="text-2xl font-bold tabular-nums tracking-tight price-transition ${priceColorClass}" id="price-${coin.id}">
@@ -905,6 +1132,7 @@
                     </div>
                 </div>
 
+                <!-- RSI SPEKTRUM ÇUBUĞU -->
                 <div class="space-y-1 pt-1">
                     <div class="w-full bg-slate-200 rounded-full h-1 relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 via-blue-500 to-rose-500 opacity-60"></div>
@@ -918,20 +1146,38 @@
                     </div>
                 </div>
 
-                <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
-                    <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
-                        <span class="block text-[8px] text-slate-400 font-semibold">AL SİNYALİ</span>
-                        <strong class="text-emerald-600 font-bold tabular-nums">≤ ${coin.buyRsi}</strong>
+                <!-- GENİŞLETİLMİŞ DETAY ALANI (SEKMELİ) -->
+                ${isExpanded ? `
+                    <div class="pt-3 border-t border-slate-100 space-y-3">
+                        <!-- SEKME BUTONLARI -->
+                        <div class="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg text-xs font-semibold text-slate-600">
+                            <button onclick="setCardTab('${coin.id}', 'strategy')" class="flex-1 py-1 rounded-md transition ${activeTab === 'strategy' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}">Strateji</button>
+                            <button onclick="setCardTab('${coin.id}', 'monthly')" class="flex-1 py-1 rounded-md transition ${activeTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}">Aylık Tablo</button>
+                            <button onclick="setCardTab('${coin.id}', 'trades')" class="flex-1 py-1 rounded-md transition ${activeTab === 'trades' ? 'bg-white text-slate-900 shadow-sm' : 'hover:text-slate-900'}">Son 10 İşlem</button>
+                        </div>
+
+                        <!-- SEKME İÇERİĞİ -->
+                        <div class="pt-1">
+                            ${tabContentHtml}
+                        </div>
                     </div>
-                    <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
-                        <span class="block text-[8px] text-slate-400 font-semibold">SAT SİNYALİ</span>
-                        <strong class="text-rose-600 font-bold tabular-nums">≥ ${coin.sellRsi}</strong>
+                ` : `
+                    <!-- DARALTILMIŞ STRATEJİ ŞERİDİ -->
+                    <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
+                            <span class="block text-[8px] text-slate-400 font-semibold">AL SİNYALİ</span>
+                            <strong class="text-emerald-600 font-bold tabular-nums">≤ ${coin.buyRsi}</strong>
+                        </div>
+                        <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
+                            <span class="block text-[8px] text-slate-400 font-semibold">SAT SİNYALİ</span>
+                            <strong class="text-rose-600 font-bold tabular-nums">≥ ${coin.sellRsi}</strong>
+                        </div>
+                        <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
+                            <span class="block text-[8px] text-slate-400 font-semibold">HEDEF / KİLİT</span>
+                            <strong class="text-blue-600 font-bold tabular-nums">%${coin.profitTarget} / %${coin.monthlyCap}</strong>
+                        </div>
                     </div>
-                    <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
-                        <span class="block text-[8px] text-slate-400 font-semibold">HEDEF / KİLİT</span>
-                        <strong class="text-blue-600 font-bold tabular-nums">%${coin.profitTarget} / %${coin.monthlyCap}</strong>
-                    </div>
-                </div>
+                `}
             `;
 
             if (!cardEl) {
@@ -1169,6 +1415,8 @@
                 terminalState.coins[existingIdx].sellRsi = cand.sellRsi;
                 terminalState.coins[existingIdx].profitTarget = cand.profitTarget;
                 terminalState.coins[existingIdx].monthlyCap = cand.monthlyCap;
+                terminalState.coins[existingIdx].isExpanded = true;
+                terminalState.coins[existingIdx].activeTab = 'monthly';
                 saveCoins();
                 await fetchInitialCandles(terminalState.coins[existingIdx]);
             } else {
@@ -1188,7 +1436,9 @@
                     low24: 0,
                     rsi: 50.0,
                     prevRsi: 50.0,
-                    candles: []
+                    candles: [],
+                    isExpanded: true,
+                    activeTab: 'monthly'
                 };
                 terminalState.coins.push(newCoin);
                 saveCoins();
@@ -1240,10 +1490,10 @@
             elHistoryContainer.innerHTML = terminalState.closedTrades.map(t => {
                 const isWin = t.pnlPercent >= 0;
                 return `
-                    <div class="bg-slate-50 border border-slate-200/80 rounded-lg p-3 flex items-center justify-between text-xs">
+                    <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 flex items-center justify-between text-xs">
                         <div class="space-y-1">
                             <div class="flex items-center space-x-2">
-                                <span class="font-bold text-slate-900 text-sm tracking-tight">${t.displaySymbol}</span>
+                                <span class="font-bold text-slate-900 text-sm">${t.displaySymbol}</span>
                                 <span class="text-[10px] px-1.5 py-0.5 rounded ${isWin ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'} font-semibold">
                                     ${t.reason}
                                 </span>
