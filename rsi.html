@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KUZGUN Pro Terminal — Dynamic Cloud Engine</title>
-    <!-- Google Fonts: Inter (Modern Apple / Finans Arayüz Fontu) -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -24,8 +24,7 @@
                         brandIndigo: '#4f46e5'
                     },
                     fontFamily: {
-                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        mono: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'] // Eski daktilo fontunu engeller
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
                     }
                 }
             }
@@ -34,7 +33,6 @@
     <style>
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-feature-settings: "cv02", "cv03", "cv04", "cv11";
             letter-spacing: -0.01em;
         }
         .tabular-nums {
@@ -50,197 +48,131 @@
 </head>
 <body class="bg-brandDark text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col">
 
-    <!-- 1️⃣ ÜST TICKER & KONSOL ÇUBUĞU -->
+    <!-- 1️⃣ ÜST KONSOL & TÜM KOMPAKT METRİKLER ÇUBUĞU -->
     <header class="border-b border-surfaceBorder bg-surface/95 backdrop-blur sticky top-0 z-40">
-        <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between">
+        <div class="max-w-[1780px] mx-auto px-4 h-14 flex items-center justify-between gap-3 overflow-x-auto">
             
-            <div class="flex items-center space-x-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-sm shadow-md shadow-blue-500/20">
+            <!-- Sol: Logo & Navigasyon -->
+            <div class="flex items-center space-x-4 shrink-0">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xs shadow-md shadow-blue-500/20">
                         KZ
                     </div>
                     <div>
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-1.5">
                             <h1 class="font-bold text-sm tracking-tight text-white leading-none">KUZGUN</h1>
-                            <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 tracking-wider uppercase">PRO WEB</span>
+                            <span class="text-[8px] font-semibold px-1 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 uppercase">PRO</span>
                         </div>
-                        <p class="text-[10px] text-slate-400 mt-0.5 leading-none">PORTFOLIO ALGO ENGINE</p>
                     </div>
                 </div>
 
-                <nav class="hidden md:flex items-center space-x-1 border-l border-surfaceBorder pl-6">
-                    <button class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surfaceHover text-blue-400 border border-surfaceBorder">Terminal</button>
-                    <button onclick="openAddCoinModal()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Strateji Sihirbazı</button>
-                    <button onclick="openHistoryModal()" class="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">İşlem Günlüğü</button>
+                <nav class="hidden md:flex items-center space-x-1 border-l border-surfaceBorder pl-4 text-xs font-medium">
+                    <button class="px-2.5 py-1 rounded-md bg-surfaceHover text-blue-400 border border-surfaceBorder">Terminal</button>
+                    <button onclick="openAddCoinModal()" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Sihirbaz</button>
+                    <button onclick="openHistoryModal()" class="px-2.5 py-1 rounded-md text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition flex items-center space-x-1">
+                        <span>Günlük</span>
+                        <span id="closedTradesCount" class="text-[10px] text-blue-400 font-semibold px-1 rounded bg-blue-500/10">0</span>
+                    </button>
                 </nav>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
-                    <span class="text-slate-400 font-medium text-[11px]">SLOT:</span>
-                    <select id="slotSelector" onchange="changeMaxSlots(this.value)" class="bg-surface text-blue-400 font-semibold px-1.5 py-0.5 rounded border border-surfaceBorder focus:outline-none cursor-pointer">
-                        <option value="1">1 Slot</option>
-                        <option value="2" selected>2 Slot</option>
-                        <option value="3">3 Slot</option>
-                        <option value="4">4 Slot</option>
+            <!-- Sağ: Üst Bar Kompakt Finansal Metrikler -->
+            <div class="flex items-center space-x-2 shrink-0">
+                
+                <!-- 🎯 BİLEŞİK PORTFÖY (USD & TRY BİRLİKTE) -->
+                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brandDark/90 border border-surfaceBorder text-xs">
+                    <span class="text-slate-400 font-medium text-[10px] tracking-wider uppercase">PORTFÖY:</span>
+                    <span id="portfolioUsd" class="font-bold text-white tabular-nums tracking-tight">$1,000.00</span>
+                    <span id="portfolioTry" class="text-[10px] text-slate-400 tabular-nums">≈ ₺--.--</span>
+                </div>
+
+                <!-- 🎯 NET KAZANÇ (USD & %) -->
+                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brandDark/90 border border-surfaceBorder text-xs">
+                    <span class="text-slate-400 font-medium text-[10px] tracking-wider uppercase">NET:</span>
+                    <span id="netGainUsd" class="font-bold text-emerald-400 tabular-nums">+$0.00</span>
+                    <span id="netGainPercent" class="text-[10px] font-semibold text-emerald-400/90 tabular-nums">(%0.00)</span>
+                </div>
+
+                <!-- 🎯 SLOT KAPASİTESİ & SEÇİCİ -->
+                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brandDark/90 border border-surfaceBorder text-xs">
+                    <span class="text-slate-400 font-medium text-[10px] tracking-wider uppercase">SLOT:</span>
+                    <span id="slotCountDisplay" class="font-bold text-white tabular-nums">0/2</span>
+                    <select id="slotSelector" onchange="changeMaxSlots(this.value)" class="bg-surface text-blue-400 font-semibold text-[11px] px-1 py-0.5 rounded border border-surfaceBorder focus:outline-none cursor-pointer">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
                     </select>
                 </div>
 
-                <div class="hidden lg:flex items-center space-x-2 px-3 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
-                    <span class="text-slate-400 font-medium">BTC/USDT:</span>
+                <!-- BTC/USDT Ticker -->
+                <div class="hidden lg:flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
+                    <span class="text-slate-400 font-medium text-[10px]">BTC:</span>
                     <span id="liveBtcPrice" class="font-semibold text-slate-200 tabular-nums price-transition">$---.--</span>
                 </div>
 
-                <div class="flex items-center space-x-2 px-3 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-slate-400 font-medium">USDT/TRY:</span>
+                <!-- USDT/TRY Kuru -->
+                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-brandDark/80 border border-surfaceBorder text-xs">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="text-slate-400 font-medium text-[10px]">TRY:</span>
                     <span id="liveTryRate" class="font-semibold text-emerald-400 tabular-nums">₺--.--</span>
                 </div>
 
-                <div class="hidden sm:flex items-center space-x-1.5 text-[11px] text-slate-400 px-2 py-1 bg-surfaceHover rounded-lg border border-surfaceBorder">
-                    <span id="wsStatusDot" class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                    <span class="text-slate-400 font-medium">BINANCE WS:</span>
-                    <span id="wsStatusText" class="text-amber-400 font-semibold">CONNECTING</span>
+                <!-- WebSocket Durumu -->
+                <div class="hidden sm:flex items-center space-x-1 text-[10px] text-slate-400 px-2 py-1 bg-surfaceHover rounded-lg border border-surfaceBorder">
+                    <span id="wsStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                    <span id="wsStatusText" class="text-amber-400 font-semibold text-[9px]">WS</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- 2️⃣ ANA DASHBOARD -->
-    <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-6 space-y-6">
-        
-        <!-- ÜST METRİK ŞERİDİ -->
-        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+    <!-- 2️⃣ ANA ÇALIŞMA ALANI -->
+    <main class="flex-1 max-w-[1780px] w-full mx-auto px-4 py-5">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
             
-            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Bileşik Portföy</span>
-                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">CANLI</span>
-                </div>
-
-                <div class="my-3 space-y-1">
-                    <div class="flex items-baseline space-x-2">
-                        <span id="portfolioUsd" class="text-3xl font-bold tabular-nums tracking-tight text-white">$1,000.00</span>
-                        <span class="text-xs font-semibold text-slate-400">USDT</span>
-                    </div>
-                    <div class="flex items-center space-x-1.5 text-xs text-slate-400">
-                        <span>≈</span>
-                        <span id="portfolioTry" class="font-medium text-slate-200 tabular-nums text-sm">₺--.--</span>
-                        <span class="text-[10px]">TRY</span>
-                    </div>
-                </div>
-
-                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
-                    <span>Başlangıç: <strong class="text-slate-300 font-medium">$1,000.00</strong></span>
-                    <span id="totalGrowthBadge" class="text-emerald-400 font-semibold tabular-nums">+%0.00 Büyüme</span>
-                </div>
-            </div>
-
-            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Slot Kapasitesi</span>
-                    <span id="slotStatusBadge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2 BOŞTA</span>
-                </div>
-
-                <div class="my-3 space-y-1">
-                    <div class="flex items-baseline space-x-2">
-                        <span id="slotCountDisplay" class="text-3xl font-bold tabular-nums text-white">0 / 2</span>
-                        <span class="text-xs font-semibold text-slate-400">SLOT DOLU</span>
-                    </div>
-                    <div class="text-xs text-slate-400">
-                        Slot Başı Bütçe: <strong id="slotBudget" class="text-slate-200 font-semibold tabular-nums">$500.00</strong>
-                    </div>
-                </div>
-
-                <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div id="slotBar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
-                </div>
-            </div>
-
-            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Net Kazanç</span>
-                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-surfaceBorder">CANLI PnL</span>
-                </div>
-
-                <div class="my-3 space-y-1">
-                    <div class="flex items-baseline space-x-2">
-                        <span id="netGainUsd" class="text-3xl font-bold tabular-nums text-emerald-400">+$0.00</span>
-                        <span id="netGainTry" class="text-xs font-semibold text-emerald-400/80 tabular-nums">(+₺0.00)</span>
-                    </div>
-                    <div class="text-xs text-slate-400">
-                        Top. Kâr: <span id="netGainPercent" class="text-emerald-400 font-bold tabular-nums">%0.00</span>
-                    </div>
-                </div>
-
-                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
-                    <span>Ana Paraya Oran:</span>
-                    <span id="initialGainPercent" class="text-blue-400 font-semibold tabular-nums">+%0.00</span>
-                </div>
-            </div>
-
-            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Kilit & Risk Durumu</span>
-                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">KÂR KORUMA</span>
-                </div>
-
-                <div class="my-3 space-y-1">
-                    <div class="flex items-baseline space-x-2">
-                        <span id="lockedCoinsCount" class="text-3xl font-bold tabular-nums text-indigo-400">0</span>
-                        <span class="text-xs font-semibold text-slate-400">AY KİLİTLİ COİN</span>
-                    </div>
-                    <div class="text-xs text-slate-400">
-                        Kilitlenen pariteler o ay dinlenmeye alınır.
-                    </div>
-                </div>
-
-                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
-                    <button onclick="openHistoryModal()" class="text-blue-400 hover:text-blue-300 font-medium text-left">
-                        <span id="closedTradesCount">0 Kapalı İşlem</span> →
-                    </button>
-                    <span class="text-slate-500 text-[10px]">Realtime WS</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- 3️⃣ ÇİFT SÜTUNLU ÇALIŞMA ALANI -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
-            
-            <section class="xl:col-span-9 space-y-4">
-                <div class="flex flex-wrap items-center justify-between gap-3 bg-surface border border-surfaceBorder p-3.5 rounded-xl">
+            <!-- SOL GENİŞ ALAN: COIN KARTLARI (9 Kolon) -->
+            <section class="xl:col-span-9 space-y-3.5">
+                
+                <!-- Üst Kontrol Barı -->
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-surface border border-surfaceBorder p-3 rounded-xl">
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-2">Görünüm:</span>
-                        <button onclick="filterCards('all')" id="btnFilterAll" class="px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
-                        <button onclick="filterCards('position')" id="btnFilterPos" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Pozisyondakiler</button>
-                        <button onclick="filterCards('locked')" id="btnFilterLocked" class="px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Kilitlenenler</button>
+                        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400 mr-1">Filtre:</span>
+                        <button onclick="filterCards('all')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
+                        <button onclick="filterCards('position')" id="btnFilterPos" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Pozisyondakiler</button>
+                        <button onclick="filterCards('locked')" id="btnFilterLocked" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Kilitlenenler</button>
                     </div>
 
-                    <div class="flex items-center space-x-3">
-                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            <span>Yeni Coin & Strateji Sihirbazı</span>
+                            <span>🪄 Yeni Coin & Strateji Sihirbazı</span>
                         </button>
                     </div>
                 </div>
 
+                <!-- DİNAMİK COIN KARTLARI GRID'İ -->
                 <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4"></div>
             </section>
 
-            <aside class="xl:col-span-3 space-y-4">
-                <div class="bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
+            <!-- SAĞ KONSOL: CANLI POZİSYONLAR & SİNYAL RADARI (3 Kolon) -->
+            <aside class="xl:col-span-3 space-y-3.5">
+                
+                <!-- Canlı Pozisyonlar -->
+                <div class="bg-surface border border-surfaceBorder rounded-xl p-3.5 space-y-2.5 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-surfaceBorder pb-2">
                         <div class="flex items-center space-x-2">
                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                             <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-200">Canlı Pozisyonlar</h2>
                         </div>
-                        <span id="activePositionsCountBadge" class="text-[10px] text-slate-400">0 Slot</span>
+                        <span id="activePositionsCountBadge" class="text-[10px] font-semibold text-blue-400">0 Slot</span>
                     </div>
-                    <div id="activePositionsList" class="space-y-2.5"></div>
+                    <div id="activePositionsList" class="space-y-2"></div>
                 </div>
 
-                <div class="bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm">
-                    <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
+                <!-- Sinyal Radarı -->
+                <div class="bg-surface border border-surfaceBorder rounded-xl p-3.5 space-y-2.5 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-surfaceBorder pb-2">
                         <div class="flex items-center space-x-2">
                             <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                             <h2 class="text-xs font-semibold uppercase tracking-wider text-slate-200">Sinyal Radarı</h2>
@@ -249,11 +181,12 @@
                     </div>
                     <div id="pendingSignalsList" class="space-y-2"></div>
                 </div>
+
             </aside>
         </div>
     </main>
 
-    <!-- 4️⃣ 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I -->
+    <!-- 3️⃣ YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I -->
     <div id="addCoinModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-surface border border-surfaceBorder rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             
@@ -313,12 +246,10 @@
                 </button>
                 <p id="wizardLoadingStatus" class="hidden text-center text-[11px] text-blue-400 animate-pulse font-medium"></p>
 
-                <!-- 🎯 GÖRSELDEKİ GİBİ MODERN TİPOGRAFİYE SAHİP SİHİRBAZ SONUÇ KUTUSU -->
+                <!-- Sihirbaz Sonuç Kutusu -->
                 <div id="wizardResultCard" class="hidden bg-brandDark border border-surfaceBorder rounded-xl p-4 space-y-3">
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2">
-                        <div class="flex items-center space-x-1.5">
-                            <span id="wizardResultSymbol" class="font-bold text-white text-sm">ASTERUSDT (30m | RSI 7)</span>
-                        </div>
+                        <span id="wizardResultSymbol" class="font-bold text-white text-sm">ASTERUSDT (30m | RSI 7)</span>
                     </div>
 
                     <div class="space-y-2 text-xs pt-1">
@@ -335,7 +266,6 @@
                             <span id="wizardResultSellRsi" class="font-semibold text-amber-400 text-sm tabular-nums">92</span>
                         </div>
                         
-                        <!-- Görseldeki Kesikli Çizgi -->
                         <div class="border-t border-dashed border-surfaceBorder my-1"></div>
 
                         <div class="flex justify-between items-center py-1">
@@ -365,13 +295,13 @@
         </div>
     </div>
 
-    <!-- 5️⃣ İŞLEM GEÇMİŞİ MODAL'I -->
+    <!-- 4️⃣ İŞLEM GEÇMİŞİ MODAL'I -->
     <div id="historyModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-surface border border-surfaceBorder rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between border-b border-surfaceBorder pb-3">
                 <div>
                     <h3 class="font-bold text-sm text-white">Kapanan İşlemler Günlüğü</h3>
-                    <p class="text-[11px] text-slate-400">Algoritmanın kâr al veya RSI satışı ile kapattığı canlı işlemler.</p>
+                    <p class="text-[11px] text-slate-400">Kâr al veya RSI çıkışı ile tamamlanan canlı işlemler.</p>
                 </div>
                 <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white text-sm font-semibold">✕</button>
             </div>
@@ -385,7 +315,7 @@
         </div>
     </div>
 
-    <!-- 6️⃣ JAVASCRIPT: MOTOR, KİLİT MEKANİZMASI & SİHİRBAZ ENTEGRASYONU -->
+    <!-- 5️⃣ JAVASCRIPT MOTORU -->
     <script>
         const terminalState = {
             portfolioBaseUsd: 1000.00,
@@ -409,14 +339,8 @@
         const elPortfolioUsd = document.getElementById('portfolioUsd');
         const elPortfolioTry = document.getElementById('portfolioTry');
         const elNetGainUsd = document.getElementById('netGainUsd');
-        const elNetGainTry = document.getElementById('netGainTry');
         const elNetGainPercent = document.getElementById('netGainPercent');
-        const elInitialGainPercent = document.getElementById('initialGainPercent');
         const elSlotCountDisplay = document.getElementById('slotCountDisplay');
-        const elSlotStatusBadge = document.getElementById('slotStatusBadge');
-        const elSlotBudget = document.getElementById('slotBudget');
-        const elSlotBar = document.getElementById('slotBar');
-        const elLockedCoinsCount = document.getElementById('lockedCoinsCount');
         const elClosedTradesCount = document.getElementById('closedTradesCount');
         const elActivePositionsList = document.getElementById('activePositionsList');
         const elActivePositionsCountBadge = document.getElementById('activePositionsCountBadge');
@@ -514,8 +438,9 @@
             }
             if (!terminalState.coins || terminalState.coins.length === 0) {
                 terminalState.coins = [
-                    { id: 'c1', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] },
-                    { id: 'c2', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '15m', rsiLength: 14, buyRsi: 24, sellRsi: 78, profitTarget: 4.0, monthlyCap: 12.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] }
+                    { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] },
+                    { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] },
+                    { id: 'c3', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '15m', rsiLength: 14, buyRsi: 24, sellRsi: 78, profitTarget: 4.0, monthlyCap: 12.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] }
                 ];
                 saveCoins();
             }
@@ -544,7 +469,7 @@
                 try { terminalState.closedTrades = JSON.parse(savedClosedTrades); } catch(e) {}
             }
 
-            elClosedTradesCount.textContent = `${terminalState.closedTrades.length} Kapalı İşlem`;
+            elClosedTradesCount.textContent = `${terminalState.closedTrades.length}`;
         }
 
         function saveCoins() { localStorage.setItem('kuzgun_web_coins', JSON.stringify(terminalState.coins)); }
@@ -555,7 +480,7 @@
         function savePending() { localStorage.setItem('kuzgun_pending_signals', JSON.stringify(terminalState.pendingSignals)); }
         function saveClosedTrades() { 
             localStorage.setItem('kuzgun_closed_trades', JSON.stringify(terminalState.closedTrades)); 
-            elClosedTradesCount.textContent = `${terminalState.closedTrades.length} Kapalı İşlem`;
+            elClosedTradesCount.textContent = `${terminalState.closedTrades.length}`;
         }
 
         function changeMaxSlots(newSlots) {
@@ -598,9 +523,9 @@
             binanceWs = new WebSocket(streamUrl);
 
             binanceWs.onopen = () => {
-                elWsStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-                elWsStatusText.className = 'text-emerald-400 font-semibold';
-                elWsStatusText.textContent = 'CONNECTED';
+                elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+                elWsStatusText.className = 'text-emerald-400 font-semibold text-[9px]';
+                elWsStatusText.textContent = 'WS';
             };
 
             binanceWs.onmessage = (event) => {
@@ -637,9 +562,9 @@
             };
 
             binanceWs.onclose = () => {
-                elWsStatusDot.className = 'w-2 h-2 rounded-full bg-amber-500 animate-ping';
-                elWsStatusText.className = 'text-amber-400 font-semibold';
-                elWsStatusText.textContent = 'RECONNECTING';
+                elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
+                elWsStatusText.className = 'text-amber-400 font-semibold text-[9px]';
+                elWsStatusText.textContent = 'WS..';
                 setTimeout(initBinanceWebSocket, 3000);
             };
         }
@@ -784,9 +709,9 @@
             
             if (terminalState.activePositions.length === 0) {
                 elActivePositionsList.innerHTML = `
-                    <div class="py-6 text-center text-xs text-slate-400 space-y-1">
-                        <p class="font-medium text-slate-300">Açık pozisyon bulunmuyor.</p>
-                        <p class="text-[11px] text-slate-400">RSI alım seviyesine inen coinler burada listelenir.</p>
+                    <div class="py-5 text-center text-xs text-slate-400 space-y-1">
+                        <p class="font-medium text-slate-300">Açık pozisyon yok.</p>
+                        <p class="text-[11px] text-slate-400">RSI alım seviyesine inen pariteler burada listelenir.</p>
                     </div>`;
                 return;
             }
@@ -798,11 +723,11 @@
                 const isWin = pnl >= 0;
 
                 return `
-                    <div class="bg-brandDark/70 border border-surfaceBorder rounded-lg p-3 space-y-2">
+                    <div class="bg-brandDark/70 border border-surfaceBorder rounded-lg p-2.5 space-y-2">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="font-bold text-sm text-white">${pos.displaySymbol}</span>
-                                <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="font-bold text-xs text-white">${pos.displaySymbol}</span>
+                                <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">
                                     %${pos.profitTarget.toFixed(1)} TP
                                 </span>
                             </div>
@@ -811,14 +736,14 @@
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-2 text-[10px] text-slate-400 bg-surface p-2 rounded">
+                        <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate-400 bg-surface p-2 rounded">
                             <div>Giriş: <span class="text-slate-200 tabular-nums font-medium">${formatCryptoPrice(pos.entryPrice)}</span></div>
                             <div>Hedef: <span class="text-emerald-400 tabular-nums font-medium">${formatCryptoPrice(pos.targetPrice)}</span></div>
                             <div>Anlık: <span class="text-white tabular-nums font-medium">${formatCryptoPrice(currentPrice)}</span></div>
                             <div>Bütçe: <span class="text-slate-200 tabular-nums font-medium">${fmtUsd(pos.allocatedUsd)}</span></div>
                         </div>
 
-                        <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded-lg bg-surfaceHover hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 text-xs font-semibold border border-surfaceBorder transition">
+                        <button onclick="closePosition('${pos.id}')" class="w-full py-1 rounded-lg bg-surfaceHover hover:bg-rose-500/20 text-slate-300 hover:text-rose-400 text-xs font-medium border border-surfaceBorder transition">
                             Pozisyonu Kapat
                         </button>
                     </div>`;
@@ -830,7 +755,7 @@
 
             if (terminalState.pendingSignals.length === 0) {
                 elPendingSignalsList.innerHTML = `
-                    <div class="py-6 text-center text-xs text-slate-400 space-y-1">
+                    <div class="py-5 text-center text-xs text-slate-400 space-y-1">
                         <p class="font-medium text-slate-300">Radar bekleme listesi boş.</p>
                         <p class="text-[11px] text-slate-400">Slot dolu olduğunda fırsatlar burada sıraya girer.</p>
                     </div>`;
@@ -840,7 +765,7 @@
             elPendingSignalsList.innerHTML = terminalState.pendingSignals.map(item => `
                 <div class="bg-brandDark/70 border border-amber-500/30 rounded-lg p-2.5 space-y-2">
                     <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-1.5">
                             <span class="font-bold text-xs text-white">${item.displaySymbol}</span>
                             <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 font-semibold tabular-nums">RSI: ${item.triggerRsi.toFixed(1)}</span>
                         </div>
@@ -850,7 +775,7 @@
                         Tetiklenme: <strong class="text-slate-200 tabular-nums">${formatCryptoPrice(item.triggerPrice)}</strong>
                     </div>
                     <button onclick="forceEnterFromPending('${item.id}')" class="w-full py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white text-[11px] font-semibold border border-blue-500/30 transition">
-                        Slot Aç & Hemen Dahil Et
+                        Slot Aç & Dahil Et
                     </button>
                 </div>
             `).join('');
@@ -871,36 +796,18 @@
             const netGainPct = (netGainUsd / 1000.00) * 100;
 
             elPortfolioUsd.textContent = fmtUsd(currentTotalUsd);
-            elSlotBudget.textContent = fmtUsd(currentTotalUsd / terminalState.maxSlots);
             
             elNetGainUsd.textContent = `${netGainUsd >= 0 ? '+' : ''}${fmtUsd(netGainUsd)}`;
-            elNetGainUsd.className = `text-3xl font-bold tabular-nums ${netGainUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-            elNetGainPercent.textContent = `%${netGainPct.toFixed(2)}`;
-            elInitialGainPercent.textContent = `${netGainPct >= 0 ? '+' : ''}%${netGainPct.toFixed(2)}`;
+            elNetGainUsd.className = `font-bold tabular-nums ${netGainUsd >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            elNetGainPercent.textContent = `(%${netGainPct >= 0 ? '+' : ''}${netGainPct.toFixed(2)})`;
+            elNetGainPercent.className = `text-[10px] font-semibold tabular-nums ${netGainUsd >= 0 ? 'text-emerald-400/90' : 'text-rose-400/90'}`;
 
             if (terminalState.usdtTryRate > 0) {
-                elPortfolioTry.textContent = fmtTry(currentTotalUsd * terminalState.usdtTryRate);
-                const gainTry = netGainUsd * terminalState.usdtTryRate;
-                elNetGainTry.textContent = `(${gainTry >= 0 ? '+' : ''}${fmtTry(gainTry)})`;
+                elPortfolioTry.textContent = `≈ ${fmtTry(currentTotalUsd * terminalState.usdtTryRate)}`;
             }
-
-            const lockedCount = terminalState.coins.filter(c => isCoinMonthlyLocked(c)).length;
-            elLockedCoinsCount.textContent = lockedCount;
 
             const usedSlots = terminalState.activePositions.length;
-            elSlotCountDisplay.textContent = `${usedSlots} / ${terminalState.maxSlots}`;
-            elSlotBar.style.width = `${(usedSlots / terminalState.maxSlots) * 100}%`;
-            
-            if (usedSlots === 0) {
-                elSlotStatusBadge.textContent = `${terminalState.maxSlots} BOŞTA`;
-                elSlotStatusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20';
-            } else if (usedSlots < terminalState.maxSlots) {
-                elSlotStatusBadge.textContent = `${terminalState.maxSlots - usedSlots} BOŞ SLOT`;
-                elSlotStatusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20';
-            } else {
-                elSlotStatusBadge.textContent = 'SLOTLAR DOLU';
-                elSlotStatusBadge.className = 'text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 border border-rose-500/20';
-            }
+            elSlotCountDisplay.textContent = `${usedSlots}/${terminalState.maxSlots}`;
 
             renderActivePositionsList();
         }
@@ -1047,9 +954,9 @@
 
         function filterCards(type) {
             terminalState.activeFilter = type;
-            document.getElementById('btnFilterAll').className = type === 'all' ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
-            document.getElementById('btnFilterPos').className = type === 'position' ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
-            document.getElementById('btnFilterLocked').className = type === 'locked' ? 'px-3 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-3 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
+            document.getElementById('btnFilterAll').className = type === 'all' ? 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
+            document.getElementById('btnFilterPos').className = type === 'position' ? 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
+            document.getElementById('btnFilterLocked').className = type === 'locked' ? 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm' : 'px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition';
             terminalState.coins.forEach(c => renderSingleCard(c));
         }
 
@@ -1325,7 +1232,7 @@
                 elHistoryContainer.innerHTML = `
                     <div class="py-12 text-center text-xs text-slate-400 space-y-1">
                         <p class="font-medium text-slate-300">Henüz kapalı işlem kaydı yok.</p>
-                        <p class="text-[11px] text-slate-500">Pozisyonlar kâr aldığında veya stoplandığında burada listelenir.</p>
+                        <p class="text-[11px] text-slate-500">Pozisyonlar tamamlandığında burada listelenir.</p>
                     </div>`;
                 return;
             }
