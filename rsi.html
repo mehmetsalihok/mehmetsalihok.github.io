@@ -29,20 +29,19 @@
     </script>
     <style>
         .tabular-nums { font-variant-numeric: tabular-nums; }
-        /* İnce terminal scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #080b11; }
         ::-webkit-scrollbar-thumb { background: #1c2433; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #28354a; }
+        .price-transition { transition: color 0.4s ease-out; }
     </style>
 </head>
 <body class="bg-brandDark text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col">
 
-    <!-- 1️⃣ ÜST PROFESYONEL TICKER & KONSOL ÇUBUĞU -->
-    <header class="border-b border-surfaceBorder bg-surface/95 backdrop-blur sticky top-0 z-50">
+    <!-- 1️⃣ ÜST TICKER & KONSOL ÇUBUĞU -->
+    <header class="border-b border-surfaceBorder bg-surface/95 backdrop-blur sticky top-0 z-40">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between">
             
-            <!-- Sol: Terminal Marka & Modül -->
             <div class="flex items-center space-x-6">
                 <div class="flex items-center space-x-3">
                     <div class="w-8 h-8 rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-md shadow-blue-500/20 tracking-tighter">
@@ -57,7 +56,6 @@
                     </div>
                 </div>
 
-                <!-- Navigasyon Kısayolları -->
                 <nav class="hidden md:flex items-center space-x-1 border-l border-surfaceBorder pl-6">
                     <button class="px-3 py-1.5 rounded-md text-xs font-semibold bg-surfaceHover text-blue-400 border border-surfaceBorder">Terminal</button>
                     <button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Coin Ligi</button>
@@ -66,25 +64,21 @@
                 </nav>
             </div>
 
-            <!-- Sağ: Canlı Ağ & Piyasa Kurları -->
             <div class="flex items-center space-x-4">
-                <!-- BTC/USDT Canlı Ticker -->
                 <div class="hidden lg:flex items-center space-x-2 px-3 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
                     <span class="text-slate-400 font-medium">BTC/USDT:</span>
-                    <span id="liveBtcPrice" class="font-bold text-slate-200 tabular-nums">$---.--</span>
+                    <span id="liveBtcPrice" class="font-bold text-slate-200 tabular-nums price-transition">$---.--</span>
                 </div>
 
-                <!-- Canlı USDT/TRY Kuru -->
                 <div class="flex items-center space-x-2 px-3 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span class="text-slate-400 font-medium">USDT/TRY:</span>
                     <span id="liveTryRate" class="font-bold text-emerald-400 tabular-nums">₺--.--</span>
                 </div>
 
-                <!-- API Ping Durumu -->
                 <div class="hidden sm:flex items-center space-x-1.5 text-[11px] font-mono text-slate-400 px-2 py-1 bg-surfaceHover rounded border border-surfaceBorder">
-                    <span class="text-slate-400">BINANCE REST:</span>
-                    <span class="text-emerald-400 font-semibold">ONLINE (18ms)</span>
+                    <span>ENGINE:</span>
+                    <span id="engineStatus" class="text-emerald-400 font-semibold">RUNNING</span>
                 </div>
             </div>
         </div>
@@ -93,120 +87,100 @@
     <!-- 2️⃣ ANA DASHBOARD GÖVDESİ -->
     <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-6 space-y-6">
         
-        <!-- ÜST METRİK ŞERİDİ (4'LÜ PROFESYONEL ANALİTİK KARTLARI) -->
+        <!-- ÜST METRİK ŞERİDİ -->
         <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             
-            <!-- 1. KART: BİLEŞİK PORTFÖY (USD & TRY BİRLİKTE) -->
-            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Bileşik Portföy</span>
-                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                        CANLI BAKİYE
-                    </span>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">CANLI</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span id="portfolioUsd" class="text-3xl font-extrabold font-mono tabular-nums tracking-tight text-white">
-                            $1,000.00
-                        </span>
+                        <span id="portfolioUsd" class="text-3xl font-extrabold font-mono tabular-nums tracking-tight text-white">$1,000.00</span>
                         <span class="text-xs font-bold text-slate-400">USDT</span>
                     </div>
-
-                    <!-- Canlı TRY Karşılığı -->
                     <div class="flex items-center space-x-1.5 text-xs font-mono text-slate-400">
                         <span>≈</span>
                         <span id="portfolioTry" class="font-semibold text-slate-200 tabular-nums text-sm">₺--.--</span>
-                        <span class="text-[10px] text-slate-400">TRY</span>
+                        <span class="text-[10px]">TRY</span>
                     </div>
                 </div>
 
                 <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
                     <span>Başlangıç: <strong class="text-slate-300 font-mono">$1,000.00</strong></span>
-                    <span class="text-emerald-400 font-mono font-semibold">+%0.00 Büyüme</span>
+                    <span class="text-emerald-400 font-mono font-semibold">+%0.00</span>
                 </div>
             </div>
 
-            <!-- 2. KART: SLOT KAPASİTESİ VE AKTİF DAĞILIM -->
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Slot Kapasitesi</span>
-                    <span id="slotBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        2 BOŞTA
-                    </span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Slot Durumu</span>
+                    <span id="slotStatusBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">2 BOŞTA</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span class="text-3xl font-extrabold font-mono tabular-nums text-white">0 / 2</span>
+                        <span id="slotCountDisplay" class="text-3xl font-extrabold font-mono tabular-nums text-white">0 / 2</span>
                         <span class="text-xs font-bold text-slate-400">SLOT DOLU</span>
                     </div>
                     <div class="text-xs font-mono text-slate-400">
-                        Slot Başı Bütçe: <strong id="slotBudget" class="text-slate-200 font-semibold tabular-nums">$500.00</strong>
+                        Slot Bütçesi: <strong id="slotBudget" class="text-slate-200 font-semibold tabular-nums">$500.00</strong>
                     </div>
                 </div>
 
                 <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                    <div class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+                    <div id="slotBar" class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
                 </div>
             </div>
 
-            <!-- 3. KART: DÖNEMLİK NET KAZANÇ (USDT & TRY PARALEL) -->
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Net Kazanç</span>
-                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-surfaceBorder">
-                        BUGÜN
-                    </span>
+                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-surfaceBorder">CANLI PnL</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span id="netGainUsd" class="text-3xl font-extrabold font-mono tabular-nums text-emerald-400">
-                            +$0.00
-                        </span>
-                        <span id="netGainTry" class="text-xs font-mono font-semibold text-emerald-400/80 tabular-nums">
-                            (+₺0.00)
-                        </span>
+                        <span id="netGainUsd" class="text-3xl font-extrabold font-mono tabular-nums text-emerald-400">+$0.00</span>
+                        <span id="netGainTry" class="text-xs font-mono font-semibold text-emerald-400/80 tabular-nums">(+₺0.00)</span>
                     </div>
                     <div class="text-xs font-mono text-slate-400">
-                        Top. İşlem Kârı: <span class="text-emerald-400 font-bold">%0.00</span>
+                        Anlık Portföy Kârı: <span id="netGainPercent" class="text-emerald-400 font-bold">%0.00</span>
                     </div>
                 </div>
 
                 <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder font-mono">
                     <span>Ana Paraya Oran:</span>
-                    <span class="text-blue-400 font-bold">+%0.00</span>
+                    <span id="initialGainPercent" class="text-blue-400 font-bold">+%0.00</span>
                 </div>
             </div>
 
-            <!-- 4. KART: BOT VERİMİ & MAX SERİ -->
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Algoritma Verimi</span>
-                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
-                        OPTİMİZE
-                    </span>
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">İzlenen Parite</span>
+                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">AKTİF RADAR</span>
                 </div>
 
                 <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span class="text-3xl font-extrabold font-mono tabular-nums text-white">100%</span>
-                        <span class="text-xs font-bold text-slate-400">(0W - 0L)</span>
+                        <span id="trackedCoinsCount" class="text-3xl font-extrabold font-mono tabular-nums text-white">0</span>
+                        <span class="text-xs font-bold text-slate-400">COİN TAKİPTE</span>
                     </div>
                     <div class="text-xs font-mono text-slate-400">
-                        Max Win Streak: <strong class="text-slate-200">0W</strong> • Ort. Süre: <strong class="text-slate-200">-</strong>
+                        Algoritma: <strong class="text-slate-200">Wilder RSI + Dynamic Target</strong>
                     </div>
                 </div>
 
                 <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
-                    <span>Aylık Kilitlenen: <strong class="text-slate-200 font-mono">0/0 Ay</strong></span>
-                    <span class="text-slate-400 font-mono">Sinyal Radarı: Aktif</span>
+                    <span>Ağ Durumu: <strong class="text-emerald-400 font-mono">Senkronize</strong></span>
+                    <span class="text-slate-400 font-mono">1.0s Polling</span>
                 </div>
             </div>
         </section>
 
-        <!-- 3️⃣ ÇİFT SÜTUNLU ÇALIŞMA ALANI (GRID 12 KOLON) -->
+        <!-- 3️⃣ ÇİFT SÜTUNLU ÇALIŞMA ALANI -->
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
             <!-- SOL GENİŞ ALAN: TAKİP EDİLEN COIN KARTLARI (9 Kolon) -->
@@ -215,63 +189,47 @@
                 <!-- Kontrol Barı: Filtreler & Ekleme Butonu -->
                 <div class="flex flex-wrap items-center justify-between gap-3 bg-surface border border-surfaceBorder p-3.5 rounded-xl">
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2">Dönem:</span>
-                        <button class="px-3 py-1 rounded text-xs font-semibold bg-blue-600 text-white shadow-sm">Bugün</button>
-                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">7 Gün</button>
-                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Bu Ay</button>
-                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Tümü</button>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2">Zaman:</span>
+                        <button class="px-3 py-1 rounded text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
+                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">15m</button>
+                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">1h</button>
+                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">4h</button>
                     </div>
 
                     <div class="flex items-center space-x-3">
-                        <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-surfaceHover hover:bg-slate-800 text-xs font-bold text-slate-200 border border-surfaceBorder transition">
-                            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            <span>Strateji Sihirbazı</span>
-                        </button>
-                        
-                        <button class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm transition">
+                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm transition">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             <span>Yeni Coin Ekle</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- COIN KARTLARI GRID'İ (AŞAMA 2'DE CANLI MİKRO KARTLARLA DOLDURULACAK) -->
+                <!-- DİNAMİK COIN KARTLARI GRID'İ -->
                 <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
-                    
-                    <!-- Bilgilendirme & Aşama Durumu Panosu -->
-                    <div class="col-span-full border border-dashed border-surfaceBorder rounded-2xl p-12 text-center bg-surface/30 space-y-3">
-                        <div class="w-12 h-12 rounded-xl bg-blue-600/10 text-blue-400 mx-auto flex items-center justify-center border border-blue-500/20">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        </div>
-                        <h3 class="font-bold text-base text-slate-100">Aşama 1: Web Panel İskeleti Tamamlandı</h3>
-                        <p class="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
-                            Masaüstü terminal düzeni, 4'lü metrik konsolu, Binance canlı USDT/TRY ve BTC/USDT kur bağlantıları aktiftir. 
-                            <strong>2. Aşamada</strong> bu alana Binance mum verisini çeken, canlı RSI hesaplayan ve anlık fiyat flaşlarına sahip kartlar entegre edilecektir.
-                        </p>
-                    </div>
+                    <!-- Kartlar JavaScript ile buraya basılır -->
                 </div>
             </section>
 
             <!-- SAĞ KONSOL: CANLI POZİSYONLAR & SİNYAL RADARI (3 Kolon) -->
             <aside class="xl:col-span-3 space-y-4">
                 
-                <!-- Aktif Pozisyonlar Kutusu -->
                 <div class="bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm">
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
                         <div class="flex items-center space-x-2">
                             <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Canlı Pozisyonlar</h2>
                         </div>
-                        <span class="text-[10px] font-mono text-slate-400">0 Pozisyon</span>
+                        <span id="activePositionsCountBadge" class="text-[10px] font-mono text-slate-400">0 Pozisyon</span>
                     </div>
 
-                    <div class="py-8 text-center text-xs text-slate-400 space-y-1">
-                        <p class="font-medium text-slate-300">Açık pozisyon bulunmuyor.</p>
-                        <p class="text-[11px] text-slate-400">Slotlar yeni sinyaller için hazır bekliyor.</p>
+                    <div id="activePositionsList" class="space-y-2">
+                        <div class="py-6 text-center text-xs text-slate-400 space-y-1">
+                            <p class="font-medium text-slate-300">Açık pozisyon bulunmuyor.</p>
+                            <p class="text-[11px] text-slate-400">RSI alım seviyesine inen coinler burada listelenir.</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Bekleme Listesi (Sinyal Radarı) Kutusu -->
                 <div class="bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm">
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
                         <div class="flex items-center space-x-2">
@@ -281,9 +239,9 @@
                         <span class="text-[10px] font-mono text-amber-400 font-bold">0 Bekleyen</span>
                     </div>
 
-                    <div class="py-8 text-center text-xs text-slate-400 space-y-1">
+                    <div class="py-6 text-center text-xs text-slate-400 space-y-1">
                         <p class="font-medium text-slate-300">Radar bekleme listesi boş.</p>
-                        <p class="text-[11px] text-slate-400">Slot kapasitesi aşıldığında sinyaller buraya sıraya alınır.</p>
+                        <p class="text-[11px] text-slate-400">Slot dolu olduğunda tetiklenen fırsatlar buraya sıraya girer.</p>
                     </div>
                 </div>
 
@@ -291,19 +249,87 @@
         </div>
     </main>
 
-    <!-- 4️⃣ JAVASCRIPT MOTORU: CANLI PİYASA AKIŞI -->
+    <!-- 4️⃣ YENİ COIN EKLEME MODAL'I -->
+    <div id="addCoinModal" class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-surface border border-surfaceBorder rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-surfaceBorder pb-3">
+                <h3 class="font-bold text-sm text-white">Yeni Coin Kartı Ekle</h3>
+                <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
+            </div>
+
+            <form id="addCoinForm" onsubmit="handleFormSubmit(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 font-semibold mb-1">Coin Sembolü</label>
+                    <input type="text" id="modalSymbolInput" placeholder="Örn: ASTER, SOL, ETH, AVAX" required
+                        class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono font-bold text-white focus:outline-none focus:border-blue-500 uppercase">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Zaman Dilimi</label>
+                        <select id="modalIntervalInput" class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
+                            <option value="5m">5 Dakika (5m)</option>
+                            <option value="15m" selected>15 Dakika (15m)</option>
+                            <option value="30m">30 Dakika (30m)</option>
+                            <option value="1h">1 Saat (1h)</option>
+                            <option value="4h">4 Saat (4h)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">RSI Periyodu</label>
+                        <input type="number" id="modalRsiLengthInput" value="14" min="2" max="50" required
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">RSI Al Seviyesi (≤)</label>
+                        <input type="number" id="modalBuyRsiInput" value="25" min="5" max="50" required
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-emerald-400 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">RSI Sat Seviyesi (≥)</label>
+                        <input type="number" id="modalSellRsiInput" value="75" min="50" max="95" required
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-rose-400 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Hedef Kâr (%)</label>
+                        <input type="number" step="0.1" id="modalProfitInput" value="4.0" required
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 font-semibold mb-1">Aylık Kilit Limiti (%)</label>
+                        <input type="number" step="0.1" id="modalCapInput" value="12.0" required
+                            class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-indigo-400 focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="pt-3 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="closeAddCoinModal()" class="px-4 py-2 rounded-lg bg-surfaceHover text-slate-300 font-bold hover:bg-slate-800 transition">İptal</button>
+                    <button type="submit" class="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-500 shadow-sm transition">Kartı Oluştur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 5️⃣ JAVASCRIPT: BINANCE KLINE & WILDER'S RSI & CANLI MOTOR -->
     <script>
-        // Terminal Global Durumu (State)
+        // Terminal Genel Durumu
         const terminalState = {
             portfolioUsd: 1000.00,
             netGainUsd: 0.00,
-            usdtTryRate: 0.00,
+            usdtTryRate: 36.50,
             btcPrice: 0.00,
             maxSlots: 2,
-            activeSlots: 0
+            coins: []
         };
 
-        // DOM Elemanları
+        // DOM Referansları
+        const elCardsGrid = document.getElementById('cardsGrid');
         const elLiveTry = document.getElementById('liveTryRate');
         const elLiveBtc = document.getElementById('liveBtcPrice');
         const elPortfolioUsd = document.getElementById('portfolioUsd');
@@ -311,38 +337,283 @@
         const elNetGainUsd = document.getElementById('netGainUsd');
         const elNetGainTry = document.getElementById('netGainTry');
         const elSlotBudget = document.getElementById('slotBudget');
+        const elTrackedCoinsCount = document.getElementById('trackedCoinsCount');
+        const modal = document.getElementById('addCoinModal');
 
         // Sayı Formatlayıcılar
-        const fmtUsd = (val) => '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        const fmtTry = (val) => '₺' + val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmtUsd = (val) => '$' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const fmtTry = (val) => '₺' + Number(val).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        
+        function formatCryptoPrice(price) {
+            if (!price || price <= 0) return "--.--";
+            if (price >= 1000) return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            if (price >= 1) return '$' + price.toFixed(4);
+            return '$' + price.toFixed(6);
+        }
 
-        // Arayüz Senkronizasyonu
-        function renderTerminalUI() {
-            elPortfolioUsd.textContent = fmtUsd(terminalState.portfolioUsd);
+        // 🧠 WILDER'S SMOOTHED RSI HESAPLAMA ALGORİTMASI
+        function calculateRSI(closes, period = 14) {
+            if (!closes || closes.length <= period) return 50.0;
             
-            // Slot bütçesini güncelle
-            const budgetPerSlot = terminalState.portfolioUsd / terminalState.maxSlots;
-            elSlotBudget.textContent = fmtUsd(budgetPerSlot);
+            let gains = 0;
+            let losses = 0;
+            
+            for (let i = 1; i <= period; i++) {
+                const diff = closes[i] - closes[i - 1];
+                if (diff >= 0) gains += diff;
+                else losses += Math.abs(diff);
+            }
+            
+            let avgGain = gains / period;
+            let avgLoss = losses / period;
 
-            if (terminalState.usdtTryRate > 0) {
-                elLiveTry.textContent = fmtTry(terminalState.usdtTryRate);
-                
-                const balanceInTry = terminalState.portfolioUsd * terminalState.usdtTryRate;
-                elPortfolioTry.textContent = fmtTry(balanceInTry);
+            for (let i = period + 1; i < closes.length; i++) {
+                const diff = closes[i] - closes[i - 1];
+                const gain = diff >= 0 ? diff : 0;
+                const loss = diff < 0 ? Math.abs(diff) : 0;
 
-                const gainInTry = terminalState.netGainUsd * terminalState.usdtTryRate;
-                elNetGainTry.textContent = `(${gainInTry >= 0 ? '+' : ''}${fmtTry(gainInTry)})`;
+                avgGain = (avgGain * (period - 1) + gain) / period;
+                avgLoss = (avgLoss * (period - 1) + loss) / period;
             }
 
-            if (terminalState.btcPrice > 0) {
-                elLiveBtc.textContent = fmtUsd(terminalState.btcPrice);
+            if (avgLoss === 0) return 100.0;
+            const rs = avgGain / avgLoss;
+            return 100.0 - (100.0 / (1.0 + rs));
+        }
+
+        // LocalStorage'dan Coinleri Yükleme
+        function loadSavedCoins() {
+            const saved = localStorage.getItem('kuzgun_web_coins');
+            if (saved) {
+                try {
+                    terminalState.coins = JSON.parse(saved);
+                } catch (e) {
+                    terminalState.coins = [];
+                }
+            }
+            
+            // Eğer boşsa varsayılan popüler pariteleri yükle
+            if (!terminalState.coins || terminalState.coins.length === 0) {
+                terminalState.coins = [
+                    { id: 'c1', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, isPosition: false },
+                    { id: 'c2', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '15m', rsiLength: 14, buyRsi: 24, sellRsi: 78, profitTarget: 4.0, monthlyCap: 12.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, isPosition: false },
+                    { id: 'c3', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '15m', rsiLength: 14, buyRsi: 28, sellRsi: 82, profitTarget: 4.5, monthlyCap: 13.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, isPosition: false }
+                ];
+                saveCoinsToStorage();
+            }
+
+            elTrackedCoinsCount.textContent = terminalState.coins.length;
+        }
+
+        function saveCoinsToStorage() {
+            localStorage.setItem('kuzgun_web_coins', JSON.stringify(terminalState.coins));
+            elTrackedCoinsCount.textContent = terminalState.coins.length;
+        }
+
+        // BINANCE MUM VE 24S BİLGİSİNİ ÇEKME MOTORU
+        async function fetchCoinData(coin) {
+            try {
+                // Klines (mumlar) ve 24hr Ticker paralel çekilir
+                const [klineRes, tickerRes] = await Promise.all([
+                    fetch(`https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=100`),
+                    fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${coin.symbol}`)
+                ]);
+
+                if (klineRes.ok) {
+                    const klines = await klineRes.json();
+                    const closes = klines.map(k => parseFloat(k[4]));
+                    coin.rsi = calculateRSI(closes, coin.rsiLength);
+                    
+                    const latestClose = closes[closes.length - 1];
+                    if (latestClose > 0) {
+                        coin.prevPrice = coin.price > 0 ? coin.price : latestClose;
+                        coin.price = latestClose;
+                    }
+                }
+
+                if (tickerRes.ok) {
+                    const t = await tickerRes.json();
+                    coin.high24 = parseFloat(t.highPrice) || 0;
+                    coin.low24 = parseFloat(t.lowPrice) || 0;
+                }
+
+                renderSingleCard(coin);
+            } catch (err) {
+                console.warn(`Veri çekilemedi [${coin.symbol}]:`, err.message);
             }
         }
 
-        // Binance Ticker Çekici (USDT/TRY & BTC/USDT)
+        // DİNAMİK KARTLARI ÇİZEN HTML FABRİKASI
+        function renderSingleCard(coin) {
+            let cardEl = document.getElementById(`card-${coin.id}`);
+            
+            // RSI Durumu
+            let rsiColor = 'text-slate-400';
+            let rsiBg = 'bg-slate-800';
+            let rsiLabel = 'NÖTR';
+            if (coin.rsi <= coin.buyRsi) {
+                rsiColor = 'text-emerald-400';
+                rsiBg = 'bg-emerald-500/10 border-emerald-500/20';
+                rsiLabel = 'AŞIRI SATIM';
+            } else if (coin.rsi >= coin.sellRsi) {
+                rsiColor = 'text-rose-400';
+                rsiBg = 'bg-rose-500/10 border-rose-500/20';
+                rsiLabel = 'AŞIRI ALIM';
+            }
+
+            // Fiyat Flaş Rengi (Metin rengi geçişi)
+            let priceColorClass = 'text-white';
+            if (coin.prevPrice > 0 && coin.price !== coin.prevPrice) {
+                priceColorClass = coin.price > coin.prevPrice ? 'text-emerald-400' : 'text-rose-400';
+            }
+
+            const htmlContent = `
+                <div class="flex items-center justify-between border-b border-surfaceBorder pb-3">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-extrabold text-base tracking-wide text-white">${coin.displaySymbol}</span>
+                        <span class="text-[10px] font-mono text-slate-400">/USDT</span>
+                        <span class="text-[9px] font-bold font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                            ${coin.interval} • RSI(${coin.rsiLength})
+                        </span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-slate-800 text-[10px] font-mono font-bold text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>CANLI</span>
+                        </div>
+                        <button onclick="deleteCoinCard('${coin.id}')" class="text-slate-500 hover:text-rose-400 p-1 rounded transition" title="Kartı Sil">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Finansal Rakamlar Vitrini -->
+                <div class="flex items-baseline justify-between pt-1">
+                    <div>
+                        <div class="text-2xl font-extrabold font-mono tabular-nums tracking-tight price-transition ${priceColorClass}" id="price-${coin.id}">
+                            ${formatCryptoPrice(coin.price)}
+                        </div>
+                        <div class="flex items-center space-x-2 text-[10px] font-mono text-slate-400 mt-0.5">
+                            <span>24s:</span>
+                            <span class="text-rose-400 tabular-nums">${formatCryptoPrice(coin.low24)}</span>
+                            <span>—</span>
+                            <span class="text-emerald-400 tabular-nums">${formatCryptoPrice(coin.high24)}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col items-end space-y-1">
+                        <div class="flex items-center space-x-1.5 px-2 py-1 rounded-md border ${rsiBg} text-xs font-mono">
+                            <span class="text-[9px] text-slate-400 font-bold">RSI</span>
+                            <span class="font-extrabold tabular-nums ${rsiColor}">${coin.rsi.toFixed(1)}</span>
+                        </div>
+                        <span class="text-[8px] font-bold ${rsiColor}">${rsiLabel}</span>
+                    </div>
+                </div>
+
+                <!-- RSI Spektrum Çizgisi -->
+                <div class="space-y-1 pt-1">
+                    <div class="w-full bg-slate-800 rounded-full h-1 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-r from-emerald-500 via-blue-500 to-rose-500 opacity-60"></div>
+                        <div class="absolute h-full w-1.5 bg-white shadow-sm transition-all duration-300" style="left: ${Math.min(100, Math.max(0, coin.rsi))}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[8px] font-mono text-slate-500">
+                        <span>0</span>
+                        <span>AL ≤ ${coin.buyRsi}</span>
+                        <span>SAT ≥ ${coin.sellRsi}</span>
+                        <span>100</span>
+                    </div>
+                </div>
+
+                <!-- Strateji Parametreleri Şeridi -->
+                <div class="pt-2 border-t border-surfaceBorder grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                    <div class="bg-brandDark/50 p-1.5 rounded border border-surfaceBorder/60">
+                        <span class="block text-[8px] text-slate-500 font-bold">AL SİNYALİ</span>
+                        <strong class="text-emerald-400 font-bold">≤ ${coin.buyRsi}</strong>
+                    </div>
+                    <div class="bg-brandDark/50 p-1.5 rounded border border-surfaceBorder/60">
+                        <span class="block text-[8px] text-slate-500 font-bold">SAT SİNYALİ</span>
+                        <strong class="text-rose-400 font-bold">≥ ${coin.sellRsi}</strong>
+                    </div>
+                    <div class="bg-brandDark/50 p-1.5 rounded border border-surfaceBorder/60">
+                        <span class="block text-[8px] text-slate-500 font-bold">HEDEF / KİLİT</span>
+                        <strong class="text-blue-400 font-bold">%${coin.profitTarget}</strong>
+                    </div>
+                </div>
+            `;
+
+            if (!cardEl) {
+                cardEl = document.createElement('div');
+                cardEl.id = `card-${coin.id}`;
+                cardEl.className = 'bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm hover:border-slate-700 transition flex flex-col justify-between';
+                elCardsGrid.appendChild(cardEl);
+            }
+
+            cardEl.innerHTML = htmlContent;
+
+            // Flaş efektinden sonra rengi yumuşakça normale döndür
+            setTimeout(() => {
+                const pEl = document.getElementById(`price-${coin.id}`);
+                if (pEl) {
+                    pEl.classList.remove('text-emerald-400', 'text-rose-400');
+                    pEl.classList.add('text-white');
+                }
+            }, 450);
+        }
+
+        // Tüm Coinleri Toplu Yükleme ve Yenileme Döngüsü
+        async function updateAllCoins() {
+            for (const coin of terminalState.coins) {
+                await fetchCoinData(coin);
+            }
+        }
+
+        // Yeni Coin Ekleme Modal Fonksiyonları
+        function openAddCoinModal() { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+        function closeAddCoinModal() { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            let rawSym = document.getElementById('modalSymbolInput').value.trim().toUpperCase();
+            if (!rawSym) return;
+            if (!rawSym.endsWith('USDT')) rawSym += 'USDT';
+
+            const displaySym = rawSym.replace('USDT', '');
+            const newCoin = {
+                id: 'c_' + Date.now(),
+                symbol: rawSym,
+                displaySymbol: displaySym,
+                interval: document.getElementById('modalIntervalInput').value,
+                rsiLength: parseInt(document.getElementById('modalRsiLengthInput').value) || 14,
+                buyRsi: parseFloat(document.getElementById('modalBuyRsiInput').value) || 25,
+                sellRsi: parseFloat(document.getElementById('modalSellRsiInput').value) || 75,
+                profitTarget: parseFloat(document.getElementById('modalProfitInput').value) || 4.0,
+                monthlyCap: parseFloat(document.getElementById('modalCapInput').value) || 12.0,
+                price: 0,
+                prevPrice: 0,
+                high24: 0,
+                low24: 0,
+                rsi: 50.0,
+                isPosition: false
+            };
+
+            terminalState.coins.push(newCoin);
+            saveCoinsToStorage();
+            closeAddCoinModal();
+            fetchCoinData(newCoin);
+            document.getElementById('addCoinForm').reset();
+        }
+
+        function deleteCoinCard(id) {
+            terminalState.coins = terminalState.coins.filter(c => c.id !== id);
+            saveCoinsToStorage();
+            const el = document.getElementById(`card-${id}`);
+            if (el) el.remove();
+        }
+
+        // Üst Başlık Piyasa Verilerini Çekme (USDT/TRY & BTC)
         async function fetchMarketPrices() {
             try {
-                // Paralel çekim
                 const [tryRes, btcRes] = await Promise.all([
                     fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTTRY'),
                     fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
@@ -358,15 +629,31 @@
                     terminalState.btcPrice = parseFloat(dataBtc.price) || 0;
                 }
 
-                renderTerminalUI();
+                // UI Senkronizasyonu
+                elPortfolioUsd.textContent = fmtUsd(terminalState.portfolioUsd);
+                elSlotBudget.textContent = fmtUsd(terminalState.portfolioUsd / terminalState.maxSlots);
+
+                if (terminalState.usdtTryRate > 0) {
+                    elLiveTry.textContent = fmtTry(terminalState.usdtTryRate);
+                    elPortfolioTry.textContent = fmtTry(terminalState.portfolioUsd * terminalState.usdtTryRate);
+                }
+
+                if (terminalState.btcPrice > 0) {
+                    elLiveBtc.textContent = fmtUsd(terminalState.btcPrice);
+                }
             } catch (err) {
                 console.warn('Piyasa verisi çekilemedi:', err.message);
             }
         }
 
-        // Başlangıç tetikleyicisi & Otomatik Yenileme Döngüsü
+        // MOTOR BAŞLATICI
+        loadSavedCoins();
         fetchMarketPrices();
+        updateAllCoins();
+
+        // Döngüler: Piyasa verisi her 8sn, Coin mumları/RSI her 2sn
         setInterval(fetchMarketPrices, 8000);
+        setInterval(updateAllCoins, 2000);
     </script>
 </body>
 </html>
