@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kuzgun Terminal</title>
+    <title>KUZGUN Pro Terminal — Dynamic Cloud Engine</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -12,188 +12,361 @@
             theme: {
                 extend: {
                     colors: {
-                        brandDark: '#0b0e14',
-                        surface: '#151922',
-                        surfaceBorder: '#232936',
-                        accentBlue: '#2563eb'
+                        brandDark: '#080b11',
+                        surface: '#0f141c',
+                        surfaceHover: '#151b26',
+                        surfaceBorder: '#1c2433',
+                        brandBlue: '#2563eb',
+                        brandIndigo: '#4f46e5'
                     },
                     fontFamily: {
-                        mono: ['JetBrains Mono', 'Menlo', 'monospace']
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Menlo', 'Consolas', 'monospace']
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Rakamların yatayda kaymasını önleyen monospaced ayarı */
-        .tabular-nums {
-            font-variant-numeric: tabular-nums;
-        }
+        .tabular-nums { font-variant-numeric: tabular-nums; }
+        /* İnce terminal scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #080b11; }
+        ::-webkit-scrollbar-thumb { background: #1c2433; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #28354a; }
     </style>
 </head>
-<body class="bg-brandDark text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white">
+<body class="bg-brandDark text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col">
 
-    <!-- ÜST NAVİGASYON ÇUBUĞU -->
-    <header class="border-b border-surfaceBorder bg-surface/80 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-600/30">
-                    K
+    <!-- 1️⃣ ÜST PROFESYONEL TICKER & KONSOL ÇUBUĞU -->
+    <header class="border-b border-surfaceBorder bg-surface/95 backdrop-blur sticky top-0 z-50">
+        <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between">
+            
+            <!-- Sol: Terminal Marka & Modül -->
+            <div class="flex items-center space-x-6">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center font-black text-white text-base shadow-md shadow-blue-500/20 tracking-tighter">
+                        KZ
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <h1 class="font-extrabold text-sm tracking-wide text-white leading-none">KUZGUN</h1>
+                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 tracking-widest uppercase">PRO WEB</span>
+                        </div>
+                        <p class="text-[10px] font-mono text-slate-400 mt-0.5 leading-none">PORTFOLIO ALGO ENGINE</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 class="font-bold text-sm tracking-wider leading-none">KUZGUN</h1>
-                    <span class="text-[10px] font-semibold text-slate-400 tracking-wider">CLOUD TERMINAL</span>
-                </div>
+
+                <!-- Navigasyon Kısayolları -->
+                <nav class="hidden md:flex items-center space-x-1 border-l border-surfaceBorder pl-6">
+                    <button class="px-3 py-1.5 rounded-md text-xs font-semibold bg-surfaceHover text-blue-400 border border-surfaceBorder">Terminal</button>
+                    <button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Coin Ligi</button>
+                    <button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Sihirbaz</button>
+                    <button class="px-3 py-1.5 rounded-md text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Alarmlar</button>
+                </nav>
             </div>
 
-            <!-- Canlı Bağlantı ve Kur Rozeti -->
-            <div class="flex items-center space-x-3">
-                <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-slate-800/80 border border-surfaceBorder text-[11px]">
+            <!-- Sağ: Canlı Ağ & Piyasa Kurları -->
+            <div class="flex items-center space-x-4">
+                <!-- BTC/USDT Canlı Ticker -->
+                <div class="hidden lg:flex items-center space-x-2 px-3 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
+                    <span class="text-slate-400 font-medium">BTC/USDT:</span>
+                    <span id="liveBtcPrice" class="font-bold text-slate-200 tabular-nums">$---.--</span>
+                </div>
+
+                <!-- Canlı USDT/TRY Kuru -->
+                <div class="flex items-center space-x-2 px-3 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <span class="text-slate-400 font-medium">USDT/TRY:</span>
-                    <span id="liveTryRate" class="font-mono font-bold text-slate-200 tabular-nums">₺--.--</span>
+                    <span id="liveTryRate" class="font-bold text-emerald-400 tabular-nums">₺--.--</span>
+                </div>
+
+                <!-- API Ping Durumu -->
+                <div class="hidden sm:flex items-center space-x-1.5 text-[11px] font-mono text-slate-400 px-2 py-1 bg-surfaceHover rounded border border-surfaceBorder">
+                    <span class="text-slate-400">BINANCE REST:</span>
+                    <span class="text-emerald-400 font-semibold">ONLINE (18ms)</span>
                 </div>
             </div>
         </div>
     </header>
 
-    <!-- ANA İÇERİK KAPSAYICI -->
-    <main class="max-w-4xl mx-auto px-4 py-6 space-y-5">
+    <!-- 2️⃣ ANA DASHBOARD GÖVDESİ -->
+    <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-6 space-y-6">
+        
+        <!-- ÜST METRİK ŞERİDİ (4'LÜ PROFESYONEL ANALİTİK KARTLARI) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            
+            <!-- 1. KART: BİLEŞİK PORTFÖY (USD & TRY BİRLİKTE) -->
+            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm relative overflow-hidden">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Bileşik Portföy</span>
+                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        CANLI BAKİYE
+                    </span>
+                </div>
 
-        <!-- 1️⃣ TOPLAM BİLEŞİK PORTFÖY & NET KÂR PANELİ -->
-        <section class="bg-surface border border-surfaceBorder rounded-2xl p-5 shadow-xl">
-            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                
-                <!-- Sol Taraf: Bakiye ve Canlı TRY -->
-                <div class="space-y-1.5">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-400">Bileşik Portföy</span>
-                        <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                            0/2 SLOT
-                        </span>
-                    </div>
-
+                <div class="my-3 space-y-1">
                     <div class="flex items-baseline space-x-2">
-                        <span id="portfolioUsd" class="text-3xl sm:text-4xl font-extrabold tracking-tight font-mono tabular-nums text-white">
+                        <span id="portfolioUsd" class="text-3xl font-extrabold font-mono tabular-nums tracking-tight text-white">
                             $1,000.00
                         </span>
                         <span class="text-xs font-bold text-slate-400">USDT</span>
                     </div>
 
                     <!-- Canlı TRY Karşılığı -->
-                    <div class="flex items-center space-x-1 text-xs text-slate-400 font-mono">
+                    <div class="flex items-center space-x-1.5 text-xs font-mono text-slate-400">
                         <span>≈</span>
-                        <span id="portfolioTry" class="font-semibold tabular-nums text-slate-300">₺--.--</span>
-                        <span class="text-[10px]">TRY</span>
+                        <span id="portfolioTry" class="font-semibold text-slate-200 tabular-nums text-sm">₺--.--</span>
+                        <span class="text-[10px] text-slate-400">TRY</span>
                     </div>
                 </div>
 
-                <!-- Sağ Taraf: Net Kâr / Performans -->
-                <div class="flex flex-col sm:items-end justify-between self-start sm:self-auto space-y-1">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Net Kazanç</span>
-                    
-                    <div class="flex items-baseline space-x-1.5">
-                        <span id="netGainUsd" class="text-lg sm:text-xl font-bold font-mono text-emerald-400 tabular-nums">
+                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
+                    <span>Başlangıç: <strong class="text-slate-300 font-mono">$1,000.00</strong></span>
+                    <span class="text-emerald-400 font-mono font-semibold">+%0.00 Büyüme</span>
+                </div>
+            </div>
+
+            <!-- 2. KART: SLOT KAPASİTESİ VE AKTİF DAĞILIM -->
+            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Slot Kapasitesi</span>
+                    <span id="slotBadge" class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        2 BOŞTA
+                    </span>
+                </div>
+
+                <div class="my-3 space-y-1">
+                    <div class="flex items-baseline space-x-2">
+                        <span class="text-3xl font-extrabold font-mono tabular-nums text-white">0 / 2</span>
+                        <span class="text-xs font-bold text-slate-400">SLOT DOLU</span>
+                    </div>
+                    <div class="text-xs font-mono text-slate-400">
+                        Slot Başı Bütçe: <strong id="slotBudget" class="text-slate-200 font-semibold tabular-nums">$500.00</strong>
+                    </div>
+                </div>
+
+                <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-blue-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+            </div>
+
+            <!-- 3. KART: DÖNEMLİK NET KAZANÇ (USDT & TRY PARALEL) -->
+            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Net Kazanç</span>
+                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-surfaceBorder">
+                        BUGÜN
+                    </span>
+                </div>
+
+                <div class="my-3 space-y-1">
+                    <div class="flex items-baseline space-x-2">
+                        <span id="netGainUsd" class="text-3xl font-extrabold font-mono tabular-nums text-emerald-400">
                             +$0.00
                         </span>
-                        <span id="netGainTry" class="text-xs font-mono text-emerald-400/80 tabular-nums">
+                        <span id="netGainTry" class="text-xs font-mono font-semibold text-emerald-400/80 tabular-nums">
                             (+₺0.00)
                         </span>
                     </div>
-
-                    <div class="flex items-center space-x-2 pt-1">
-                        <span class="text-[11px] font-bold font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                            %0.00 Kâr
-                        </span>
-                        <span class="text-[11px] font-bold font-mono px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                            %0.00 Ana Para
-                        </span>
+                    <div class="text-xs font-mono text-slate-400">
+                        Top. İşlem Kârı: <span class="text-emerald-400 font-bold">%0.00</span>
                     </div>
                 </div>
-            </div>
 
-            <!-- Zaman Filtreleri -->
-            <div class="mt-5 pt-4 border-t border-surfaceBorder flex items-center space-x-2 overflow-x-auto pb-1 text-xs font-semibold">
-                <button class="px-3 py-1.5 rounded-lg bg-blue-600 text-white font-medium shadow-sm transition">Bugün</button>
-                <button class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">7 Gün</button>
-                <button class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Bu Ay</button>
-                <button class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition">Tümü</button>
-            </div>
-        </section>
-
-        <!-- 2️⃣ COIN KARTLARI LİSTESİ ALANI (2. AŞAMADA DOLDURULACAK) -->
-        <section id="coinCardsContainer" class="space-y-3">
-            <div class="border border-dashed border-surfaceBorder rounded-2xl p-8 text-center bg-surface/40">
-                <div class="w-12 h-12 rounded-full bg-blue-500/10 text-blue-400 mx-auto flex items-center justify-center mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
+                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder font-mono">
+                    <span>Ana Paraya Oran:</span>
+                    <span class="text-blue-400 font-bold">+%0.00</span>
                 </div>
-                <h3 class="font-bold text-sm text-slate-200">1. Aşama Başarıyla Kuruldu</h3>
-                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                    Bakiye paneli ve canlı USDT/TRY kuru devrede. 2. Aşamada Binance mum verisi ve canlı RSI hesaplayan kartları bu alana bağlayacağız.
-                </p>
+            </div>
+
+            <!-- 4. KART: BOT VERİMİ & MAX SERİ -->
+            <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Algoritma Verimi</span>
+                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                        OPTİMİZE
+                    </span>
+                </div>
+
+                <div class="my-3 space-y-1">
+                    <div class="flex items-baseline space-x-2">
+                        <span class="text-3xl font-extrabold font-mono tabular-nums text-white">100%</span>
+                        <span class="text-xs font-bold text-slate-400">(0W - 0L)</span>
+                    </div>
+                    <div class="text-xs font-mono text-slate-400">
+                        Max Win Streak: <strong class="text-slate-200">0W</strong> • Ort. Süre: <strong class="text-slate-200">-</strong>
+                    </div>
+                </div>
+
+                <div class="text-[11px] text-slate-400 flex items-center justify-between pt-2 border-t border-surfaceBorder">
+                    <span>Aylık Kilitlenen: <strong class="text-slate-200 font-mono">0/0 Ay</strong></span>
+                    <span class="text-slate-400 font-mono">Sinyal Radarı: Aktif</span>
+                </div>
             </div>
         </section>
 
+        <!-- 3️⃣ ÇİFT SÜTUNLU ÇALIŞMA ALANI (GRID 12 KOLON) -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
+            
+            <!-- SOL GENİŞ ALAN: TAKİP EDİLEN COIN KARTLARI (9 Kolon) -->
+            <section class="xl:col-span-9 space-y-4">
+                
+                <!-- Kontrol Barı: Filtreler & Ekleme Butonu -->
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-surface border border-surfaceBorder p-3.5 rounded-xl">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2">Dönem:</span>
+                        <button class="px-3 py-1 rounded text-xs font-semibold bg-blue-600 text-white shadow-sm">Bugün</button>
+                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">7 Gün</button>
+                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Bu Ay</button>
+                        <button class="px-3 py-1 rounded text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-surfaceHover transition">Tümü</button>
+                    </div>
+
+                    <div class="flex items-center space-x-3">
+                        <button class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-surfaceHover hover:bg-slate-800 text-xs font-bold text-slate-200 border border-surfaceBorder transition">
+                            <svg class="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            <span>Strateji Sihirbazı</span>
+                        </button>
+                        
+                        <button class="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-bold text-white shadow-sm transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Yeni Coin Ekle</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- COIN KARTLARI GRID'İ (AŞAMA 2'DE CANLI MİKRO KARTLARLA DOLDURULACAK) -->
+                <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+                    
+                    <!-- Bilgilendirme & Aşama Durumu Panosu -->
+                    <div class="col-span-full border border-dashed border-surfaceBorder rounded-2xl p-12 text-center bg-surface/30 space-y-3">
+                        <div class="w-12 h-12 rounded-xl bg-blue-600/10 text-blue-400 mx-auto flex items-center justify-center border border-blue-500/20">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-base text-slate-100">Aşama 1: Web Panel İskeleti Tamamlandı</h3>
+                        <p class="text-xs text-slate-400 max-w-lg mx-auto leading-relaxed">
+                            Masaüstü terminal düzeni, 4'lü metrik konsolu, Binance canlı USDT/TRY ve BTC/USDT kur bağlantıları aktiftir. 
+                            <strong>2. Aşamada</strong> bu alana Binance mum verisini çeken, canlı RSI hesaplayan ve anlık fiyat flaşlarına sahip kartlar entegre edilecektir.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SAĞ KONSOL: CANLI POZİSYONLAR & SİNYAL RADARI (3 Kolon) -->
+            <aside class="xl:col-span-3 space-y-4">
+                
+                <!-- Aktif Pozisyonlar Kutusu -->
+                <div class="bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Canlı Pozisyonlar</h2>
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-400">0 Pozisyon</span>
+                    </div>
+
+                    <div class="py-8 text-center text-xs text-slate-400 space-y-1">
+                        <p class="font-medium text-slate-300">Açık pozisyon bulunmuyor.</p>
+                        <p class="text-[11px] text-slate-400">Slotlar yeni sinyaller için hazır bekliyor.</p>
+                    </div>
+                </div>
+
+                <!-- Bekleme Listesi (Sinyal Radarı) Kutusu -->
+                <div class="bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm">
+                    <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-200">Sinyal Radarı</h2>
+                        </div>
+                        <span class="text-[10px] font-mono text-amber-400 font-bold">0 Bekleyen</span>
+                    </div>
+
+                    <div class="py-8 text-center text-xs text-slate-400 space-y-1">
+                        <p class="font-medium text-slate-300">Radar bekleme listesi boş.</p>
+                        <p class="text-[11px] text-slate-400">Slot kapasitesi aşıldığında sinyaller buraya sıraya alınır.</p>
+                    </div>
+                </div>
+
+            </aside>
+        </div>
     </main>
 
-    <!-- JAVASCRIPT: CANLI KUR VE BAKİYE MOTORU -->
+    <!-- 4️⃣ JAVASCRIPT MOTORU: CANLI PİYASA AKIŞI -->
     <script>
-        // Başlangıç Portföy State'i
-        const state = {
-            compoundedBalanceUsd: 1000.00,
+        // Terminal Global Durumu (State)
+        const terminalState = {
+            portfolioUsd: 1000.00,
             netGainUsd: 0.00,
-            usdtTryRate: 0.00
+            usdtTryRate: 0.00,
+            btcPrice: 0.00,
+            maxSlots: 2,
+            activeSlots: 0
         };
 
-        // DOM Referansları
-        const liveTryRateEl = document.getElementById('liveTryRate');
-        const portfolioUsdEl = document.getElementById('portfolioUsd');
-        const portfolioTryEl = document.getElementById('portfolioTry');
-        const netGainUsdEl = document.getElementById('netGainUsd');
-        const netGainTryEl = document.getElementById('netGainTry');
+        // DOM Elemanları
+        const elLiveTry = document.getElementById('liveTryRate');
+        const elLiveBtc = document.getElementById('liveBtcPrice');
+        const elPortfolioUsd = document.getElementById('portfolioUsd');
+        const elPortfolioTry = document.getElementById('portfolioTry');
+        const elNetGainUsd = document.getElementById('netGainUsd');
+        const elNetGainTry = document.getElementById('netGainTry');
+        const elSlotBudget = document.getElementById('slotBudget');
 
         // Sayı Formatlayıcılar
         const fmtUsd = (val) => '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const fmtTry = (val) => '₺' + val.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        // Arayüzü Güncelleme Fonksiyonu
-        function updateUI() {
-            portfolioUsdEl.textContent = fmtUsd(state.compoundedBalanceUsd);
+        // Arayüz Senkronizasyonu
+        function renderTerminalUI() {
+            elPortfolioUsd.textContent = fmtUsd(terminalState.portfolioUsd);
             
-            if (state.usdtTryRate > 0) {
-                liveTryRateEl.textContent = fmtTry(state.usdtTryRate);
-                
-                const balanceInTry = state.compoundedBalanceUsd * state.usdtTryRate;
-                portfolioTryEl.textContent = fmtTry(balanceInTry);
+            // Slot bütçesini güncelle
+            const budgetPerSlot = terminalState.portfolioUsd / terminalState.maxSlots;
+            elSlotBudget.textContent = fmtUsd(budgetPerSlot);
 
-                const gainInTry = state.netGainUsd * state.usdtTryRate;
-                netGainTryEl.textContent = `(${gainInTry >= 0 ? '+' : ''}${fmtTry(gainInTry)})`;
+            if (terminalState.usdtTryRate > 0) {
+                elLiveTry.textContent = fmtTry(terminalState.usdtTryRate);
+                
+                const balanceInTry = terminalState.portfolioUsd * terminalState.usdtTryRate;
+                elPortfolioTry.textContent = fmtTry(balanceInTry);
+
+                const gainInTry = terminalState.netGainUsd * terminalState.usdtTryRate;
+                elNetGainTry.textContent = `(${gainInTry >= 0 ? '+' : ''}${fmtTry(gainInTry)})`;
+            }
+
+            if (terminalState.btcPrice > 0) {
+                elLiveBtc.textContent = fmtUsd(terminalState.btcPrice);
             }
         }
 
-        // Binance API'den Canlı USDT/TRY Kurunu Çekme
-        async function fetchLiveUsdtTry() {
+        // Binance Ticker Çekici (USDT/TRY & BTC/USDT)
+        async function fetchMarketPrices() {
             try {
-                const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTTRY');
-                if (!res.ok) throw new Error('Ağ hatası');
-                const data = await res.json();
-                const rate = parseFloat(data.price);
-                
-                if (rate > 0) {
-                    state.usdtTryRate = rate;
-                    updateUI();
+                // Paralel çekim
+                const [tryRes, btcRes] = await Promise.all([
+                    fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTTRY'),
+                    fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT')
+                ]);
+
+                if (tryRes.ok) {
+                    const dataTry = await tryRes.json();
+                    terminalState.usdtTryRate = parseFloat(dataTry.price) || 0;
                 }
+
+                if (btcRes.ok) {
+                    const dataBtc = await btcRes.json();
+                    terminalState.btcPrice = parseFloat(dataBtc.price) || 0;
+                }
+
+                renderTerminalUI();
             } catch (err) {
-                console.warn('USDT/TRY kuru alınamadı:', err.message);
+                console.warn('Piyasa verisi çekilemedi:', err.message);
             }
         }
 
-        // Başlatıcı
-        fetchLiveUsdtTry();
-        // Kuru her 10 saniyede bir otomatik yenile
-        setInterval(fetchLiveUsdtTry, 10000);
+        // Başlangıç tetikleyicisi & Otomatik Yenileme Döngüsü
+        fetchMarketPrices();
+        setInterval(fetchMarketPrices, 8000);
     </script>
 </body>
 </html>
