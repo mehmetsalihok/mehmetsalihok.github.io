@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KUZGUN Pro Terminal — Dynamic Cloud Engine</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -63,7 +62,6 @@
                 </nav>
             </div>
 
-            <!-- Sağ Ticker ve Slot Seçici -->
             <div class="flex items-center space-x-4">
                 <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-md bg-brandDark/80 border border-surfaceBorder text-xs font-mono">
                     <span class="text-slate-400 font-medium text-[11px]">SLOT:</span>
@@ -97,7 +95,7 @@
     <!-- 2️⃣ ANA DASHBOARD -->
     <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-6 space-y-6">
         
-        <!-- ÜST METRİK ŞERİDİ (4'LÜ PANEL) -->
+        <!-- ÜST METRİK ŞERİDİ -->
         <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
@@ -170,7 +168,7 @@
             <div class="bg-surface border border-surfaceBorder rounded-xl p-4 flex flex-col justify-between shadow-sm">
                 <div class="flex items-center justify-between">
                     <span class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Kilit & Risk Durumu</span>
-                    <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">KÂR KORUMA</span>
+                    <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">KÂR KORUMA</span>
                 </div>
 
                 <div class="my-3 space-y-1">
@@ -195,9 +193,7 @@
         <!-- 3️⃣ ÇİFT SÜTUNLU ÇALIŞMA ALANI -->
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
             
-            <!-- SOL ALAN: COIN KARTLARI -->
             <section class="xl:col-span-9 space-y-4">
-                
                 <div class="flex flex-wrap items-center justify-between gap-3 bg-surface border border-surfaceBorder p-3.5 rounded-xl">
                     <div class="flex items-center space-x-2">
                         <span class="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2">Görünüm:</span>
@@ -214,13 +210,10 @@
                     </div>
                 </div>
 
-                <!-- DİNAMİK COIN KARTLARI GRID'İ -->
                 <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4"></div>
             </section>
 
-            <!-- SAĞ KONSOL: POZİSYONLAR & RADAR -->
             <aside class="xl:col-span-3 space-y-4">
-                
                 <div class="bg-surface border border-surfaceBorder rounded-xl p-4 space-y-3 shadow-sm">
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2.5">
                         <div class="flex items-center space-x-2">
@@ -242,12 +235,11 @@
                     </div>
                     <div id="pendingSignalsList" class="space-y-2"></div>
                 </div>
-
             </aside>
         </div>
     </main>
 
-    <!-- 4️⃣ 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I (BİRLEŞTİRİLMİŞ AKILLI MOTOR) -->
+    <!-- 4️⃣ 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I (TAM YIL BACKTEST MOTORU) -->
     <div id="addCoinModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-surface border border-surfaceBorder rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             
@@ -258,17 +250,16 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-sm text-white">Yeni Coin & Strateji Sihirbazı</h3>
-                        <p class="text-[11px] text-slate-400">Parite geçmişi taranarak en kârlı AL/SAT değerleri bulunur.</p>
+                        <p class="text-[11px] text-slate-400">2026 yılı tüm verisi taranarak en kârlı AL/SAT değerleri bulunur.</p>
                     </div>
                 </div>
                 <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-white text-sm font-bold">✕</button>
             </div>
 
-            <!-- Parametre Giriş Formu -->
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-400 font-semibold mb-1">Coin Sembolü</label>
-                    <input type="text" id="wizardSymbolInput" placeholder="Örn: ASTER, SOL, PEPE, AVAX, NEAR" required
+                    <input type="text" id="wizardSymbolInput" value="ASTER" placeholder="Örn: ASTER, SOL, PEPE, AVAX" required
                         class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono font-bold text-white focus:outline-none focus:border-blue-500 uppercase">
                 </div>
 
@@ -277,15 +268,15 @@
                         <label class="block text-slate-400 font-semibold mb-1">Zaman Dilimi</label>
                         <select id="wizardIntervalInput" class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
                             <option value="5m">5 Dakika (5m)</option>
-                            <option value="15m" selected>15 Dakika (15m)</option>
-                            <option value="30m">30 Dakika (30m)</option>
+                            <option value="15m">15 Dakika (15m)</option>
+                            <option value="30m" selected>30 Dakika (30m)</option>
                             <option value="1h">1 Saat (1h)</option>
                             <option value="4h">4 Saat (4h)</option>
                         </select>
                     </div>
                     <div>
                         <label class="block text-slate-400 font-semibold mb-1">RSI Periyodu (Uzunluk)</label>
-                        <input type="number" id="wizardRsiLengthInput" value="14" min="2" max="50" required
+                        <input type="number" id="wizardRsiLengthInput" value="7" min="2" max="50" required
                             class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
@@ -293,85 +284,69 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-slate-400 font-semibold mb-1">Hedef Kâr (%)</label>
-                        <input type="number" step="0.1" id="wizardProfitInput" value="3.5" required
+                        <input type="number" step="0.1" id="wizardProfitInput" value="0.7" required
                             class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-white focus:outline-none focus:border-blue-500">
                     </div>
                     <div>
                         <label class="block text-slate-400 font-semibold mb-1">Aylık Kilit Limiti (%)</label>
-                        <input type="number" step="0.1" id="wizardCapInput" value="10.5" required
+                        <input type="number" step="0.1" id="wizardCapInput" value="7.0" required
                             class="w-full px-3 py-2 bg-brandDark border border-surfaceBorder rounded-lg font-mono text-indigo-400 focus:outline-none focus:border-blue-500">
                     </div>
                 </div>
 
-                <!-- Test Butonu -->
+                <!-- Test Butonu ve İlerleme Çubuğu -->
                 <button onclick="runWizardForNewCoin()" id="btnWizardRun" class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold shadow-sm transition flex items-center justify-center space-x-2">
-                    <span>🪄 Geçmiş Mumları Tara & En İdeal Stratejiyi Bul</span>
+                    <span>🪄 2026 Yılının Tüm Mumlarını Tara & Optimize Et</span>
                 </button>
+                <p id="wizardLoadingStatus" class="hidden text-center font-mono text-[11px] text-blue-400 animate-pulse"></p>
 
                 <!-- Sihirbaz Sonuç & Onay Alanı -->
                 <div id="wizardResultCard" class="hidden bg-brandDark border border-surfaceBorder rounded-xl p-4 space-y-3">
                     <div class="flex items-center justify-between border-b border-surfaceBorder pb-2">
                         <div class="flex items-center space-x-1.5">
                             <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                            <span id="wizardResultSymbol" class="font-bold text-white text-sm">ASTER/USDT</span>
+                            <span id="wizardResultSymbol" class="font-bold text-white text-sm">ASTER/USDT (30m | RSI 7)</span>
                         </div>
-                        <span id="wizardResultWinRate" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold font-mono text-xs">%100 Win Rate</span>
+                        <span id="wizardResultWinRate" class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 font-bold font-mono text-xs">%100</span>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2.5 font-mono text-xs">
-                        <div class="bg-surface p-2 rounded">
-                            <span class="text-[9px] text-slate-500 block font-bold">ÖNERİLEN AL RSI</span>
-                            <strong id="wizardResultBuyRsi" class="text-emerald-400 text-sm font-bold">≤ 26</strong>
+                    <div class="space-y-1.5 font-mono text-xs pt-1">
+                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
+                            <span class="text-slate-400">Hedef Kâr Oranı:</span>
+                            <span id="wizardResultTargetDisplay" class="font-bold text-emerald-400">%0.7 (Ay Kilit: %7.0)</span>
                         </div>
-                        <div class="bg-surface p-2 rounded">
-                            <span class="text-[9px] text-slate-500 block font-bold">ÖNERİLEN SAT RSI</span>
-                            <strong id="wizardResultSellRsi" class="text-rose-400 text-sm font-bold">≥ 78</strong>
+                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
+                            <span class="text-slate-400">Önerilen RSI Al:</span>
+                            <span id="wizardResultBuyRsi" class="font-bold text-blue-400 text-sm">24</span>
                         </div>
-                        <div class="bg-surface p-2 rounded">
-                            <span class="text-[9px] text-slate-500 block font-bold">İŞLEM SAYISI</span>
-                            <strong id="wizardResultTrades" class="text-slate-200 text-sm font-bold">14 İşlem</strong>
+                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
+                            <span class="text-slate-400">Önerilen RSI Sat:</span>
+                            <span id="wizardResultSellRsi" class="font-bold text-amber-400 text-sm">92</span>
                         </div>
-                        <div class="bg-surface p-2 rounded">
-                            <span class="text-[9px] text-slate-500 block font-bold">TEST EDİLEN KÂR</span>
-                            <strong id="wizardResultPnl" class="text-emerald-400 text-sm font-bold">+%49.0</strong>
+                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
+                            <span class="text-slate-400">Kayıp İşlem Sayısı:</span>
+                            <span id="wizardResultLosses" class="font-bold text-emerald-400">0 Kayıp</span>
+                        </div>
+                        <div class="flex justify-between py-1 border-b border-surfaceBorder/40">
+                            <span class="text-slate-400">Toplam İşlem Sayısı:</span>
+                            <span id="wizardResultTrades" class="font-bold text-white text-sm">81 İşlem</span>
+                        </div>
+                        <div class="flex justify-between py-1">
+                            <span class="text-slate-400">Geçmiş Net Toplam Kâr:</span>
+                            <span id="wizardResultPnl" class="font-bold text-emerald-400 text-sm">+56.33%</span>
                         </div>
                     </div>
 
-                    <!-- Karta Ekle Butonu -->
                     <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition text-xs shadow-md flex items-center justify-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
                 </div>
-
-                <!-- Manuel Ekleme Seçeneği (İsteğe Bağlı) -->
-                <div class="pt-2 border-t border-surfaceBorder/60 text-center">
-                    <button type="button" onclick="toggleManualInputs()" class="text-slate-500 hover:text-slate-300 text-[11px] font-medium underline">
-                        veya sihirbazsız manuel AL/SAT değerleriyle ekle
-                    </button>
-
-                    <div id="manualInputsBox" class="hidden mt-3 space-y-2 text-left">
-                        <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-slate-400 text-[10px] font-semibold mb-1">Manuel AL RSI (≤)</label>
-                                <input type="number" id="manualBuyRsi" value="25" class="w-full px-2 py-1.5 bg-brandDark border border-surfaceBorder rounded font-mono text-emerald-400 text-xs">
-                            </div>
-                            <div>
-                                <label class="block text-slate-400 text-[10px] font-semibold mb-1">Manuel SAT RSI (≥)</label>
-                                <input type="number" id="manualSellRsi" value="75" class="w-full px-2 py-1.5 bg-brandDark border border-surfaceBorder rounded font-mono text-rose-400 text-xs">
-                            </div>
-                        </div>
-                        <button onclick="addCoinDirectlyManual()" class="w-full py-2 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">
-                            Manuel Değerlerle Direkt Ekle
-                        </button>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
 
-    <!-- 5️⃣ İŞLEM GEÇMİŞİ / KAPALI İŞLEMLER MODAL'I -->
+    <!-- 5️⃣ İŞLEM GEÇMİŞİ MODAL'I -->
     <div id="historyModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-surface border border-surfaceBorder rounded-2xl max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
             <div class="flex items-center justify-between border-b border-surfaceBorder pb-3">
@@ -391,7 +366,7 @@
         </div>
     </div>
 
-    <!-- 6️⃣ JAVASCRIPT: MOTOR, KİLİT MEKANİZMASI & SİHİRBAZ ENTEGRASYONU -->
+    <!-- 6️⃣ JAVASCRIPT MOTORU: YIL BOYUNCA TARAMA VE SİMÜLASYON -->
     <script>
         const terminalState = {
             portfolioBaseUsd: 1000.00,
@@ -408,7 +383,7 @@
 
         let binanceWs = null;
 
-        // DOM Referansları
+        // DOM Elemanları
         const elCardsGrid = document.getElementById('cardsGrid');
         const elLiveTry = document.getElementById('liveTryRate');
         const elLiveBtc = document.getElementById('liveBtcPrice');
@@ -435,8 +410,8 @@
         const elHistoryTotal = document.getElementById('historyStatsTotal');
         const addCoinModal = document.getElementById('addCoinModal');
         const wizardResultCard = document.getElementById('wizardResultCard');
+        const wizardLoadingStatus = document.getElementById('wizardLoadingStatus');
 
-        // Sayı Formatlayıcılar
         const fmtUsd = (val) => '$' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const fmtTry = (val) => '₺' + Number(val).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         
@@ -469,30 +444,44 @@
             } catch (e) {}
         }
 
-        // WILDER'S RSI
-        function calculateRSI(closes, period = 14) {
-            if (!closes || closes.length <= period) return 50.0;
+        // TAM VE HIZLI DİZİSEL WILDER'S RSI HESAPLAYICI
+        function calculateRSIHistory(prices, period = 14) {
+            const rsiValues = new Array(prices.length).fill(null);
+            if (prices.length <= period) return rsiValues;
+
             let gains = 0, losses = 0;
             for (let i = 1; i <= period; i++) {
-                const diff = closes[i] - closes[i - 1];
+                const diff = prices[i] - prices[i - 1];
                 if (diff >= 0) gains += diff; else losses += Math.abs(diff);
             }
+
             let avgGain = gains / period;
             let avgLoss = losses / period;
+            rsiValues[period] = avgLoss === 0 ? 100.0 : 100.0 - (100.0 / (1.0 + avgGain / avgLoss));
 
-            for (let i = period + 1; i < closes.length; i++) {
-                const diff = closes[i] - closes[i - 1];
+            for (let i = period + 1; i < prices.length; i++) {
+                const diff = prices[i] - prices[i - 1];
                 const gain = diff >= 0 ? diff : 0;
                 const loss = diff < 0 ? Math.abs(diff) : 0;
+
                 avgGain = (avgGain * (period - 1) + gain) / period;
                 avgLoss = (avgLoss * (period - 1) + loss) / period;
+
+                if (avgLoss === 0) {
+                    rsiValues[i] = 100.0;
+                } else {
+                    const rs = avgGain / avgLoss;
+                    rsiValues[i] = 100.0 - (100.0 / (1.0 + rs));
+                }
             }
-            if (avgLoss === 0) return 100.0;
-            const rs = avgGain / avgLoss;
-            return 100.0 - (100.0 / (1.0 + rs));
+            return rsiValues;
         }
 
-        // AYLIK KİLİT KONTROLÜ
+        function calculateRSI(closes, period = 14) {
+            const history = calculateRSIHistory(closes, period);
+            return history[history.length - 1] || 50.0;
+        }
+
         function isCoinMonthlyLocked(coin) {
             const currentMonthStr = new Date().toISOString().slice(0, 7);
             const currentMonthTrades = terminalState.closedTrades.filter(t => t.coinId === coin.id && t.exitMonth === currentMonthStr);
@@ -500,7 +489,6 @@
             return (totalMonthPnl + 0.001) >= coin.monthlyCap;
         }
 
-        // LOCALSTORAGE İŞLEMLERİ
         function loadStorage() {
             const savedCoins = localStorage.getItem('kuzgun_web_coins');
             if (savedCoins) {
@@ -509,8 +497,7 @@
             if (!terminalState.coins || terminalState.coins.length === 0) {
                 terminalState.coins = [
                     { id: 'c1', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] },
-                    { id: 'c2', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '15m', rsiLength: 14, buyRsi: 24, sellRsi: 78, profitTarget: 4.0, monthlyCap: 12.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] },
-                    { id: 'c3', symbol: 'ETHUSDT', displaySymbol: 'ETH', interval: '15m', rsiLength: 14, buyRsi: 26, sellRsi: 76, profitTarget: 3.8, monthlyCap: 11.4, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] }
+                    { id: 'c2', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '15m', rsiLength: 14, buyRsi: 24, sellRsi: 78, profitTarget: 4.0, monthlyCap: 12.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [] }
                 ];
                 saveCoins();
             }
@@ -559,7 +546,6 @@
             updatePortfolioCalculations();
         }
 
-        // REST İLE İLK MUMLARI ÇEKME
         async function fetchInitialCandles(coin) {
             try {
                 const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=120`);
@@ -581,7 +567,6 @@
             renderSingleCard(coin);
         }
 
-        // WEBSOCKET BAĞLANTISI
         function initBinanceWebSocket() {
             if (binanceWs) {
                 try { binanceWs.close(); } catch(e) {}
@@ -641,7 +626,6 @@
             };
         }
 
-        // CANLI SİNYAL VE İŞLEM TETİKLEYİCİSİ
         function evaluateTradingRules(coin) {
             const activePos = terminalState.activePositions.find(p => p.coinId === coin.id);
 
@@ -777,7 +761,6 @@
             renderPendingSignalsList();
         }
 
-        // SAĞ KONSOL LİSTELERİ
         function renderActivePositionsList() {
             elActivePositionsCountBadge.textContent = `${terminalState.activePositions.length} / ${terminalState.maxSlots} Slot`;
             
@@ -855,7 +838,6 @@
             `).join('');
         }
 
-        // PORTFÖY TOPLAM HESABI
         function updatePortfolioCalculations() {
             let unrealizedPnlUsd = 0;
             terminalState.activePositions.forEach(p => {
@@ -905,7 +887,6 @@
             renderActivePositionsList();
         }
 
-        // COIN KARTI ÇİZİCİSİ
         function renderSingleCard(coin) {
             let cardEl = document.getElementById(`card-${coin.id}`);
             const isPos = terminalState.activePositions.some(p => p.coinId === coin.id);
@@ -1054,11 +1035,10 @@
             terminalState.coins.forEach(c => renderSingleCard(c));
         }
 
-        // 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MOTORU
+        // 🪄 YENİ COIN & STRATEJİ SİHİRBAZI MODAL'I
         function openAddCoinModal() {
-            document.getElementById('wizardSymbolInput').value = '';
             wizardResultCard.classList.add('hidden');
-            document.getElementById('manualInputsBox').classList.add('hidden');
+            wizardLoadingStatus.classList.add('hidden');
             terminalState.pendingWizardCandidate = null;
             addCoinModal.classList.remove('hidden');
             addCoinModal.classList.add('flex');
@@ -1069,12 +1049,6 @@
             addCoinModal.classList.remove('flex');
         }
 
-        function toggleManualInputs() {
-            const el = document.getElementById('manualInputsBox');
-            el.classList.toggle('hidden');
-        }
-
-        // Mevcut bir karttan sihirbazı çağırma
         function openWizardForExistingCoin(coinId) {
             const coin = terminalState.coins.find(c => c.id === coinId);
             if (!coin) return;
@@ -1087,7 +1061,7 @@
             runWizardForNewCoin();
         }
 
-        // SİHİRBAZ: BİNANCE'DEN GEÇMİŞİ ÇEKİP EN İDEAL SEVİYELERİ BULUR
+        // 🚀 BİNANCE'TEN 1 OCAK 2026'DAN İTİBAREN TÜM MUMLARI ÇEKEN VE SİMÜLE EDEN AKILLI SİHİRBAZ MOTORU
         async function runWizardForNewCoin() {
             let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
             if (!rawSym) {
@@ -1097,84 +1071,162 @@
             if (!rawSym.endsWith('USDT')) rawSym += 'USDT';
 
             const interval = document.getElementById('wizardIntervalInput').value;
-            const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value) || 14;
-            const profitTarget = parseFloat(document.getElementById('wizardProfitInput').value) || 3.5;
-            const monthlyCap = parseFloat(document.getElementById('wizardCapInput').value) || 10.5;
+            const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value) || 7;
+            const profitTarget = parseFloat(document.getElementById('wizardProfitInput').value) || 0.7;
+            const monthlyCap = parseFloat(document.getElementById('wizardCapInput').value) || 7.0;
 
             const btn = document.getElementById('btnWizardRun');
-            btn.innerHTML = `<span class="animate-pulse">⏳ Mumlar İndiriliyor & Simüle Ediliyor...</span>`;
+            wizardLoadingStatus.classList.remove('hidden');
+            wizardLoadingStatus.textContent = "2026 yılı mumları indiriliyor (Sayfalanıyor)...";
             btn.disabled = true;
 
             try {
-                // 500 mumluk geçmiş veri çek
-                const res = await fetch(`https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=500`);
-                if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
-                
-                const klines = await res.json();
-                if (klines.length < 50) throw new Error("Yetersiz mum verisi!");
+                // 1 Ocak 2026 UTC başlangıcı
+                let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
+                const endTime = Date.now();
+                let allCandles = [];
 
-                const closes = klines.map(k => parseFloat(k[4]));
+                // Pagination (Tüm yılın mumlarını 1000'erli çekme)
+                while (currentStart < endTime) {
+                    wizardLoadingStatus.textContent = `2026 Verisi İndiriliyor: ${allCandles.length} mum indirildi...`;
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000&startTime=${currentStart}`;
+                    const res = await fetch(url);
+                    if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
 
-                // Grid Search: AL (18 - 36) x SAT (65 - 88)
-                let best = null;
+                    const batch = await res.json();
+                    if (!batch || batch.length === 0) break;
 
-                for (let buy = 18; buy <= 36; buy += 2) {
-                    for (let sell = 65; sell <= 88; sell += 2) {
-                        let inPos = false, entryP = 0, totPnl = 0, wins = 0, total = 0;
+                    for (const item of batch) {
+                        if (item[0] <= endTime) {
+                            allCandles.push({
+                                time: item[0],
+                                open: parseFloat(item[1]),
+                                high: parseFloat(item[2]),
+                                low: parseFloat(item[3]),
+                                close: parseFloat(item[4]),
+                                monthKey: new Date(item[0]).toISOString().slice(0, 7) // '2026-01', '2026-02' vb.
+                            });
+                        }
+                    }
 
-                        for (let i = rsiLength + 1; i < closes.length; i++) {
-                            const rsi = calculateRSI(closes.slice(0, i + 1), rsiLength);
-                            const cPrice = closes[i];
+                    if (batch.length < 1000) break;
+                    currentStart = batch[batch.length - 1][0] + 1;
+                }
 
-                            if (!inPos && rsi <= buy) {
-                                inPos = true;
-                                entryP = cPrice;
-                            } else if (inPos) {
-                                const targetP = entryP * (1.0 + profitTarget / 100.0);
-                                if (cPrice >= targetP) {
-                                    inPos = false;
-                                    total++;
-                                    wins++;
-                                    totPnl += profitTarget;
+                if (allCandles.length < (rsiLength + 10)) {
+                    throw new Error("Yetersiz mum verisi!");
+                }
+
+                wizardLoadingStatus.textContent = `${allCandles.length} adet mum üzerinde strateji hesaplanıyor...`;
+
+                // Tüm mumların kapanış fiyatları ve RSI serisi
+                const closePrices = allCandles.map(c => c.close);
+                const rsiValues = calculateRSIHistory(closePrices, rsiLength);
+
+                let bestCandidate = null;
+
+                // 🎯 IOS İLE BİREBİR AYNI GRID SEARCH TARAMASI: AL (12 - 40, adım 1) x SAT (60 - 95, adım 1)
+                for (let buy = 12; buy <= 40; buy += 1) {
+                    for (let sell = 60; sell <= 95; sell += 1) {
+                        
+                        let inPos = false;
+                        let entryPrice = 0;
+                        let totPnl = 0;
+                        let winCount = 0;
+                        let lossCount = 0;
+                        let totalTrades = 0;
+                        const monthlyStats = {};
+
+                        for (let i = rsiLength + 1; i < allCandles.length; i++) {
+                            const c = allCandles[i];
+                            const rsi = rsiValues[i];
+                            const prevRsi = rsiValues[i - 1];
+                            if (rsi === null || prevRsi === null) continue;
+
+                            const mKey = c.monthKey;
+                            if (!monthlyStats[mKey]) monthlyStats[mKey] = { pnl: 0, capReached: false };
+
+                            const isCapReached = (monthlyStats[mKey].pnl + 0.001) >= monthlyCap;
+
+                            // Alım Koşulu
+                            if (!inPos && !isCapReached) {
+                                if (prevRsi <= buy && rsi > buy) {
+                                    inPos = true;
+                                    entryPrice = c.close;
+                                }
+                            } 
+                            // Pozisyon Kapatma Koşulu
+                            else if (inPos) {
+                                const targetPrice = entryPrice * (1.0 + profitTarget / 100.0);
+                                let exited = false;
+                                let pnl = 0;
+
+                                if (c.high >= targetPrice) {
+                                    exited = true;
+                                    pnl = profitTarget;
                                 } else if (rsi >= sell) {
+                                    exited = true;
+                                    pnl = ((c.close - entryPrice) / entryPrice) * 100.0;
+                                }
+
+                                if (exited) {
                                     inPos = false;
-                                    total++;
-                                    const pnl = ((cPrice - entryP) / entryP) * 100;
-                                    if (pnl >= 0) wins++;
+                                    totalTrades++;
+                                    if (pnl >= 0) winCount++; else lossCount++;
                                     totPnl += pnl;
+
+                                    const curM = monthlyStats[mKey].pnl + pnl;
+                                    monthlyStats[mKey].pnl = curM;
+                                    if ((curM + 0.001) >= monthlyCap) {
+                                        monthlyStats[mKey].capReached = true;
+                                    }
                                 }
                             }
                         }
 
-                        if (total >= 1) {
-                            const winRate = (wins / total) * 100;
-                            const score = totPnl * Math.pow(winRate / 100, 1.5);
-                            if (!best || score > best.score) {
-                                best = { buyRsi: buy, sellRsi: sell, winRate, totalTrades: total, netPnl: totPnl, score };
+                        if (totalTrades >= 1) {
+                            const winRate = (winCount / totalTrades) * 100.0;
+                            // Swift Kuzgun formülü: score = totPnl * (winRate / 100)^1.5
+                            const score = totPnl * Math.pow(winRate / 100.0, 1.5);
+
+                            if (!bestCandidate || score > bestCandidate.score) {
+                                bestCandidate = {
+                                    buyRsi: buy,
+                                    sellRsi: sell,
+                                    winRate: winRate,
+                                    lossCount: lossCount,
+                                    totalTrades: totalTrades,
+                                    netPnl: totPnl,
+                                    score: score
+                                };
                             }
                         }
                     }
                 }
 
-                if (best) {
+                if (bestCandidate) {
                     terminalState.pendingWizardCandidate = {
                         symbol: rawSym,
                         displaySymbol: rawSym.replace('USDT', ''),
                         interval: interval,
                         rsiLength: rsiLength,
-                        buyRsi: best.buyRsi,
-                        sellRsi: best.sellRsi,
+                        buyRsi: bestCandidate.buyRsi,
+                        sellRsi: bestCandidate.sellRsi,
                         profitTarget: profitTarget,
                         monthlyCap: monthlyCap
                     };
 
-                    document.getElementById('wizardResultSymbol').textContent = `${terminalState.pendingWizardCandidate.displaySymbol}/USDT`;
-                    document.getElementById('wizardResultWinRate').textContent = `%${best.winRate.toFixed(0)} Win Rate`;
-                    document.getElementById('wizardResultBuyRsi').textContent = `≤ ${best.buyRsi}`;
-                    document.getElementById('wizardResultSellRsi').textContent = `≥ ${best.sellRsi}`;
-                    document.getElementById('wizardResultTrades').textContent = `${best.totalTrades} İşlem`;
-                    document.getElementById('wizardResultPnl').textContent = `${best.netPnl >= 0 ? '+' : ''}%${best.netPnl.toFixed(1)}`;
+                    document.getElementById('wizardResultSymbol').textContent = `${terminalState.pendingWizardCandidate.displaySymbol}/USDT (${interval} | RSI ${rsiLength})`;
+                    document.getElementById('wizardResultTargetDisplay').textContent = `%${profitTarget.toFixed(1)} (Ay Kilit: %${monthlyCap.toFixed(1)})`;
+                    document.getElementById('wizardResultWinRate').textContent = `%${bestCandidate.winRate.toFixed(0)}`;
+                    document.getElementById('wizardResultBuyRsi').textContent = `${bestCandidate.buyRsi}`;
+                    document.getElementById('wizardResultSellRsi').textContent = `${bestCandidate.sellRsi}`;
+                    document.getElementById('wizardResultLosses').textContent = `${bestCandidate.lossCount} Kayıp`;
+                    document.getElementById('wizardResultLosses').className = bestCandidate.lossCount === 0 ? 'font-bold text-rose-400' : 'font-bold text-rose-500';
+                    document.getElementById('wizardResultTrades').textContent = `${bestCandidate.totalTrades} İşlem`;
+                    document.getElementById('wizardResultPnl').textContent = `${bestCandidate.netPnl >= 0 ? '+' : ''}${bestCandidate.netPnl.toFixed(2)}%`;
 
+                    wizardLoadingStatus.classList.add('hidden');
                     wizardResultCard.classList.remove('hidden');
                     playChime(true);
                 } else {
@@ -1183,18 +1235,17 @@
 
             } catch (err) {
                 alert("Hata: " + err.message);
+                wizardLoadingStatus.classList.add('hidden');
             } finally {
-                btn.innerHTML = `<span>🪄 Geçmiş Mumları Tara & En İdeal Stratejiyi Bul</span>`;
                 btn.disabled = false;
             }
         }
 
-        // SİHİRBAZDAN ONAYLAYIP KART EKLEME
+        // SİHİRBAZDAN KARTA EKLE
         async function confirmAndAddCoinFromWizard() {
             if (!terminalState.pendingWizardCandidate) return;
             const cand = terminalState.pendingWizardCandidate;
 
-            // Var olan coin varsa güncelle, yoksa yeni ekle
             const existingIdx = terminalState.coins.findIndex(c => c.symbol === cand.symbol);
             if (existingIdx !== -1) {
                 terminalState.coins[existingIdx].interval = cand.interval;
@@ -1235,42 +1286,6 @@
             playChime(true);
         }
 
-        // MANUEL DEĞERLERLE DİREKT EKLEME
-        async function addCoinDirectlyManual() {
-            let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
-            if (!rawSym) {
-                alert("Lütfen sembol girin");
-                return;
-            }
-            if (!rawSym.endsWith('USDT')) rawSym += 'USDT';
-
-            const newCoin = {
-                id: 'c_' + Date.now(),
-                symbol: rawSym,
-                displaySymbol: rawSym.replace('USDT', ''),
-                interval: document.getElementById('wizardIntervalInput').value,
-                rsiLength: parseInt(document.getElementById('wizardRsiLengthInput').value) || 14,
-                buyRsi: parseFloat(document.getElementById('manualBuyRsi').value) || 25,
-                sellRsi: parseFloat(document.getElementById('manualSellRsi').value) || 75,
-                profitTarget: parseFloat(document.getElementById('wizardProfitInput').value) || 3.5,
-                monthlyCap: parseFloat(document.getElementById('wizardCapInput').value) || 10.5,
-                price: 0,
-                prevPrice: 0,
-                high24: 0,
-                low24: 0,
-                rsi: 50.0,
-                prevRsi: 50.0,
-                candles: []
-            };
-
-            terminalState.coins.push(newCoin);
-            saveCoins();
-            closeAddCoinModal();
-            await fetchInitialCandles(newCoin);
-            initBinanceWebSocket();
-            updatePortfolioCalculations();
-        }
-
         function deleteCoinCard(id) {
             terminalState.coins = terminalState.coins.filter(c => c.id !== id);
             terminalState.activePositions = terminalState.activePositions.filter(p => p.coinId !== id);
@@ -1284,7 +1299,6 @@
             updatePortfolioCalculations();
         }
 
-        // İŞLEM GEÇMİŞİ MODAL FONKSİYONLARI
         function openHistoryModal() {
             renderHistoryTrades();
             document.getElementById('historyModal').classList.remove('hidden');
@@ -1358,7 +1372,6 @@
             } catch (e) {}
         }
 
-        // MOTORU ÇALIŞTIR
         async function startEngine() {
             loadStorage();
             renderActivePositionsList();
