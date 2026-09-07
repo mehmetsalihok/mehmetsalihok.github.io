@@ -82,6 +82,14 @@
                     <span id="netGainPercent" class="text-[10px] font-semibold text-emerald-600/90 tabular-nums">(%0.00)</span>
                 </div>
 
+                <span class="hidden lg:inline-block h-3.5 w-px bg-slate-200"></span>
+
+                <!-- 🎯 YENİ: KOMİSYON GÖSTERGESİ -->
+                <div class="hidden lg:flex items-baseline space-x-1">
+                    <span class="text-slate-400 font-medium text-[10px] tracking-wider uppercase">KOMİSYON:</span>
+                    <span id="totalFeesPaidDisplay" class="font-semibold text-slate-500 tabular-nums">-$0.00</span>
+                </div>
+
                 <span class="h-3.5 w-px bg-slate-200"></span>
 
                 <div class="flex items-center space-x-1">
@@ -92,6 +100,7 @@
                         <option value="2" selected>2</option>
                         <option value="3">3</option>
                         <option value="4">4</option>
+                        <option value="5">5</option>
                     </select>
                 </div>
 
@@ -134,8 +143,17 @@
                         <button onclick="filterCards('locked')" id="btnFilterLocked" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Kilitlenenler</button>
                     </div>
 
-                    <div class="flex items-center space-x-2">
-                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition">
+                    <!-- 🎯 MOTOR AYAR KAPSÜLLERİ -->
+                    <div class="flex items-center space-x-3 text-xs">
+                        <label class="flex items-center space-x-1.5 cursor-pointer text-slate-600 hover:text-slate-900 select-none">
+                            <input type="checkbox" id="chkSlotFilter" onchange="toggleSlotFilter(this.checked)" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-[11px] font-medium">Slot Çakışma Filtresi</span>
+                        </label>
+                        <label class="flex items-center space-x-1.5 cursor-pointer text-slate-600 hover:text-slate-900 select-none">
+                            <input type="checkbox" id="chkFeeDeduction" onchange="toggleFeeDeduction(this.checked)" checked class="rounded border-slate-300 text-blue-600 focus:ring-blue-500">
+                            <span class="text-[11px] font-medium">Borsa Komisyonu (%0.15)</span>
+                        </label>
+                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition ml-2">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                             <span>Yeni Coin & Strateji Sihirbazı</span>
                         </button>
@@ -160,7 +178,7 @@
                             <h2 class="text-xs font-semibold tracking-tight text-slate-800">Canlı Pozisyonlar</h2>
                         </div>
                         <span id="activePositionsCountBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">
-                            0 / 1 Slot
+                            0 / 2 Slot
                         </span>
                     </div>
                     <div id="activePositionsList" class="space-y-2"></div>
@@ -318,10 +336,15 @@
     <!-- 5️⃣ JAVASCRIPT MOTORU -->
     <script>
         const terminalState = {
-            portfolioBaseUsd: 1000.00,
+            initialBaseUsd: 1000.00,
+            compoundedBalance: 1000.00,
             usdtTryRate: 36.50,
             btcPrice: 0.00,
             maxSlots: 2,
+            isSlotConstraintEnabled: true,
+            isFeeDeductionEnabled: true,
+            isCandleCloseConfirmationEnabled: true,
+            totalFeesPaidUSD: 0.0,
             coins: [],
             activePositions: [],
             pendingSignals: [],
@@ -340,6 +363,7 @@
         const elNetGainUsd = document.getElementById('netGainUsd');
         const elNetGainPercent = document.getElementById('netGainPercent');
         const elSlotCountDisplay = document.getElementById('slotCountDisplay');
+        const elTotalFeesPaid = document.getElementById('totalFeesPaidDisplay');
         const elClosedTradesCount = document.getElementById('closedTradesCount');
         const elActivePositionsList = document.getElementById('activePositionsList');
         const elActivePositionsCountBadge = document.getElementById('activePositionsCountBadge');
@@ -353,6 +377,8 @@
         const addCoinModal = document.getElementById('addCoinModal');
         const wizardResultCard = document.getElementById('wizardResultCard');
         const wizardLoadingStatus = document.getElementById('wizardLoadingStatus');
+        const chkSlotFilter = document.getElementById('chkSlotFilter');
+        const chkFeeDeduction = document.getElementById('chkFeeDeduction');
 
         const fmtUsd = (val) => '$' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const fmtTry = (val) => '₺' + Number(val).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -362,6 +388,17 @@
             if (price >= 1000) return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             if (price >= 1) return '$' + price.toFixed(4);
             return '$' + price.toFixed(6);
+        }
+
+        function intervalToMilliseconds(interval) {
+            switch (interval) {
+                case "5m": return 5 * 60 * 1000;
+                case "15m": return 15 * 60 * 1000;
+                case "30m": return 30 * 60 * 1000;
+                case "1h": return 60 * 60 * 1000;
+                case "4h": return 4 * 60 * 60 * 1000;
+                default: return 15 * 60 * 1000;
+            }
         }
 
         function playChime(isSuccess = true) {
@@ -430,13 +467,149 @@
             return (totalMonthPnl + 0.001) >= coin.monthlyCap;
         }
 
-        // 🎯 2026 YILININ TÜM AYLARINI (OCAK - AĞUSTOS) KAPSAYAN SİMÜLASYON MOTORU
+        // 🎯 1. GERÇEKÇİ SLOT ÇAKIŞMA FİLTRESİ (Swift filterTradesBySlotCapacity karşılığı)
+        function filterTradesBySlotCapacity(trades, maxSlots) {
+            if (!maxSlots || maxSlots <= 0 || trades.length === 0) return trades;
+
+            const liveTradeIds = new Set(terminalState.closedTrades.map(t => t.id));
+            const authoritativeLive = trades.filter(t => liveTradeIds.has(t.id)).sort((a, b) => a.entryTime - b.entryTime);
+            const backtestCandidates = trades.filter(t => !liveTradeIds.has(t.id)).sort((a, b) => a.entryTime - b.entryTime);
+
+            const acceptedTrades = [...authoritativeLive];
+            const acceptedBacktests = [];
+
+            function wouldExceedCapacity(candidate) {
+                const candStart = candidate.entryTime;
+                const candEnd = Math.max(candidate.exitTime, candidate.entryTime + 1);
+
+                const occupiedIntervals = authoritativeLive.map(t => ({ start: t.entryTime, end: Math.max(t.exitTime, t.entryTime + 1) }));
+                terminalState.activePositions.forEach(pos => {
+                    occupiedIntervals.push({ start: pos.entryTime, end: Number.MAX_SAFE_INTEGER });
+                });
+                acceptedBacktests.forEach(t => {
+                    occupiedIntervals.push({ start: t.entryTime, end: Math.max(t.exitTime, t.entryTime + 1) });
+                });
+
+                const checkPoints = [candStart];
+                for (const interval of occupiedIntervals) {
+                    if (interval.start > candStart && interval.start < candEnd) {
+                        checkPoints.push(interval.start);
+                    }
+                }
+
+                for (const pt of checkPoints) {
+                    let occupiedCount = 0;
+                    for (const interval of occupiedIntervals) {
+                        if (interval.start <= pt && interval.end > pt) {
+                            occupiedCount++;
+                        }
+                    }
+                    if (occupiedCount + 1 > maxSlots) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            for (const cand of backtestCandidates) {
+                if (!wouldExceedCapacity(cand)) {
+                    acceptedBacktests.push(cand);
+                    acceptedTrades.push(cand);
+                }
+            }
+
+            return acceptedTrades.sort((a, b) => a.exitTime - b.exitTime);
+        }
+
+        // 🎯 2. BİLEŞİK BAKİYE VE KOMİSYON MOTORU (Swift recalculateCompoundedBalance karşılığı)
+        function recalculateCompoundedBalance() {
+            let allRawTrades = [...terminalState.closedTrades];
+            terminalState.coins.forEach(c => {
+                if (c.simAllTrades) {
+                    allRawTrades.push(...c.simAllTrades);
+                }
+            });
+
+            // Slot filtresi açık mı?
+            const processedTrades = terminalState.isSlotConstraintEnabled
+                ? filterTradesBySlotCapacity(allRawTrades, terminalState.maxSlots)
+                : allRawTrades.sort((a, b) => a.exitTime - b.exitTime);
+
+            let runningBalance = terminalState.initialBaseUsd;
+            let accumulatedFees = 0.0;
+            const slots = Math.max(1, terminalState.maxSlots);
+
+            for (const trade of processedTrades) {
+                const currentSlotUsd = runningBalance / slots;
+                const buyFee = terminalState.isFeeDeductionEnabled ? (currentSlotUsd * 0.00075) : 0.0;
+                const exitVal = currentSlotUsd * (1.0 + trade.pnlPercent / 100.0);
+                const sellFee = terminalState.isFeeDeductionEnabled ? (exitVal * 0.00075) : 0.0;
+                const totalFee = buyFee + sellFee;
+                accumulatedFees += totalFee;
+
+                const rawGain = currentSlotUsd * (trade.pnlPercent / 100.0);
+                const netGain = rawGain - totalFee;
+                runningBalance += netGain;
+            }
+
+            terminalState.totalFeesPaidUSD = accumulatedFees;
+
+            // Anlık gerçekleşmemiş açık pozisyon kârı
+            let unrealizedPnlUsd = 0;
+            const currentSlotBudget = runningBalance / slots;
+
+            terminalState.activePositions.forEach(p => {
+                const coin = terminalState.coins.find(c => c.id === p.coinId);
+                const liveP = coin ? coin.price : p.entryPrice;
+                const pnl = ((liveP - p.entryPrice) / p.entryPrice) * 100.0;
+                unrealizedPnlUsd += currentSlotBudget * (pnl / 100.0);
+            });
+
+            terminalState.compoundedBalance = runningBalance + unrealizedPnlUsd;
+
+            // Ekran güncellemeleri
+            const netGainUsd = terminalState.compoundedBalance - terminalState.initialBaseUsd;
+            const netGainPct = (netGainUsd / terminalState.initialBaseUsd) * 100;
+
+            elPortfolioUsd.textContent = fmtUsd(terminalState.compoundedBalance);
+            elNetGainUsd.textContent = `${netGainUsd >= 0 ? '+' : ''}${fmtUsd(netGainUsd)}`;
+            elNetGainUsd.className = `font-bold tabular-nums tracking-tight ${netGainUsd >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+            elNetGainPercent.textContent = `(%${netGainPct >= 0 ? '+' : ''}${netGainPct.toFixed(2)})`;
+            elNetGainPercent.className = `text-[10px] font-semibold tabular-nums ${netGainUsd >= 0 ? 'text-emerald-600/90' : 'text-rose-600/90'}`;
+
+            if (terminalState.usdtTryRate > 0) {
+                elPortfolioTry.textContent = `≈ ${fmtTry(terminalState.compoundedBalance * terminalState.usdtTryRate)}`;
+            }
+
+            elTotalFeesPaid.textContent = `-$${accumulatedFees.toFixed(2)}`;
+            elSlotCountDisplay.textContent = `${terminalState.activePositions.length}/${terminalState.maxSlots}`;
+            elActivePositionsCountBadge.textContent = `${terminalState.activePositions.length} / ${terminalState.maxSlots} Slot`;
+        }
+
+        function toggleSlotFilter(checked) {
+            terminalState.isSlotConstraintEnabled = checked;
+            localStorage.setItem('kuzgun_slot_filter', checked.toString());
+            recalculateCompoundedBalance();
+        }
+
+        function toggleFeeDeduction(checked) {
+            terminalState.isFeeDeductionEnabled = checked;
+            localStorage.setItem('kuzgun_fee_deduction', checked.toString());
+            recalculateCompoundedBalance();
+        }
+
+        function changeMaxSlots(newSlots) {
+            terminalState.maxSlots = parseInt(newSlots) || 2;
+            localStorage.setItem('kuzgun_max_slots', terminalState.maxSlots.toString());
+            recalculateCompoundedBalance();
+        }
+
+        // 🎯 3. MUM VERİSİ ÜZERİNDE SİMÜLASYON VE İŞLEM TOPLAYICI
         function runCardBacktest(coin) {
             const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
             const currentYear = 2026;
-            const currentMonthIdx = 7; // Ağustos (0-indexed 7)
+            const currentMonthIdx = 7;
 
-            // Yıl başından Ağustos sonuna kadarki tüm 8 ayı kesin oluştur
             const monthlyMap = {};
             for (let m = 0; m <= currentMonthIdx; m++) {
                 const mKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
@@ -452,6 +625,7 @@
             if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 10)) {
                 coin.simMonthlyStats = Object.values(monthlyMap).reverse();
                 coin.simLastTrades = [];
+                coin.simAllTrades = [];
                 return;
             }
 
@@ -460,6 +634,8 @@
             
             let inPos = false, entryP = 0, entryT = 0;
             const trades = [];
+            const allRawTrades = [];
+            const intervalMs = intervalToMilliseconds(coin.interval);
 
             for (let i = coin.rsiLength + 1; i < coin.rawCandles.length; i++) {
                 const c = coin.rawCandles[i];
@@ -490,15 +666,17 @@
                     }
                 } else if (inPos) {
                     const targetP = entryP * (1.0 + coin.profitTarget / 100.0);
-                    let exited = false, pnl = 0, reason = '';
+                    let exited = false, pnl = 0, reason = '', exitPrice = 0;
 
                     if (c.high >= targetP) {
                         exited = true;
                         pnl = coin.profitTarget;
+                        exitPrice = targetP;
                         reason = `Kâr (%${coin.profitTarget.toFixed(1)})`;
                     } else if (rsi >= coin.sellRsi) {
                         exited = true;
                         pnl = ((c.close - entryP) / entryP) * 100.0;
+                        exitPrice = c.close;
                         reason = `RSI Sat (${rsi.toFixed(0)})`;
                     }
 
@@ -510,6 +688,7 @@
                             monthlyMap[mKey].isLocked = true;
                         }
 
+                        const exitTimeMs = c.time + intervalMs;
                         const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
                         const hours = Math.floor(diffSec / 3600);
                         const mins = Math.floor((diffSec % 3600) / 60);
@@ -518,130 +697,93 @@
                         const exitD = new Date(c.time);
                         const dateStr = `${exitD.getDate()} ${monthNames[exitD.getMonth()].slice(0, 3)} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
 
-                        trades.push({
+                        const tradeObj = {
+                            id: `trade_${coin.id}_${entryT}`,
+                            coinId: coin.id,
+                            symbol: coin.symbol,
+                            displaySymbol: coin.displaySymbol,
+                            entryTime: entryT,
+                            exitTime: exitTimeMs,
                             entryPrice: entryP,
-                            exitPrice: c.close,
-                            pnl: pnl,
+                            exitPrice: exitPrice,
+                            pnlPercent: pnl,
                             reason: reason,
                             duration: durStr,
                             dateStr: dateStr,
+                            exitMonth: mKey,
                             isWin: pnl >= 0
-                        });
+                        };
+
+                        trades.push(tradeObj);
+                        allRawTrades.push(tradeObj);
                     }
                 }
             }
 
-            // Ağustos'tan Ocak'a doğru sıralı döküm
             coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
             coin.simLastTrades = trades.slice(-10).reverse();
+            coin.simAllTrades = allRawTrades;
         }
 
-        function loadStorage() {
-            const savedCoins = localStorage.getItem('kuzgun_web_coins');
-            if (savedCoins) {
-                try { terminalState.coins = JSON.parse(savedCoins); } catch (e) { terminalState.coins = []; }
-            }
-            if (!terminalState.coins || terminalState.coins.length === 0) {
-                terminalState.coins = [
-                    { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: true, activeSubTab: 'monthly' },
-                    { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly' }
-                ];
-                saveCoins();
-            }
+        // 🎯 4. MUM KAPANIŞ TEYİDİ & CANLI VERİ MOTORU (TradingView Bar Close Uyumlu)
+        function evaluateTradingRules(coin, liveClose, isConfirmedBarClose = false) {
+            const activePos = terminalState.activePositions.find(p => p.coinId === coin.id);
 
-            const savedSlots = localStorage.getItem('kuzgun_max_slots');
-            if (savedSlots) {
-                terminalState.maxSlots = parseInt(savedSlots) || 2;
-                elSlotSelector.value = terminalState.maxSlots;
-            }
+            // 1. POZİSYONDA ÇIKIŞ KONTROLÜ
+            if (activePos) {
+                const pnl = ((liveClose - activePos.entryPrice) / activePos.entryPrice) * 100.0;
+                activePos.livePnlPercent = pnl;
+                activePos.livePnlUsd = activePos.allocatedUsd * (pnl / 100.0);
 
-            const savedBase = localStorage.getItem('kuzgun_base_usd');
-            if (savedBase) terminalState.portfolioBaseUsd = parseFloat(savedBase) || 1000.00;
+                if (liveClose >= activePos.targetPrice) {
+                    closePosition(activePos.id, `Kâr Hedefi (%${activePos.profitTarget.toFixed(1)})`);
+                    playChime(true);
+                    return;
+                }
 
-            const savedPositions = localStorage.getItem('kuzgun_active_pos');
-            if (savedPositions) {
-                try { terminalState.activePositions = JSON.parse(savedPositions); } catch(e) {}
-            }
+                if (coin.rsi >= coin.sellRsi) {
+                    closePosition(activePos.id, `RSI Sat (${coin.rsi.toFixed(1)})`);
+                    playChime(pnl >= 0);
+                    return;
+                }
+            } else {
+                // 2. YENİ POZİSYON AÇILIŞ KONTROLÜ
+                if (isCoinMonthlyLocked(coin)) return;
 
-            const savedPending = localStorage.getItem('kuzgun_pending_signals');
-            if (savedPending) {
-                try { terminalState.pendingSignals = JSON.parse(savedPending); } catch(e) {}
-            }
+                // Mum kapanış teyidi kontrolü
+                let isTriggered = false;
+                if (terminalState.isCandleCloseConfirmationEnabled) {
+                    // Sadece yeni mum başladığında, kapanmış mumun RSI kırılımına bakılır
+                    isTriggered = isConfirmedBarClose && (coin.prevRsi <= coin.buyRsi && coin.rsi > coin.buyRsi);
+                } else {
+                    // Anlık iğne kırılımı modu
+                    isTriggered = (coin.prevRsi <= coin.buyRsi && coin.rsi > coin.buyRsi) || (coin.rsi <= coin.buyRsi);
+                }
 
-            const savedClosedTrades = localStorage.getItem('kuzgun_closed_trades');
-            if (savedClosedTrades) {
-                try { terminalState.closedTrades = JSON.parse(savedClosedTrades); } catch(e) {}
-            }
+                if (isTriggered) {
+                    const alreadyPending = terminalState.pendingSignals.some(s => s.coinId === coin.id);
 
-            elClosedTradesCount.textContent = `${terminalState.closedTrades.length}`;
-        }
-
-        function saveCoins() { localStorage.setItem('kuzgun_web_coins', JSON.stringify(terminalState.coins)); }
-        function savePositions() { 
-            localStorage.setItem('kuzgun_active_pos', JSON.stringify(terminalState.activePositions));
-            localStorage.setItem('kuzgun_base_usd', terminalState.portfolioBaseUsd.toString());
-        }
-        function savePending() { localStorage.setItem('kuzgun_pending_signals', JSON.stringify(terminalState.pendingSignals)); }
-        function saveClosedTrades() { 
-            localStorage.setItem('kuzgun_closed_trades', JSON.stringify(terminalState.closedTrades)); 
-            elClosedTradesCount.textContent = `${terminalState.closedTrades.length}`;
-        }
-
-        function changeMaxSlots(newSlots) {
-            terminalState.maxSlots = parseInt(newSlots) || 2;
-            localStorage.setItem('kuzgun_max_slots', terminalState.maxSlots.toString());
-            updatePortfolioCalculations();
-        }
-
-        // 🚀 TÜM YILI KESİNTİSİZ ÇEKEN VE AĞUSTOS'A KADAR İNDİREN FONKSİYON
-        async function fetchInitialCandles(coin) {
-            try {
-                let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
-                const endTime = Date.now();
-                let all = [];
-
-                // Limit sınırı kaldırıldı: Ağustos sonuna kadar tüm 2026 indirilir
-                while (currentStart < endTime) {
-                    const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000&startTime=${currentStart}`;
-                    const res = await fetch(url);
-                    if (!res.ok) break;
-                    const batch = await res.json();
-                    if (!batch || batch.length === 0) break;
-
-                    for (const item of batch) {
-                        if (item[0] <= endTime) {
-                            all.push({
-                                time: item[0],
-                                open: parseFloat(item[1]),
-                                high: parseFloat(item[2]),
-                                low: parseFloat(item[3]),
-                                close: parseFloat(item[4]),
-                                monthKey: new Date(item[0]).toISOString().slice(0, 7)
-                            });
-                        }
+                    if (terminalState.activePositions.length < terminalState.maxSlots) {
+                        openPosition(coin, liveClose);
+                        playChime(true);
+                    } else if (!alreadyPending) {
+                        terminalState.pendingSignals.push({
+                            id: 'pend_' + Date.now(),
+                            coinId: coin.id,
+                            symbol: coin.symbol,
+                            displaySymbol: coin.displaySymbol,
+                            triggerPrice: liveClose,
+                            triggerRsi: coin.rsi,
+                            time: Date.now()
+                        });
+                        savePending();
+                        renderPendingSignalsList();
                     }
-                    if (batch.length < 1000) break;
-                    currentStart = batch[batch.length - 1][0] + 1;
                 }
-
-                coin.rawCandles = all;
-                coin.candles = all.map(c => c.close);
-                coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
-                coin.prevRsi = coin.rsi;
-
-                const latest = coin.candles[coin.candles.length - 1];
-                if (latest > 0) {
-                    coin.prevPrice = latest;
-                    coin.price = latest;
-                }
-
-                runCardBacktest(coin);
-            } catch (err) {
-                console.warn(`Mum çekilemedi [${coin.symbol}]:`, err.message);
             }
-            renderSingleCard(coin);
         }
 
+        // 🎯 5. WEBSOCKET CANLI AKIŞI & CANDLE ROLLOVER MOTORU
         function initBinanceWebSocket() {
             if (binanceWs) {
                 try { binanceWs.close(); } catch(e) {}
@@ -675,20 +817,53 @@
 
                     const coin = terminalState.coins.find(c => c.symbol === sym);
                     if (coin && liveClose > 0) {
+                        const nowMs = Date.now();
+                        const intervalMs = intervalToMilliseconds(coin.interval);
+
                         coin.prevPrice = coin.price > 0 ? coin.price : liveClose;
                         coin.price = liveClose;
                         coin.high24 = parseFloat(d.h);
                         coin.low24 = parseFloat(d.l);
 
-                        if (coin.candles && coin.candles.length > 0) {
+                        let isConfirmedBarClose = false;
+
+                        // 🎯 CANDLE ROLLOVER (MUM MÜHÜRLEME & YENİ MUM BAŞLATMA)
+                        if (coin.rawCandles && coin.rawCandles.length > 0) {
+                            let lastCandle = coin.rawCandles[coin.rawCandles.length - 1];
+
+                            while (nowMs >= (lastCandle.time + intervalMs)) {
+                                isConfirmedBarClose = true;
+                                lastCandle.close = liveClose;
+                                if (liveClose > lastCandle.high) lastCandle.high = liveClose;
+                                if (liveClose < lastCandle.low) lastCandle.low = liveClose;
+
+                                const nextStartTime = lastCandle.time + intervalMs;
+                                const newCandle = {
+                                    time: nextStartTime,
+                                    open: liveClose,
+                                    high: liveClose,
+                                    low: liveClose,
+                                    close: liveClose,
+                                    monthKey: new Date(nextStartTime).toISOString().slice(0, 7)
+                                };
+                                coin.rawCandles.push(newCandle);
+                                coin.candles.push(liveClose);
+                                lastCandle = newCandle;
+                            }
+
+                            // Aktif mumu anlık güncelle
+                            lastCandle.close = liveClose;
+                            if (liveClose > lastCandle.high) lastCandle.high = liveClose;
+                            if (liveClose < lastCandle.low) lastCandle.low = liveClose;
                             coin.candles[coin.candles.length - 1] = liveClose;
+
                             coin.prevRsi = coin.rsi;
                             coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
                         }
 
-                        evaluateTradingRules(coin);
+                        evaluateTradingRules(coin, liveClose, isConfirmedBarClose);
                         renderSingleCard(coin);
-                        updatePortfolioCalculations();
+                        recalculateCompoundedBalance();
                     }
                 } catch (e) {}
             };
@@ -701,56 +876,9 @@
             };
         }
 
-        function evaluateTradingRules(coin) {
-            const activePos = terminalState.activePositions.find(p => p.coinId === coin.id);
-
-            if (activePos) {
-                const pnl = ((coin.price - activePos.entryPrice) / activePos.entryPrice) * 100;
-                activePos.livePnlPercent = pnl;
-                activePos.livePnlUsd = activePos.allocatedUsd * (pnl / 100);
-
-                if (coin.price >= activePos.targetPrice) {
-                    closePosition(activePos.id, `Kâr Hedefi (%${activePos.profitTarget.toFixed(1)})`);
-                    playChime(true);
-                    return;
-                }
-
-                if (coin.rsi >= coin.sellRsi) {
-                    closePosition(activePos.id, `RSI Sat (${coin.rsi.toFixed(1)})`);
-                    playChime(pnl >= 0);
-                    return;
-                }
-            } else {
-                if (isCoinMonthlyLocked(coin)) return;
-
-                const isRsiBuyTriggered = (coin.prevRsi <= coin.buyRsi && coin.rsi > coin.buyRsi) || (coin.rsi <= coin.buyRsi);
-                
-                if (isRsiBuyTriggered) {
-                    const alreadyPending = terminalState.pendingSignals.some(s => s.coinId === coin.id);
-                    
-                    if (terminalState.activePositions.length < terminalState.maxSlots) {
-                        openPosition(coin);
-                        playChime(true);
-                    } else if (!alreadyPending) {
-                        terminalState.pendingSignals.push({
-                            id: 'pend_' + Date.now(),
-                            coinId: coin.id,
-                            symbol: coin.symbol,
-                            displaySymbol: coin.displaySymbol,
-                            triggerPrice: coin.price,
-                            triggerRsi: coin.rsi,
-                            time: Date.now()
-                        });
-                        savePending();
-                        renderPendingSignalsList();
-                    }
-                }
-            }
-        }
-
         function openPosition(coin, customPrice = null) {
             const entryP = customPrice || coin.price;
-            const slotBudget = terminalState.portfolioBaseUsd / terminalState.maxSlots;
+            const slotBudget = terminalState.compoundedBalance / Math.max(1, terminalState.maxSlots);
             const targetP = entryP * (1.0 + (coin.profitTarget / 100.0));
 
             const newPos = {
@@ -773,6 +901,7 @@
             savePositions();
             renderActivePositionsList();
             renderPendingSignalsList();
+            recalculateCompoundedBalance();
         }
 
         function closePosition(positionId, reason = 'Manuel Kapatıldı') {
@@ -780,10 +909,8 @@
             if (idx === -1) return;
 
             const pos = terminalState.activePositions[idx];
-            const exitPnlUsd = pos.livePnlUsd;
-            terminalState.portfolioBaseUsd += exitPnlUsd;
-
             const now = new Date();
+
             terminalState.closedTrades.unshift({
                 id: 'trade_' + Date.now(),
                 coinId: pos.coinId,
@@ -792,8 +919,10 @@
                 entryPrice: pos.entryPrice,
                 exitPrice: (pos.coinId && terminalState.coins.find(c => c.id === pos.coinId)?.price) || pos.targetPrice,
                 pnlPercent: pos.livePnlPercent,
-                pnlUsd: exitPnlUsd,
+                pnlUsd: pos.livePnlUsd,
                 reason: reason,
+                entryTime: pos.entryTime,
+                exitTime: Date.now(),
                 entryTimeStr: new Date(pos.entryTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
                 exitTimeStr: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
                 exitMonth: now.toISOString().slice(0, 7)
@@ -803,6 +932,7 @@
             savePositions();
             saveClosedTrades();
 
+            // Sıradaki bekleyen sinyali slota al
             if (terminalState.pendingSignals.length > 0 && terminalState.activePositions.length < terminalState.maxSlots) {
                 const next = terminalState.pendingSignals.shift();
                 savePending();
@@ -814,7 +944,7 @@
 
             renderActivePositionsList();
             renderPendingSignalsList();
-            updatePortfolioCalculations();
+            recalculateCompoundedBalance();
         }
 
         function forceEnterFromPending(pendingId) {
@@ -851,7 +981,7 @@
             elActivePositionsList.innerHTML = terminalState.activePositions.map(pos => {
                 const coin = terminalState.coins.find(c => c.id === pos.coinId);
                 const currentPrice = coin ? coin.price : pos.entryPrice;
-                const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
+                const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
                 const isWin = pnl >= 0;
 
                 return `
@@ -913,35 +1043,52 @@
             `).join('');
         }
 
-        function updatePortfolioCalculations() {
-            let unrealizedPnlUsd = 0;
-            terminalState.activePositions.forEach(p => {
-                const coin = terminalState.coins.find(c => c.id === p.coinId);
-                if (coin && coin.price > 0) {
-                    const pnl = ((coin.price - p.entryPrice) / p.entryPrice) * 100;
-                    unrealizedPnlUsd += p.allocatedUsd * (pnl / 100);
+        async function fetchInitialCandles(coin) {
+            try {
+                let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
+                const endTime = Date.now();
+                let all = [];
+
+                while (currentStart < endTime) {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000&startTime=${currentStart}`;
+                    const res = await fetch(url);
+                    if (!res.ok) break;
+                    const batch = await res.json();
+                    if (!batch || batch.length === 0) break;
+
+                    for (const item of batch) {
+                        if (item[0] <= endTime) {
+                            all.push({
+                                time: item[0],
+                                open: parseFloat(item[1]),
+                                high: parseFloat(item[2]),
+                                low: parseFloat(item[3]),
+                                close: parseFloat(item[4]),
+                                monthKey: new Date(item[0]).toISOString().slice(0, 7)
+                            });
+                        }
+                    }
+                    if (batch.length < 1000) break;
+                    currentStart = batch[batch.length - 1][0] + 1;
                 }
-            });
 
-            const currentTotalUsd = terminalState.portfolioBaseUsd + unrealizedPnlUsd;
-            const netGainUsd = currentTotalUsd - 1000.00;
-            const netGainPct = (netGainUsd / 1000.00) * 100;
+                coin.rawCandles = all;
+                coin.candles = all.map(c => c.close);
+                coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+                coin.prevRsi = coin.rsi;
 
-            elPortfolioUsd.textContent = fmtUsd(currentTotalUsd);
-            
-            elNetGainUsd.textContent = `${netGainUsd >= 0 ? '+' : ''}${fmtUsd(netGainUsd)}`;
-            elNetGainUsd.className = `font-bold tabular-nums tracking-tight ${netGainUsd >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
-            elNetGainPercent.textContent = `(%${netGainPct >= 0 ? '+' : ''}${netGainPct.toFixed(2)})`;
-            elNetGainPercent.className = `text-[10px] font-semibold tabular-nums ${netGainUsd >= 0 ? 'text-emerald-600/90' : 'text-rose-600/90'}`;
+                const latest = coin.candles[coin.candles.length - 1];
+                if (latest > 0) {
+                    coin.prevPrice = latest;
+                    coin.price = latest;
+                }
 
-            if (terminalState.usdtTryRate > 0) {
-                elPortfolioTry.textContent = `≈ ${fmtTry(currentTotalUsd * terminalState.usdtTryRate)}`;
+                runCardBacktest(coin);
+            } catch (err) {
+                console.warn(`Mum çekilemedi [${coin.symbol}]:`, err.message);
             }
-
-            const usedSlots = terminalState.activePositions.length;
-            elSlotCountDisplay.textContent = `${usedSlots}/${terminalState.maxSlots}`;
-
-            renderActivePositionsList();
+            renderSingleCard(coin);
+            recalculateCompoundedBalance();
         }
 
         function toggleCardExpand(coinId) {
@@ -955,7 +1102,6 @@
             renderSingleCard(coin);
         }
 
-        // 🎯 KAYAN SEKME DEĞİŞTİRİCİ (AYLIK TABLO <-> SON 10 İŞLEM)
         function setCardSubTab(coinId, subTab) {
             const coin = terminalState.coins.find(c => c.id === coinId);
             if (!coin) return;
@@ -978,7 +1124,6 @@
             }
         }
 
-        // 🎯 ANLIK VE CANLI HESAPLAMA (INPUT DEĞİŞTİĞİ ANDA ALTTTAKİ TABLO ANINDA GÜNCELLENİR)
         function handleLiveParamChange(coinId) {
             const coin = terminalState.coins.find(c => c.id === coinId);
             if (!coin) return;
@@ -997,12 +1142,10 @@
             coin.monthlyCap = capVal;
             coin.rsiLength = rsiLenVal;
 
-            // Kart bazında simülasyonu çalıştır
             runCardBacktest(coin);
             saveCoins();
-
-            // Sadece alt tabloları güncelle (Focus ve klavye imleci bozulmaz!)
             updateCardTablesOnly(coin);
+            recalculateCompoundedBalance();
         }
 
         async function handleLiveIntervalChange(coinId) {
@@ -1018,7 +1161,6 @@
             }
         }
 
-        // SADECE TABLOLARI YENİLEYEN HIZLI DOM MOTORU
         function updateCardTablesOnly(coin) {
             const mContainer = document.getElementById(`monthly-container-${coin.id}`);
             const tContainer = document.getElementById(`trades-container-${coin.id}`);
@@ -1083,7 +1225,6 @@
             }
         }
 
-        // 🎯 DİNAMİK VE GENİŞLETİLEBİLİR KART FABRİKASI
         function renderSingleCard(coin) {
             let cardEl = document.getElementById(`card-${coin.id}`);
             const isPos = terminalState.activePositions.some(p => p.coinId === coin.id);
@@ -1138,7 +1279,6 @@
             const isExpanded = !!coin.isExpanded;
             const subTabIndex = activeSubTab === 'monthly' ? 0 : 1;
 
-            // 1. ÜST: SABİT KALAN STRATEJİ AYARLARI
             const strategyFixedHtml = `
                 <div class="bg-slate-50/80 p-3 rounded-xl border border-slate-200/80 space-y-2.5 text-xs">
                     <div class="grid grid-cols-2 gap-2">
@@ -1188,7 +1328,6 @@
                 </div>
             `;
 
-            // 2. ALTTA: AYLIK TABLO & SON 10 İŞLEM KAYAN CAROUSEL
             const months = coin.simMonthlyStats || [];
             let totalPnl = 0;
             let totalTrades = 0;
@@ -1321,14 +1460,11 @@
                     </div>
                 </div>
 
-                <!-- GENİŞLETİLMİŞ VE DİKEY HİZALI ALAN (SABİT STRATEJİ ÜSTTE, AYLIK TABLO ALTTA) -->
+                <!-- GENİŞLETİLMİŞ VE DİKEY HİZALI ALAN -->
                 ${isExpanded ? `
                     <div class="pt-3 border-t border-slate-100 space-y-3">
-                        
-                        <!-- 1. EN ÜSTTE SABİT STRATEJİ GİRİŞLERİ -->
                         ${strategyFixedHtml}
 
-                        <!-- 2. ALTINDA KAYAN GEÇİŞLİ AYLIK TABLO / SON 10 İŞLEM -->
                         <div class="space-y-2 pt-1">
                             <div class="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg text-xs font-semibold text-slate-600">
                                 <button id="subtab-btn-${coin.id}-monthly" onclick="setCardSubTab('${coin.id}', 'monthly')" class="flex-1 py-1 rounded-md transition ${activeSubTab === 'monthly' ? 'bg-white text-slate-900 shadow-sm font-semibold' : 'text-slate-500 hover:text-slate-800 font-medium'}">Aylık Tablo (2026)</button>
@@ -1342,10 +1478,8 @@
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 ` : `
-                    <!-- DARALTILMIŞ STATİK ŞERİT -->
                     <div class="pt-2 border-t border-slate-100 grid grid-cols-3 gap-2 text-center text-xs">
                         <div class="bg-slate-50 p-1.5 rounded-lg border border-slate-200/70">
                             <span class="block text-[8px] text-slate-400 font-semibold">AL SİNYALİ</span>
@@ -1476,7 +1610,6 @@
 
                 for (let buy = 12; buy <= 40; buy += 1) {
                     for (let sell = 60; sell <= 95; sell += 1) {
-                        
                         let inPos = false;
                         let entryPrice = 0;
                         let totPnl = 0;
@@ -1501,8 +1634,7 @@
                                     inPos = true;
                                     entryPrice = c.close;
                                 }
-                            } 
-                            else if (inPos) {
+                            } else if (inPos) {
                                 const targetPrice = entryPrice * (1.0 + profitTarget / 100.0);
                                 let exited = false;
                                 let pnl = 0;
@@ -1630,7 +1762,7 @@
 
             closeAddCoinModal();
             initBinanceWebSocket();
-            updatePortfolioCalculations();
+            recalculateCompoundedBalance();
             playChime(true);
         }
 
@@ -1644,7 +1776,7 @@
             const el = document.getElementById(`card-${id}`);
             if (el) el.remove();
             initBinanceWebSocket();
-            updatePortfolioCalculations();
+            recalculateCompoundedBalance();
         }
 
         function openHistoryModal() {
@@ -1704,7 +1836,7 @@
                 terminalState.closedTrades = [];
                 saveClosedTrades();
                 renderHistoryTrades();
-                updatePortfolioCalculations();
+                recalculateCompoundedBalance();
             }
         }
 
@@ -1715,9 +1847,66 @@
                     const data = await res.json();
                     terminalState.usdtTryRate = parseFloat(data.price) || 36.50;
                     elLiveTry.textContent = fmtTry(terminalState.usdtTryRate);
-                    updatePortfolioCalculations();
+                    recalculateCompoundedBalance();
                 }
             } catch (e) {}
+        }
+
+        function loadStorage() {
+            const savedCoins = localStorage.getItem('kuzgun_web_coins');
+            if (savedCoins) {
+                try { terminalState.coins = JSON.parse(savedCoins); } catch (e) { terminalState.coins = []; }
+            }
+            if (!terminalState.coins || terminalState.coins.length === 0) {
+                terminalState.coins = [
+                    { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: true, activeSubTab: 'monthly' },
+                    { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly' }
+                ];
+                saveCoins();
+            }
+
+            const savedSlots = localStorage.getItem('kuzgun_max_slots');
+            if (savedSlots) {
+                terminalState.maxSlots = parseInt(savedSlots) || 2;
+                elSlotSelector.value = terminalState.maxSlots;
+            }
+
+            const savedSlotFilter = localStorage.getItem('kuzgun_slot_filter');
+            if (savedSlotFilter !== null) {
+                terminalState.isSlotConstraintEnabled = (savedSlotFilter === 'true');
+                chkSlotFilter.checked = terminalState.isSlotConstraintEnabled;
+            }
+
+            const savedFeeDeduction = localStorage.getItem('kuzgun_fee_deduction');
+            if (savedFeeDeduction !== null) {
+                terminalState.isFeeDeductionEnabled = (savedFeeDeduction === 'true');
+                chkFeeDeduction.checked = terminalState.isFeeDeductionEnabled;
+            }
+
+            const savedPositions = localStorage.getItem('kuzgun_active_pos');
+            if (savedPositions) {
+                try { terminalState.activePositions = JSON.parse(savedPositions); } catch(e) {}
+            }
+
+            const savedPending = localStorage.getItem('kuzgun_pending_signals');
+            if (savedPending) {
+                try { terminalState.pendingSignals = JSON.parse(savedPending); } catch(e) {}
+            }
+
+            const savedClosedTrades = localStorage.getItem('kuzgun_closed_trades');
+            if (savedClosedTrades) {
+                try { terminalState.closedTrades = JSON.parse(savedClosedTrades); } catch(e) {}
+            }
+
+            elClosedTradesCount.textContent = `${terminalState.closedTrades.length}`;
+        }
+
+        function saveCoins() { localStorage.setItem('kuzgun_web_coins', JSON.stringify(terminalState.coins)); }
+        function savePositions() { localStorage.setItem('kuzgun_active_pos', JSON.stringify(terminalState.activePositions)); }
+        function savePending() { localStorage.setItem('kuzgun_pending_signals', JSON.stringify(terminalState.pendingSignals)); }
+        function saveClosedTrades() { 
+            localStorage.setItem('kuzgun_closed_trades', JSON.stringify(terminalState.closedTrades)); 
+            elClosedTradesCount.textContent = `${terminalState.closedTrades.length}`;
         }
 
         async function startEngine() {
@@ -1731,7 +1920,7 @@
             }
 
             initBinanceWebSocket();
-            updatePortfolioCalculations();
+            recalculateCompoundedBalance();
             setInterval(fetchMarketRate, 10000);
         }
 
