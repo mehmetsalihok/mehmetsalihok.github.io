@@ -66,7 +66,7 @@
                 </nav>
             </div>
 
-            <!-- Sağ: Ticker Satırı -->
+            <!-- Sağ: Sade Ticker Satırı -->
             <div class="flex items-center space-x-3.5 text-xs shrink-0">
                 <div class="flex items-baseline space-x-1.5">
                     <span class="text-slate-400 font-medium text-[10px] tracking-wider uppercase">PORTFÖY:</span>
@@ -114,7 +114,7 @@
 
                 <div class="flex items-center space-x-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="text-slate-400 font-medium text-[10px]">USD:</span>
+                    <span class="text-slate-400 font-medium text-[10px]">TRY:</span>
                     <span id="liveTryRate" class="font-semibold text-emerald-600 tabular-nums">₺--.--</span>
                 </div>
 
@@ -223,7 +223,7 @@
             <div class="space-y-3 text-xs">
                 <div>
                     <label class="block text-slate-600 font-medium mb-1">Coin Sembolü</label>
-                    <input type="text" id="wizardSymbolInput" value="ASTR" placeholder="Örn: ASTR, SOL, PEPE, AVAX" required
+                    <input type="text" id="wizardSymbolInput" value="ASTER" placeholder="Örn: ASTER, SOL, PEPE, AVAX" required
                         class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-500 uppercase">
                 </div>
 
@@ -266,7 +266,7 @@
                 <!-- Sihirbaz Sonuç Kutusu -->
                 <div id="wizardResultCard" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
                     <div class="flex items-center justify-between border-b border-slate-200 pb-2">
-                        <span id="wizardResultSymbol" class="font-bold text-slate-900 text-sm">ASTRUSDT (30m | RSI 7)</span>
+                        <span id="wizardResultSymbol" class="font-bold text-slate-900 text-sm">ASTERUSDT (30m | RSI 7)</span>
                     </div>
 
                     <div class="space-y-2 text-xs pt-1">
@@ -418,6 +418,14 @@
             return '$' + price.toFixed(6);
         }
 
+        // 🎯 BİNANCE SEMBOL NORMALİZE EDİCİSİ (ASTERUSDT -> ASTRUSDT)
+        function getBinanceSymbol(sym) {
+            if (!sym) return '';
+            const upper = sym.toUpperCase();
+            if (upper === 'ASTERUSDT' || upper === 'ASTER') return 'ASTRUSDT';
+            return upper;
+        }
+
         function intervalToMilliseconds(interval) {
             switch (interval) {
                 case "5m": return 5 * 60 * 1000;
@@ -495,7 +503,7 @@
             return (totalMonthPnl + 0.001) >= coin.monthlyCap;
         }
 
-        // 🎯 1. SLOT ÇAKIŞMA FİLTRESİ (AŞAMA 1)
+        // 🎯 1. SLOT ÇAKIŞMA FİLTRESİ
         function filterTradesBySlotCapacity(trades, maxSlots) {
             if (!maxSlots || maxSlots <= 0 || !Array.isArray(trades) || trades.length === 0) return trades || [];
 
@@ -556,7 +564,7 @@
         function refreshCoinMonthlyStats(coin) {
             const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
             const currentYear = 2026;
-            const currentMonthIdx = 8; // Eylül (0-indexed 8)
+            const currentMonthIdx = 8; // Eylül
 
             const monthlyMap = {};
             for (let m = 0; m <= currentMonthIdx; m++) {
@@ -572,7 +580,6 @@
                 };
             }
 
-            // A) Coinin bağımsız strateji sinyalleri
             if (coin.simAllTrades) {
                 coin.simAllTrades.forEach(t => {
                     const mKey = t.exitMonth;
@@ -597,7 +604,6 @@
                 });
             }
 
-            // B) Coinin portföy slotuna fiilen girip gerçekleşen işlemleri
             const executedForCoin = terminalState.globalExecutedTrades.filter(t => t.symbol === coin.symbol);
             executedForCoin.forEach(et => {
                 const mKey = et.exitMonth;
@@ -875,14 +881,25 @@
             }
         }
 
-        // 🎯 6. KESİNTİSİZ GLOBAL WEBSOCKET MOTORU (!miniTicker@arr)
+        // 🎯 6. GÜVENLİ WEBSOCKET MOTORU (Çakışma ve invalid stream'ler engellendi)
         function initBinanceWebSocket() {
             if (binanceWs) {
                 try { binanceWs.close(); } catch(e) {}
             }
 
-            // Global All-Market akışı: Asla stream çakışması yapmaz, kopmaz
-            const streamUrl = `wss://stream.binance.com:9443/ws/!miniTicker@arr`;
+            if (terminalState.coins.length === 0) return;
+
+            // Stream isimlerini tekilleştir ve normalize et
+            const streamSet = new Set();
+            terminalState.coins.forEach(c => {
+                const bSym = getBinanceSymbol(c.symbol).toLowerCase();
+                streamSet.add(`${bSym}@miniTicker`);
+            });
+            streamSet.add('btcusdt@miniTicker'); // BTC her zaman dinlenir
+
+            const streamsParam = Array.from(streamSet).join('/');
+            const streamUrl = `wss://stream.binance.com:9443/stream?streams=${streamsParam}`;
+
             binanceWs = new WebSocket(streamUrl);
 
             binanceWs.onopen = () => {
@@ -893,84 +910,63 @@
 
             binanceWs.onmessage = (event) => {
                 try {
-                    const tickers = JSON.parse(event.data);
-                    if (!Array.isArray(tickers)) return;
+                    const msg = JSON.parse(event.data);
+                    if (!msg || !msg.data) return;
+                    const d = msg.data;
+                    const sym = d.s;
+                    const liveClose = parseFloat(d.c);
 
-                    const tickerMap = new Map();
-                    for (let i = 0; i < tickers.length; i++) {
-                        tickerMap.set(tickers[i].s, tickers[i]);
+                    if (sym === 'BTCUSDT') {
+                        terminalState.btcPrice = liveClose;
+                        elLiveBtc.textContent = fmtUsd(liveClose);
                     }
 
-                    // BTC Fiyatı
-                    const btcData = tickerMap.get('BTCUSDT');
-                    if (btcData) {
-                        const btcClose = parseFloat(btcData.c);
-                        if (btcClose > 0) {
-                            terminalState.btcPrice = btcClose;
-                            elLiveBtc.textContent = fmtUsd(btcClose);
-                        }
-                    }
+                    const coin = terminalState.coins.find(c => c.symbol === sym || getBinanceSymbol(c.symbol) === sym);
+                    if (coin && liveClose > 0) {
+                        const nowMs = Date.now();
+                        const intervalMs = intervalToMilliseconds(coin.interval);
 
-                    // Takip edilen coinler
-                    const nowMs = Date.now();
-                    let anyUpdated = false;
+                        coin.prevPrice = coin.price > 0 ? coin.price : liveClose;
+                        coin.price = liveClose;
+                        coin.high24 = parseFloat(d.h);
+                        coin.low24 = parseFloat(d.l);
 
-                    for (const coin of terminalState.coins) {
-                        let d = tickerMap.get(coin.symbol);
-                        if (!d && coin.symbol === 'ASTERUSDT') d = tickerMap.get('ASTRUSDT');
+                        let isConfirmedBarClose = false;
 
-                        if (d) {
-                            const liveClose = parseFloat(d.c);
-                            if (liveClose > 0) {
-                                anyUpdated = true;
-                                const intervalMs = intervalToMilliseconds(coin.interval);
+                        if (coin.rawCandles && coin.rawCandles.length > 0) {
+                            let lastCandle = coin.rawCandles[coin.rawCandles.length - 1];
 
-                                coin.prevPrice = coin.price > 0 ? coin.price : liveClose;
-                                coin.price = liveClose;
-                                coin.high24 = parseFloat(d.h);
-                                coin.low24 = parseFloat(d.l);
+                            while (nowMs >= (lastCandle.time + intervalMs)) {
+                                isConfirmedBarClose = true;
+                                lastCandle.close = liveClose;
+                                if (liveClose > lastCandle.high) lastCandle.high = liveClose;
+                                if (liveClose < lastCandle.low) lastCandle.low = liveClose;
 
-                                let isConfirmedBarClose = false;
-
-                                if (coin.rawCandles && coin.rawCandles.length > 0) {
-                                    let lastCandle = coin.rawCandles[coin.rawCandles.length - 1];
-
-                                    while (nowMs >= (lastCandle.time + intervalMs)) {
-                                        isConfirmedBarClose = true;
-                                        lastCandle.close = liveClose;
-                                        if (liveClose > lastCandle.high) lastCandle.high = liveClose;
-                                        if (liveClose < lastCandle.low) lastCandle.low = liveClose;
-
-                                        const nextStartTime = lastCandle.time + intervalMs;
-                                        const newCandle = {
-                                            time: nextStartTime,
-                                            open: liveClose,
-                                            high: liveClose,
-                                            low: liveClose,
-                                            close: liveClose,
-                                            monthKey: new Date(nextStartTime).toISOString().slice(0, 7)
-                                        };
-                                        coin.rawCandles.push(newCandle);
-                                        coin.candles.push(liveClose);
-                                        lastCandle = newCandle;
-                                    }
-
-                                    lastCandle.close = liveClose;
-                                    if (liveClose > lastCandle.high) lastCandle.high = liveClose;
-                                    if (liveClose < lastCandle.low) lastCandle.low = liveClose;
-                                    coin.candles[coin.candles.length - 1] = liveClose;
-
-                                    coin.prevRsi = coin.rsi;
-                                    coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
-                                }
-
-                                evaluateTradingRules(coin, liveClose, isConfirmedBarClose);
-                                renderSingleCard(coin);
+                                const nextStartTime = lastCandle.time + intervalMs;
+                                const newCandle = {
+                                    time: nextStartTime,
+                                    open: liveClose,
+                                    high: liveClose,
+                                    low: liveClose,
+                                    close: liveClose,
+                                    monthKey: new Date(nextStartTime).toISOString().slice(0, 7)
+                                };
+                                coin.rawCandles.push(newCandle);
+                                coin.candles.push(liveClose);
+                                lastCandle = newCandle;
                             }
-                        }
-                    }
 
-                    if (anyUpdated) {
+                            lastCandle.close = liveClose;
+                            if (liveClose > lastCandle.high) lastCandle.high = liveClose;
+                            if (liveClose < lastCandle.low) lastCandle.low = liveClose;
+                            coin.candles[coin.candles.length - 1] = liveClose;
+
+                            coin.prevRsi = coin.rsi;
+                            coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+                        }
+
+                        evaluateTradingRules(coin, liveClose, isConfirmedBarClose);
+                        renderSingleCard(coin);
                         recalculateCompoundedBalance();
                     }
                 } catch (e) {}
@@ -990,30 +986,30 @@
             };
         }
 
-        // 🎯 7. AÇILIŞTA ANINDA FİYAT GETİREN REST YOKLAMA
-        async function fetchLivePricesRest() {
-            try {
-                const res = await fetch('https://api.binance.com/api/v3/ticker/price');
-                if (!res.ok) return;
-                const data = await res.json();
-                const map = new Map(data.map(item => [item.symbol, parseFloat(item.price)]));
-
-                if (map.has('BTCUSDT')) {
-                    terminalState.btcPrice = map.get('BTCUSDT');
-                    elLiveBtc.textContent = fmtUsd(terminalState.btcPrice);
-                }
-
-                for (const coin of terminalState.coins) {
-                    let p = map.get(coin.symbol);
-                    if (!p && coin.symbol === 'ASTERUSDT') p = map.get('ASTRUSDT');
-                    if (p && p > 0) {
-                        coin.prevPrice = coin.price > 0 ? coin.price : p;
-                        coin.price = p;
-                        renderSingleCard(coin);
+        // 🎯 7. REST ANLIK FİYAT ÇEKİCİ (WS el sıkışırken fiyatların anında dolması için)
+        async function fetchImmediatePrices() {
+            const symbolsToFetch = [...new Set([...terminalState.coins.map(c => getBinanceSymbol(c.symbol)), 'BTCUSDT'])];
+            for (const sym of symbolsToFetch) {
+                try {
+                    const res = await fetch(`https://api.binance.com/api/v3/ticker/price?symbol=${sym}`);
+                    if (!res.ok) continue;
+                    const data = await res.json();
+                    const p = parseFloat(data.price);
+                    if (p > 0) {
+                        if (sym === 'BTCUSDT') {
+                            terminalState.btcPrice = p;
+                            elLiveBtc.textContent = fmtUsd(p);
+                        }
+                        const coin = terminalState.coins.find(c => c.symbol === sym || getBinanceSymbol(c.symbol) === sym);
+                        if (coin && coin.price === 0) {
+                            coin.prevPrice = p;
+                            coin.price = p;
+                            renderSingleCard(coin);
+                        }
                     }
-                }
-                recalculateCompoundedBalance();
-            } catch (e) {}
+                } catch (e) {}
+            }
+            recalculateCompoundedBalance();
         }
 
         function openPosition(coin, customPrice = null) {
@@ -1086,7 +1082,7 @@
             recalculateCompoundedBalance();
         }
 
-        // 🎯 8. MALİYET / ALIŞ FİYATI REVİZE İŞLEMLERİ (AŞAMA 2)
+        // 🎯 8. MALİYET / ALIŞ FİYATI REVİZE MODAL İŞLEMLERİ (AŞAMA 2)
         function openEditEntryModal(positionId) {
             const pos = terminalState.activePositions.find(p => p.id === positionId);
             if (!pos) return;
@@ -1240,23 +1236,18 @@
             `).join('');
         }
 
-        // 🎯 9. AKILLI MUM ÇEKİCİ (ASTER -> ASTR KONTROLLÜ)
+        // 🎯 9. TARİHSEL MUM ÇEKİCİ (AĞUSTOS'A KADAR TÜM 2026)
         async function fetchInitialCandles(coin) {
             try {
-                let fetchSym = coin.symbol;
-                // Binance'te ASTER yoksa ASTR olarak dene
-                if (fetchSym === 'ASTERUSDT') {
-                    fetchSym = 'ASTRUSDT';
-                }
-
+                const bSym = getBinanceSymbol(coin.symbol);
                 let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
                 const endTime = Date.now();
                 let all = [];
                 let pageCount = 0;
 
-                while (currentStart < endTime && pageCount < 25) {
+                while (currentStart < endTime && pageCount < 30) {
                     pageCount++;
-                    const url = `https://api.binance.com/api/v3/klines?symbol=${fetchSym}&interval=${coin.interval}&limit=1000&startTime=${currentStart}`;
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${bSym}&interval=${coin.interval}&limit=1000&startTime=${currentStart}`;
                     const res = await fetch(url);
                     if (!res.ok) break;
                     const batch = await res.json();
@@ -1743,12 +1734,12 @@
         async function runWizardForNewCoin() {
             let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
             if (!rawSym) {
-                alert("Lütfen bir coin sembolü girin (Örn: ASTR, SOL, PEPE)");
+                alert("Lütfen bir coin sembolü girin (Örn: ASTER, SOL, PEPE)");
                 return;
             }
-            if (rawSym === 'ASTER') rawSym = 'ASTR';
             if (!rawSym.endsWith('USDT')) rawSym += 'USDT';
 
+            const binanceSym = getBinanceSymbol(rawSym);
             const interval = document.getElementById('wizardIntervalInput').value;
             const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value) || 7;
             const profitTarget = parseFloat(document.getElementById('wizardProfitInput').value) || 0.7;
@@ -1765,10 +1756,10 @@
                 let allCandles = [];
                 let pageCount = 0;
 
-                while (currentStart < endTime && pageCount < 25) {
+                while (currentStart < endTime && pageCount < 30) {
                     pageCount++;
                     wizardLoadingStatus.textContent = `2026 Verisi İndiriliyor: ${allCandles.length} mum çekildi...`;
-                    const url = `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000&startTime=${currentStart}`;
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${binanceSym}&interval=${interval}&limit=1000&startTime=${currentStart}`;
                     const res = await fetch(url);
                     if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
 
@@ -1952,6 +1943,7 @@
                 };
                 terminalState.coins.push(newCoin);
                 saveCoins();
+                initBinanceWebSocket();
                 await fetchInitialCandles(newCoin);
             }
 
@@ -1969,6 +1961,7 @@
             savePending();
             const el = document.getElementById(`card-${id}`);
             if (el) el.remove();
+            initBinanceWebSocket();
             recalculateCompoundedBalance();
         }
 
@@ -2051,9 +2044,11 @@
                 try { 
                     const parsed = JSON.parse(savedCoins);
                     terminalState.coins = parsed.map(c => {
-                        // Eğer eski ASTERUSDT kaldıysa ASTRUSDT ile normalize et
-                        if (c.symbol === 'ASTERUSDT') c.symbol = 'ASTRUSDT';
-                        return c;
+                        return {
+                            ...c,
+                            symbol: c.symbol || 'ASTRUSDT',
+                            displaySymbol: c.displaySymbol || 'ASTR'
+                        };
                     });
                 } catch (e) { terminalState.coins = []; }
             }
@@ -2116,21 +2111,21 @@
             elClosedTradesCount.textContent = `${terminalState.closedTrades.length}`;
         }
 
-        // 🎯 11. HIZLI VE KESİNTİSİZ BAŞLATICI
+        // 🎯 11. SIRASIZ, HIZLI VE KESİNTİSİZ MOTOR BAŞLATICI
         async function startEngine() {
             loadStorage();
 
-            // 1. Kartları ve listeleri gecikmesiz ilk anda çiz
+            // 1. Kartları ve panelleri beklemeden HEMEN ekrana çiz
             terminalState.coins.forEach(c => renderSingleCard(c));
             renderActivePositionsList();
             renderPendingSignalsList();
 
-            // 2. Fiyatları anında getiren REST ve kur yoklamasını çalıştır
+            // 2. Fiyatları ilk 200 ms içinde REST üzerinden hemen getir
             fetchMarketRate();
-            fetchLivePricesRest();
+            fetchImmediatePrices();
             setInterval(fetchMarketRate, 10000);
 
-            // 3. Kesintisiz WebSocket motorunu bağla
+            // 3. WebSocket'i gecikmesiz bağla (Hemen yeşile döner)
             initBinanceWebSocket();
 
             // 4. Arka planda 2026 mumlarını paralel indir (UI'ı asla dondurmaz)
