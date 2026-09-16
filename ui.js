@@ -1,4 +1,3 @@
-// Global State Köprüsü (Yükleme sırasından bağımsız çalışır)
 window.terminalState = window.terminalState || {
     portfolioBaseUsd: 1000.00,
     usdtTryRate: 36.50,
