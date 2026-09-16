@@ -14,6 +14,12 @@ window.terminalState = window.terminalState || {
 const terminalState = window.terminalState;
 
 let binanceWs = null;
+let wsEndpointIndex = 0;
+// Port 9443 engeline takılmayan standart 443 portlu WebSocket uçları
+const WS_ENDPOINTS = [
+    'wss://stream.binance.com/stream?streams=',
+    'wss://data-stream.binance.vision/stream?streams='
+];
 
 function calculateRSIHistory(prices, period = 14) {
     const rsiValues = new Array(prices.length).fill(null);
@@ -274,53 +280,120 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
 
 async function fetchInitialCandles(coin) {
     try {
-        let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
-        const endTime = Date.now();
-        let all = [];
+        const endpoints = [
+            `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000`,
+            `https://data-api.binance.vision/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000`
+        ];
 
-        // Hızlı açılış için son 1500 mum odaklı çekim yapılır
-        const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000`;
-        const res = await fetch(url);
-        if (res.ok) {
-            const batch = await res.json();
-            for (const item of batch) {
-                all.push({
-                    time: item[0],
-                    open: parseFloat(item[1]),
-                    high: parseFloat(item[2]),
-                    low: parseFloat(item[3]),
-                    close: parseFloat(item[4]),
-                    monthKey: new Date(item[0]).toISOString().slice(0, 7)
-                });
+        let batch = null;
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep);
+                if (res.ok) {
+                    batch = await res.json();
+                    if (batch && batch.length > 0) break;
+                }
+            } catch (e) {}
+        }
+
+        if (batch && batch.length > 0) {
+            const all = batch.map(item => ({
+                time: item[0],
+                open: parseFloat(item[1]),
+                high: parseFloat(item[2]),
+                low: parseFloat(item[3]),
+                close: parseFloat(item[4]),
+                monthKey: new Date(item[0]).toISOString().slice(0, 7)
+            }));
+
+            coin.rawCandles = all;
+            coin.candles = all.map(c => c.close);
+            coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+            coin.prevRsi = coin.rsi;
+
+            const latest = coin.candles[coin.candles.length - 1];
+            if (latest > 0 && (!coin.price || coin.price === 0)) {
+                coin.prevPrice = latest;
+                coin.price = latest;
             }
+
+            runCardBacktest(coin);
         }
-
-        coin.rawCandles = all;
-        coin.candles = all.map(c => c.close);
-        coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
-        coin.prevRsi = coin.rsi;
-
-        const latest = coin.candles[coin.candles.length - 1];
-        if (latest > 0 && (coin.price === 0 || !coin.price)) {
-            coin.prevPrice = latest;
-            coin.price = latest;
-        }
-
-        runCardBacktest(coin);
     } catch (err) {
         console.warn(`Mum çekilemedi [${coin.symbol}]:`, err.message);
     }
     renderSingleCard(coin);
 }
 
+// REST Fiyat Yedekleme (WS bağlantısı gecikse bile kartları hemen canlandırır)
+async function fetchLiveTickerFallback() {
+    try {
+        const endpoints = [
+            'https://api.binance.com/api/v3/ticker/24hr',
+            'https://data-api.binance.vision/api/v3/ticker/24hr'
+        ];
+
+        let data = null;
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep);
+                if (res.ok) {
+                    data = await res.json();
+                    if (data && data.length > 0) break;
+                }
+            } catch (e) {}
+        }
+
+        if (!data) return;
+
+        const priceMap = {};
+        data.forEach(item => {
+            priceMap[item.symbol] = {
+                price: parseFloat(item.lastPrice),
+                high: parseFloat(item.highPrice),
+                low: parseFloat(item.lowPrice)
+            };
+        });
+
+        if (priceMap['BTCUSDT']) {
+            terminalState.btcPrice = priceMap['BTCUSDT'].price;
+            if (elLiveBtc) elLiveBtc.textContent = fmtUsd(terminalState.btcPrice);
+        }
+
+        terminalState.coins.forEach(coin => {
+            const info = priceMap[coin.symbol];
+            if (info && info.price > 0) {
+                coin.prevPrice = coin.price > 0 ? coin.price : info.price;
+                coin.price = info.price;
+                coin.high24 = info.high;
+                coin.low24 = info.low;
+
+                if (coin.candles && coin.candles.length > 0) {
+                    coin.candles[coin.candles.length - 1] = info.price;
+                    coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+                }
+
+                evaluateTradingRules(coin);
+                renderSingleCard(coin);
+            }
+        });
+
+        updatePortfolioCalculations();
+    } catch (err) {
+        console.warn("REST ticker yedekleme hatası:", err.message);
+    }
+}
+
 function initBinanceWebSocket() {
     if (binanceWs) {
-        try { binanceWs.close(); } catch(e) {}
+        try { 
+            binanceWs.onclose = null;
+            binanceWs.close(); 
+        } catch(e) {}
     }
 
     if (!terminalState.coins || terminalState.coins.length === 0) return;
 
-    // Benzersiz stream isimleri oluşturulur ve BTC otomatik eklenir (çiftleme önlenir)
     const streamSet = new Set();
     streamSet.add('btcusdt@miniTicker');
     terminalState.coins.forEach(c => {
@@ -328,77 +401,97 @@ function initBinanceWebSocket() {
     });
 
     const streamPath = Array.from(streamSet).join('/');
-    const streamUrl = `wss://stream.binance.com:9443/stream?streams=${streamPath}`;
+    const currentEndpoint = WS_ENDPOINTS[wsEndpointIndex % WS_ENDPOINTS.length];
+    const streamUrl = `${currentEndpoint}${streamPath}`;
 
-    binanceWs = new WebSocket(streamUrl);
+    try {
+        binanceWs = new WebSocket(streamUrl);
 
-    binanceWs.onopen = () => {
-        if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-        if (elWsStatusText) {
-            elWsStatusText.className = 'text-emerald-600 font-semibold text-[9px]';
-            elWsStatusText.textContent = 'WS';
-        }
-    };
-
-    binanceWs.onmessage = (event) => {
-        try {
-            const msg = JSON.parse(event.data);
-            if (!msg || !msg.data) return;
-            const d = msg.data;
-            const sym = d.s;
-            const liveClose = parseFloat(d.c);
-
-            if (sym === 'BTCUSDT') {
-                terminalState.btcPrice = liveClose;
-                if (elLiveBtc) elLiveBtc.textContent = fmtUsd(liveClose);
+        binanceWs.onopen = () => {
+            if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+            if (elWsStatusText) {
+                elWsStatusText.className = 'text-emerald-600 font-semibold text-[9px]';
+                elWsStatusText.textContent = 'WS';
             }
+        };
 
-            const coin = terminalState.coins.find(c => c.symbol === sym);
-            if (coin && liveClose > 0) {
-                coin.prevPrice = coin.price > 0 ? coin.price : liveClose;
-                coin.price = liveClose;
-                coin.high24 = parseFloat(d.h);
-                coin.low24 = parseFloat(d.l);
+        binanceWs.onmessage = (event) => {
+            try {
+                const msg = JSON.parse(event.data);
+                if (!msg || !msg.data) return;
+                const d = msg.data;
+                const sym = d.s;
+                const liveClose = parseFloat(d.c);
 
-                if (coin.candles && coin.candles.length > 0) {
-                    coin.candles[coin.candles.length - 1] = liveClose;
-                    coin.prevRsi = coin.rsi;
-                    coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+                if (sym === 'BTCUSDT') {
+                    terminalState.btcPrice = liveClose;
+                    if (elLiveBtc) elLiveBtc.textContent = fmtUsd(liveClose);
                 }
 
-                evaluateTradingRules(coin);
-                renderSingleCard(coin);
-                updatePortfolioCalculations();
+                const coin = terminalState.coins.find(c => c.symbol === sym);
+                if (coin && liveClose > 0) {
+                    coin.prevPrice = coin.price > 0 ? coin.price : liveClose;
+                    coin.price = liveClose;
+                    coin.high24 = parseFloat(d.h);
+                    coin.low24 = parseFloat(d.l);
+
+                    if (coin.candles && coin.candles.length > 0) {
+                        coin.candles[coin.candles.length - 1] = liveClose;
+                        coin.prevRsi = coin.rsi;
+                        coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+                    }
+
+                    evaluateTradingRules(coin);
+                    renderSingleCard(coin);
+                    updatePortfolioCalculations();
+                }
+            } catch (e) {}
+        };
+
+        binanceWs.onerror = () => {
+            wsEndpointIndex++;
+        };
+
+        binanceWs.onclose = () => {
+            if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
+            if (elWsStatusText) {
+                elWsStatusText.className = 'text-amber-600 font-semibold text-[9px]';
+                elWsStatusText.textContent = 'WS..';
             }
-        } catch (e) {}
-    };
-
-    binanceWs.onerror = (e) => {
-        console.warn("WS Hatası:", e);
-    };
-
-    binanceWs.onclose = () => {
-        if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
-        if (elWsStatusText) {
-            elWsStatusText.className = 'text-amber-600 font-semibold text-[9px]';
-            elWsStatusText.textContent = 'WS..';
-        }
-        setTimeout(initBinanceWebSocket, 4000);
-    };
+            setTimeout(initBinanceWebSocket, 3000);
+        };
+    } catch (e) {
+        wsEndpointIndex++;
+        setTimeout(initBinanceWebSocket, 3000);
+    }
 }
 
 async function fetchBinanceSpotSymbols() {
     try {
-        const res = await fetch('https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT');
-        if (!res.ok) return;
-        const data = await res.json();
-        
-        const symbols = data.symbols
-            .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
-            .map(s => s.baseAsset);
-            
-        terminalState.validSymbols = new Set(symbols);
-        if (typeof populateDatalist === 'function') populateDatalist(symbols);
+        const endpoints = [
+            'https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT',
+            'https://data-api.binance.vision/api/v3/exchangeInfo?permissions=SPOT'
+        ];
+
+        let data = null;
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep);
+                if (res.ok) {
+                    data = await res.json();
+                    if (data && data.symbols) break;
+                }
+            } catch (e) {}
+        }
+
+        if (data && data.symbols) {
+            const symbols = data.symbols
+                .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
+                .map(s => s.baseAsset);
+                
+            terminalState.validSymbols = new Set(symbols);
+            if (typeof populateDatalist === 'function') populateDatalist(symbols);
+        }
     } catch (err) {
         console.warn("Sembol listesi alınamadı:", err.message);
     }
@@ -423,11 +516,23 @@ async function runWizardForNewCoin() {
     btn.disabled = true;
 
     try {
-        const url = `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
-        const batch = await res.json();
-        if (!batch || batch.length === 0) throw new Error("Veri boş döndü.");
+        const endpoints = [
+            `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000`,
+            `https://data-api.binance.vision/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000`
+        ];
+
+        let batch = null;
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep);
+                if (res.ok) {
+                    batch = await res.json();
+                    if (batch && batch.length > 0) break;
+                }
+            } catch (e) {}
+        }
+
+        if (!batch || batch.length === 0) throw new Error("Parite verisi alınamadı.");
 
         let allCandles = batch.map(item => ({
             time: item[0],
@@ -523,9 +628,23 @@ async function runWizardForNewCoin() {
 
 async function fetchMarketRate() {
     try {
-        const res = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTTRY');
-        if (res.ok) {
-            const data = await res.json();
+        const endpoints = [
+            'https://api.binance.com/api/v3/ticker/price?symbol=USDTTRY',
+            'https://data-api.binance.vision/api/v3/ticker/price?symbol=USDTTRY'
+        ];
+
+        let data = null;
+        for (const ep of endpoints) {
+            try {
+                const res = await fetch(ep);
+                if (res.ok) {
+                    data = await res.json();
+                    if (data && data.price) break;
+                }
+            } catch (e) {}
+        }
+
+        if (data && data.price) {
             terminalState.usdtTryRate = parseFloat(data.price) || 36.50;
             if (elLiveTry) elLiveTry.textContent = fmtTry(terminalState.usdtTryRate);
             updatePortfolioCalculations();
@@ -536,27 +655,32 @@ async function fetchMarketRate() {
 async function startEngine() {
     loadStorage();
 
-    // 1. Kartları ve paneli beklemeden HEMEN ekrana bas
+    // 1. Kartları hemen DOM'a bas
     terminalState.coins.forEach(c => renderSingleCard(c));
     renderActivePositionsList();
     renderPendingSignalsList();
     renderHistoryTrades();
     updatePortfolioCalculations();
 
-    // 2. Canlı fiyat akışını ve doğrulamayı başlat
-    initBinanceWebSocket();
+    // 2. Canlı fiyatları REST ile HEMEN çek (WebSocket açılana kadar ekran boş kalmaz)
+    await fetchLiveTickerFallback();
     fetchMarketRate();
+
+    // 3. WebSocket ve dinamik doğrulayıcıyı başlat
+    initBinanceWebSocket();
     fetchBinanceSpotSymbols();
     if (typeof setupSymbolLiveValidation === 'function') setupSymbolLiveValidation();
-    setInterval(fetchMarketRate, 10000);
 
-    // 3. Arka planda mum geçmişlerini tamamla
+    // Düzenli fiyat kontrolleri
+    setInterval(fetchMarketRate, 10000);
+    setInterval(fetchLiveTickerFallback, 5000);
+
+    // 4. Arka planda geçmiş mumları tamamla
     for (const coin of terminalState.coins) {
         await fetchInitialCandles(coin);
     }
 }
 
-// DOM yüklenme durumunu garantiye alan tetikleyici
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startEngine);
 } else {
