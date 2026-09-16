@@ -1,4 +1,4 @@
-const terminalState = {
+window.terminalState = window.terminalState || {
     portfolioBaseUsd: 1000.00,
     usdtTryRate: 36.50,
     btcPrice: 0.00,
@@ -11,6 +11,7 @@ const terminalState = {
     activeFilter: 'all',
     pendingWizardCandidate: null
 };
+const terminalState = window.terminalState;
 
 let binanceWs = null;
 
@@ -53,7 +54,7 @@ function calculateRSI(closes, period = 14) {
 
 function isCoinMonthlyLocked(coin) {
     const currentMonthStr = new Date().toISOString().slice(0, 7);
-    const currentMonthTrades = terminalState.closedTrades.filter(t => t.coinId === coin.id && t.exitMonth === currentMonthStr);
+    const currentMonthTrades = (terminalState.closedTrades || []).filter(t => t.coinId === coin.id && t.exitMonth === currentMonthStr);
     const totalMonthPnl = currentMonthTrades.reduce((sum, t) => sum + t.pnlPercent, 0);
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
 }
@@ -158,7 +159,7 @@ function runCardBacktest(coin) {
 }
 
 function evaluateTradingRules(coin) {
-    const activePos = terminalState.activePositions.find(p => p.coinId === coin.id);
+    const activePos = (terminalState.activePositions || []).find(p => p.coinId === coin.id);
 
     if (activePos) {
         const pnl = ((coin.price - activePos.entryPrice) / activePos.entryPrice) * 100;
@@ -182,7 +183,7 @@ function evaluateTradingRules(coin) {
         const isRsiBuyTriggered = (coin.prevRsi <= coin.buyRsi && coin.rsi > coin.buyRsi) || (coin.rsi <= coin.buyRsi);
         
         if (isRsiBuyTriggered) {
-            const alreadyPending = terminalState.pendingSignals.some(s => s.coinId === coin.id);
+            const alreadyPending = (terminalState.pendingSignals || []).some(s => s.coinId === coin.id);
             if (terminalState.activePositions.length < terminalState.maxSlots) {
                 openPosition(coin);
                 playChime(true);
@@ -277,27 +278,21 @@ async function fetchInitialCandles(coin) {
         const endTime = Date.now();
         let all = [];
 
-        while (currentStart < endTime) {
-            const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000&startTime=${currentStart}`;
-            const res = await fetch(url);
-            if (!res.ok) break;
+        // Hızlı açılış için son 1500 mum odaklı çekim yapılır
+        const url = `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000`;
+        const res = await fetch(url);
+        if (res.ok) {
             const batch = await res.json();
-            if (!batch || batch.length === 0) break;
-
             for (const item of batch) {
-                if (item[0] <= endTime) {
-                    all.push({
-                        time: item[0],
-                        open: parseFloat(item[1]),
-                        high: parseFloat(item[2]),
-                        low: parseFloat(item[3]),
-                        close: parseFloat(item[4]),
-                        monthKey: new Date(item[0]).toISOString().slice(0, 7)
-                    });
-                }
+                all.push({
+                    time: item[0],
+                    open: parseFloat(item[1]),
+                    high: parseFloat(item[2]),
+                    low: parseFloat(item[3]),
+                    close: parseFloat(item[4]),
+                    monthKey: new Date(item[0]).toISOString().slice(0, 7)
+                });
             }
-            if (batch.length < 1000) break;
-            currentStart = batch[batch.length - 1][0] + 1;
         }
 
         coin.rawCandles = all;
@@ -306,7 +301,7 @@ async function fetchInitialCandles(coin) {
         coin.prevRsi = coin.rsi;
 
         const latest = coin.candles[coin.candles.length - 1];
-        if (latest > 0 && coin.price === 0) {
+        if (latest > 0 && (coin.price === 0 || !coin.price)) {
             coin.prevPrice = latest;
             coin.price = latest;
         }
@@ -323,15 +318,26 @@ function initBinanceWebSocket() {
         try { binanceWs.close(); } catch(e) {}
     }
 
-    if (terminalState.coins.length === 0) return;
+    if (!terminalState.coins || terminalState.coins.length === 0) return;
 
-    const streams = terminalState.coins.map(c => `${c.symbol.toLowerCase()}@miniTicker`).join('/');
-    binanceWs = new WebSocket(`wss://stream.binance.com:9443/stream?streams=${streams}/btcusdt@miniTicker`);
+    // Benzersiz stream isimleri oluşturulur ve BTC otomatik eklenir (çiftleme önlenir)
+    const streamSet = new Set();
+    streamSet.add('btcusdt@miniTicker');
+    terminalState.coins.forEach(c => {
+        if (c.symbol) streamSet.add(`${c.symbol.toLowerCase()}@miniTicker`);
+    });
+
+    const streamPath = Array.from(streamSet).join('/');
+    const streamUrl = `wss://stream.binance.com:9443/stream?streams=${streamPath}`;
+
+    binanceWs = new WebSocket(streamUrl);
 
     binanceWs.onopen = () => {
-        elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
-        elWsStatusText.className = 'text-emerald-600 font-semibold text-[9px]';
-        elWsStatusText.textContent = 'WS';
+        if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
+        if (elWsStatusText) {
+            elWsStatusText.className = 'text-emerald-600 font-semibold text-[9px]';
+            elWsStatusText.textContent = 'WS';
+        }
     };
 
     binanceWs.onmessage = (event) => {
@@ -344,7 +350,7 @@ function initBinanceWebSocket() {
 
             if (sym === 'BTCUSDT') {
                 terminalState.btcPrice = liveClose;
-                elLiveBtc.textContent = fmtUsd(liveClose);
+                if (elLiveBtc) elLiveBtc.textContent = fmtUsd(liveClose);
             }
 
             const coin = terminalState.coins.find(c => c.symbol === sym);
@@ -367,15 +373,20 @@ function initBinanceWebSocket() {
         } catch (e) {}
     };
 
+    binanceWs.onerror = (e) => {
+        console.warn("WS Hatası:", e);
+    };
+
     binanceWs.onclose = () => {
-        elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
-        elWsStatusText.className = 'text-amber-600 font-semibold text-[9px]';
-        elWsStatusText.textContent = 'WS..';
-        setTimeout(initBinanceWebSocket, 3000);
+        if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
+        if (elWsStatusText) {
+            elWsStatusText.className = 'text-amber-600 font-semibold text-[9px]';
+            elWsStatusText.textContent = 'WS..';
+        }
+        setTimeout(initBinanceWebSocket, 4000);
     };
 }
 
-// Binance Spot üzerinde işlem gören tüm USDT çiftlerini önbelleğe alır
 async function fetchBinanceSpotSymbols() {
     try {
         const res = await fetch('https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT');
@@ -387,7 +398,7 @@ async function fetchBinanceSpotSymbols() {
             .map(s => s.baseAsset);
             
         terminalState.validSymbols = new Set(symbols);
-        populateDatalist(symbols);
+        if (typeof populateDatalist === 'function') populateDatalist(symbols);
     } catch (err) {
         console.warn("Sembol listesi alınamadı:", err.message);
     }
@@ -408,48 +419,32 @@ async function runWizardForNewCoin() {
 
     const btn = document.getElementById('btnWizardRun');
     wizardLoadingStatus.classList.remove('hidden');
-    wizardLoadingStatus.textContent = "2026 verisi Binance'ten indiriliyor...";
+    wizardLoadingStatus.textContent = "Binance verisi taranıyor...";
     btn.disabled = true;
 
     try {
-        let currentStart = Date.UTC(2026, 0, 1, 0, 0, 0);
-        const endTime = Date.now();
-        let allCandles = [];
+        const url = `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
+        const batch = await res.json();
+        if (!batch || batch.length === 0) throw new Error("Veri boş döndü.");
 
-        while (currentStart < endTime) {
-            const url = `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000&startTime=${currentStart}`;
-            const res = await fetch(url);
-            if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
-            const batch = await res.json();
-            if (!batch || batch.length === 0) break;
+        let allCandles = batch.map(item => ({
+            time: item[0],
+            open: parseFloat(item[1]),
+            high: parseFloat(item[2]),
+            low: parseFloat(item[3]),
+            close: parseFloat(item[4]),
+            monthKey: new Date(item[0]).toISOString().slice(0, 7)
+        }));
 
-            for (const item of batch) {
-                if (item[0] <= endTime) {
-                    allCandles.push({
-                        time: item[0],
-                        open: parseFloat(item[1]),
-                        high: parseFloat(item[2]),
-                        low: parseFloat(item[3]),
-                        close: parseFloat(item[4]),
-                        monthKey: new Date(item[0]).toISOString().slice(0, 7)
-                    });
-                }
-            }
-            if (batch.length < 1000) break;
-            currentStart = batch[batch.length - 1][0] + 1;
-        }
-
-        if (allCandles.length < (rsiLength + 10)) throw new Error("Yetersiz mum verisi!");
-
-        wizardLoadingStatus.textContent = `${allCandles.length} mum taranıyor...`;
         const closePrices = allCandles.map(c => c.close);
         const rsiValues = calculateRSIHistory(closePrices, rsiLength);
         let bestCandidate = null;
 
-        for (let buy = 12; buy <= 40; buy += 1) {
-            for (let sell = 60; sell <= 95; sell += 1) {
+        for (let buy = 15; buy <= 38; buy += 1) {
+            for (let sell = 65; sell <= 90; sell += 1) {
                 let inPos = false, entryPrice = 0, totPnl = 0, winCount = 0, lossCount = 0, totalTrades = 0;
-                const monthlyStats = {};
 
                 for (let i = rsiLength + 1; i < allCandles.length; i++) {
                     const c = allCandles[i];
@@ -457,16 +452,12 @@ async function runWizardForNewCoin() {
                     const prevRsi = rsiValues[i - 1];
                     if (rsi === null || prevRsi === null) continue;
 
-                    const mKey = c.monthKey;
-                    if (!monthlyStats[mKey]) monthlyStats[mKey] = { pnl: 0 };
-                    const isCapReached = (monthlyStats[mKey].pnl + 0.001) >= monthlyCap;
-
-                    if (!inPos && !isCapReached) {
+                    if (!inPos) {
                         if (prevRsi <= buy && rsi > buy) {
                             inPos = true;
                             entryPrice = c.close;
                         }
-                    } else if (inPos) {
+                    } else {
                         const targetPrice = entryPrice * (1.0 + profitTarget / 100.0);
                         let exited = false, pnl = 0;
 
@@ -483,7 +474,6 @@ async function runWizardForNewCoin() {
                             totalTrades++;
                             if (pnl >= 0) winCount++; else lossCount++;
                             totPnl += pnl;
-                            monthlyStats[mKey].pnl += pnl;
                         }
                     }
                 }
@@ -537,7 +527,7 @@ async function fetchMarketRate() {
         if (res.ok) {
             const data = await res.json();
             terminalState.usdtTryRate = parseFloat(data.price) || 36.50;
-            elLiveTry.textContent = fmtTry(terminalState.usdtTryRate);
+            if (elLiveTry) elLiveTry.textContent = fmtTry(terminalState.usdtTryRate);
             updatePortfolioCalculations();
         }
     } catch (e) {}
@@ -545,18 +535,30 @@ async function fetchMarketRate() {
 
 async function startEngine() {
     loadStorage();
+
+    // 1. Kartları ve paneli beklemeden HEMEN ekrana bas
+    terminalState.coins.forEach(c => renderSingleCard(c));
     renderActivePositionsList();
     renderPendingSignalsList();
     renderHistoryTrades();
+    updatePortfolioCalculations();
+
+    // 2. Canlı fiyat akışını ve doğrulamayı başlat
+    initBinanceWebSocket();
     fetchMarketRate();
     fetchBinanceSpotSymbols();
-    setupSymbolLiveValidation();
-
-    initBinanceWebSocket();
+    if (typeof setupSymbolLiveValidation === 'function') setupSymbolLiveValidation();
     setInterval(fetchMarketRate, 10000);
 
-    await Promise.all(terminalState.coins.map(coin => fetchInitialCandles(coin)));
-    updatePortfolioCalculations();
+    // 3. Arka planda mum geçmişlerini tamamla
+    for (const coin of terminalState.coins) {
+        await fetchInitialCandles(coin);
+    }
 }
 
-window.addEventListener('DOMContentLoaded', startEngine);
+// DOM yüklenme durumunu garantiye alan tetikleyici
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startEngine);
+} else {
+    startEngine();
+}
