@@ -1,3 +1,19 @@
+// Global State Köprüsü (Yükleme sırasından bağımsız çalışır)
+window.terminalState = window.terminalState || {
+    portfolioBaseUsd: 1000.00,
+    usdtTryRate: 36.50,
+    btcPrice: 0.00,
+    maxSlots: 2,
+    coins: [],
+    validSymbols: new Set(),
+    activePositions: [],
+    pendingSignals: [],
+    closedTrades: [],
+    activeFilter: 'all',
+    pendingWizardCandidate: null
+};
+const terminalState = window.terminalState;
+
 const elCardsGrid = document.getElementById('cardsGrid');
 const elLiveTry = document.getElementById('liveTryRate');
 const elLiveBtc = document.getElementById('liveBtcPrice');
@@ -19,8 +35,8 @@ const addCoinModal = document.getElementById('addCoinModal');
 const wizardResultCard = document.getElementById('wizardResultCard');
 const wizardLoadingStatus = document.getElementById('wizardLoadingStatus');
 
-const fmtUsd = (val) => '$' + Number(val).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const fmtTry = (val) => '₺' + Number(val).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtUsd = (val) => '$' + Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtTry = (val) => '₺' + Number(val || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function formatCryptoPrice(price) {
     if (!price || price <= 0) return "--.--";
@@ -53,8 +69,8 @@ function loadStorage() {
     }
     if (!terminalState.coins || terminalState.coins.length === 0) {
         terminalState.coins = [
-            { id: 'c1', symbol: 'ASTERUSDT', displaySymbol: 'ASTER', interval: '30m', rsiLength: 7, buyRsi: 24, sellRsi: 92, profitTarget: 0.7, monthlyCap: 7.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' },
-            { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 25, sellRsi: 75, profitTarget: 3.5, monthlyCap: 10.5, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' }
+            { id: 'c1', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '30m', rsiLength: 14, buyRsi: 30, sellRsi: 70, profitTarget: 1.5, monthlyCap: 10.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' },
+            { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 28, sellRsi: 72, profitTarget: 2.0, monthlyCap: 8.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' }
         ];
         saveCoins();
     }
@@ -62,7 +78,7 @@ function loadStorage() {
     const savedSlots = localStorage.getItem('kuzgun_max_slots');
     if (savedSlots) {
         terminalState.maxSlots = parseInt(savedSlots) || 2;
-        elSlotSelector.value = terminalState.maxSlots;
+        if (elSlotSelector) elSlotSelector.value = terminalState.maxSlots;
     }
 
     const savedBase = localStorage.getItem('kuzgun_base_usd');
@@ -99,9 +115,10 @@ function changeMaxSlots(newSlots) {
 }
 
 function renderSingleCard(coin) {
+    if (!elCardsGrid) return;
     let cardEl = document.getElementById(`card-${coin.id}`);
-    const isPos = terminalState.activePositions.some(p => p.coinId === coin.id);
-    const isLocked = isCoinMonthlyLocked(coin);
+    const isPos = (terminalState.activePositions || []).some(p => p.coinId === coin.id);
+    const isLocked = typeof isCoinMonthlyLocked === 'function' ? isCoinMonthlyLocked(coin) : false;
 
     if (terminalState.activeFilter === 'position' && !isPos) {
         if (cardEl) cardEl.style.display = 'none';
@@ -273,13 +290,12 @@ function renderSingleCard(coin) {
             <div class="flex flex-col items-end space-y-1">
                 <div class="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg border ${rsiBg} text-xs shadow-sm">
                     <span class="text-[9px] text-slate-500 font-bold tracking-wider">RSI</span>
-                    <span class="font-extrabold tabular-nums ${rsiColor}">${coin.rsi.toFixed(1)}</span>
+                    <span class="font-extrabold tabular-nums ${rsiColor}">${(coin.rsi || 50).toFixed(1)}</span>
                 </div>
                 <span class="text-[9px] font-bold tracking-tight ${rsiColor}">${rsiLabel}</span>
             </div>
         </div>
 
-        <!-- PROFESYONEL RSI BANDI -->
         <div class="space-y-1.5 pt-1.5">
             <div class="flex items-center justify-between text-[9px] font-bold text-slate-500">
                 <span class="flex items-center space-x-1 text-emerald-600"><span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>AL KORİDORU</span></span>
@@ -290,7 +306,7 @@ function renderSingleCard(coin) {
                 <div style="width: ${coin.buyRsi}%" class="bg-emerald-500/25 border-r border-emerald-500/60 h-full"></div>
                 <div style="width: ${Math.max(0, coin.sellRsi - coin.buyRsi)}%" class="bg-slate-100/40 h-full"></div>
                 <div style="width: ${Math.max(0, 100 - coin.sellRsi)}%" class="bg-rose-500/25 border-l border-rose-500/60 h-full"></div>
-                <div class="absolute top-0 bottom-0 w-1 bg-slate-900 shadow-md transition-all duration-300 z-10 -ml-0.5" style="left: ${Math.min(100, Math.max(0, coin.rsi))}%">
+                <div class="absolute top-0 bottom-0 w-1 bg-slate-900 shadow-md transition-all duration-300 z-10 -ml-0.5" style="left: ${Math.min(100, Math.max(0, coin.rsi || 50))}%">
                     <div class="w-2.5 h-1.5 bg-slate-900 rounded-sm -mt-0.5 -ml-[3px]"></div>
                 </div>
             </div>
@@ -349,14 +365,6 @@ function renderSingleCard(coin) {
         elCardsGrid.appendChild(cardEl);
     }
     cardEl.innerHTML = htmlContent;
-
-    setTimeout(() => {
-        const pEl = document.getElementById(`price-${coin.id}`);
-        if (pEl) {
-            pEl.classList.remove('text-emerald-600', 'text-rose-600');
-            pEl.classList.add('text-slate-900');
-        }
-    }, 350);
 }
 
 function updateCardTablesOnly(coin) {
@@ -412,6 +420,7 @@ function updateCardTablesOnly(coin) {
 }
 
 function renderActivePositionsList() {
+    if (!elActivePositionsCountBadge || !elActivePositionsList) return;
     elActivePositionsCountBadge.textContent = `${terminalState.activePositions.length} / ${terminalState.maxSlots} Slot`;
     if (terminalState.activePositions.length === 0) {
         elActivePositionsList.innerHTML = `<div class="py-5 px-3 text-center bg-slate-50/70 border border-dashed border-slate-200/80 rounded-lg"><p class="font-semibold text-slate-700 text-xs">Açık pozisyon yok</p></div>`;
@@ -420,7 +429,7 @@ function renderActivePositionsList() {
 
     elActivePositionsList.innerHTML = terminalState.activePositions.map(pos => {
         const coin = terminalState.coins.find(c => c.id === pos.coinId);
-        const currentPrice = coin ? coin.price : pos.entryPrice;
+        const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
         const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
         const isWin = pnl >= 0;
 
@@ -442,6 +451,7 @@ function renderActivePositionsList() {
 }
 
 function renderPendingSignalsList() {
+    if (!elPendingSignalsCountBadge || !elPendingSignalsList) return;
     elPendingSignalsCountBadge.textContent = `${terminalState.pendingSignals.length} Bekleyen`;
     if (terminalState.pendingSignals.length === 0) {
         elPendingSignalsList.innerHTML = `<div class="py-5 px-3 text-center bg-slate-50/70 border border-dashed border-slate-200/80 rounded-lg"><p class="font-semibold text-slate-700 text-xs">Radar sırası boş</p></div>`;
@@ -451,7 +461,7 @@ function renderPendingSignalsList() {
     elPendingSignalsList.innerHTML = terminalState.pendingSignals.map(item => `
         <div class="bg-amber-50/50 border border-amber-200/80 rounded-lg p-2.5 space-y-2">
             <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-slate-900">${item.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold tabular-nums">RSI: ${item.triggerRsi.toFixed(1)}</span></span>
+                <span class="font-bold text-xs text-slate-900">${item.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 text-amber-800 font-semibold tabular-nums">RSI: ${(item.triggerRsi || 0).toFixed(1)}</span></span>
                 <button onclick="dismissPending('${item.id}')" class="text-slate-400 hover:text-rose-600 text-xs font-semibold">✕</button>
             </div>
             <div class="text-[10px] text-slate-600">Tetiklenme: <strong class="text-slate-900 tabular-nums">${formatCryptoPrice(item.triggerPrice)}</strong></div>
@@ -460,6 +470,7 @@ function renderPendingSignalsList() {
 }
 
 function renderHistoryTrades() {
+    if (!elHistoryTotal || !elHistoryContainer) return;
     elHistoryTotal.textContent = `${terminalState.closedTrades.length} İşlem`;
     if (terminalState.closedTrades.length === 0) {
         elHistoryContainer.innerHTML = `<div class="py-6 text-center text-xs text-slate-400 bg-slate-50/70 border border-dashed border-slate-200/80 rounded-lg"><p class="font-medium text-slate-600">Henüz kapalı işlem kaydı yok.</p></div>`;
@@ -484,7 +495,7 @@ function renderHistoryTrades() {
 
 function updatePortfolioCalculations() {
     let unrealizedPnlUsd = 0;
-    terminalState.activePositions.forEach(p => {
+    (terminalState.activePositions || []).forEach(p => {
         const coin = terminalState.coins.find(c => c.id === p.coinId);
         if (coin && coin.price > 0) {
             unrealizedPnlUsd += p.allocatedUsd * (((coin.price - p.entryPrice) / p.entryPrice));
@@ -495,16 +506,20 @@ function updatePortfolioCalculations() {
     const netGainUsd = currentTotalUsd - 1000.00;
     const netGainPct = (netGainUsd / 1000.00) * 100;
 
-    elPortfolioUsd.textContent = fmtUsd(currentTotalUsd);
-    elNetGainUsd.textContent = `${netGainUsd >= 0 ? '+' : ''}${fmtUsd(netGainUsd)}`;
-    elNetGainUsd.className = `font-bold tabular-nums tracking-tight text-xs ${netGainUsd >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
-    elNetGainPercent.textContent = `%${netGainPct >= 0 ? '+' : ''}${netGainPct.toFixed(2)}`;
-    elNetGainPercent.className = `text-[10px] font-semibold tabular-nums ${netGainPct >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+    if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(currentTotalUsd);
+    if (elNetGainUsd) {
+        elNetGainUsd.textContent = `${netGainUsd >= 0 ? '+' : ''}${fmtUsd(netGainUsd)}`;
+        elNetGainUsd.className = `font-bold tabular-nums tracking-tight text-xs ${netGainUsd >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+    }
+    if (elNetGainPercent) {
+        elNetGainPercent.textContent = `%${netGainPct >= 0 ? '+' : ''}${netGainPct.toFixed(2)}`;
+        elNetGainPercent.className = `text-[10px] font-semibold tabular-nums ${netGainPct >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+    }
 
-    if (terminalState.usdtTryRate > 0) {
+    if (terminalState.usdtTryRate > 0 && elPortfolioTry) {
         elPortfolioTry.textContent = `≈ ${fmtTry(currentTotalUsd * terminalState.usdtTryRate)}`;
     }
-    elSlotCountDisplay.textContent = `${terminalState.activePositions.length}/${terminalState.maxSlots}`;
+    if (elSlotCountDisplay) elSlotCountDisplay.textContent = `${terminalState.activePositions.length}/${terminalState.maxSlots}`;
     renderActivePositionsList();
 }
 
@@ -512,7 +527,7 @@ function toggleCardExpand(coinId) {
     const coin = terminalState.coins.find(c => c.id === coinId);
     if (!coin) return;
     coin.isExpanded = !coin.isExpanded;
-    if (coin.isExpanded && !coin.simMonthlyStats) runCardBacktest(coin);
+    if (coin.isExpanded && !coin.simMonthlyStats && typeof runCardBacktest === 'function') runCardBacktest(coin);
     saveCoins();
     renderSingleCard(coin);
 }
@@ -541,7 +556,7 @@ function handleLiveParamChange(coinId) {
     coin.monthlyCap = parseFloat(document.getElementById(`input-cap-${coin.id}`).value);
     coin.rsiLength = parseInt(document.getElementById(`input-rsiLen-${coin.id}`).value);
 
-    runCardBacktest(coin);
+    if (typeof runCardBacktest === 'function') runCardBacktest(coin);
     saveCoins();
     updateCardTablesOnly(coin);
 }
@@ -551,8 +566,8 @@ async function handleLiveIntervalChange(coinId) {
     if (!coin) return;
     coin.interval = document.getElementById(`select-interval-${coin.id}`).value;
     saveCoins();
-    await fetchInitialCandles(coin);
-    initBinanceWebSocket();
+    if (typeof fetchInitialCandles === 'function') await fetchInitialCandles(coin);
+    if (typeof initBinanceWebSocket === 'function') initBinanceWebSocket();
 }
 
 function filterCards(type) {
@@ -595,7 +610,7 @@ async function confirmAndAddCoinFromWizard() {
     if (existingIdx !== -1) {
         Object.assign(terminalState.coins[existingIdx], cand, { isExpanded: false, activeSubTab: 'monthly' });
         saveCoins();
-        await fetchInitialCandles(terminalState.coins[existingIdx]);
+        if (typeof fetchInitialCandles === 'function') await fetchInitialCandles(terminalState.coins[existingIdx]);
     } else {
         const newCoin = Object.assign({
             id: 'c_' + Date.now(),
@@ -604,11 +619,12 @@ async function confirmAndAddCoinFromWizard() {
         }, cand);
         terminalState.coins.push(newCoin);
         saveCoins();
-        await fetchInitialCandles(newCoin);
+        renderSingleCard(newCoin);
+        if (typeof fetchInitialCandles === 'function') await fetchInitialCandles(newCoin);
     }
 
     closeAddCoinModal();
-    initBinanceWebSocket();
+    if (typeof initBinanceWebSocket === 'function') initBinanceWebSocket();
     updatePortfolioCalculations();
     playChime(true);
 }
@@ -622,7 +638,7 @@ function deleteCoinCard(id) {
     savePending();
     const el = document.getElementById(`card-${id}`);
     if (el) el.remove();
-    initBinanceWebSocket();
+    if (typeof initBinanceWebSocket === 'function') initBinanceWebSocket();
     updatePortfolioCalculations();
 }
 
@@ -640,7 +656,7 @@ function forceEnterFromPending(pendingId) {
     if (idx === -1) return;
     const pending = terminalState.pendingSignals[idx];
     const coin = terminalState.coins.find(c => c.id === pending.coinId);
-    if (coin && !isCoinMonthlyLocked(coin)) {
+    if (coin && typeof isCoinMonthlyLocked === 'function' && !isCoinMonthlyLocked(coin)) {
         terminalState.pendingSignals.splice(idx, 1);
         savePending();
         openPosition(coin);
@@ -653,14 +669,12 @@ function dismissPending(pendingId) {
     renderPendingSignalsList();
 }
 
-// Otomatik tamamlama için Datalist'i Binance coinleriyle doldurur
 function populateDatalist(symbols) {
     const datalist = document.getElementById('coinSuggestions');
     if (!datalist) return;
     datalist.innerHTML = symbols.map(sym => `<option value="${sym}">`).join('');
 }
 
-// Sembol kutusunu siz yazdıkça canlı kontrol eden rozet mekanizması
 function setupSymbolLiveValidation() {
     const input = document.getElementById('wizardSymbolInput');
     const status = document.getElementById('wizardSymbolStatus');
