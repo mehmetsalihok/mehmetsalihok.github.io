@@ -652,3 +652,47 @@ function dismissPending(pendingId) {
     savePending();
     renderPendingSignalsList();
 }
+
+// Datalist'i Binance coinleri ile doldurur
+function populateDatalist(symbols) {
+    const datalist = document.getElementById('coinSuggestions');
+    if (!datalist) return;
+    datalist.innerHTML = symbols.map(sym => `<option value="${sym}">`).join('');
+}
+
+// Kullanıcı harf yazdıkça anında doğrulama yapar
+function setupSymbolLiveValidation() {
+    const input = document.getElementById('wizardSymbolInput');
+    const status = document.getElementById('wizardSymbolStatus');
+    const btn = document.getElementById('btnWizardRun');
+    if (!input || !status) return;
+
+    input.addEventListener('input', () => {
+        let val = input.value.trim().toUpperCase().replace('USDT', '');
+        
+        if (!val) {
+            status.className = "mt-1 text-[11px] text-slate-400 font-medium";
+            status.textContent = "Bir sembol giriniz...";
+            if (btn) btn.disabled = true;
+            return;
+        }
+
+        if (terminalState.validSymbols.size > 0) {
+            if (terminalState.validSymbols.has(val)) {
+                status.className = "mt-1 flex items-center space-x-1 text-[11px] font-semibold text-emerald-600";
+                status.innerHTML = `<span>✓ ${val}USDT geçerli (Binance Spot)</span>`;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                status.className = "mt-1 flex items-center space-x-1 text-[11px] font-semibold text-rose-500";
+                status.innerHTML = `<span>✕ "${val}USDT" paritesi Binance'te bulunamadı</span>`;
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+    });
+}
