@@ -1,4 +1,5 @@
-window.terminalState = window.terminalState || {
+// Global State Tanımı (SyntaxError önleyici 'var' kullanımı)
+var terminalState = window.terminalState = window.terminalState || {
     portfolioBaseUsd: 1000.00,
     usdtTryRate: 36.50,
     btcPrice: 0.00,
@@ -11,7 +12,6 @@ window.terminalState = window.terminalState || {
     activeFilter: 'all',
     pendingWizardCandidate: null
 };
-const terminalState = window.terminalState;
 
 const elCardsGrid = document.getElementById('cardsGrid');
 const elLiveTry = document.getElementById('liveTryRate');
