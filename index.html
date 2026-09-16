@@ -34,7 +34,7 @@
 </head>
 <body class="bg-slate-100/70 text-slate-800 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col">
 
-    <!-- ÜST KONSOL & METRİK ÇUBUĞU -->
+    <!-- 1️⃣ ÜST KONSOL & METRİK ÇUBUĞU -->
     <header class="border-b border-slate-200/80 bg-white/95 backdrop-blur sticky top-0 z-40">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
             
@@ -117,7 +117,7 @@
         </div>
     </header>
 
-    <!-- ANA ÇALIŞMA ALANI -->
+    <!-- 2️⃣ ANA ÇALIŞMA ALANI -->
     <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-5">
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
             
@@ -194,7 +194,7 @@
         </div>
     </main>
 
-    <!-- SİHİRBAZ / AYARLAR MODALI -->
+    <!-- 3️⃣ SİHİRBAZ / AYARLAR MODALI -->
     <div id="addCoinModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -209,10 +209,17 @@
             </div>
 
             <div class="space-y-3 text-xs">
+                <!-- Otomatik Tamamlama & Canlı Doğrulama Destekli Sembol Alanı -->
                 <div>
                     <label class="block text-slate-600 font-medium mb-1">Coin Sembolü</label>
-                    <input type="text" id="wizardSymbolInput" value="ASTER" placeholder="Örn: ASTER, SOL, PEPE" required
-                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-500 uppercase">
+                    <div class="relative">
+                        <input type="text" id="wizardSymbolInput" value="ASTER" placeholder="Örn: BTC, SOL, PEPE, AVAX" autocomplete="off" list="coinSuggestions" required
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-500 uppercase">
+                        <datalist id="coinSuggestions"></datalist>
+                    </div>
+                    <div id="wizardSymbolStatus" class="mt-1 flex items-center space-x-1 text-[11px] font-semibold text-emerald-600">
+                        <span>✓ Geçerli Binance Spot paritesi</span>
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -298,7 +305,7 @@
         </div>
     </div>
 
-    <!-- Modüler Script Yüklemesi -->
+    <!-- 4️⃣ MODÜLER JAVASCRIPT BAĞLANTILARI -->
     <script src="ui.js"></script>
     <script src="engine.js"></script>
 </body>
