@@ -653,14 +653,14 @@ function dismissPending(pendingId) {
     renderPendingSignalsList();
 }
 
-// Datalist'i Binance coinleri ile doldurur
+// Otomatik tamamlama için Datalist'i Binance coinleriyle doldurur
 function populateDatalist(symbols) {
     const datalist = document.getElementById('coinSuggestions');
     if (!datalist) return;
     datalist.innerHTML = symbols.map(sym => `<option value="${sym}">`).join('');
 }
 
-// Kullanıcı harf yazdıkça anında doğrulama yapar
+// Sembol kutusunu siz yazdıkça canlı kontrol eden rozet mekanizması
 function setupSymbolLiveValidation() {
     const input = document.getElementById('wizardSymbolInput');
     const status = document.getElementById('wizardSymbolStatus');
@@ -677,7 +677,7 @@ function setupSymbolLiveValidation() {
             return;
         }
 
-        if (terminalState.validSymbols.size > 0) {
+        if (terminalState.validSymbols && terminalState.validSymbols.size > 0) {
             if (terminalState.validSymbols.has(val)) {
                 status.className = "mt-1 flex items-center space-x-1 text-[11px] font-semibold text-emerald-600";
                 status.innerHTML = `<span>✓ ${val}USDT geçerli (Binance Spot)</span>`;
