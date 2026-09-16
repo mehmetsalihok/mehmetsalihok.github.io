@@ -539,3 +539,53 @@ async function startEngine() {
 }
 
 window.addEventListener('DOMContentLoaded', startEngine);
+
+// 1. terminalState içine validSymbols ekleyin:
+const terminalState = {
+    portfolioBaseUsd: 1000.00,
+    usdtTryRate: 36.50,
+    btcPrice: 0.00,
+    maxSlots: 2,
+    coins: [],
+    validSymbols: new Set(), // <-- EKLENDİ
+    activePositions: [],
+    pendingSignals: [],
+    closedTrades: [],
+    activeFilter: 'all',
+    pendingWizardCandidate: null
+};
+
+// 2. Binance'ten tüm aktif USDT paritelerini tek seferde çeken fonksiyon (engine.js içine ekleyin):
+async function fetchBinanceSpotSymbols() {
+    try {
+        const res = await fetch('https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const symbols = data.symbols
+            .filter(s => s.quoteAsset === 'USDT' && s.status === 'TRADING')
+            .map(s => s.baseAsset);
+            
+        terminalState.validSymbols = new Set(symbols);
+        populateDatalist(symbols);
+    } catch (err) {
+        console.warn("Sembol listesi alınamadı:", err.message);
+    }
+}
+
+// 3. startEngine() fonksiyonunun içine fetchBinanceSpotSymbols()'ı ekleyin:
+async function startEngine() {
+    loadStorage();
+    renderActivePositionsList();
+    renderPendingSignalsList();
+    renderHistoryTrades();
+    fetchMarketRate();
+    fetchBinanceSpotSymbols(); // <-- BURAYA EKLEYİN
+    setupSymbolLiveValidation(); // <-- BURAYA EKLEYİN
+
+    initBinanceWebSocket();
+    setInterval(fetchMarketRate, 10000);
+
+    await Promise.all(terminalState.coins.map(coin => fetchInitialCandles(coin)));
+    updatePortfolioCalculations();
+}
