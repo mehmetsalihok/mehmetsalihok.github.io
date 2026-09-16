@@ -1,211 +1,305 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CODEMSO | Terminal Login</title>
-  <style>
-    :root {
-      --bg-color: #f8fafc;
-      --card-bg: #ffffff;
-      --text-color: #0f172a;
-      --text-muted: #64748b;
-      --border-color: #cbd5e1;
-      --box-bg: #ffffff;
-      --accent-color: #0284c7;
-      --accent-hover: #0369a1;
-      --danger-color: #ef4444;
-    }
-
-    * {
-      box-sizing: border-box;
-      border-radius: 0 !important;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 16px;
-      font-size: 0.72rem;
-    }
-
-    .login-card {
-      background-color: var(--card-bg);
-      border: 1px solid var(--border-color);
-      width: 100%;
-      max-width: 280px;
-      padding: 22px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
-    }
-
-    .login-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      border-bottom: 1px solid var(--border-color);
-      padding-bottom: 14px;
-      gap: 10px;
-    }
-
-    .login-logo {
-      height: 42px;
-      width: auto;
-      object-fit: contain;
-      user-select: none;
-      -webkit-user-drag: none;
-    }
-
-    .brand-name {
-      font-weight: 700;
-      font-size: 0.92rem;
-      letter-spacing: 0.5px;
-      color: var(--text-color);
-    }
-
-    .brand-sub {
-      color: #0284c7;
-      font-size: 0.58rem;
-      font-weight: 600;
-      letter-spacing: 0.5px;
-      display: block;
-      margin-top: 2px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .form-group label {
-      font-size: 0.58rem;
-      color: var(--text-muted);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .form-control {
-      background-color: var(--box-bg);
-      border: 1px solid var(--border-color);
-      color: var(--text-color);
-      padding: 6px 8px;
-      font-size: 0.72rem;
-      font-weight: 400;
-      outline: none;
-      width: 100%;
-      transition: border-color 0.2s;
-    }
-
-    .form-control:focus {
-      border-color: #0284c7;
-    }
-
-    .btn-login {
-      background-color: var(--accent-color);
-      color: #ffffff;
-      border: 1px solid var(--accent-hover);
-      padding: 7px 12px;
-      font-size: 0.68rem;
-      font-weight: 600;
-      cursor: pointer;
-      letter-spacing: 0.5px;
-      margin-top: 4px;
-      transition: background-color 0.2s;
-    }
-
-    .btn-login:hover {
-      background-color: var(--accent-hover);
-    }
-
-    .error-msg {
-      color: var(--danger-color);
-      font-size: 0.60rem;
-      font-weight: 500;
-      display: none;
-      text-align: center;
-      background-color: #fef2f2;
-      padding: 5px;
-      border: 1px solid #fecaca;
-    }
-
-    .footer-info {
-      font-size: 0.55rem;
-      color: var(--text-muted);
-      text-align: center;
-      font-family: monospace;
-      margin-top: 2px;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUZGUN Pro Terminal — Dynamic Cloud Engine</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.015em; }
+        .tabular-nums { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .price-transition { transition: color 0.35s ease-out; }
+    </style>
 </head>
-<body>
+<body class="bg-slate-100/70 text-slate-800 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col">
 
-  <div class="login-card">
-    <div class="login-header">
-      <img src="https://i.hizliresim.com/mes685t.png" alt="Logo" class="login-logo" oncontextmenu="return false;">
-      <div>
-        <div class="brand-name">CODEMSO</div>
-        <span class="brand-sub">TERMINAL ACCESS PORTAL</span>
-      </div>
+    <!-- ÜST KONSOL & METRİK ÇUBUĞU -->
+    <header class="border-b border-slate-200/80 bg-white/95 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
+            
+            <div class="flex items-center space-x-4 shrink-0">
+                <div class="flex items-center space-x-1.5">
+                    <h1 class="font-black text-base tracking-tight text-slate-900 leading-none">KUZGUN</h1>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200 uppercase">PRO</span>
+                </div>
+                <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 pl-4 text-xs font-medium">
+                    <button class="px-2.5 py-1 rounded-md bg-slate-100 text-blue-600 font-semibold">Terminal</button>
+                    <button onclick="openAddCoinModal()" class="px-2.5 py-1 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Sihirbaz</button>
+                </nav>
+            </div>
+
+            <div class="flex items-center space-x-4 text-xs shrink-0">
+                <!-- PORTFÖY -->
+                <div class="flex flex-col justify-center text-left leading-tight">
+                    <span class="text-slate-400 font-medium text-[9px] tracking-wider uppercase">PORTFÖY</span>
+                    <span id="portfolioUsd" class="font-bold text-slate-900 tabular-nums tracking-tight text-xs">$1,000.00</span>
+                    <span id="portfolioTry" class="text-[10px] text-slate-400 tabular-nums font-medium">≈ ₺--.--</span>
+                </div>
+
+                <span class="h-6 w-px bg-slate-200"></span>
+
+                <!-- NET & BİRLEŞİK -->
+                <div class="flex flex-col justify-center text-left leading-tight">
+                    <div class="flex items-baseline space-x-1">
+                        <span class="text-slate-400 font-medium text-[9px] tracking-wider uppercase">NET:</span>
+                        <span id="netGainUsd" class="font-bold text-emerald-600 tabular-nums text-xs">+$0.00</span>
+                    </div>
+                    <div class="flex items-baseline space-x-1">
+                        <span class="text-slate-400 font-medium text-[9px] tracking-wider uppercase">BİRLEŞİK:</span>
+                        <span id="netGainPercent" class="text-[10px] font-semibold text-emerald-600 tabular-nums">%0.00</span>
+                    </div>
+                </div>
+
+                <span class="h-6 w-px bg-slate-200"></span>
+
+                <!-- SLOT -->
+                <div class="flex flex-col justify-center leading-tight">
+                    <span class="text-slate-400 font-medium text-[9px] tracking-wider uppercase">SLOT</span>
+                    <div class="flex items-center space-x-1">
+                        <span id="slotCountDisplay" class="font-bold text-slate-900 tabular-nums text-xs">0/2</span>
+                        <select id="slotSelector" onchange="changeMaxSlots(this.value)" class="bg-transparent text-blue-600 font-bold text-[10px] focus:outline-none cursor-pointer">
+                            <option value="1">1</option>
+                            <option value="2" selected>2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                        </select>
+                    </div>
+                </div>
+
+                <span class="hidden lg:inline-block h-6 w-px bg-slate-200"></span>
+
+                <!-- BTC -->
+                <div class="hidden lg:flex flex-col justify-center leading-tight">
+                    <span class="text-slate-400 font-medium text-[9px]">BTC FİYAT</span>
+                    <span id="liveBtcPrice" class="font-semibold text-slate-700 tabular-nums price-transition text-xs">$---.--</span>
+                </div>
+
+                <span class="h-6 w-px bg-slate-200"></span>
+
+                <!-- USDT/TRY -->
+                <div class="flex flex-col justify-center leading-tight">
+                    <div class="flex items-center space-x-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="text-slate-400 font-medium text-[9px]">USDT/TRY</span>
+                    </div>
+                    <span id="liveTryRate" class="font-semibold text-emerald-600 tabular-nums text-xs">₺--.--</span>
+                </div>
+
+                <span class="hidden sm:inline-block h-6 w-px bg-slate-200"></span>
+
+                <!-- WS DURUMU -->
+                <div class="hidden sm:flex items-center space-x-1">
+                    <span id="wsStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
+                    <span id="wsStatusText" class="text-amber-600 font-semibold text-[10px]">WS</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ANA ÇALIŞMA ALANI -->
+    <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-5">
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+            
+            <!-- SOL ALAN: COIN KARTLARI -->
+            <section class="xl:col-span-9 space-y-3.5">
+                <div class="flex flex-wrap items-center justify-between gap-3 bg-white border border-slate-200/80 p-3 rounded-xl shadow-sm">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-semibold text-slate-400 mr-1">Görünüm:</span>
+                        <button onclick="filterCards('all')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
+                        <button onclick="filterCards('position')" id="btnFilterPos" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Pozisyondakiler</button>
+                        <button onclick="filterCards('locked')" id="btnFilterLocked" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition">Kilitlenenler</button>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                            <span>Yeni Coin Ekle & Optimize Et</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 items-start"></div>
+            </section>
+
+            <!-- SAĞ KONSOL -->
+            <aside class="xl:col-span-3 space-y-3.5">
+                <!-- Canlı Pozisyonlar -->
+                <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="flex h-2 w-2 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                            </span>
+                            <h2 class="text-xs font-semibold tracking-tight text-slate-800">Canlı Pozisyonlar</h2>
+                        </div>
+                        <span id="activePositionsCountBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-100">0 / 2 Slot</span>
+                    </div>
+                    <div id="activePositionsList" class="space-y-2"></div>
+                </div>
+
+                <!-- Sinyal Radarı -->
+                <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="flex h-2 w-2 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                            </span>
+                            <h2 class="text-xs font-semibold tracking-tight text-slate-800">Sinyal Radarı</h2>
+                        </div>
+                        <span id="pendingSignalsCountBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-100">0 Bekleyen</span>
+                    </div>
+                    <div id="pendingSignalsList" class="space-y-2"></div>
+                </div>
+
+                <!-- Kapanan İşlemler Günlüğü -->
+                <div class="bg-white border border-slate-200/80 rounded-xl p-4 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-2 h-2 rounded-full bg-slate-400"></span>
+                            <h2 class="text-xs font-semibold tracking-tight text-slate-800">Kapanan İşlemler Günlüğü</h2>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span id="historyStatsTotal" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">0 İşlem</span>
+                            <button onclick="clearHistory()" class="text-slate-400 hover:text-rose-600 p-0.5 transition" title="Geçmişi Temizle">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="max-h-[360px] overflow-y-auto space-y-2 pr-1" id="historyTradesContainer"></div>
+                </div>
+            </aside>
+        </div>
+    </main>
+
+    <!-- SİHİRBAZ / AYARLAR MODALI -->
+    <div id="addCoinModal" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-xs">⚙️</div>
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-900">Coin & Strateji Optimizatörü</h3>
+                        <p class="text-[11px] text-slate-500">2026 yılı tüm mumları taranarak en kârlı AL/SAT değerleri saptanır.</p>
+                    </div>
+                </div>
+                <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-slate-600 text-sm font-semibold">✕</button>
+            </div>
+
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-600 font-medium mb-1">Coin Sembolü</label>
+                    <input type="text" id="wizardSymbolInput" value="ASTER" placeholder="Örn: ASTER, SOL, PEPE" required
+                        class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-semibold text-slate-900 focus:bg-white focus:outline-none focus:border-blue-500 uppercase">
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-1">Zaman Dilimi</label>
+                        <select id="wizardIntervalInput" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-800 font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+                            <option value="5m">5 Dakika (5m)</option>
+                            <option value="15m">15 Dakika (15m)</option>
+                            <option value="30m" selected>30 Dakika (30m)</option>
+                            <option value="1h">1 Saat (1h)</option>
+                            <option value="4h">4 Saat (4h)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-1">RSI Periyodu</label>
+                        <input type="number" id="wizardRsiLengthInput" value="7" min="2" max="50" required
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-1">Hedef Kâr (%)</label>
+                        <input type="number" step="0.1" id="wizardProfitInput" value="0.7" required
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-slate-900 font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-slate-600 font-medium mb-1">Aylık Kilit Limiti (%)</label>
+                        <input type="number" step="0.1" id="wizardCapInput" value="7.0" required
+                            class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-indigo-600 font-medium focus:bg-white focus:outline-none focus:border-blue-500">
+                    </div>
+                </div>
+
+                <button onclick="runWizardForNewCoin()" id="btnWizardRun" class="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-semibold shadow-sm transition flex items-center justify-center space-x-2">
+                    <span>Parametreleri Doğrula & Taramayı Başlat</span>
+                </button>
+                <p id="wizardLoadingStatus" class="hidden text-center text-[11px] text-blue-600 animate-pulse font-medium"></p>
+
+                <!-- Sihirbaz Sonuç Kutusu -->
+                <div id="wizardResultCard" class="hidden bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <span id="wizardResultSymbol" class="font-bold text-slate-900 text-sm">ASTERUSDT</span>
+                    </div>
+
+                    <div class="space-y-2 text-xs pt-1">
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">Hedef Kâr:</span>
+                            <span id="wizardResultTargetDisplay" class="font-semibold text-emerald-600 tabular-nums"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">Önerilen RSI Al:</span>
+                            <span id="wizardResultBuyRsi" class="font-semibold text-blue-600 text-sm tabular-nums"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">Önerilen RSI Sat:</span>
+                            <span id="wizardResultSellRsi" class="font-semibold text-amber-600 text-sm tabular-nums"></span>
+                        </div>
+                        <div class="border-t border-dashed border-slate-200 my-1"></div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">Başarı Oranı (Win Rate):</span>
+                            <span id="wizardResultWinRate" class="font-semibold text-emerald-600 tabular-nums"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">Kayıp İşlem:</span>
+                            <span id="wizardResultLosses" class="font-semibold tabular-nums"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">Toplam İşlem:</span>
+                            <span id="wizardResultTrades" class="font-bold text-slate-900 text-sm tabular-nums"></span>
+                        </div>
+                        <div class="flex justify-between items-center py-1">
+                            <span class="text-slate-600">Geçmiş Net Kâr:</span>
+                            <span id="wizardResultPnl" class="font-bold text-emerald-600 text-sm tabular-nums"></span>
+                        </div>
+                    </div>
+
+                    <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <form id="login-form" onsubmit="handleLogin(event)">
-      <div class="form-group" style="margin-bottom: 10px;">
-        <label for="username">Username</label>
-        <input type="text" id="username" class="form-control" placeholder="Enter username" required autocomplete="username">
-      </div>
-
-      <div class="form-group" style="margin-bottom: 10px;">
-        <label for="password">Password</label>
-        <input type="password" id="password" class="form-control" placeholder="Enter password" required autocomplete="current-password">
-      </div>
-
-      <div id="error-msg" class="error-msg">Invalid username or password.</div>
-
-      <button type="submit" class="btn-login">LOGIN</button>
-    </form>
-
-    <div class="footer-info">
-      v2.5.0 | Mehmet Salih OK
-    </div>
-  </div>
-
-  <script>
-    const VALID_USERNAME = "salih";
-    const VALID_PASSWORD = "123";
-
-    // Tarayıcıda oturum kayıtlıysa doğrudan terminale geç
-    if (localStorage.getItem('codemso_auth') === 'true') {
-      window.location.href = 'rsi.html';
-    }
-
-    function handleLogin(e) {
-      e.preventDefault();
-
-      const userInput = document.getElementById('username').value.trim();
-      const passInput = document.getElementById('password').value.trim();
-      const errorEl = document.getElementById('error-msg');
-
-      if (userInput === VALID_USERNAME && passInput === VALID_PASSWORD) {
-        localStorage.setItem('codemso_auth', 'true');
-        errorEl.style.display = 'none';
-        window.location.href = 'rsi.html';
-      } else {
-        errorEl.style.display = 'block';
-        document.getElementById('password').value = '';
-      }
-    }
-  </script>
+    <!-- Modüler Script Yüklemesi -->
+    <script src="ui.js"></script>
+    <script src="engine.js"></script>
 </body>
 </html>
