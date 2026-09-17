@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KUZGUN Pro — Coin Karşılaştırma Ligi (RSI 6 vs 7)</title>
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -22,7 +20,6 @@
             }
         }
     </script>
-    <!-- Parlama Önleyici Tema Başlatıcı -->
     <script>
         if (localStorage.getItem('kuzgun_theme') === 'dark' || (!('kuzgun_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -44,7 +41,6 @@
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
-    <!-- ÜST KONSOL -->
     <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40">
         <div class="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -68,13 +64,8 @@
         </div>
     </header>
 
-    <!-- ANA GÖVDE -->
     <main class="max-w-4xl w-full mx-auto px-4 py-6 space-y-5 flex-1">
-
-        <!-- 1️⃣ KONTROL & HAVUZ PANELİ -->
         <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
-            
-            <!-- Havuz Başlığı & Yönetim -->
             <div>
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center space-x-2">
@@ -87,12 +78,9 @@
                         <button onclick="clearPool()" class="text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition font-medium">Temizle</button>
                     </div>
                 </div>
-
-                <!-- Havuzdaki Coin Rozetleri -->
                 <div id="coinChipsContainer" class="flex flex-wrap gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 min-h-[44px]"></div>
             </div>
 
-            <!-- Coin Ekleme Girişi -->
             <div class="flex gap-2">
                 <div class="relative flex-1">
                     <input type="text" id="inputNewCoin" placeholder="Coin Ekle (Örn: INJ, TIA, PEPE)" 
@@ -103,32 +91,28 @@
                 </button>
             </div>
 
-            <!-- Hızlı Ekle Önerileri -->
             <div class="space-y-1.5">
                 <span class="text-[9px] font-bold uppercase text-slate-400 dark:text-slate-500 tracking-wider">HIZLI EKLE:</span>
                 <div id="quickSuggestionsContainer" class="flex flex-wrap gap-1.5"></div>
             </div>
 
             <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">
-                
-                <!-- Zaman Dilimi -->
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">ZAMAN DİLİMİ</label>
                     <div class="grid grid-cols-5 gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl" id="intervalSelector">
                         <button onclick="setIntervalChoice('5m')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="5m">5m</button>
-                        <button onclick="setIntervalChoice('15m')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="15m">15m</button>
-                        <button onclick="setIntervalChoice('30m')" class="py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" data-tf="30m">30m</button>
+                        <button onclick="setIntervalChoice('15m')" class="py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" data-tf="15m">15m</button>
+                        <button onclick="setIntervalChoice('30m')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="30m">30m</button>
                         <button onclick="setIntervalChoice('1h')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="1h">1h</button>
                         <button onclick="setIntervalChoice('4h')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="4h">4h</button>
                     </div>
                 </div>
 
-                <!-- Hedef Kâr & Ay Kilit Multiplier Stepper -->
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between">
                         <div>
                             <span class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">HEDEF KÂR</span>
-                            <span id="txtProfitTarget" class="text-sm font-black tabular-nums text-slate-900 dark:text-white">%0.7</span>
+                            <span id="txtProfitTarget" class="text-sm font-black tabular-nums text-slate-900 dark:text-white">%0.6</span>
                         </div>
                         <div class="flex items-center space-x-1">
                             <button onclick="stepProfit(-0.1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 transition">-</button>
@@ -138,8 +122,8 @@
 
                     <div class="bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between">
                         <div>
-                            <span class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">AY KİLİT (<span id="txtCapMul">3x</span>)</span>
-                            <span id="txtMonthlyCap" class="text-sm font-black tabular-nums text-indigo-600 dark:text-indigo-400">%2.1</span>
+                            <span class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">AY KİLİT (<span id="txtCapMul">6x</span>)</span>
+                            <span id="txtMonthlyCap" class="text-sm font-black tabular-nums text-indigo-600 dark:text-indigo-400">%3.6</span>
                         </div>
                         <div class="flex items-center space-x-1">
                             <button onclick="stepCapMultiplier(-1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 transition">-</button>
@@ -148,13 +132,11 @@
                     </div>
                 </div>
 
-                <!-- Benchmark Başlat Butonu -->
                 <button id="btnRunLeague" onclick="runLeagueBenchmark()" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                     <span>RSI 6 & 7 Stratejilerini Kıyasla (2026 Taraması)</span>
                 </button>
 
-                <!-- İlerleme Çubuğu -->
                 <div id="progressBox" class="hidden space-y-1.5">
                     <div class="flex justify-between text-[11px] font-bold">
                         <span id="progressStatusText" class="text-blue-600 dark:text-blue-400 animate-pulse">Taranıyor...</span>
@@ -167,24 +149,21 @@
             </div>
         </section>
 
-        <!-- 2️⃣ LİG SONUÇ LİSTESİ -->
         <section id="resultsContainer" class="space-y-3.5"></section>
     </main>
 
-    <!-- TOAST BİLDİRİM -->
     <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-emerald-600 text-white px-4 py-2.5 rounded-xl shadow-lg text-xs font-bold flex items-center space-x-2">
         <span>✓</span>
         <span id="toastMsg">Strateji karta eklendi!</span>
     </div>
 
     <script>
-        // --- STATE YÖNETİMİ ---
         const LEAGUE_STATE = {
-            coinPool: ["ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH", "FLOKI"],
+            coinPool: ["SYN", "ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH"],
             suggestedCoins: ["INJ", "TIA", "APT", "RENDER", "OP", "ARB", "PEPE", "SHIB", "FET", "RUNE", "SEI", "DOT", "ADA", "BNB"],
-            selectedInterval: "30m",
-            profitTarget: 0.7,
-            capMultiplier: 3,
+            selectedInterval: "15m",
+            profitTarget: 0.6,
+            capMultiplier: 6,
             isAnalyzing: false,
             candleCache: {},
             results: []
@@ -194,6 +173,16 @@
 
         function getMonthlyCap() {
             return Math.round(LEAGUE_STATE.profitTarget * LEAGUE_STATE.capMultiplier * 10) / 10;
+        }
+
+        // 🎯 Swift DateFormatter ile Birebir Eşitlenmiş Türkiye Saati (UTC+3) Ay ve Gün Çözücü
+        function getTurkeyDateComponents(timestampMs) {
+            const d = new Date(timestampMs);
+            const str = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }); // "YYYY-MM-DD"
+            return {
+                monthKey: str.slice(0, 7), // "YYYY-MM"
+                day: parseInt(str.slice(8, 10), 10)
+            };
         }
 
         function toggleTheme() {
@@ -208,7 +197,6 @@
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2500);
         }
 
-        // --- HAVUZ VE STEPPER RENDER ---
         function renderPool() {
             const container = document.getElementById('coinChipsContainer');
             document.getElementById('poolCountBadge').textContent = LEAGUE_STATE.coinPool.length;
@@ -224,7 +212,6 @@
                 `).join('');
             }
 
-            // Hızlı Ekle Önerileri
             const unadded = LEAGUE_STATE.suggestedCoins.filter(c => !LEAGUE_STATE.coinPool.includes(c));
             const sugContainer = document.getElementById('quickSuggestionsContainer');
             sugContainer.innerHTML = unadded.map(c => `
@@ -260,7 +247,7 @@
         }
 
         function resetPool() {
-            LEAGUE_STATE.coinPool = ["ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH", "FLOKI"];
+            LEAGUE_STATE.coinPool = ["SYN", "ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH"];
             renderPool();
         }
 
@@ -293,7 +280,6 @@
             }
         }
 
-        // --- MATEMATİK & RSI MOTORU ---
         function calculateRSIHistory(prices, period = 14) {
             const rsiValues = new Array(prices.length).fill(null);
             if (prices.length <= period) return rsiValues;
@@ -332,22 +318,38 @@
             let allCandles = [];
             let currentStart = startTime;
 
+            const endpoints = [
+                'https://data-api.binance.vision/api/v3/klines',
+                'https://api.binance.com/api/v3/klines'
+            ];
+
             while (currentStart < endTime) {
-                const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
-                const res = await fetch(url);
-                if (!res.ok) break;
-                const batch = await res.json();
+                let batch = null;
+                for (const ep of endpoints) {
+                    try {
+                        const url = `${ep}?symbol=${symbol}&interval=${interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
+                        const res = await fetch(url);
+                        if (res.ok) {
+                            batch = await res.json();
+                            if (batch && batch.length > 0) break;
+                        }
+                    } catch (e) {}
+                }
+
                 if (!batch || batch.length === 0) break;
 
-                const mapped = batch.map(item => ({
-                    time: item[0],
-                    open: parseFloat(item[1]),
-                    high: parseFloat(item[2]),
-                    low: parseFloat(item[3]),
-                    close: parseFloat(item[4]),
-                    monthKey: new Date(item[0]).toISOString().slice(0, 7),
-                    day: new Date(item[0]).getDate()
-                }));
+                const mapped = batch.map(item => {
+                    const comp = getTurkeyDateComponents(item[0]);
+                    return {
+                        time: item[0],
+                        open: parseFloat(item[1]),
+                        high: parseFloat(item[2]),
+                        low: parseFloat(item[3]),
+                        close: parseFloat(item[4]),
+                        monthKey: comp.monthKey,
+                        day: comp.day
+                    };
+                });
 
                 allCandles.push(...mapped);
                 if (batch.length < 1000) break;
@@ -356,7 +358,7 @@
             return allCandles;
         }
 
-        // Tekil Konfigürasyon Simülatörü (Aylık Kilit Gün Analiziyle Birlikte)
+        // 🎯 Swift simulateSingleConfiguration ile Birebir Eşitlenmiş Motor
         function simulateSingleConfig(candles, rsiLength, buyRsi, sellRsi, profitTarget, monthlyCap) {
             const closePrices = candles.map(c => c.close);
             const rsiVals = calculateRSIHistory(closePrices, rsiLength);
@@ -365,6 +367,7 @@
             let totPnl = 0, winCount = 0, totalTrades = 0;
             let totalHoldSeconds = 0;
             let monthlyMap = {};
+            const tradeLogs = [];
 
             for (let i = rsiLength + 1; i < candles.length; i++) {
                 const c = candles[i];
@@ -373,18 +376,8 @@
                 if (rsi === null || prevRsi === null) continue;
 
                 const mKey = c.monthKey;
-                if (!monthlyMap[mKey]) {
-                    monthlyMap[mKey] = {
-                        monthKey: mKey,
-                        firstTradeDay: c.day,
-                        lockDay: null,
-                        daysToLock: null,
-                        totalMonthPnl: 0,
-                        isLocked: false
-                    };
-                }
-
-                const isCapReached = (monthlyMap[mKey].totalMonthPnl + 0.001) >= monthlyCap;
+                if (!monthlyMap[mKey]) monthlyMap[mKey] = { pnl: 0, isLocked: false };
+                const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= monthlyCap;
 
                 if (!inPos && !isCapReached) {
                     if (prevRsi <= buyRsi && rsi > buyRsi) {
@@ -410,30 +403,81 @@
                         if (pnl >= 0) winCount++;
                         totPnl += pnl;
 
-                        monthlyMap[mKey].totalMonthPnl += pnl;
-                        if ((monthlyMap[mKey].totalMonthPnl + 0.001) >= monthlyCap && !monthlyMap[mKey].isLocked) {
+                        monthlyMap[mKey].pnl += pnl;
+                        if ((monthlyMap[mKey].pnl + 0.001) >= monthlyCap) {
                             monthlyMap[mKey].isLocked = true;
-                            monthlyMap[mKey].lockDay = c.day;
-                            monthlyMap[mKey].daysToLock = Math.max(1, c.day - monthlyMap[mKey].firstTradeDay + 1);
                         }
 
                         const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
                         totalHoldSeconds += diffSec;
+
+                        tradeLogs.push({
+                            entryTime: entryT,
+                            exitTime: c.time,
+                            pnl: pnl,
+                            monthKey: mKey
+                        });
                     }
                 }
             }
 
             const winRateVal = totalTrades > 0 ? (winCount / totalTrades) * 100.0 : 0.0;
             const avgSec = totalTrades > 0 ? Math.floor(totalHoldSeconds / totalTrades) : 0;
-            const avgH = Math.floor(avgSec / 3600);
-            const avgM = Math.floor((avgSec % 3600) / 60);
-            const avgDurationStr = avgH > 0 ? `${avgH}sa ${avgM}dk` : `${Math.max(15, avgM)}dk`;
+            const avgHours = avgSec / 3600.0;
+            const avgDurationStr = avgHours < 1.0 ? `${Math.max(15, Math.floor(avgHours * 60))}dk` : `${avgHours.toFixed(1)}sa`;
 
-            const mRecords = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-            const lockedMonths = mRecords.filter(m => m.isLocked);
-            const avgDaysToLock = lockedMonths.length > 0
-                ? (lockedMonths.reduce((sum, m) => sum + (m.daysToLock || 0), 0) / lockedMonths.length).toFixed(1)
-                : null;
+            // 🎯 Swift ile Birebir Aynı: Ayın İlk İşlemi Bazlı Kilit Günü Analizi
+            const groupedByMonth = {};
+            tradeLogs.forEach(t => {
+                if (!groupedByMonth[t.monthKey]) groupedByMonth[t.monthKey] = [];
+                groupedByMonth[t.monthKey].push(t);
+            });
+
+            const sortedMonthKeys = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a));
+            const monthlyRecords = [];
+            let totalLockDaysSum = 0;
+            let lockedMonthCount = 0;
+
+            for (const mKey of sortedMonthKeys) {
+                const monthTrades = groupedByMonth[mKey].sort((a, b) => a.entryTime - b.entryTime);
+                if (monthTrades.length === 0) continue;
+
+                const firstTrade = monthTrades[0];
+                const firstDay = getTurkeyDateComponents(firstTrade.entryTime).day;
+
+                let runningPnl = 0.0;
+                let lockDay = null;
+                let daysToLock = null;
+                let isLocked = false;
+
+                for (const t of monthTrades) {
+                    runningPnl += t.pnl;
+                    if ((runningPnl + 0.001) >= monthlyCap && !isLocked) {
+                        isLocked = true;
+                        const lDay = getTurkeyDateComponents(t.exitTime).day;
+                        lockDay = lDay;
+                        daysToLock = Math.max(1, lDay - firstDay + 1);
+                        totalLockDaysSum += daysToLock;
+                        lockedMonthCount++;
+                    }
+                }
+
+                const mIdx = parseInt(mKey.split('-')[1], 10) - 1;
+                const mTitle = monthNames[Math.max(0, Math.min(11, mIdx))];
+
+                monthlyRecords.push({
+                    monthKey: mKey,
+                    monthName: mTitle,
+                    firstTradeDay: firstDay,
+                    lockDay: lockDay,
+                    daysToLock: daysToLock,
+                    totalMonthPnl: runningPnl,
+                    isLocked: isLocked
+                });
+            }
+
+            const avgDays = lockedMonthCount > 0 ? (totalLockDaysSum / lockedMonthCount).toFixed(1) : null;
+            const ratioStr = `${lockedMonthCount}/${Math.max(1, monthlyRecords.length)} Ay`;
 
             return {
                 rsiLength,
@@ -444,13 +488,13 @@
                 avgDurationFormatted: avgDurationStr,
                 totalTrades,
                 netPnl: totPnl,
-                monthlyBreakdowns: mRecords,
-                avgDaysToLock,
-                lockedMonthsRatio: `${lockedMonths.length}/${Math.max(1, mRecords.length)} Ay`
+                monthlyBreakdowns: monthlyRecords,
+                avgDaysToLock: avgDays,
+                lockedMonthsRatio: ratioStr
             };
         }
 
-        // Otomatik En İdeal Seviyeleri Bulan Grid Arama (Swift CoinLeagueView ile Birebir Eşitlenmiş Aralıklar: Buy 10..35, Sell 65..92)
+        // 🎯 Swift evaluateExactPerformance ile Birebir Eşitlenmiş Grid Arama (Buy: 10..35 / Sell: 65..92)
         function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap) {
             const closePrices = candles.map(c => c.close);
             const rsiVals = calculateRSIHistory(closePrices, rsiLength);
@@ -513,7 +557,6 @@
             return simulateSingleConfig(candles, rsiLength, chosenBuy, chosenSell, profitTarget, monthlyCap);
         }
 
-        // --- LİG BENCHMARK ÇALIŞTIRICI ---
         async function runLeagueBenchmark() {
             if (LEAGUE_STATE.isAnalyzing || LEAGUE_STATE.coinPool.length === 0) return;
             LEAGUE_STATE.isAnalyzing = true;
@@ -586,7 +629,6 @@
             setTimeout(() => pBox.classList.add('hidden'), 1200);
         }
 
-        // --- KARTLARIN RENDER EDİLMESİ ---
         function renderLeagueResults() {
             const container = document.getElementById('resultsContainer');
             if (LEAGUE_STATE.results.length === 0) {
@@ -600,8 +642,6 @@
 
                 return `
                     <div id="league-card-${res.symbol}" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3 transition">
-                        
-                        <!-- Üst Başlık -->
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2.5">
                                 <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs">#${res.rank}</span>
@@ -615,20 +655,17 @@
                             </div>
 
                             <div class="flex items-center space-x-2">
-                                <!-- RSI 6 / 7 Seçici Kapsülü -->
                                 <div class="flex items-center p-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[10px] font-bold">
                                     <button onclick="switchRsiTab('${res.symbol}', 6)" class="px-2.5 py-1 rounded-md transition ${res.activeTab === 6 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}">RSI 6</button>
                                     <button onclick="switchRsiTab('${res.symbol}', 7)" class="px-2.5 py-1 rounded-md transition ${res.activeTab === 7 ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'}">RSI 7</button>
                                 </div>
 
-                                <!-- Terminale Aktar Butonu -->
                                 <button onclick="addStrategyToTerminal('${res.symbol}')" class="px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs transition flex items-center space-x-1">
                                     <span>+ Ekle</span>
                                 </button>
                             </div>
                         </div>
 
-                        <!-- Orta Kısım: Aktif RSI Metrikleri -->
                         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 space-y-2">
                             <div class="flex items-center justify-between text-xs font-bold">
                                 <div class="flex items-center space-x-1.5">
@@ -659,7 +696,6 @@
                             </div>
                         </div>
 
-                        <!-- Genişletilebilir Ayarlar & Aylık Döküm Çubuğu -->
                         <div>
                             <button onclick="toggleCardExpand('${res.symbol}')" class="w-full flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white pt-1">
                                 <span class="font-medium text-[11px]">
@@ -670,8 +706,6 @@
 
                             ${res.isExpanded ? `
                                 <div class="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-                                    
-                                    <!-- Canlı RSI Ayarlayıcı -->
                                     <div class="flex items-center justify-between gap-2 text-xs">
                                         <div class="flex items-center space-x-1.5 bg-slate-50 dark:bg-slate-800 p-1.5 rounded-xl border border-slate-200 dark:border-slate-700">
                                             <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">AL RSI:</span>
@@ -688,22 +722,17 @@
                                         </div>
                                     </div>
 
-                                    <!-- Aylık Kilit Geçmişi Tablosu -->
                                     <div class="space-y-1 max-h-48 overflow-y-auto pr-1">
-                                        ${active.monthlyBreakdowns.map(m => {
-                                            const mIndex = parseInt(m.monthKey.split('-')[1]) - 1;
-                                            const mTitle = monthNames[mIndex] || m.monthKey;
-                                            return `
-                                                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-[11px]">
-                                                    <span class="font-semibold text-slate-800 dark:text-slate-200 w-16">${mTitle}</span>
-                                                    <span class="text-slate-500 dark:text-slate-400">
-                                                        ${m.isLocked ? `${m.firstTradeDay}. Gün → ${m.lockDay}. Gün <strong class="text-blue-600">(${m.daysToLock} gün)</strong>` : `${m.firstTradeDay}. Gün → Kilitlenemedi`}
-                                                    </span>
-                                                    <span class="font-bold tabular-nums ${m.totalMonthPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
-                                                        ${m.totalMonthPnl >= 0 ? '+' : ''}${m.totalMonthPnl.toFixed(1)}%
-                                                    </span>
-                                                </div>`;
-                                        }).join('')}
+                                        ${active.monthlyBreakdowns.map(m => `
+                                            <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-[11px]">
+                                                <span class="font-semibold text-slate-800 dark:text-slate-200 w-16">${m.monthName}</span>
+                                                <span class="text-slate-500 dark:text-slate-400">
+                                                    ${m.isLocked ? `${m.firstTradeDay}. Gün → ${m.lockDay}. Gün <strong class="text-blue-600">(${m.daysToLock} gün)</strong>` : `${m.firstTradeDay}. Gün → Kilitlenemedi`}
+                                                </span>
+                                                <span class="font-bold tabular-nums ${m.totalMonthPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                                                    ${m.totalMonthPnl >= 0 ? '+' : ''}${m.totalMonthPnl.toFixed(1)}%
+                                                </span>
+                                            </div>`).join('')}
                                     </div>
                                 </div>
                             ` : ''}
@@ -744,7 +773,6 @@
             renderLeagueResults();
         }
 
-        // Terminale Ekle (index.html ile paylaşılan localStorage anahtarına yazar)
         function addStrategyToTerminal(symbol) {
             const item = LEAGUE_STATE.results.find(r => r.symbol === symbol);
             if (!item) return;
@@ -782,7 +810,6 @@
             showToast(`${item.displaySymbol} (RSI ${active.rsiLength}) Terminal'e Eklendi!`);
         }
 
-        // Başlat
         document.addEventListener('DOMContentLoaded', () => {
             renderPool();
         });
