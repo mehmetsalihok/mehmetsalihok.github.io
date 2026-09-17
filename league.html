@@ -365,7 +365,6 @@
             let totPnl = 0, winCount = 0, totalTrades = 0;
             let totalHoldSeconds = 0;
             let monthlyMap = {};
-            const trades = [];
 
             for (let i = rsiLength + 1; i < candles.length; i++) {
                 const c = candles[i];
@@ -451,14 +450,14 @@
             };
         }
 
-        // Otomatik En İdeal Seviyeleri Bulan Grid Arama
+        // Otomatik En İdeal Seviyeleri Bulan Grid Arama (Swift CoinLeagueView ile Birebir Eşitlenmiş Aralıklar: Buy 10..35, Sell 65..92)
         function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap) {
             const closePrices = candles.map(c => c.close);
             const rsiVals = calculateRSIHistory(closePrices, rsiLength);
             let bestCandidate = null;
 
-            for (let buy = 12; buy <= 40; buy += 1) {
-                for (let sell = 60; sell <= 95; sell += 1) {
+            for (let buy = 10; buy <= 35; buy += 1) {
+                for (let sell = 65; sell <= 92; sell += 1) {
                     let inPos = false, entryP = 0, totPnl = 0, winCount = 0, totalTrades = 0;
                     let monthlyStats = {};
 
@@ -595,7 +594,7 @@
                 return;
             }
 
-            container.innerHTML = LEAGUE_STATE.results.map((res, idx) => {
+            container.innerHTML = LEAGUE_STATE.results.map((res) => {
                 const active = res.activeTab === 6 ? res.rsi6 : res.rsi7;
                 const other = res.activeTab === 6 ? res.rsi7 : res.rsi6;
 
