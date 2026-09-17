@@ -15,6 +15,11 @@ const KZ_STATE = {
 
 let binanceWs = null;
 
+// 🎯 Türkiye Saat Dilimi (UTC+3) Ay Çözücü
+function getTurkeyMonthKey(timestamp = Date.now()) {
+    return new Date(timestamp).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }).slice(0, 7);
+}
+
 // Tema Yönetimi
 function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
@@ -108,7 +113,7 @@ function calculateRSI(closes, period = 14) {
 }
 
 function isCoinMonthlyLocked(coin) {
-    const currentMonthStr = new Date().toISOString().slice(0, 7);
+    const currentMonthStr = getTurkeyMonthKey();
     const currentMonthTrades = (KZ_STATE.closedTrades || []).filter(t => t.coinId === coin.id && t.exitMonth === currentMonthStr);
     const totalMonthPnl = currentMonthTrades.reduce((sum, t) => sum + t.pnlPercent, 0);
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
@@ -146,7 +151,7 @@ function runCardBacktest(coin) {
 
         const mKey = c.monthKey;
         if (!monthlyMap[mKey]) {
-            const mIdx = parseInt(mKey.split('-')[1]) - 1;
+            const mIdx = parseInt(mKey.split('-')[1], 10) - 1;
             monthlyMap[mKey] = { monthKey: mKey, name: monthNames[mIdx] || mKey, trades: 0, pnl: 0, isLocked: false };
         }
 
@@ -305,7 +310,7 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
         reason: reason,
         entryTimeStr: new Date(pos.entryTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
         exitTimeStr: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-        exitMonth: now.toISOString().slice(0, 7)
+        exitMonth: getTurkeyMonthKey(now)
     });
 
     KZ_STATE.activePositions.splice(idx, 1);
@@ -342,7 +347,7 @@ function loadStorage() {
 
     const savedSlots = localStorage.getItem('kuzgun_max_slots');
     if (savedSlots) {
-        KZ_STATE.maxSlots = parseInt(savedSlots) || 2;
+        KZ_STATE.maxSlots = parseInt(savedSlots, 10) || 2;
         if (elSlotSelector) elSlotSelector.value = KZ_STATE.maxSlots;
     }
 
@@ -374,7 +379,7 @@ function savePending() { localStorage.setItem('kuzgun_pending_signals', JSON.str
 function saveClosedTrades() { localStorage.setItem('kuzgun_closed_trades', JSON.stringify(KZ_STATE.closedTrades)); }
 
 function changeMaxSlots(newSlots) {
-    KZ_STATE.maxSlots = parseInt(newSlots) || 2;
+    KZ_STATE.maxSlots = parseInt(newSlots, 10) || 2;
     localStorage.setItem('kuzgun_max_slots', KZ_STATE.maxSlots.toString());
     updatePortfolioCalculations();
 }
@@ -824,7 +829,7 @@ function handleLiveParamChange(coinId) {
     coin.sellRsi = parseFloat(document.getElementById(`input-sell-${coin.id}`).value);
     coin.profitTarget = parseFloat(document.getElementById(`input-profit-${coin.id}`).value);
     coin.monthlyCap = parseFloat(document.getElementById(`input-cap-${coin.id}`).value);
-    coin.rsiLength = parseInt(document.getElementById(`input-rsiLen-${coin.id}`).value);
+    coin.rsiLength = parseInt(document.getElementById(`input-rsiLen-${coin.id}`).value, 10);
 
     runCardBacktest(coin);
     saveCoins();
@@ -984,7 +989,7 @@ function setupSymbolLiveValidation() {
     });
 }
 
-// REST Fiyat Yedekleme (WS bağlantısını beklemeden anında doldurur)
+// REST Fiyat Yedekleme
 async function fetchLiveTickerFallback() {
     try {
         const endpoints = [
@@ -1068,7 +1073,7 @@ async function fetchInitialCandles(coin) {
                 high: parseFloat(item[2]),
                 low: parseFloat(item[3]),
                 close: parseFloat(item[4]),
-                monthKey: new Date(item[0]).toISOString().slice(0, 7)
+                monthKey: getTurkeyMonthKey(item[0])
             }));
 
             coin.rawCandles = all;
@@ -1182,7 +1187,7 @@ async function fetchBinanceSpotSymbols() {
     } catch (err) {}
 }
 
-// 🎯 Yedekli ve Kesintisiz 2026 Mum Çekici (data-api.binance.vision + api.binance.com)
+// 🎯 Yedekli ve Kesintisiz 2026 Mum Çekici (Türkiye Saati Gruplamalı)
 async function fetchAllCandlesSince2026(symbol, interval) {
     const startTime = new Date('2026-01-01T00:00:00Z').getTime();
     const endTime = Date.now();
@@ -1215,7 +1220,7 @@ async function fetchAllCandlesSince2026(symbol, interval) {
             high: parseFloat(item[2]),
             low: parseFloat(item[3]),
             close: parseFloat(item[4]),
-            monthKey: new Date(item[0]).toISOString().slice(0, 7)
+            monthKey: getTurkeyMonthKey(item[0])
         }));
 
         allCandles.push(...mapped);
@@ -1235,7 +1240,7 @@ async function runWizardForNewCoin() {
     if (!rawSym.endsWith('USDT')) rawSym += 'USDT';
 
     const interval = document.getElementById('wizardIntervalInput').value;
-    const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value) || 6;
+    const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value, 10) || 6;
     const profitTarget = parseFloat(document.getElementById('wizardProfitInput').value) || 0.6;
     const monthlyCap = parseFloat(document.getElementById('wizardCapInput').value) || 3.6;
 
