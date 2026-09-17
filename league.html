@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KUZGUN Pro — Coin Karşılaştırma Ligi (RSI 6 vs 7)</title>
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -20,11 +22,16 @@
             }
         }
     </script>
+    <!-- Parlama Önleyici 3 Aşamalı Tema Başlatıcı -->
     <script>
-        if (localStorage.getItem('kuzgun_theme') === 'dark' || (!('kuzgun_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        const savedTheme = localStorage.getItem('kuzgun_theme');
+        if (savedTheme === 'oled') {
+            document.documentElement.classList.add('dark', 'oled');
+        } else if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('oled');
         } else {
-            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.remove('dark', 'oled');
         }
     </script>
     <style>
@@ -37,6 +44,40 @@
         .dark ::-webkit-scrollbar-track { background: #0f172a; }
         .dark ::-webkit-scrollbar-thumb { background: #334155; }
         .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+        /* 🌑 SAF OLED SİYAH MOTORU */
+        html.oled, 
+        html.oled body {
+            background-color: #000000 !important;
+        }
+
+        html.oled header,
+        html.oled section,
+        html.oled aside,
+        html.oled .bg-white,
+        html.oled div[class*="dark:bg-slate-900"] {
+            background-color: #000000 !important;
+            border-color: #171717 !important;
+        }
+
+        html.oled div[class*="dark:bg-slate-800"],
+        html.oled .dark\:bg-slate-800\/60,
+        html.oled .dark\:bg-slate-800\/50,
+        html.oled .dark\:bg-slate-800\/40,
+        html.oled .dark\:bg-slate-800 {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+
+        html.oled input, 
+        html.oled select {
+            background-color: #0a0a0a !important;
+            border-color: #262626 !important;
+        }
+
+        html.oled ::-webkit-scrollbar-track { background: #000000 !important; }
+        html.oled ::-webkit-scrollbar-thumb { background: #262626 !important; }
+        html.oled ::-webkit-scrollbar-thumb:hover { background: #333333 !important; }
     </style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
@@ -65,9 +106,15 @@
 
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
 
-                <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0" title="Açık / Koyu Mod">
-                    <svg class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                    <svg class="w-4 h-4 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton (Açık -> Koyu -> OLED) -->
+                <button onclick="cycleTheme()" class="px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0 flex items-center space-x-1.5" title="Tema: Açık / Koyu / OLED">
+                    <svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <svg id="themeIconDark" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <span id="themeBadgeOled" class="hidden text-[10px] font-black px-1.5 py-0.5 rounded bg-black text-white border border-neutral-700 uppercase tracking-wider">OLED</span>
                 </button>
             </div>
         </div>
@@ -185,6 +232,7 @@
             return Math.round(LEAGUE_STATE.profitTarget * LEAGUE_STATE.capMultiplier * 10) / 10;
         }
 
+        // 🎯 Swift DateFormatter ile Birebir Eşitlenmiş Türkiye Saati (UTC+3) Ay ve Gün Çözücü
         function getTurkeyDateComponents(timestampMs) {
             const d = new Date(timestampMs);
             const str = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
@@ -194,9 +242,44 @@
             };
         }
 
-        function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            localStorage.setItem('kuzgun_theme', isDark ? 'dark' : 'light');
+        // 🎯 3 Aşamalı Tema Döngüsü
+        function applyTheme(theme) {
+            const root = document.documentElement;
+            root.classList.remove('dark', 'oled');
+
+            if (theme === 'dark') {
+                root.classList.add('dark');
+            } else if (theme === 'oled') {
+                root.classList.add('dark', 'oled');
+            }
+
+            localStorage.setItem('kuzgun_theme', theme);
+            updateThemeIcons(theme);
+        }
+
+        function cycleTheme() {
+            const current = localStorage.getItem('kuzgun_theme') || 'light';
+            const nextTheme = current === 'light' ? 'dark' : (current === 'dark' ? 'oled' : 'light');
+            applyTheme(nextTheme);
+        }
+
+        function updateThemeIcons(theme) {
+            const iconLight = document.getElementById('themeIconLight');
+            const iconDark = document.getElementById('themeIconDark');
+            const badgeOled = document.getElementById('themeBadgeOled');
+            if (!iconLight || !iconDark || !badgeOled) return;
+
+            iconLight.classList.add('hidden');
+            iconDark.classList.add('hidden');
+            badgeOled.classList.add('hidden');
+
+            if (theme === 'oled') {
+                badgeOled.classList.remove('hidden');
+            } else if (theme === 'dark') {
+                iconDark.classList.remove('hidden');
+            } else {
+                iconLight.classList.remove('hidden');
+            }
         }
 
         function showToast(msg) {
@@ -501,6 +584,7 @@
             };
         }
 
+        // Swift CoinLeagueView arama sınırları: Buy 10..35, Sell 65..92
         function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap) {
             const closePrices = candles.map(c => c.close);
             const rsiVals = calculateRSIHistory(closePrices, rsiLength);
@@ -818,6 +902,8 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             renderPool();
+            const currentTheme = localStorage.getItem('kuzgun_theme') || (document.documentElement.classList.contains('dark') ? (document.documentElement.classList.contains('oled') ? 'oled' : 'dark') : 'light');
+            updateThemeIcons(currentTheme);
         });
     </script>
 </body>
