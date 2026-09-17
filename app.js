@@ -122,7 +122,7 @@ function isCoinMonthlyLocked(coin) {
 function runCardBacktest(coin) {
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const currentYear = 2026;
-    const currentMonthIdx = 8; // Eylül 2026
+    const currentMonthIdx = 8;
 
     const monthlyMap = {};
     for (let m = 0; m <= currentMonthIdx; m++) {
@@ -1187,7 +1187,7 @@ async function fetchBinanceSpotSymbols() {
     } catch (err) {}
 }
 
-// 🎯 Yedekli ve Kesintisiz 2026 Mum Çekici (Türkiye Saati Gruplamalı)
+// 🎯 Yedekli ve Kesintisiz 2026 Mum Çekici
 async function fetchAllCandlesSince2026(symbol, interval) {
     const startTime = new Date('2026-01-01T00:00:00Z').getTime();
     const endTime = Date.now();
@@ -1259,7 +1259,6 @@ async function runWizardForNewCoin() {
         const rsiValues = calculateRSIHistory(closePrices, rsiLength);
         let bestCandidate = null;
 
-        // Swift CoinLeagueView sınırları: Buy 10..35, Sell 65..92
         for (let buy = 10; buy <= 35; buy += 1) {
             for (let sell = 65; sell <= 92; sell += 1) {
                 let inPos = false;
@@ -1374,18 +1373,15 @@ async function fetchMarketRate() {
 async function startEngine() {
     loadStorage();
 
-    // 1. Kartları HEMEN çiz
     KZ_STATE.coins.forEach(c => renderSingleCard(c));
     renderActivePositionsList();
     renderPendingSignalsList();
     renderHistoryTrades();
     updatePortfolioCalculations();
 
-    // 2. Canlı fiyatları REST ile anında çek
     await fetchLiveTickerFallback();
     fetchMarketRate();
 
-    // 3. WebSocket ve dinamik doğrulayıcıyı devreye al
     initBinanceWebSocket();
     fetchBinanceSpotSymbols();
     setupSymbolLiveValidation();
@@ -1393,13 +1389,19 @@ async function startEngine() {
     setInterval(fetchMarketRate, 10000);
     setInterval(fetchLiveTickerFallback, 5000);
 
-    // 4. Arka planda mum geçmişlerini tamamla
     for (const coin of KZ_STATE.coins) {
         await fetchInitialCandles(coin);
     }
+
+    // URL'den ?openWizard=true ile gelindiyse sihirbazı otomatik aç
+    if (window.location.search.includes('openWizard=true')) {
+        setTimeout(() => {
+            openAddCoinModal();
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 250);
+    }
 }
 
-// Yükleme kontrolü
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startEngine);
 } else {
