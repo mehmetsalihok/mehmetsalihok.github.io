@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUZGUN Pro — Terminal Ayarları</title>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Parlama Önleyici Tema Başlatıcı -->
+    <script>
+        if (localStorage.getItem('kuzgun_theme') === 'dark' || (!('kuzgun_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.015em; }
+        .tabular-nums { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    </style>
+</head>
+<body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
+
+    <!-- ÜST KONSOL -->
+    <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40">
+        <div class="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="flex items-center space-x-1.5 hover:opacity-80 transition">
+                    <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">PRO</span>
+                </a>
+                <span class="text-slate-300 dark:text-slate-700">/</span>
+                <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Terminal Ayarları</span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition flex items-center space-x-1">
+                    <span>← Terminale Dön</span>
+                </a>
+                <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition">
+                    <svg class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="w-4 h-4 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ANA FORM ALANI -->
+    <main class="max-w-2xl w-full mx-auto px-4 py-6 space-y-5 flex-1">
+
+        <!-- 1️⃣ SERMAYE VE ZAMAN YÖNETİMİ KARTI -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <span class="w-6 h-6 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">💵</span>
+                <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">SERMAYE VE ZAMAN YÖNETİMİ</h2>
+            </div>
+
+            <!-- A) Başlangıç Sermayesi Input -->
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">BAŞLANGIÇ SERMAYESİ (USDT)</label>
+                <div class="flex items-center space-x-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl">
+                    <span class="font-bold text-sm text-slate-400">$</span>
+                    <input type="number" id="inputBalance" step="10" placeholder="1000.00"
+                        class="w-full bg-transparent font-bold text-sm text-slate-900 dark:text-white focus:outline-none tabular-nums">
+                    <button onclick="saveBalance()" class="px-3 py-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs rounded-lg transition hover:opacity-90">KAYDET</button>
+                </div>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">💡 İşlem pozisyon büyüklükleri ve toplam bakiye artışı bu tutar üzerinden hesaplanır.</p>
+            </div>
+
+            <hr class="border-slate-100 dark:border-slate-800">
+
+            <!-- B) Başlangıç Zamanı Seçici -->
+            <div class="space-y-2">
+                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">SERMAYE BAŞLANGIÇ ZAMANI (SAAT / DAKİKA)</label>
+                <input type="datetime-local" id="inputStartDate" onchange="handleDateChange()"
+                    class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-xs text-slate-900 dark:text-white focus:outline-none">
+
+                <!-- Hızlı Tarih Butonları -->
+                <div class="flex flex-wrap gap-1.5 pt-1">
+                    <button onclick="setQuickDate('now')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition">Şimdi</button>
+                    <button onclick="setQuickDate('today')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition">Bugün 00:00</button>
+                    <button onclick="setQuickDate('24h')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition">24 Sa. Önce</button>
+                    <button onclick="setQuickDate('3d')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition">3 Gün Önce</button>
+                    <button onclick="setQuickDate('year_start')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition">Yıl Başı (2026)</button>
+                </div>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">💡 Cüzdanınız seçtiğiniz tarih ve saatteki paranızla başlatılır.</p>
+            </div>
+
+            <hr class="border-slate-100 dark:border-slate-800">
+
+            <!-- C) Eşzamanlı Slot Stepper -->
+            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl">
+                <div>
+                    <span class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase">EŞZAMANLI SLOT LİMİTİ</span>
+                    <span id="txtSlotCount" class="font-black text-xs text-slate-900 dark:text-white">2 Pozisyon (%50 Bütçe / İşlem)</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <button onclick="stepSlots(-1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 transition">-</button>
+                    <span id="displaySlotsValue" class="w-6 text-center font-bold text-xs">2</span>
+                    <button onclick="stepSlots(1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 transition">+</button>
+                </div>
+            </div>
+
+            <hr class="border-slate-100 dark:border-slate-800">
+
+            <!-- D, E, F) Switch Toggles -->
+            <div class="space-y-3">
+                <!-- Slot Çakışma Filtresi -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-semibold text-xs text-slate-900 dark:text-white block">Gerçekçi Slot Çakışma Filtresi</span>
+                        <span class="text-[10px] text-slate-400 block max-w-sm">Açıkken kapasiteyi aşan çakışan işlemler geçmiş portföyden elenir.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleSlotConstraint" onchange="handleToggle('slotConstraint')" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <!-- Borsa Komisyon Kesintisi -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-semibold text-xs text-slate-900 dark:text-white block">Borsa Komisyon Kesintisi (BNB %0.075 + %0.075)</span>
+                        <span class="text-[10px] text-slate-400 block max-w-sm">Alış ve satışta toplam %0.15 komisyon kârdan düşülerek reel getiri hesaplanır.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleFeeDeduction" onchange="handleToggle('feeDeduction')" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <!-- Mum Kapanış Teyidi -->
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="font-semibold text-xs text-slate-900 dark:text-white block">Mum Kapanış Teyidi (TradingView Uyumu)</span>
+                        <span class="text-[10px] text-slate-400 block max-w-sm">Alım için bir önceki mumun kapanış RSI değerinin sınırda kapatmış olması şart koşulur.</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleCandleClose" onchange="handleToggle('candleClose')" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2️⃣ TELEGRAM BİLDİRİM BOTU KARTI -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <span class="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">✈️</span>
+                <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">TELEGRAM SİNYAL BOTU</h2>
+            </div>
+
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">TELEGRAM CHAT ID</label>
+                <div class="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl">
+                    <span class="text-slate-400 font-bold text-xs pl-1">#</span>
+                    <input type="text" id="inputTelegramChatId" placeholder="Örn: 1059064615"
+                        class="w-full bg-transparent font-semibold text-xs text-slate-900 dark:text-white focus:outline-none">
+                    <button onclick="saveTelegramId()" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition">Kaydet</button>
+                </div>
+                <p class="text-[10px] text-slate-500 dark:text-slate-400">💡 RSI kırılımları ve kâr hedefleri bulut botu tarafından bu Chat ID'ye iletilir.</p>
+            </div>
+        </section>
+
+        <!-- 3️⃣ BİLDİRİM VE UYARI AYARLARI KARTI -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <span class="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">🔔</span>
+                <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">BİLDİRİM VE UYARI AYARLARI</h2>
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-xs text-slate-900 dark:text-white">Alım Sinyali Bildirimleri</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleBuyNotification" onchange="handleToggle('buyNotification')" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-xs text-slate-900 dark:text-white">Satım / Kâr Bildirimleri</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleSellNotification" onchange="handleToggle('sellNotification')" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <span class="font-semibold text-xs text-slate-900 dark:text-white">Sistem Ses Efektleri</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="toggleSound" onchange="handleToggle('sound')" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4️⃣ SİSTEM BİLGİSİ KARTI -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3">
+            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
+                <span class="w-6 h-6 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">ℹ️</span>
+                <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">SİSTEM BİLGİSİ</h2>
+            </div>
+
+            <div class="space-y-2 text-xs">
+                <div class="flex justify-between items-center py-1 text-slate-600 dark:text-slate-400">
+                    <span>Terminal Sürümü:</span>
+                    <span class="font-bold text-slate-900 dark:text-white font-mono">v1.5.0</span>
+                </div>
+                <div class="flex justify-between items-center py-1 text-slate-600 dark:text-slate-400">
+                    <span>Geliştirici İmzası:</span>
+                    <span class="font-semibold text-slate-900 dark:text-white font-mono">codemso by mehmetsalihok</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- TOAST BİLDİRİMİ -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold flex items-center space-x-2">
+        <span>✓</span>
+        <span id="toastMsg">Ayar kaydedildi</span>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('kuzgun_theme', isDark ? 'dark' : 'light');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2000);
+        }
+
+        // --- DEĞERLERİ YÜKLE & YÖNET ---
+        function loadSettings() {
+            // Sermaye (kuzgun_base_usd & kuzgun_user_balance uyumlu)
+            const balance = localStorage.getItem('kuzgun_base_usd') || localStorage.getItem('kuzgun_user_balance') || '1000';
+            document.getElementById('inputBalance').value = parseFloat(balance).toFixed(2);
+
+            // Başlangıç Tarihi
+            const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || (Date.now() / 1000);
+            const dateObj = new Date(startTs * 1000);
+            // Yerel datetime-local formatı (YYYY-MM-DDTHH:MM)
+            const tzOffset = dateObj.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
+            document.getElementById('inputStartDate').value = localISOTime;
+
+            // Slot Limiti
+            const slots = parseInt(localStorage.getItem('kuzgun_max_slots'), 10) || 2;
+            updateSlotsUI(slots);
+
+            // Toggles
+            document.getElementById('toggleSlotConstraint').checked = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
+            document.getElementById('toggleFeeDeduction').checked = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
+            document.getElementById('toggleCandleClose').checked = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
+            document.getElementById('toggleBuyNotification').checked = localStorage.getItem('kuzgun_buy_notification_enabled') !== 'false';
+            document.getElementById('toggleSellNotification').checked = localStorage.getItem('kuzgun_sell_notification_enabled') !== 'false';
+            document.getElementById('toggleSound').checked = localStorage.getItem('kuzgun_sound_enabled') !== 'false';
+
+            // Telegram Chat ID
+            document.getElementById('inputTelegramChatId').value = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
+        }
+
+        function saveBalance() {
+            const val = parseFloat(document.getElementById('inputBalance').value);
+            if (val > 0) {
+                localStorage.setItem('kuzgun_base_usd', val.toString());
+                localStorage.setItem('kuzgun_user_balance', val.toString());
+                showToast('Sermaye kaydedildi: $' + val.toFixed(2));
+            }
+        }
+
+        function handleDateChange() {
+            const inputVal = document.getElementById('inputStartDate').value;
+            if (inputVal) {
+                const ts = new Date(inputVal).getTime() / 1000;
+                localStorage.setItem('kuzgun_portfolio_start_date', ts.toString());
+                showToast('Başlangıç tarihi güncellendi');
+            }
+        }
+
+        function setQuickDate(type) {
+            const now = new Date();
+            let targetDate = new Date();
+
+            switch(type) {
+                case 'now':
+                    targetDate = now;
+                    break;
+                case 'today':
+                    targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+                    break;
+                case '24h':
+                    targetDate = new Date(now.getTime() - (86400 * 1000));
+                    break;
+                case '3d':
+                    targetDate = new Date(now.getTime() - (3 * 86400 * 1000));
+                    break;
+                case 'year_start':
+                    targetDate = new Date(2026, 0, 1, 0, 0, 0);
+                    break;
+            }
+
+            const tzOffset = targetDate.getTimezoneOffset() * 60000;
+            const localISOTime = (new Date(targetDate - tzOffset)).toISOString().slice(0, 16);
+            document.getElementById('inputStartDate').value = localISOTime;
+
+            localStorage.setItem('kuzgun_portfolio_start_date', (targetDate.getTime() / 1000).toString());
+            showToast('Tarih ayarlandı');
+        }
+
+        function stepSlots(delta) {
+            let current = parseInt(localStorage.getItem('kuzgun_max_slots'), 10) || 2;
+            let next = current + delta;
+            if (next >= 1 && next <= 5) {
+                localStorage.setItem('kuzgun_max_slots', next.toString());
+                updateSlotsUI(next);
+                showToast('Slot limiti: ' + next);
+            }
+        }
+
+        function updateSlotsUI(slots) {
+            const pct = Math.floor(100 / slots);
+            document.getElementById('displaySlotsValue').textContent = slots;
+            document.getElementById('txtSlotCount').textContent = `${slots} Pozisyon (%${pct} Bütçe / İşlem)`;
+        }
+
+        function handleToggle(key) {
+            const map = {
+                slotConstraint: { id: 'toggleSlotConstraint', storage: 'kuzgun_slot_constraint_enabled', name: 'Slot Çakışma Filtresi' },
+                feeDeduction: { id: 'toggleFeeDeduction', storage: 'kuzgun_fee_deduction_enabled', name: 'Komisyon Kesintisi' },
+                candleClose: { id: 'toggleCandleClose', storage: 'kuzgun_candle_close_confirmation_enabled', name: 'Mum Kapanış Teyidi' },
+                buyNotification: { id: 'toggleBuyNotification', storage: 'kuzgun_buy_notification_enabled', name: 'Alım Bildirimleri' },
+                sellNotification: { id: 'toggleSellNotification', storage: 'kuzgun_sell_notification_enabled', name: 'Satım Bildirimleri' },
+                sound: { id: 'toggleSound', storage: 'kuzgun_sound_enabled', name: 'Ses Efektleri' }
+            };
+
+            const item = map[key];
+            if (item) {
+                const checked = document.getElementById(item.id).checked;
+                localStorage.setItem(item.storage, checked.toString());
+                showToast(`${item.name}: ${checked ? 'Açık' : 'Kapalı'}`);
+            }
+        }
+
+        function saveTelegramId() {
+            const id = document.getElementById('inputTelegramChatId').value.trim();
+            if (id) {
+                localStorage.setItem('kuzgun_telegram_chat_id', id);
+                showToast('Telegram Chat ID kaydedildi');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadSettings);
+    </script>
+</body>
+</html>
