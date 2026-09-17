@@ -117,7 +117,7 @@ function isCoinMonthlyLocked(coin) {
 function runCardBacktest(coin) {
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const currentYear = 2026;
-    const currentMonthIdx = 8;
+    const currentMonthIdx = 8; // Eylül 2026
 
     const monthlyMap = {};
     for (let m = 0; m <= currentMonthIdx; m++) {
@@ -1182,6 +1182,37 @@ async function fetchBinanceSpotSymbols() {
     } catch (err) {}
 }
 
+// 🎯 2026 Başından Günümüze Tüm Mumları Çeken Sayfalamalı Fetcher
+async function fetchAllCandlesSince2026(symbol, interval) {
+    const startTime = new Date('2026-01-01T00:00:00Z').getTime();
+    const endTime = Date.now();
+    let allCandles = [];
+    let currentStart = startTime;
+
+    while (currentStart < endTime) {
+        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
+        const res = await fetch(url);
+        if (!res.ok) break;
+        const batch = await res.json();
+        if (!batch || batch.length === 0) break;
+
+        const mapped = batch.map(item => ({
+            time: item[0],
+            open: parseFloat(item[1]),
+            high: parseFloat(item[2]),
+            low: parseFloat(item[3]),
+            close: parseFloat(item[4]),
+            monthKey: new Date(item[0]).toISOString().slice(0, 7)
+        }));
+
+        allCandles.push(...mapped);
+        if (batch.length < 1000) break;
+        currentStart = batch[batch.length - 1][0] + 1;
+    }
+    return allCandles;
+}
+
+// 🎯 Swift StabilityWizardView ile Birebir Eşitlenmiş Optimizasyon Motoru
 async function runWizardForNewCoin() {
     let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
     if (!rawSym) {
@@ -1193,36 +1224,33 @@ async function runWizardForNewCoin() {
     const interval = document.getElementById('wizardIntervalInput').value;
     const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value) || 7;
     const profitTarget = parseFloat(document.getElementById('wizardProfitInput').value) || 0.7;
-    const monthlyCap = parseFloat(document.getElementById('wizardCapInput').value) || 7.0;
+    const monthlyCap = parseFloat(document.getElementById('wizardCapInput').value) || 2.1;
 
     const btn = document.getElementById('btnWizardRun');
     wizardLoadingStatus.classList.remove('hidden');
-    wizardLoadingStatus.textContent = "Binance verisi taranıyor...";
+    wizardLoadingStatus.textContent = "2026 tüm mum verisi taranıyor (Binance)...";
     btn.disabled = true;
 
     try {
-        const url = `https://api.binance.com/api/v3/klines?symbol=${rawSym}&interval=${interval}&limit=1000`;
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Parite Binance'te bulunamadı!");
-        const batch = await res.json();
-        if (!batch || batch.length === 0) throw new Error("Veri boş döndü.");
-
-        let allCandles = batch.map(item => ({
-            time: item[0],
-            open: parseFloat(item[1]),
-            high: parseFloat(item[2]),
-            low: parseFloat(item[3]),
-            close: parseFloat(item[4]),
-            monthKey: new Date(item[0]).toISOString().slice(0, 7)
-        }));
+        const allCandles = await fetchAllCandlesSince2026(rawSym, interval);
+        if (!allCandles || allCandles.length < (rsiLength + 10)) {
+            throw new Error("Yeterli mum verisi alınamadı.");
+        }
 
         const closePrices = allCandles.map(c => c.close);
         const rsiValues = calculateRSIHistory(closePrices, rsiLength);
         let bestCandidate = null;
 
-        for (let buy = 15; buy <= 38; buy += 1) {
-            for (let sell = 65; sell <= 90; sell += 1) {
-                let inPos = false, entryPrice = 0, totPnl = 0, winCount = 0, lossCount = 0, totalTrades = 0;
+        // Swift Range: Buy (12..42), Sell (60..95) — 24 Al & 92 Sat tam bu koridorda
+        for (let buy = 12; buy <= 42; buy += 1) {
+            for (let sell = 60; sell <= 95; sell += 1) {
+                let inPos = false;
+                let entryPrice = 0.0;
+                let totPnl = 0.0;
+                let winCount = 0;
+                let lossCount = 0;
+                let totalTrades = 0;
+                let monthlyStats = {};
 
                 for (let i = rsiLength + 1; i < allCandles.length; i++) {
                     const c = allCandles[i];
@@ -1230,14 +1258,19 @@ async function runWizardForNewCoin() {
                     const prevRsi = rsiValues[i - 1];
                     if (rsi === null || prevRsi === null) continue;
 
-                    if (!inPos) {
+                    const mKey = c.monthKey;
+                    if (!monthlyStats[mKey]) monthlyStats[mKey] = { pnl: 0.0, isLocked: false };
+                    const isCapReached = (monthlyStats[mKey].pnl + 0.001) >= monthlyCap;
+
+                    if (!inPos && !isCapReached) {
                         if (prevRsi <= buy && rsi > buy) {
                             inPos = true;
                             entryPrice = c.close;
                         }
-                    } else {
+                    } else if (inPos) {
                         const targetPrice = entryPrice * (1.0 + profitTarget / 100.0);
-                        let exited = false, pnl = 0;
+                        let exited = false;
+                        let pnl = 0.0;
 
                         if (c.high >= targetPrice) {
                             exited = true;
@@ -1252,6 +1285,11 @@ async function runWizardForNewCoin() {
                             totalTrades++;
                             if (pnl >= 0) winCount++; else lossCount++;
                             totPnl += pnl;
+
+                            monthlyStats[mKey].pnl += pnl;
+                            if ((monthlyStats[mKey].pnl + 0.001) >= monthlyCap) {
+                                monthlyStats[mKey].isLocked = true;
+                            }
                         }
                     }
                 }
@@ -1270,10 +1308,12 @@ async function runWizardForNewCoin() {
             KZ_STATE.pendingWizardCandidate = {
                 symbol: rawSym,
                 displaySymbol: rawSym.replace('USDT', ''),
-                interval, rsiLength,
+                interval,
+                rsiLength,
                 buyRsi: bestCandidate.buyRsi,
                 sellRsi: bestCandidate.sellRsi,
-                profitTarget, monthlyCap
+                profitTarget,
+                monthlyCap
             };
 
             document.getElementById('wizardResultSymbol').textContent = `${rawSym} (${interval} | RSI ${rsiLength})`;
@@ -1289,7 +1329,7 @@ async function runWizardForNewCoin() {
             wizardResultCard.classList.remove('hidden');
             playChime(true);
         } else {
-            alert("Uygun strateji kombinasyonu bulunamadı.");
+            alert("Kriterlere uygun işlem bulunamadı.");
         }
     } catch (err) {
         alert("Hata: " + err.message);
