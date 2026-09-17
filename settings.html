@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KUZGUN Pro Terminal — Ayarlar</title>
+    <title>KUZGUN Pro Terminal — Sistem & Motor Ayarları</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -42,17 +42,17 @@
         .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
-<body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
+<body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
-    <!-- 1️⃣ ÜST KONSOL & MENÜ -->
+    <!-- 1️⃣ ÜST KONSOL & METRİK ÇUBUĞU -->
     <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
-        <div class="max-w-5xl mx-auto px-5 h-14 flex items-center justify-between">
-            <div class="flex items-center space-x-4">
+        <div class="max-w-[1780px] mx-auto px-6 h-14 flex items-center justify-between">
+            <div class="flex items-center space-x-5">
                 <a href="index.html" class="flex items-center space-x-1.5 hover:opacity-85 transition">
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">PRO</span>
                 </a>
-                <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 dark:border-slate-800 pl-4 text-xs font-medium">
+                <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 dark:border-slate-800 pl-5 text-xs font-medium">
                     <a href="index.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Terminal</a>
                     <a href="league.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Lig Kıyaslama</a>
                     <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold">Ayarlar</button>
@@ -60,8 +60,8 @@
             </div>
 
             <div class="flex items-center space-x-3">
-                <a href="index.html" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition flex items-center space-x-1">
-                    <span>Terminali Aç →</span>
+                <a href="index.html" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm transition flex items-center space-x-1.5">
+                    <span>← Canlı Terminal</span>
                 </a>
                 <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0" title="Açık / Koyu Mod">
                     <svg class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
@@ -71,196 +71,284 @@
         </div>
     </header>
 
-    <!-- 2️⃣ ANA ÇALIŞMA FORMU -->
-    <main class="max-w-2xl w-full mx-auto px-4 py-6 space-y-4 flex-1">
+    <!-- 2️⃣ GENİŞ EKRAN DASHBOARD YERLEŞİMİ (3 SÜTUN) -->
+    <main class="max-w-[1780px] w-full mx-auto px-6 py-6 flex-1">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-        <!-- KART 1: SERMAYE VE ZAMAN YÖNETİMİ -->
-        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 transition-colors">
-            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <!-- SOL SÜTUN: KATEGORİ MENÜSÜ & SİSTEM ÖZETİ (3 Kolon) -->
+            <aside class="lg:col-span-3 space-y-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm space-y-1">
+                    <div class="px-3 py-2 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">AYAR KATEGORİLERİ</div>
+                    
+                    <button onclick="scrollToSection('secCapital')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
+                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">💵</span>
+                        <span class="flex-1">Sermaye & Zaman</span>
+                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
+                    </button>
+                    
+                    <button onclick="scrollToSection('secRules')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
+                        <span class="text-indigo-600 dark:text-indigo-400 font-bold">⚙️</span>
+                        <span class="flex-1">İşlem & Slot Kuralları</span>
+                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
+                    </button>
+
+                    <button onclick="scrollToSection('secTelegram')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
+                        <span class="text-blue-600 dark:text-blue-400 font-bold">✈️</span>
+                        <span class="flex-1">Telegram Sinyal Botu</span>
+                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
+                    </button>
+
+                    <button onclick="scrollToSection('secAlerts')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
+                        <span class="text-amber-600 dark:text-amber-400 font-bold">🔔</span>
+                        <span class="flex-1">Bildirim & Sesler</span>
+                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
+                    </button>
                 </div>
-                <div>
-                    <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">SERMAYE VE ZAMAN YÖNETİMİ</h2>
-                    <p class="text-[10px] text-slate-400">İşlem bütçeleri ve portföy getiri hesaplama kuralları</p>
-                </div>
-            </div>
 
-            <!-- Başlangıç Sermayesi Input -->
-            <div class="space-y-1.5">
-                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">BAŞLANGIÇ SERMAYESİ (USDT)</label>
-                <div class="flex items-center space-x-2 p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500 transition">
-                    <span class="font-bold text-sm text-slate-400">$</span>
-                    <input type="number" id="inputBalance" step="10" placeholder="1000.00"
-                        class="w-full bg-transparent font-bold text-sm text-slate-900 dark:text-white focus:outline-none tabular-nums">
-                    <span class="text-xs font-bold text-slate-400 pr-1">USDT</span>
-                    <button onclick="saveBalance()" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs rounded-lg transition shrink-0">KAYDET</button>
-                </div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400">💡 İşlem pozisyon büyüklükleri ve toplam bakiye artışı bu tutar üzerinden hesaplanır.</p>
-            </div>
-
-            <hr class="border-slate-100 dark:border-slate-800">
-
-            <!-- Başlangıç Zamanı Seçici -->
-            <div class="space-y-2">
-                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">SERMAYE BAŞLANGIÇ ZAMANI (SAAT / DAKİKA)</label>
-                <input type="datetime-local" id="inputStartDate" onchange="handleDateChange()"
-                    class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition">
-
-                <!-- Hızlı Tarih Butonları -->
-                <div class="flex flex-wrap gap-1.5 pt-0.5">
-                    <button onclick="setQuickDate('now')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">Şimdi</button>
-                    <button onclick="setQuickDate('today')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">Bugün 00:00</button>
-                    <button onclick="setQuickDate('24h')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">24 Sa. Önce</button>
-                    <button onclick="setQuickDate('3d')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">3 Gün Önce</button>
-                    <button onclick="setQuickDate('year_start')" class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition">Yıl Başı (2026)</button>
-                </div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400">💡 Cüzdanınız seçtiğiniz tarih ve saatteki paranızla başlatılır.</p>
-            </div>
-
-            <hr class="border-slate-100 dark:border-slate-800">
-
-            <!-- Eşzamanlı Slot Stepper -->
-            <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl">
-                <div>
-                    <span class="block text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">EŞZAMANLI SLOT LİMİTİ</span>
-                    <span id="txtSlotCount" class="font-black text-xs text-slate-900 dark:text-white">2 Pozisyon (%50 Bütçe / İşlem)</span>
-                </div>
-                <div class="flex items-center space-x-1.5">
-                    <button onclick="stepSlots(-1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition shadow-sm">-</button>
-                    <span id="displaySlotsValue" class="w-6 text-center font-bold text-xs text-slate-900 dark:text-white tabular-nums">2</span>
-                    <button onclick="stepSlots(1)" class="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 font-bold text-sm flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 transition shadow-sm">+</button>
-                </div>
-            </div>
-
-            <hr class="border-slate-100 dark:border-slate-800">
-
-            <!-- Gelişmiş Filtre & Kural Toggle'ları -->
-            <div class="space-y-3.5">
-                <!-- Slot Çakışma Filtresi -->
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <span class="font-semibold text-xs text-slate-900 dark:text-white block">Gerçekçi Slot Çakışma Filtresi</span>
-                        <span class="text-[10px] text-slate-400 block max-w-sm">Açıkken slot kapasitesini aşan çakışan işlemler geçmiş portföyden elenir, net gerçek kâr hesaplanır.</span>
+                <!-- Sistem Bilgisi Kartı -->
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
+                    <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-xs">🛡️</span>
+                        <span class="text-xs font-bold text-slate-900 dark:text-white">KUZGUN ENGINE</span>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                        <input type="checkbox" id="toggleSlotConstraint" onchange="handleToggle('slotConstraint')" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-
-                <!-- Borsa Komisyon Kesintisi -->
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <span class="font-semibold text-xs text-slate-900 dark:text-white block">Borsa Komisyon Kesintisi (BNB ile %0.075 + %0.075)</span>
-                        <span class="text-[10px] text-slate-400 block max-w-sm">Açıkken alım ve satımda BNB indirimli Binance Spot komisyonu (Toplam %0.15) düşülerek net getiri hesaplanır.</span>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                            <span>Sürüm:</span>
+                            <span class="font-bold text-slate-900 dark:text-white font-mono text-[11px]">v1.5.0</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                            <span>Platform:</span>
+                            <span class="font-semibold text-emerald-600 dark:text-emerald-400">Binance Spot</span>
+                        </div>
+                        <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
+                            <span>Geliştirici:</span>
+                            <span class="font-mono text-[10px] text-slate-700 dark:text-slate-300">codemso</span>
+                        </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                        <input type="checkbox" id="toggleFeeDeduction" onchange="handleToggle('feeDeduction')" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
                 </div>
+            </aside>
 
-                <!-- Mum Kapanış Teyidi -->
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <span class="font-semibold text-xs text-slate-900 dark:text-white block">Mum Kapanış Teyidi (TradingView Uyumu)</span>
-                        <span class="text-[10px] text-slate-400 block max-w-sm">Açıkken alım için önceki mumun RSI değerinin alım sınırında kapatmış olması şart koşulur.</span>
+            <!-- ORTA SÜTUN: GENİŞ FORM AYAR PANELLERİ (6 Kolon) -->
+            <div class="lg:col-span-6 space-y-5">
+
+                <!-- PANEL 1: SERMAYE VE ZAMAN YÖNETİMİ -->
+                <section id="secCapital" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <div class="flex items-center space-x-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">💵</span>
+                            <div>
+                                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">SERMAYE VE ZAMAN YÖNETİMİ</h2>
+                                <p class="text-[11px] text-slate-400">Portföy başlangıç sermayesi ve getiri hesaplama zaman çizelgesi</p>
+                            </div>
+                        </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                        <input type="checkbox" id="toggleCandleClose" onchange="handleToggle('candleClose')" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-            </div>
-        </section>
 
-        <!-- KART 2: TELEGRAM SİNYAL BOTU -->
-        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3 transition-colors">
-            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                </div>
-                <div>
-                    <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">TELEGRAM SİNYAL BOTU</h2>
-                    <p class="text-[10px] text-slate-400">Bulut bildirim botu entegrasyonu</p>
-                </div>
-            </div>
-
-            <div class="space-y-1.5">
-                <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">TELEGRAM CHAT ID</label>
-                <div class="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500 transition">
-                    <span class="text-slate-400 font-bold text-xs pl-1">#</span>
-                    <input type="text" id="inputTelegramChatId" placeholder="Örn: 1059064615"
-                        class="w-full bg-transparent font-semibold text-xs text-slate-900 dark:text-white focus:outline-none font-mono">
-                    <button onclick="saveTelegramId()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition shrink-0">Kaydet</button>
-                </div>
-                <p class="text-[10px] text-slate-500 dark:text-slate-400">💡 RSI kırılımları ve gerçekleşen işlemler bu Chat ID'ye iletilir.</p>
-            </div>
-        </section>
-
-        <!-- KART 3: BİLDİRİM VE SES KONTROLLERİ -->
-        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3 transition-colors">
-            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path></svg>
-                </div>
-                <div>
-                    <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">BİLDİRİM VE UYARI AYARLARI</h2>
-                    <p class="text-[10px] text-slate-400">Sistem sinyal uyarıları ve ses efektleri</p>
-                </div>
-            </div>
-
-            <div class="space-y-3">
-                <div class="flex items-center justify-between">
-                    <span class="font-semibold text-xs text-slate-900 dark:text-white">Alım Sinyali Bildirimleri</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggleBuyNotification" onchange="handleToggle('buyNotification')" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <span class="font-semibold text-xs text-slate-900 dark:text-white">Satım / Kâr Bildirimleri</span>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggleSellNotification" onchange="handleToggle('sellNotification')" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-2">
-                        <span class="font-semibold text-xs text-slate-900 dark:text-white">Sistem Ses Efektleri</span>
-                        <button onclick="testChimeSound()" class="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">(Sesi Test Et)</button>
+                    <!-- Sermaye Girişi (Geniş Web Input) -->
+                    <div class="space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">BAŞLANGIÇ SERMAYESİ (USDT)</label>
+                        <div class="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500 transition">
+                            <span class="font-bold text-base text-slate-400 pl-2">$</span>
+                            <input type="number" id="inputBalance" step="10" placeholder="1000.00" oninput="updateLivePreview()"
+                                class="w-full bg-transparent font-bold text-base text-slate-900 dark:text-white focus:outline-none tabular-nums">
+                            <span class="text-xs font-bold text-slate-400 pr-2">USDT</span>
+                            <button onclick="saveBalance()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs rounded-lg transition shadow-sm shrink-0">KAYDET</button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 İşlem pozisyon büyüklükleri ve toplam bakiye artışı bu tutar üzerinden hesaplanır[cite: 8, 13].</p>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" id="toggleSound" onchange="handleToggle('sound')" class="sr-only peer">
-                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-            </div>
-        </section>
 
-        <!-- KART 4: SİSTEM BİLGİSİ -->
-        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-3 transition-colors">
-            <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <div class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <h2 class="text-xs font-bold tracking-wide uppercase text-slate-900 dark:text-white">SİSTEM BİLGİSİ</h2>
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">SERMAYE BAŞLANGIÇ ZAMANI (SAAT / DAKİKA)</label>
+                        <input type="datetime-local" id="inputStartDate" onchange="handleDateChange()"
+                            class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition">
+
+                        <!-- Hızlı Tarih Butonları Şeridi -->
+                        <div class="grid grid-cols-5 gap-1.5 pt-1">
+                            <button onclick="setQuickDate('now')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Şimdi</button>
+                            <button onclick="setQuickDate('today')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Bugün 00:00</button>
+                            <button onclick="setQuickDate('24h')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">24 Sa. Önce</button>
+                            <button onclick="setQuickDate('3d')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">3 Gün Önce</button>
+                            <button onclick="setQuickDate('year_start')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Yıl Başı (2026)</button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 Cüzdanınız seçtiğiniz tarih ve saatteki paranızla başlatılır[cite: 8, 13].</p>
+                    </div>
+                </section>
+
+                <!-- PANEL 2: İŞLEM MOTORU & SLOT KURALLARI -->
+                <section id="secRules" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">⚙️</span>
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">İŞLEM MOTORU & SLOT FİLTRELERİ</h2>
+                            <p class="text-[11px] text-slate-400">Kapasite çakışması, borsa komisyonları ve TradingView teyitleri</p>
+                        </div>
+                    </div>
+
+                    <!-- Eşzamanlı Slot Kapasitesi (Geniş Kontrol) -->
+                    <div class="p-3.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-between">
+                        <div>
+                            <span class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">EŞZAMANLI SLOT LİMİTİ</span>
+                            <span id="txtSlotCount" class="font-extrabold text-sm text-slate-900 dark:text-white">2 Pozisyon (%50 Bütçe / İşlem)</span>
+                        </div>
+                        <div class="flex items-center space-x-2 bg-white dark:bg-slate-700 p-1 rounded-xl border border-slate-200 dark:border-slate-600 shadow-sm">
+                            <button onclick="stepSlots(-1)" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-600 font-black text-sm text-slate-700 dark:text-slate-200 transition">-</button>
+                            <span id="displaySlotsValue" class="w-8 text-center font-black text-sm text-slate-900 dark:text-white tabular-nums">2</span>
+                            <button onclick="stepSlots(1)" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-600 font-black text-sm text-slate-700 dark:text-slate-200 transition">+</button>
+                        </div>
+                    </div>
+
+                    <!-- 3 Ana Motor Kuralı Switch'leri -->
+                    <div class="space-y-4 pt-1">
+                        <!-- Slot Çakışma Filtresi -->
+                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Gerçekçi Slot Çakışma Filtresi</span>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken slot kapasitesini aşan çakışan işlemler geçmiş portföyden elenir, net gerçek kâr hesaplanır[cite: 8, 13]. Kapalıyken tüm coinlerin geçmiş kârları doğrudan toplanır[cite: 8, 13].</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input type="checkbox" id="toggleSlotConstraint" onchange="handleToggle('slotConstraint')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <!-- Borsa Komisyon Kesintisi -->
+                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Borsa Komisyon Kesintisi (BNB İndirimli %0.075 + %0.075)</span>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken alım ve satımda BNB indirimli Binance Spot komisyonu (%0.075 Alış + %0.075 Satış, Toplam %0.15) düşülerek net reel getiri hesaplanır[cite: 8, 13].</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input type="checkbox" id="toggleFeeDeduction" onchange="handleToggle('feeDeduction')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <!-- Mum Kapanış Teyidi -->
+                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Mum Kapanış Teyidi (TradingView Uyumu)</span>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken alım için önceki mumun kapanış RSI değerinin alım sınırında kapatmış olması şart koşulur (TradingView ile birebir aynı)[cite: 8, 13]. Kapalıyken anlık 1 saniyelik iğne kırılımları baz alınır[cite: 8, 13].</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input type="checkbox" id="toggleCandleClose" onchange="handleToggle('candleClose')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- PANEL 3: TELEGRAM BOTU & BİLDİRİMLER -->
+                <section id="secTelegram" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">✈️</span>
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">TELEGRAM SİNYAL BOTU</h2>
+                            <p class="text-[11px] text-slate-400">Bulut tabanlı anlık alım / satım mesaj entegrasyonu[cite: 4, 8]</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">TELEGRAM CHAT ID</label>
+                        <div class="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500 transition">
+                            <span class="text-slate-400 font-bold text-sm pl-2">#</span>
+                            <input type="text" id="inputTelegramChatId" placeholder="Örn: 1059064615"
+                                class="w-full bg-transparent font-semibold text-xs text-slate-900 dark:text-white focus:outline-none font-mono">
+                            <button onclick="saveTelegramId()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition shrink-0 shadow-sm">Kaydet</button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 RSI kırılımları bulut botu tarafından bu Chat ID'ye iletilir[cite: 8, 13].</p>
+                    </div>
+                </section>
+
+                <!-- PANEL 4: SİSTEM SESLERİ VE UYARILAR -->
+                <section id="secAlerts" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <span class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">🔔</span>
+                        <div>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">BİLDİRİM VE UYARI AYARLARI</h2>
+                            <p class="text-[11px] text-slate-400">Tarayıcı içi görsel ve sesli alarm kontrolleri</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/70">
+                            <span class="font-semibold text-xs text-slate-900 dark:text-white">Alım Sinyali Bildirimleri</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggleBuyNotification" onchange="handleToggle('buyNotification')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/70">
+                            <span class="font-semibold text-xs text-slate-900 dark:text-white">Satım / Kâr Bildirimleri</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggleSellNotification" onchange="handleToggle('sellNotification')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/70">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-semibold text-xs text-slate-900 dark:text-white">Sistem Ses Efektleri</span>
+                                <button onclick="testChimeSound()" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline">(Sesi Sına 🔊)</button>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggleSound" onchange="handleToggle('sound')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+                </section>
             </div>
 
-            <div class="space-y-2 text-xs">
-                <div class="flex justify-between items-center py-1 text-slate-600 dark:text-slate-400">
-                    <span>Terminal Sürümü</span>
-                    <span class="font-bold text-slate-900 dark:text-white font-mono">v1.5.0</span>
+            <!-- SAĞ SÜTUN: CANLI PARAMETRE ÖNİZLEME VİDEGET'İ (3 Kolon) -->
+            <aside class="lg:col-span-3 space-y-4">
+                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 sticky top-20">
+                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                        <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">CANLI MOTOR ÖZETİ</span>
+                        <span class="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                            <span>SENKRON</span>
+                        </span>
+                    </div>
+
+                    <!-- Canlı Metrik Kutuları -->
+                    <div class="space-y-3 text-xs">
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">BAŞLANGIÇ SERMAYESİ</span>
+                            <div id="previewBalance" class="text-xl font-black tabular-nums text-slate-900 dark:text-white">$1,000.00</div>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase">POZİSYON BAŞI BÜTÇE</span>
+                            <div id="previewSlotBudget" class="text-base font-extrabold tabular-nums text-blue-600 dark:text-blue-400">$500.00</div>
+                            <span id="previewSlotRatio" class="text-[10px] text-slate-400 font-medium">Toplam 2 Slot (%50/İşlem)</span>
+                        </div>
+
+                        <div class="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Çakışma Kalkanı:</span>
+                                <span id="badgeSlotConstraint" class="font-bold text-emerald-600 dark:text-emerald-400">Aktif</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Komisyon Kesintisi:</span>
+                                <span id="badgeFeeDeduction" class="font-bold text-emerald-600 dark:text-emerald-400">%0.15 Reel</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Mum Teyidi:</span>
+                                <span id="badgeCandleClose" class="font-bold text-emerald-600 dark:text-emerald-400">TradingView</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Telegram Bot:</span>
+                                <span id="badgeTelegram" class="font-mono font-bold text-blue-600 dark:text-blue-400">#1059064615</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <a href="index.html" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs shadow-sm transition flex items-center justify-center space-x-2">
+                        <span>Değişiklikleri Canlıda Gör →</span>
+                    </a>
                 </div>
-                <div class="flex justify-between items-center py-1 text-slate-600 dark:text-slate-400">
-                    <span>Geliştirici İmzası</span>
-                    <span class="font-semibold text-slate-900 dark:text-white font-mono">codemso by mehmetsalihok</span>
-                </div>
-            </div>
-        </section>
+            </aside>
+        </div>
     </main>
 
     <!-- TOAST BİLDİRİMİ -->
@@ -282,6 +370,11 @@
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2200);
         }
 
+        function scrollToSection(id) {
+            const el = document.getElementById(id);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         function testChimeSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -300,23 +393,42 @@
             } catch (e) {}
         }
 
+        function updateLivePreview() {
+            const balance = parseFloat(document.getElementById('inputBalance').value) || 1000;
+            const slots = parseInt(localStorage.getItem('kuzgun_max_slots'), 10) || 2;
+            const slotBudget = balance / slots;
+            const pct = Math.floor(100 / slots);
+
+            document.getElementById('previewBalance').textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('previewSlotBudget').textContent = '$' + slotBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            document.getElementById('previewSlotRatio').textContent = `Toplam ${slots} Slot (%${pct}/İşlem)`;
+
+            document.getElementById('badgeSlotConstraint').textContent = document.getElementById('toggleSlotConstraint').checked ? 'Aktif' : 'Pasif';
+            document.getElementById('badgeSlotConstraint').className = document.getElementById('toggleSlotConstraint').checked ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'font-bold text-slate-400';
+
+            document.getElementById('badgeFeeDeduction').textContent = document.getElementById('toggleFeeDeduction').checked ? '%0.15 Reel' : 'Sıfır Komisyon';
+            document.getElementById('badgeFeeDeduction').className = document.getElementById('toggleFeeDeduction').checked ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'font-bold text-slate-400';
+
+            document.getElementById('badgeCandleClose').textContent = document.getElementById('toggleCandleClose').checked ? 'TradingView' : 'Anlık İğne';
+            document.getElementById('badgeCandleClose').className = document.getElementById('toggleCandleClose').checked ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'font-bold text-amber-500';
+
+            const tgId = document.getElementById('inputTelegramChatId').value.trim() || '1059064615';
+            document.getElementById('badgeTelegram').textContent = '#' + tgId;
+        }
+
         function loadSettings() {
-            // Başlangıç Sermayesi
             const balance = localStorage.getItem('kuzgun_base_usd') || localStorage.getItem('kuzgun_user_balance') || '1000';
             document.getElementById('inputBalance').value = parseFloat(balance).toFixed(2);
 
-            // Başlangıç Zamanı
             const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || (Date.now() / 1000);
             const dateObj = new Date(startTs * 1000);
             const tzOffset = dateObj.getTimezoneOffset() * 60000;
             const localISOTime = (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
             document.getElementById('inputStartDate').value = localISOTime;
 
-            // Slot Limiti
             const slots = parseInt(localStorage.getItem('kuzgun_max_slots'), 10) || 2;
             updateSlotsUI(slots);
 
-            // Toggles
             document.getElementById('toggleSlotConstraint').checked = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
             document.getElementById('toggleFeeDeduction').checked = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
             document.getElementById('toggleCandleClose').checked = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
@@ -324,8 +436,9 @@
             document.getElementById('toggleSellNotification').checked = localStorage.getItem('kuzgun_sell_notification_enabled') !== 'false';
             document.getElementById('toggleSound').checked = localStorage.getItem('kuzgun_sound_enabled') !== 'false';
 
-            // Telegram Chat ID
             document.getElementById('inputTelegramChatId').value = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
+
+            updateLivePreview();
         }
 
         function saveBalance() {
@@ -333,6 +446,7 @@
             if (val > 0) {
                 localStorage.setItem('kuzgun_base_usd', val.toString());
                 localStorage.setItem('kuzgun_user_balance', val.toString());
+                updateLivePreview();
                 showToast('Sermaye kaydedildi: $' + val.toFixed(2));
             }
         }
@@ -382,6 +496,7 @@
             if (next >= 1 && next <= 5) {
                 localStorage.setItem('kuzgun_max_slots', next.toString());
                 updateSlotsUI(next);
+                updateLivePreview();
                 showToast('Slot limiti: ' + next);
             }
         }
@@ -406,6 +521,7 @@
             if (item) {
                 const checked = document.getElementById(item.id).checked;
                 localStorage.setItem(item.storage, checked.toString());
+                updateLivePreview();
                 showToast(`${item.name}: ${checked ? 'Açık' : 'Kapalı'}`);
             }
         }
@@ -414,6 +530,7 @@
             const id = document.getElementById('inputTelegramChatId').value.trim();
             if (id) {
                 localStorage.setItem('kuzgun_telegram_chat_id', id);
+                updateLivePreview();
                 showToast('Telegram Chat ID kaydedildi: #' + id);
             }
         }
