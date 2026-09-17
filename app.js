@@ -15,7 +15,7 @@ const KZ_STATE = {
 
 let binanceWs = null;
 
-// Tema Yönetimi Fonksiyonu
+// Tema Yönetimi
 function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('kuzgun_theme', isDark ? 'dark' : 'light');
@@ -1182,18 +1182,31 @@ async function fetchBinanceSpotSymbols() {
     } catch (err) {}
 }
 
-// 🎯 2026 Başından Günümüze Tüm Mumları Çeken Sayfalamalı Fetcher
+// 🎯 Yedekli ve Kesintisiz 2026 Mum Çekici (data-api.binance.vision + api.binance.com)
 async function fetchAllCandlesSince2026(symbol, interval) {
     const startTime = new Date('2026-01-01T00:00:00Z').getTime();
     const endTime = Date.now();
     let allCandles = [];
     let currentStart = startTime;
 
+    const endpoints = [
+        'https://data-api.binance.vision/api/v3/klines',
+        'https://api.binance.com/api/v3/klines'
+    ];
+
     while (currentStart < endTime) {
-        const url = `https://api.binance.com/api/v3/klines?symbol=${symbol}&interval=${interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
-        const res = await fetch(url);
-        if (!res.ok) break;
-        const batch = await res.json();
+        let batch = null;
+        for (const ep of endpoints) {
+            try {
+                const url = `${ep}?symbol=${symbol}&interval=${interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
+                const res = await fetch(url);
+                if (res.ok) {
+                    batch = await res.json();
+                    if (batch && batch.length > 0) break;
+                }
+            } catch (e) {}
+        }
+
         if (!batch || batch.length === 0) break;
 
         const mapped = batch.map(item => ({
@@ -1212,7 +1225,7 @@ async function fetchAllCandlesSince2026(symbol, interval) {
     return allCandles;
 }
 
-// 🎯 Swift StabilityWizardView ile Birebir Eşitlenmiş Optimizasyon Motoru
+// 🎯 Swift ile Birebir Eşitlenmiş Sihirbaz Motoru (Buy 10..35 / Sell 65..92)
 async function runWizardForNewCoin() {
     let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
     if (!rawSym) {
@@ -1222,9 +1235,9 @@ async function runWizardForNewCoin() {
     if (!rawSym.endsWith('USDT')) rawSym += 'USDT';
 
     const interval = document.getElementById('wizardIntervalInput').value;
-    const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value) || 7;
-    const profitTarget = parseFloat(document.getElementById('wizardProfitInput').value) || 0.7;
-    const monthlyCap = parseFloat(document.getElementById('wizardCapInput').value) || 2.1;
+    const rsiLength = parseInt(document.getElementById('wizardRsiLengthInput').value) || 6;
+    const profitTarget = parseFloat(document.getElementById('wizardProfitInput').value) || 0.6;
+    const monthlyCap = parseFloat(document.getElementById('wizardCapInput').value) || 3.6;
 
     const btn = document.getElementById('btnWizardRun');
     wizardLoadingStatus.classList.remove('hidden');
@@ -1241,9 +1254,9 @@ async function runWizardForNewCoin() {
         const rsiValues = calculateRSIHistory(closePrices, rsiLength);
         let bestCandidate = null;
 
-        // Swift Range: Buy (12..42), Sell (60..95) — 24 Al & 92 Sat tam bu koridorda
-        for (let buy = 12; buy <= 42; buy += 1) {
-            for (let sell = 60; sell <= 95; sell += 1) {
+        // Swift CoinLeagueView sınırları: Buy 10..35, Sell 65..92
+        for (let buy = 10; buy <= 35; buy += 1) {
+            for (let sell = 65; sell <= 92; sell += 1) {
                 let inPos = false;
                 let entryPrice = 0.0;
                 let totPnl = 0.0;
@@ -1356,14 +1369,14 @@ async function fetchMarketRate() {
 async function startEngine() {
     loadStorage();
 
-    // 1. Kartları HEMEN çiz (Sayfa asla boş kalmaz)
+    // 1. Kartları HEMEN çiz
     KZ_STATE.coins.forEach(c => renderSingleCard(c));
     renderActivePositionsList();
     renderPendingSignalsList();
     renderHistoryTrades();
     updatePortfolioCalculations();
 
-    // 2. Canlı fiyatları REST ile anında çekip canlandır
+    // 2. Canlı fiyatları REST ile anında çek
     await fetchLiveTickerFallback();
     fetchMarketRate();
 
