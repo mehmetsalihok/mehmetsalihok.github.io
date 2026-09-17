@@ -22,7 +22,7 @@
             }
         }
     </script>
-    <!-- Parlama Önleyici Tema Başlatıcı (FOUC Önleyici) -->
+    <!-- Parlama Önleyici Tema Başlatıcı -->
     <script>
         if (localStorage.getItem('kuzgun_theme') === 'dark' || (!('kuzgun_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -45,17 +45,17 @@
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
 
-    <!-- 1️⃣ ÜST KONSOL & METRİK ÇUBUĞU -->
+    <!-- 1️⃣ ORTAK ÜST KONSOL (Terminal Aktif) -->
     <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
             
             <div class="flex items-center space-x-4 shrink-0">
-                <div class="flex items-center space-x-1.5">
+                <a href="index.html" class="flex items-center space-x-1.5 hover:opacity-85 transition">
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">PRO</span>
-                </div>
+                </a>
                 <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 dark:border-slate-800 pl-4 text-xs font-medium">
-                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold">Terminal</button>
+                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm">Terminal</button>
                     <a href="league.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Lig Kıyaslama</a>
                     <button onclick="openAddCoinModal()" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Sihirbaz</button>
                     <a href="settings.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Ayarlar</a>
@@ -129,16 +129,10 @@
 
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
 
-                <!-- 🌓 TEMA DEĞİŞTİRİCİ BUTON -->
+                <!-- TEMA DEĞİŞTİRİCİ -->
                 <button onclick="toggleTheme()" class="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0" title="Açık / Koyu Mod">
-                    <!-- Güneş İkonu (Koyu modda görünür) -->
-                    <svg class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    <!-- Ay İkonu (Açık modda görünür) -->
-                    <svg class="w-4 h-4 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                    </svg>
+                    <svg class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="w-4 h-4 block dark:hidden text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
                 </button>
             </div>
         </div>
@@ -319,7 +313,7 @@
                     </div>
 
                     <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <svg class="w-4 h-4 fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
                 </div>
@@ -327,7 +321,7 @@
         </div>
     </div>
 
-    <!-- SÜRÜM ETİKETLİ GÜNCEL JS MOTORU -->
-    <script src="app.js?v=8"></script>
+    <!-- SÜRÜM ETİKETLİ JS MOTORU -->
+    <script src="app.js?v=9"></script>
 </body>
 </html>
