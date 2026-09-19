@@ -2015,7 +2015,10 @@ function openPosition(coin, customPrice = null, customTime = null) {
     if (!coin || coin.isActive === false) return;
     const entryP = customPrice || coin.price;
     const posTime = customTime || Date.now();
-    const slotBudget = KZ_STATE.portfolioBaseUsd / KZ_STATE.maxSlots;
+    const availableBalance = Number(KZ_STATE.cachedRealizedBalance) > 0
+        ? Number(KZ_STATE.cachedRealizedBalance)
+        : KZ_STATE.portfolioBaseUsd;
+    const slotBudget = availableBalance / Math.max(1, KZ_STATE.maxSlots);
 
     KZ_STATE.activePositions.push({
         id: 'pos_' + Date.now(),
@@ -2026,6 +2029,7 @@ function openPosition(coin, customPrice = null, customTime = null) {
         targetPrice: entryP * (1.0 + (coin.profitTarget / 100.0)),
         profitTarget: coin.profitTarget,
         allocatedUsd: slotBudget,
+        allocationVersion: 2,
         entryTime: posTime,
         livePnlPercent: 0,
         livePnlUsd: 0
@@ -2244,7 +2248,7 @@ function recalculateFullPortfolio() {
     });
 
     if (typeof PortfolioEngine !== 'undefined') {
-        const engineResult = PortfolioEngine.calculateCompoundedBalance({
+        const engineArgs = {
             baseBalance: KZ_STATE.portfolioBaseUsd,
             maxSlots: KZ_STATE.maxSlots,
             trades: allRawTrades,
@@ -2254,7 +2258,28 @@ function recalculateFullPortfolio() {
             isFeeDeductionEnabled: isFeeDeduction,
             startDateTimestamp: startTs,
             selectedYear: KZ_STATE.selectedYear
-        });
+        };
+
+        let engineResult = PortfolioEngine.calculateCompoundedBalance(engineArgs);
+
+        // Eski sürümde açık pozisyon bütçesi başlangıç parasından ayrılıyordu.
+        // Bir defalık geçişle tek/çoklu slot bütçesini güncel gerçekleşmiş
+        // bileşik bakiyeye göre düzelt ve yeniden hesapla.
+        const legacyPositions = engineArgs.activePositions.filter(pos => pos.allocationVersion !== 2);
+        if (legacyPositions.length > 0) {
+            const correctedSlotBudget = engineResult.realizedBalance / Math.max(1, KZ_STATE.maxSlots);
+            legacyPositions.forEach(pos => {
+                pos.allocatedUsd = correctedSlotBudget;
+                pos.allocationVersion = 2;
+                const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
+                const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
+                pos.livePnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
+                pos.livePnlUsd = correctedSlotBudget * (pos.livePnlPercent / 100);
+            });
+            savePositions();
+            engineResult = PortfolioEngine.calculateCompoundedBalance(engineArgs);
+            renderActivePositionsList();
+        }
 
         KZ_STATE.acceptedTradeIds = engineResult.acceptedTradeIds;
         KZ_STATE.coinRealStats = engineResult.coinRealStats;
