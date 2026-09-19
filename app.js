@@ -1,4 +1,4 @@
-// KUZGUN PRO — INDEXEDDB CANDLE CACHE
+// KUZGUN PRO — INDEXEDDB CANDLE CACHE (Swift Disk Cache Eşdeğeri)
 const CandleCache = {
     db: null,
     async init() {
@@ -119,6 +119,25 @@ function formatShortDate(timestampMs) {
     return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+// 📲 TELEGRAM BİLDİRİMİ GÖNDERİCİ
+function sendTelegramAlert(text) {
+    const chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
+    const botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
+    if (!chatId || !botToken) return;
+
+    try {
+        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: chatId,
+                text: text,
+                parse_mode: 'HTML'
+            })
+        }).catch(() => {});
+    } catch (e) {}
+}
+
 async function changeYearFromHeader(year) {
     KZ_STATE.selectedYear = year;
     localStorage.setItem('kuzgun_selected_year', year);
@@ -176,6 +195,8 @@ function formatCryptoPrice(price) {
 }
 
 function playChime(isSuccess = true) {
+    const isSound = localStorage.getItem('kuzgun_sound_enabled') !== 'false';
+    if (!isSound) return;
     try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
@@ -234,6 +255,159 @@ function isCoinMonthlyLocked(coin) {
     const currentMonthTrades = (KZ_STATE.closedTrades || []).filter(t => (t.coinId === coin.id || t.symbol === coin.symbol) && t.exitMonth === currentMonthStr);
     const totalMonthPnl = currentMonthTrades.reduce((sum, t) => sum + t.pnlPercent, 0);
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
+}
+
+// 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
+function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
+    if (!coin.rawCandles || coin.rawCandles.length === 0) return;
+
+    const intervalMs = getIntervalMilliseconds(coin.interval);
+    const nowMs = Date.now();
+    let lastCandle = coin.rawCandles[coin.rawCandles.length - 1];
+    let isRolloverOccurred = false;
+
+    // 1️⃣ MUM DEVİR DÖNGÜSÜ (CANDLE ROLLOVER)
+    while (nowMs >= (lastCandle.time + intervalMs)) {
+        isRolloverOccurred = true;
+        const nextStartTime = lastCandle.time + intervalMs;
+
+        // Kapanan mumu son fiyatla mühürle
+        lastCandle.close = livePrice;
+        if (livePrice > lastCandle.high) lastCandle.high = livePrice;
+        if (livePrice < lastCandle.low) lastCandle.low = livePrice;
+        coin.rawCandles[coin.rawCandles.length - 1] = lastCandle;
+        coin.candles[coin.candles.length - 1] = lastCandle.close;
+
+        // 🎯 MUM KAPANIŞINDA KESİNLEŞMİŞ CROSSOVER TEYİDİ (TradingView Uyumu)
+        const isCandleCloseEnabled = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
+        if (isCandleCloseEnabled) {
+            const recentCandles = coin.rawCandles.slice(-150);
+            const rsiHistory = calculateRSIHistory(recentCandles.map(c => c.close), coin.rsiLength);
+            const validRsis = rsiHistory.filter(r => r !== null);
+
+            if (validRsis.length >= 2) {
+                const closedRsi = validRsis[validRsis.length - 1];
+                const prevClosedRsi = validRsis[validRsis.length - 2];
+
+                // Kesinleşmiş kapanış crossover kuralı
+                const isConfirmedCrossover = prevClosedRsi <= coin.buyRsi && closedRsi > coin.buyRsi;
+                const isAlreadyInPos = (KZ_STATE.activePositions || []).some(p => p.coinId === coin.id || p.symbol === coin.symbol);
+                const isCapReached = isCoinMonthlyLocked(coin);
+
+                if (isConfirmedCrossover && !isAlreadyInPos && !isCapReached) {
+                    if (KZ_STATE.activePositions.length < KZ_STATE.maxSlots) {
+                        openPosition(coin, livePrice, nextStartTime);
+                        playChime(true);
+                        sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (Mum Teyitli)</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Giriş Fiyatı:</b> ${formatCryptoPrice(livePrice)}\n<b>Kapanış RSI:</b> ${closedRsi.toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}`);
+                    } else {
+                        const alreadyPending = (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol);
+                        if (!alreadyPending) {
+                            KZ_STATE.pendingSignals.push({
+                                id: 'pend_' + Date.now(),
+                                coinId: coin.id,
+                                symbol: coin.symbol,
+                                displaySymbol: coin.displaySymbol,
+                                triggerPrice: livePrice,
+                                triggerRsi: closedRsi,
+                                time: nextStartTime
+                            });
+                            savePending();
+                            renderPendingSignalsList();
+                            playChime(true);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Sıradaki yeni açık mumu başlat
+        const newCandle = {
+            time: nextStartTime,
+            open: livePrice,
+            high: livePrice,
+            low: livePrice,
+            close: livePrice,
+            monthKey: getTurkeyMonthKey(nextStartTime)
+        };
+        coin.rawCandles.push(newCandle);
+        coin.candles.push(livePrice);
+        lastCandle = newCandle;
+    }
+
+    // 2️⃣ ŞU ANKİ AKTİF MUMUN DEĞERLERİNİ CANLI GÜNCELLE
+    lastCandle.close = livePrice;
+    if (livePrice > lastCandle.high) lastCandle.high = livePrice;
+    if (livePrice < lastCandle.low) lastCandle.low = livePrice;
+    coin.rawCandles[coin.rawCandles.length - 1] = lastCandle;
+    coin.candles[coin.candles.length - 1] = livePrice;
+
+    coin.prevPrice = coin.price > 0 ? coin.price : livePrice;
+    coin.price = livePrice;
+    if (liveHigh !== undefined) coin.high24 = liveHigh;
+    if (liveLow !== undefined) coin.low24 = liveLow;
+
+    coin.prevRsi = coin.rsi;
+    coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+
+    // 3️⃣ CANLI POZİSYON ÇIKIŞ KONTROLÜ (Kâr Hedefi ve RSI Sat Anlık Çalışır)
+    const activePos = (KZ_STATE.activePositions || []).find(p => p.coinId === coin.id || p.symbol === coin.symbol);
+    if (activePos) {
+        const pnl = ((coin.price - activePos.entryPrice) / activePos.entryPrice) * 100;
+        activePos.livePnlPercent = pnl;
+        activePos.livePnlUsd = activePos.allocatedUsd * (pnl / 100);
+
+        if (coin.price >= activePos.targetPrice) {
+            closePosition(activePos.id, `Kâr Hedefi (%${activePos.profitTarget.toFixed(1)})`);
+            playChime(true);
+            sendTelegramAlert(`🔴 <b>HEDEF KÂR ALINDI</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Kâr:</b> +%${pnl.toFixed(2)}`);
+            return;
+        }
+
+        if (coin.rsi >= coin.sellRsi) {
+            closePosition(activePos.id, `RSI Sat (${coin.rsi.toFixed(1)})`);
+            playChime(pnl >= 0);
+            sendTelegramAlert(`🔴 <b>RSI SAT SİNYALİ</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Net PnL:</b> ${pnl >= 0 ? '+' : ''}%${pnl.toFixed(2)}`);
+            return;
+        }
+    } else {
+        // 4️⃣ MUM KAPANIŞI TEYİDİ KAPALIYSA: ANLIK İĞNE KIRILIMINDA GİRİŞ
+        const isCandleCloseEnabled = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
+        if (!isCandleCloseEnabled && !isCoinMonthlyLocked(coin)) {
+            const isCrossedUp = coin.prevRsi <= coin.buyRsi && coin.rsi > coin.buyRsi;
+            if (isCrossedUp) {
+                const alreadyPending = (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol);
+                if (KZ_STATE.activePositions.length < KZ_STATE.maxSlots) {
+                    openPosition(coin);
+                    playChime(true);
+                } else if (!alreadyPending) {
+                    KZ_STATE.pendingSignals.push({
+                        id: 'pend_' + Date.now(),
+                        coinId: coin.id,
+                        symbol: coin.symbol,
+                        displaySymbol: coin.displaySymbol,
+                        triggerPrice: coin.price,
+                        triggerRsi: coin.rsi,
+                        time: Date.now()
+                    });
+                    savePending();
+                    renderPendingSignalsList();
+                    playChime(true);
+                }
+            }
+        }
+    }
+
+    // Arayüzü hafifçe güncelle
+    updateCardPriceOnly(coin);
+    updateLivePortfolioQuick();
+
+    // Mum devri gerçekleştiyse önbelleği ve tabloları arka planda mühürle
+    if (isRolloverOccurred) {
+        const cacheKey = `kuzgun_candles_${coin.symbol}_${coin.interval}_${KZ_STATE.selectedYear}`;
+        CandleCache.set(cacheKey, coin.rawCandles);
+        runCardBacktest(coin);
+        updateCardTablesOnly(coin);
+    }
 }
 
 function runCardBacktest(coin) {
@@ -866,7 +1040,6 @@ function renderSingleCard(coin) {
     cardEl.innerHTML = htmlContent;
 }
 
-// Canlı fiyat akarken DOM'u yeniden üretmeyen ve işlemciyi yormayan metot
 function updateCardPriceOnly(coin) {
     const elPrice = document.getElementById(`price-${coin.id}`);
     if (elPrice) {
@@ -1074,13 +1247,12 @@ function setupSymbolLiveValidation() {
     });
 }
 
-// 🎯 DETAY BUTONUNU ANINDA VE HATASIZ AÇAN METOT
 function toggleCardExpand(coinId) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
     if (!coin) return;
     coin.isExpanded = !coin.isExpanded;
     if (coin.isExpanded && !coin.simMonthlyStats) runCardBacktest(coin);
-    saveCoins(); // Sadece temiz ayarları saklar, kotayı asla aşmaz!
+    saveCoins();
     renderSingleCard(coin);
 }
 
@@ -1213,7 +1385,7 @@ async function confirmAndAddCoinFromWizard() {
     playChime(true);
 }
 
-// ⚡️ HAFİF ANLIK CANLI BAKİYE GÜNCELLEYİCİ (0 ms)
+// ⚡️ ANLIK CANLI BAKİYE GÜNCELLEYİCİ
 function updateLivePortfolioQuick() {
     let unrealizedPnlUsd = 0;
     const currentSlotBudget = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) / Math.max(1, KZ_STATE.maxSlots);
@@ -1275,22 +1447,10 @@ async function fetchLiveTickerFallback() {
         KZ_STATE.coins.forEach(coin => {
             const info = priceMap[coin.symbol];
             if (info && info.price > 0) {
-                coin.prevPrice = coin.price > 0 ? coin.price : info.price;
-                coin.price = info.price;
-                coin.high24 = info.high;
-                coin.low24 = info.low;
-
-                if (coin.candles && coin.candles.length > 0) {
-                    coin.candles[coin.candles.length - 1] = info.price;
-                    coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
-                }
-
-                evaluateTradingRules(coin);
-                updateCardPriceOnly(coin);
+                // 🎯 REST fiyatı da mum devri ve teyit motoruna iletilir
+                processLivePriceUpdate(coin, info.price, info.high, info.low);
             }
         });
-
-        updateLivePortfolioQuick();
     } catch (err) {
         console.warn("REST ticker hatası:", err.message);
     }
@@ -1397,6 +1557,7 @@ async function fetchInitialCandles(coin) {
     }
 }
 
+// 🎯 WEBSOCKET: CANLI FİYATI DOĞRUDAN MUM DEVRİ & TEYİT MOTORUNA AKTARIR
 function initBinanceWebSocket() {
     if (binanceWs) {
         try { 
@@ -1442,20 +1603,8 @@ function initBinanceWebSocket() {
 
                 const coin = KZ_STATE.coins.find(c => c.symbol === sym);
                 if (coin && liveClose > 0) {
-                    coin.prevPrice = coin.price > 0 ? coin.price : liveClose;
-                    coin.price = liveClose;
-                    coin.high24 = parseFloat(d.h);
-                    coin.low24 = parseFloat(d.l);
-
-                    if (coin.candles && coin.candles.length > 0) {
-                        coin.candles[coin.candles.length - 1] = liveClose;
-                        coin.prevRsi = coin.rsi;
-                        coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
-                    }
-
-                    evaluateTradingRules(coin);
-                    updateCardPriceOnly(coin); // 🎯 Sadece hafif fiyat metrikleri güncellenir!
-                    updateLivePortfolioQuick(); // 🎯 Devasa döngülere girmeden 0.001ms'de bakiye güncellenir!
+                    // 🎯 Mum devri, kesinleşmiş teyit ve fiyat akışı tek merkezden yönetilir
+                    processLivePriceUpdate(coin, liveClose, parseFloat(d.h), parseFloat(d.l));
                 }
             } catch (e) {}
         };
@@ -1674,54 +1823,9 @@ async function fetchMarketRate() {
     } catch (e) {}
 }
 
-function evaluateTradingRules(coin) {
-    const activePos = (KZ_STATE.activePositions || []).find(p => p.coinId === coin.id || p.symbol === coin.symbol);
-
-    if (activePos) {
-        const pnl = ((coin.price - activePos.entryPrice) / activePos.entryPrice) * 100;
-        activePos.livePnlPercent = pnl;
-        activePos.livePnlUsd = activePos.allocatedUsd * (pnl / 100);
-
-        if (coin.price >= activePos.targetPrice) {
-            closePosition(activePos.id, `Kâr Hedefi (%${activePos.profitTarget.toFixed(1)})`);
-            playChime(true);
-            return;
-        }
-
-        if (coin.rsi >= coin.sellRsi) {
-            closePosition(activePos.id, `RSI Sat (${coin.rsi.toFixed(1)})`);
-            playChime(pnl >= 0);
-            return;
-        }
-    } else {
-        if (isCoinMonthlyLocked(coin)) return;
-
-        const isRsiBuyTriggered = (coin.prevRsi <= coin.buyRsi && coin.rsi > coin.buyRsi) || (coin.rsi <= coin.buyRsi);
-        
-        if (isRsiBuyTriggered) {
-            const alreadyPending = (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol);
-            if (KZ_STATE.activePositions.length < KZ_STATE.maxSlots) {
-                openPosition(coin);
-                playChime(true);
-            } else if (!alreadyPending) {
-                KZ_STATE.pendingSignals.push({
-                    id: 'pend_' + Date.now(),
-                    coinId: coin.id,
-                    symbol: coin.symbol,
-                    displaySymbol: coin.displaySymbol,
-                    triggerPrice: coin.price,
-                    triggerRsi: coin.rsi,
-                    time: Date.now()
-                });
-                savePending();
-                renderPendingSignalsList();
-            }
-        }
-    }
-}
-
-function openPosition(coin, customPrice = null) {
+function openPosition(coin, customPrice = null, customTime = null) {
     const entryP = customPrice || coin.price;
+    const posTime = customTime || Date.now();
     const slotBudget = KZ_STATE.portfolioBaseUsd / KZ_STATE.maxSlots;
 
     KZ_STATE.activePositions.push({
@@ -1733,7 +1837,7 @@ function openPosition(coin, customPrice = null) {
         targetPrice: entryP * (1.0 + (coin.profitTarget / 100.0)),
         profitTarget: coin.profitTarget,
         allocatedUsd: slotBudget,
-        entryTime: Date.now(),
+        entryTime: posTime,
         livePnlPercent: 0,
         livePnlUsd: 0
     });
@@ -1850,7 +1954,6 @@ function loadStorage() {
     }
 }
 
-// 🎯 SAFARİ KOTASINI ASLA DOLDURMAYAN TEMİZ VE HAFİF KAYIT
 function saveCoins() {
     try {
         const sanitized = KZ_STATE.coins.map(c => ({
@@ -1897,7 +2000,6 @@ function changeMaxSlots(newSlots) {
     recalculateFullPortfolio();
 }
 
-// 🎯 SADECE DURUM DEĞİŞTİĞİNDE ÇALIŞAN TAM HESAPLAMA METODU (İŞLEMCİYİ SIFIR YORAR)
 function recalculateFullPortfolio() {
     const isSlotConstraint = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
     const isFeeDeduction = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
