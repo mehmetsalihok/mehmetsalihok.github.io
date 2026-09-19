@@ -11,12 +11,9 @@ const PortfolioEngine = {
         // Her slotun ne zaman boşa çıkacağını tutan zaman dizisi (milisaniye)
         const slotFreeTimes = new Array(slotsCount).fill(0);
 
-        // Canlıda devam eden açık pozisyonlar slotu süresiz meşgul eder
-        if (activePositions && activePositions.length > 0) {
-            for (let i = 0; i < Math.min(activePositions.length, slotsCount); i++) {
-                slotFreeTimes[i] = Infinity;
-            }
-        }
+        // Açık pozisyonlar bugünkü slot durumudur; geçmiş simülasyonun başından
+        // itibaren slotu dolu sayılmaz. Canlı slot sınırı sinyal motorunda ayrıca
+        // KZ_STATE.activePositions.length ile uygulanır.
 
         const acceptedTrades = [];
 
@@ -126,7 +123,8 @@ const PortfolioEngine = {
             const coin = coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
             const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
             const pnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
-            unrealizedPnlUSD += currentSlotBudget * (pnlPercent / 100.0);
+            const positionBudget = Number(pos.allocatedUsd) > 0 ? Number(pos.allocatedUsd) : currentSlotBudget;
+            unrealizedPnlUSD += positionBudget * (pnlPercent / 100.0);
         });
 
         const totalCompoundedBalance = runningBalance + unrealizedPnlUSD;
