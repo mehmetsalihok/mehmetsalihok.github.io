@@ -151,10 +151,11 @@ const PortfolioEngine = {
         startDateTimestamp = 0,
         customStartDate = null,
         customEndDate = null,
-        initialBalance = 1000.0
+        initialBalance = 1000.0,
+        unrealizedPnlUSD = 0
     }) {
         if (!initialBalance || initialBalance <= 0) {
-            return { usdtGain: 0, directTradePnlSum: 0, netTradePnlSum: 0, initialPnlPercentage: 0, totalFeesUSD: 0, tradesCount: 0 };
+            return { usdtGain: 0, realizedUsdtGain: 0, includeUnrealized: false, directTradePnlSum: 0, netTradePnlSum: 0, initialPnlPercentage: 0, totalFeesUSD: 0, tradesCount: 0 };
         }
 
         const now = new Date();
@@ -216,10 +217,16 @@ const PortfolioEngine = {
             totalFeesUSD += (t.feeUSD || 0);
         }
 
+        const realizedUsdtGain = usdtGain;
+        const includeUnrealized = now.getTime() >= startMs && now.getTime() <= endMs;
+        if (includeUnrealized) usdtGain += Number(unrealizedPnlUSD || 0);
+
         const initialPnlPercentage = (usdtGain / initialBalance) * 100.0;
 
         return {
             usdtGain,
+            realizedUsdtGain,
+            includeUnrealized,
             directTradePnlSum,
             netTradePnlSum,
             initialPnlPercentage,
