@@ -12,13 +12,13 @@ const PortfolioEngine = {
             const candidateStart = candidate.entryTime;
             const candidateEnd = Math.max(candidate.exitTime, candidate.entryTime + 1);
 
-            // Mevcut kabul edilmiş işlemlerin ve aktif pozisyonların zaman aralıkları
+            // Mevcut kabul edilmiş işlemlerin ve aktif pozisyonların zaman pencereleri
             const occupiedIntervals = acceptedTrades.map(t => ({
                 start: t.entryTime,
                 end: Math.max(t.exitTime, t.entryTime + 1)
             }));
 
-            // Şu an canlıda devam eden pozisyonlar
+            // Şu an canlıda devam eden açık pozisyonlar
             activePositions.forEach(p => {
                 occupiedIntervals.push({
                     start: p.entryTime,
@@ -26,7 +26,7 @@ const PortfolioEngine = {
                 });
             });
 
-            // Kritik kontrol noktaları: Giriş anı ve o aralıktaki diğer işlemlerin başlangıçları
+            // Kritik kontrol noktaları: Giriş anı ve aralıktaki diğer işlemlerin başlangıçları
             const checkPoints = [candidateStart];
             for (const interval of occupiedIntervals) {
                 if (interval.start > candidateStart && interval.start < candidateEnd) {
@@ -66,16 +66,21 @@ const PortfolioEngine = {
         coins = [],
         isSlotConstraintEnabled = true,
         isFeeDeductionEnabled = true,
-        startDateTimestamp = 0
+        startDateTimestamp = 0,
+        selectedYear = '2026'
     }) {
         // A) Slot kapasitesi kalkanını uygula
         const processedTrades = isSlotConstraintEnabled 
             ? this.filterTradesBySlotCapacity(trades, maxSlots, activePositions)
             : [...trades].sort((a, b) => a.exitTime - b.exitTime);
 
-        // B) Sermaye başlangıç tarihinden sonrasını filtrele
+        // B) Sermaye başlangıç tarihinden sonrasını filtrele (Eğer ayarlanmadıysa yılbaşından itibaren)
+        const yearInt = parseInt(selectedYear, 10) || 2026;
+        const defaultYearStartSec = new Date(Date.UTC(yearInt, 0, 1, 0, 0, 0)).getTime() / 1000;
+        const effectiveStartSec = startDateTimestamp > 0 ? startDateTimestamp : defaultYearStartSec;
+
         const validTrades = processedTrades
-            .filter(t => (t.exitTime / 1000) >= startDateTimestamp)
+            .filter(t => (t.exitTime / 1000) >= effectiveStartSec)
             .sort((a, b) => a.exitTime - b.exitTime);
 
         let runningBalance = baseBalance;
@@ -130,16 +135,16 @@ const PortfolioEngine = {
         };
     },
 
-    // 3. DİNAMİK ZAMAN DİLİMİ İSTATİSTİKLERİ (Bugün, Hafta, Ay, Seçilen Ay, Özel Aralık)
+    // 3. DİNAMİK ZAMAN DİLİMİ İSTATİSTİKLERİ
     calculateTimeframeStats({
         executedTrades = [],
-        timeframe = 'today', // 'today', 'week', 'month', 'selectMonth', 'custom'
+        timeframe = 'sinceStart', // 'sinceStart', 'today', 'week', 'month', 'selectMonth', 'custom'
         selectedMonthIndex = new Date().getMonth() + 1, // 1..12
         selectedYear = '2026',
+        startDateTimestamp = 0,
         customStartDate = null,
         customEndDate = null,
-        initialBalance = 1000.0,
-        isFeeDeductionEnabled = true
+        initialBalance = 1000.0
     }) {
         if (!initialBalance || initialBalance <= 0) {
             return { usdtGain: 0, directTradePnlSum: 0, initialPnlPercentage: 0, totalFeesUSD: 0, tradesCount: 0 };
@@ -152,11 +157,16 @@ const PortfolioEngine = {
         const getStartOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).getTime();
 
         switch (timeframe) {
+            case 'sinceStart': {
+                const yearInt = parseInt(selectedYear, 10) || 2026;
+                const defaultYearStartMs = new Date(Date.UTC(yearInt, 0, 1, 0, 0, 0)).getTime();
+                startMs = startDateTimestamp > 0 ? (startDateTimestamp * 1000) : defaultYearStartMs;
+                break;
+            }
             case 'today':
                 startMs = getStartOfDay(now);
                 break;
             case 'week': {
-                // Pazartesi'yi haftanın başı al (Türkiye/ISO)
                 const day = now.getDay();
                 const diff = (day === 0 ? -6 : 1) - day;
                 const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff, 0, 0, 0);
@@ -168,7 +178,7 @@ const PortfolioEngine = {
                 break;
             case 'selectMonth': {
                 const yearInt = parseInt(selectedYear, 10) || 2026;
-                const mIdx = parseInt(selectedMonthIndex, 10) - 1; // 0..11
+                const mIdx = parseInt(selectedMonthIndex, 10) - 1;
                 startMs = new Date(yearInt, mIdx, 1, 0, 0, 0).getTime();
                 endMs = new Date(yearInt, mIdx + 1, 0, 23, 59, 59, 999).getTime();
                 break;
@@ -182,7 +192,7 @@ const PortfolioEngine = {
                 }
                 break;
             default:
-                startMs = getStartOfDay(now);
+                startMs = startDateTimestamp > 0 ? (startDateTimestamp * 1000) : getStartOfDay(now);
         }
 
         const filtered = executedTrades.filter(t => t.exitTime >= startMs && t.exitTime <= endMs);
