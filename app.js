@@ -1,3 +1,45 @@
+// KUZGUN PRO — INDEXEDDB CANDLE CACHE (Swift Disk Cache Eşdeğeri)
+const CandleCache = {
+    db: null,
+    async init() {
+        if (this.db) return this.db;
+        return new Promise((resolve) => {
+            const req = indexedDB.open('KuzgunCandlesDB', 1);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('candles')) {
+                    db.createObjectStore('candles', { keyPath: 'key' });
+                }
+            };
+            req.onsuccess = (e) => {
+                this.db = e.target.result;
+                resolve(this.db);
+            };
+            req.onerror = () => resolve(null);
+        });
+    },
+    async get(key) {
+        const db = await this.init();
+        if (!db) return null;
+        return new Promise((resolve) => {
+            const tx = db.transaction('candles', 'readonly');
+            const req = tx.objectStore('candles').get(key);
+            req.onsuccess = () => resolve(req.result ? req.result.data : null);
+            req.onerror = () => resolve(null);
+        });
+    },
+    async set(key, data) {
+        const db = await this.init();
+        if (!db) return;
+        return new Promise((resolve) => {
+            const tx = db.transaction('candles', 'readwrite');
+            tx.objectStore('candles').put({ key, data });
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => resolve();
+        });
+    }
+};
+
 // KUZGUN PRO ENGINE & UI CONTROLLER
 const KZ_STATE = {
     portfolioBaseUsd: 1000.00,
@@ -13,13 +55,12 @@ const KZ_STATE = {
     activeFilter: 'all',
     pendingWizardCandidate: null,
     
-    // Zaman Dilimi Seçenekleri
-    selectedTimeframe: 'today', // 'today', 'week', 'month', 'selectMonth', 'custom'
-    selectedTimeframeMonth: new Date().getMonth() + 1, // 1..12
+    // Varsayılan olarak "Başlangıçtan Beri" seçilidir
+    selectedTimeframe: 'sinceStart',
+    selectedTimeframeMonth: new Date().getMonth() + 1,
     customStartDate: null,
     customEndDate: null,
 
-    // Açık Olan Aylık Detay Modalının Durumu
     activeMonthModal: {
         coinId: null,
         monthKey: null
@@ -28,23 +69,20 @@ const KZ_STATE = {
 
 let binanceWs = null;
 
-// 🎯 Türkiye Saat Dilimi (UTC+3) Ay Çözücü
+// Türkiye Saat Dilimi (UTC+3) Ay Çözücü
 function getTurkeyMonthKey(timestamp = Date.now()) {
     return new Date(timestamp).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }).slice(0, 7);
 }
 
-// 🎯 Header üzerinden yıl değiştirildiğinde
+// Header üzerinden yıl değiştirildiğinde
 async function changeYearFromHeader(year) {
     KZ_STATE.selectedYear = year;
     localStorage.setItem('kuzgun_selected_year', year);
     
-    for (const coin of KZ_STATE.coins) {
-        await fetchInitialCandles(coin);
-    }
+    await Promise.all(KZ_STATE.coins.map(c => fetchInitialCandles(c)));
     updatePortfolioCalculations();
 }
 
-// Tema Yönetimi
 function toggleTheme() {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('kuzgun_theme', isDark ? 'dark' : 'light');
@@ -72,7 +110,7 @@ const addCoinModal = document.getElementById('addCoinModal');
 const wizardResultCard = document.getElementById('wizardResultCard');
 const wizardLoadingStatus = document.getElementById('wizardLoadingStatus');
 
-// Aylık İşlem Detay Modalı Elemanları
+// Aylık Detay Modalı Elemanları
 const monthTradesModal = document.getElementById('monthTradesModal');
 const modalCoinTitle = document.getElementById('modalCoinTitle');
 const modalCoinBadge = document.getElementById('modalCoinBadge');
@@ -154,7 +192,7 @@ function isCoinMonthlyLocked(coin) {
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
 }
 
-// 🎯 GİRİŞ VE ÇIKIŞ GÜN/SAAT BİLGİLERİNİ EKSİKSİZ KAYDEDEN BACKTEST MOTORU
+// Backtest Motoru
 function runCardBacktest(coin) {
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
@@ -282,7 +320,7 @@ function runCardBacktest(coin) {
     coin.simLastTrades = trades.slice(-10).reverse();
 }
 
-// 🎯 AYLIK DETAY MODALINI AÇAN FONKSİYON
+// Aylık Detay Modalını Aç
 function openMonthTradesModal(coinId, monthKey) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId);
     if (!coin || !coin.simMonthlyStats || coin.simMonthlyStats.length === 0) return;
@@ -300,7 +338,6 @@ function openMonthTradesModal(coinId, monthKey) {
     }
 }
 
-// 🎯 MODAL İÇİ AY SEÇİM VE İÇERİK OLUŞTURUCUSU
 function renderModalTabsAndContent(coin, selectedMonthKey) {
     const months = coin.simMonthlyStats || [];
     if (months.length === 0) return;
@@ -394,7 +431,6 @@ function closeMonthTradesModal() {
     KZ_STATE.activeMonthModal = { coinId: null, monthKey: null };
 }
 
-// 🎯 AYLIK TABLO ŞABLONU (HER SATIR TIKLANDIĞINDA MODALI AÇAR)
 function generateMonthlyTableHtml(coin) {
     const months = coin.simMonthlyStats || [];
     const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
@@ -427,13 +463,12 @@ function generateMonthlyTableHtml(coin) {
     `;
 }
 
-// 🎯 TÜM COİNLERİN GEÇMİŞ VE CANLI İŞLEMLERİNİ BİRLEŞTİRİP PORTFÖYÜ HESAPLAYAN METOD
+// Portföy Hesaplama & Zaman Tüneli Entegrasyonu
 function updatePortfolioCalculations() {
     const isSlotConstraint = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
     const isFeeDeduction = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
     const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
 
-    // 1. Tüm coinlerin backtest işlemlerini ve canlı gerçekleşen işlemleri topla
     const allRawTrades = [];
 
     (KZ_STATE.closedTrades || []).forEach(t => {
@@ -470,7 +505,6 @@ function updatePortfolioCalculations() {
         }
     });
 
-    // 2. PortfolioEngine ile Çakışma Kalkanı ve Bileşik Getiriyi Çalıştır
     if (typeof PortfolioEngine !== 'undefined') {
         const engineResult = PortfolioEngine.calculateCompoundedBalance({
             baseBalance: KZ_STATE.portfolioBaseUsd,
@@ -480,7 +514,8 @@ function updatePortfolioCalculations() {
             coins: KZ_STATE.coins,
             isSlotConstraintEnabled: isSlotConstraint,
             isFeeDeductionEnabled: isFeeDeduction,
-            startDateTimestamp: startTs
+            startDateTimestamp: startTs,
+            selectedYear: KZ_STATE.selectedYear
         });
 
         const tfStats = PortfolioEngine.calculateTimeframeStats({
@@ -488,28 +523,25 @@ function updatePortfolioCalculations() {
             timeframe: KZ_STATE.selectedTimeframe,
             selectedMonthIndex: KZ_STATE.selectedTimeframeMonth,
             selectedYear: KZ_STATE.selectedYear,
+            startDateTimestamp: startTs,
             customStartDate: KZ_STATE.customStartDate,
             customEndDate: KZ_STATE.customEndDate,
-            initialBalance: KZ_STATE.portfolioBaseUsd,
-            isFeeDeductionEnabled: isFeeDeduction
+            initialBalance: KZ_STATE.portfolioBaseUsd
         });
 
         renderPortfolioShowcaseUI(engineResult, tfStats);
     }
 }
 
-// 🎯 VİTRİN ARAYÜZÜNÜ GÜNCELLEYEN METOD
 function renderPortfolioShowcaseUI(engineResult, tfStats) {
     const totalUsd = engineResult.compoundedBalance;
     const totalTry = totalUsd * KZ_STATE.usdtTryRate;
     const gainTry = tfStats.usdtGain * KZ_STATE.usdtTryRate;
 
-    // Üst Bar Metrikleri
     if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(totalUsd);
     if (elPortfolioTry) elPortfolioTry.textContent = `≈ ${fmtTry(totalTry)}`;
     if (elSlotCountDisplay) elSlotCountDisplay.textContent = `${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots}`;
 
-    // Ana Vitrin Paneli
     const elDashUsd = document.getElementById('dashCompoundedUsd');
     const elDashTry = document.getElementById('dashCompoundedTry');
     const elDashSlotBadge = document.getElementById('dashboardSlotBadge');
@@ -518,7 +550,6 @@ function renderPortfolioShowcaseUI(engineResult, tfStats) {
     if (elDashTry) elDashTry.textContent = `≈ ${fmtTry(totalTry)} TRY`;
     if (elDashSlotBadge) elDashSlotBadge.textContent = `${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots} SLOT`;
 
-    // Zaman Dilimi Kazançları
     const elTfUsd = document.getElementById('dashTfUsdGain');
     const elTfTry = document.getElementById('dashTfTryGain');
     const elTfDirect = document.getElementById('dashTfDirectPnl');
@@ -554,11 +585,18 @@ function renderPortfolioShowcaseUI(engineResult, tfStats) {
     }
 }
 
-// 🎯 ZAMAN DİLİMİ ETKİLEŞİMLERİ (Bugün, Bu Hafta, Bu Ay, Ay Seç, Özel Aralık)
 function changePortfolioTimeframe(tf) {
     KZ_STATE.selectedTimeframe = tf;
 
+    const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date'));
+    let startDateFormatted = '';
+    if (startTs) {
+        const d = new Date(startTs * 1000);
+        startDateFormatted = ` (${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')})`;
+    }
+
     const labels = {
+        sinceStart: `Sermaye Başlangıcından Beri${startDateFormatted}`,
         today: 'Bugün Net Kazanç',
         week: 'Bu Hafta Net Kazanç',
         month: 'Bu Ay Net Kazanç',
@@ -777,6 +815,13 @@ function loadStorage() {
         KZ_STATE.selectedYear = savedYear;
         const sel = document.getElementById('headerYearSelector');
         if (sel) sel.value = savedYear;
+    }
+
+    // Başlangıç tarihi yoksa varsayılan olarak seçilen yılın 1 Ocak'ı ayarlanır
+    if (!localStorage.getItem('kuzgun_portfolio_start_date')) {
+        const yearInt = parseInt(KZ_STATE.selectedYear, 10) || 2026;
+        const defTs = new Date(yearInt, 0, 1, 0, 0, 0).getTime() / 1000;
+        localStorage.setItem('kuzgun_portfolio_start_date', defTs.toString());
     }
 
     const savedBase = localStorage.getItem('kuzgun_base_usd');
@@ -1405,21 +1450,49 @@ async function fetchLiveTickerFallback() {
     }
 }
 
-// 🎯 SEÇİLEN YILIN TÜM MUMLARINI ÇEKEN SAYFALAMALI MOTOR
+// 🎯 ÖNBELLEK DESTEKLİ VE DELTA İNDİRMELİ HIZLI MUM ÇEKİCİ (0 Gecikme)
 async function fetchInitialCandles(coin) {
     const year = parseInt(KZ_STATE.selectedYear, 10) || 2026;
+    const cacheKey = `kuzgun_candles_${coin.symbol}_${coin.interval}_${year}`;
     const startTime = new Date(Date.UTC(year, 0, 1, 0, 0, 0)).getTime();
     const endTime = year === new Date().getFullYear() 
         ? Date.now() 
         : new Date(Date.UTC(year, 11, 31, 23, 59, 59)).getTime();
 
-    let allCandles = [];
+    // 1. Önce anında IndexedDB önbelleğinden oku (5ms içinde UI'yı ayağa kaldırır)
+    let cached = await CandleCache.get(cacheKey) || [];
+
+    if (cached.length > 0) {
+        coin.rawCandles = cached;
+        coin.candles = cached.map(c => c.close);
+        coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+        coin.prevRsi = coin.rsi;
+        const lastCachedPrice = cached[cached.length - 1].close;
+        if (lastCachedPrice > 0 && (!coin.price || coin.price === 0)) {
+            coin.prevPrice = lastCachedPrice;
+            coin.price = lastCachedPrice;
+        }
+        runCardBacktest(coin);
+        renderSingleCard(coin);
+    }
+
+    // 2. Eksik kalan mumları (Delta) tespit et
     let currentStart = startTime;
+    if (cached.length > 0) {
+        const lastCachedTime = cached[cached.length - 1].time;
+        // Eğer önbellek zaten güncelse tekrar ağ isteği atma
+        if (lastCachedTime >= (endTime - 60000)) {
+            return;
+        }
+        currentStart = lastCachedTime + 1;
+    }
 
     const endpoints = [
         'https://data-api.binance.vision/api/v3/klines',
         'https://api.binance.com/api/v3/klines'
     ];
+
+    let newCandles = [];
 
     try {
         while (currentStart < endTime) {
@@ -1446,30 +1519,41 @@ async function fetchInitialCandles(coin) {
                 monthKey: getTurkeyMonthKey(item[0])
             }));
 
-            allCandles.push(...mapped);
+            newCandles.push(...mapped);
 
             if (batch.length < 1000) break;
             currentStart = batch[batch.length - 1][0] + 1;
         }
 
-        if (allCandles.length > 0) {
-            coin.rawCandles = allCandles;
-            coin.candles = allCandles.map(c => c.close);
+        if (newCandles.length > 0) {
+            const merged = cached.concat(newCandles);
+            // Çift kayıtları engelle
+            const seen = new Set();
+            const uniqueCandles = merged.filter(c => {
+                if (seen.has(c.time)) return false;
+                seen.add(c.time);
+                return true;
+            });
+
+            coin.rawCandles = uniqueCandles;
+            coin.candles = uniqueCandles.map(c => c.close);
             coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
             coin.prevRsi = coin.rsi;
 
             const latest = coin.candles[coin.candles.length - 1];
-            if (latest > 0 && (!coin.price || coin.price === 0)) {
+            if (latest > 0) {
                 coin.prevPrice = latest;
                 coin.price = latest;
             }
 
+            // Önbelleğe kaydet (Gelecek ziyaretler için)
+            await CandleCache.set(cacheKey, uniqueCandles);
             runCardBacktest(coin);
+            renderSingleCard(coin);
         }
     } catch (err) {
-        console.warn(`Mum çekilemedi [${coin.symbol}]:`, err.message);
+        console.warn(`Delta mum çekilemedi [${coin.symbol}]:`, err.message);
     }
-    renderSingleCard(coin);
 }
 
 function initBinanceWebSocket() {
@@ -1609,7 +1693,7 @@ async function fetchAllCandlesForYear(symbol, interval, year) {
     return allCandles;
 }
 
-// 🎯 Swift ile Birebir Eşitlenmiş Sihirbaz Motoru
+// Swift ile Birebir Eşitlenmiş Sihirbaz Motoru
 async function runWizardForNewCoin() {
     let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
     if (!rawSym) {
@@ -1750,15 +1834,21 @@ async function fetchMarketRate() {
     } catch (e) {}
 }
 
+// 🎯 HIZLANDIRILMIŞ BAŞLATMA MOTORU (PARALEL & CACHED)
 async function startEngine() {
     loadStorage();
 
+    // Kartları hemen DOM'a yerleştir
     KZ_STATE.coins.forEach(c => renderSingleCard(c));
     renderActivePositionsList();
     renderPendingSignalsList();
     renderHistoryTrades();
+
+    // 1. Önce önbellekten paralel oku ve portföyü anında hesapla (< 50ms)
+    await Promise.all(KZ_STATE.coins.map(coin => fetchInitialCandles(coin)));
     updatePortfolioCalculations();
 
+    // 2. Canlı fiyatları ve kurları getir
     await fetchLiveTickerFallback();
     fetchMarketRate();
 
@@ -1769,10 +1859,6 @@ async function startEngine() {
     setInterval(fetchMarketRate, 10000);
     setInterval(fetchLiveTickerFallback, 5000);
 
-    for (const coin of KZ_STATE.coins) {
-        await fetchInitialCandles(coin);
-    }
-
     if (window.location.search.includes('openWizard=true')) {
         setTimeout(() => {
             openAddCoinModal();
@@ -1781,7 +1867,6 @@ async function startEngine() {
     }
 }
 
-// ESC Tuşu ile Modal Kapatma Desteği
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeMonthTradesModal();
