@@ -1,6 +1,7 @@
 // KUZGUN PRO ENGINE & UI CONTROLLER
 const KZ_STATE = {
     portfolioBaseUsd: 1000.00,
+    selectedYear: localStorage.getItem('kuzgun_selected_year') || '2026', // 🎯 Dinamik Yıl
     usdtTryRate: 36.50,
     btcPrice: 0.00,
     maxSlots: 2,
@@ -18,6 +19,18 @@ let binanceWs = null;
 // 🎯 Türkiye Saat Dilimi (UTC+3) Ay Çözücü
 function getTurkeyMonthKey(timestamp = Date.now()) {
     return new Date(timestamp).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }).slice(0, 7);
+}
+
+// 🎯 Header üzerinden yıl değiştirildiğinde
+async function changeYearFromHeader(year) {
+    KZ_STATE.selectedYear = year;
+    localStorage.setItem('kuzgun_selected_year', year);
+    
+    // Tüm kartları seçilen yıla göre yeniden çek ve tara
+    for (const coin of KZ_STATE.coins) {
+        await fetchInitialCandles(coin);
+    }
+    updatePortfolioCalculations();
 }
 
 // Tema Yönetimi
@@ -119,18 +132,22 @@ function isCoinMonthlyLocked(coin) {
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
 }
 
+// 🎯 TÜM AYLARI DİNAMİK VE DOĞRU HESAPLAYAN BACKTEST MOTORU
 function runCardBacktest(coin) {
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-    const currentYear = 2026;
-    const currentMonthIdx = 8;
+    const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
+    const now = new Date();
+    
+    // Eğer seçilen yıl bu yılsa şu anki aya kadar, geçmiş yılsa 12 ayın tamamı (0..11)
+    const maxMonthIdx = (targetYear === now.getFullYear()) ? now.getMonth() : 11;
 
     const monthlyMap = {};
-    for (let m = 0; m <= currentMonthIdx; m++) {
-        const mKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+    for (let m = 0; m <= maxMonthIdx; m++) {
+        const mKey = `${targetYear}-${String(m + 1).padStart(2, '0')}`;
         monthlyMap[mKey] = { monthKey: mKey, name: monthNames[m], trades: 0, pnl: 0, isLocked: false };
     }
 
-    if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 10)) {
+    if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 5)) {
         coin.simMonthlyStats = Object.values(monthlyMap).reverse();
         coin.simLastTrades = [];
         coin.avgHoldDurationStr = '--';
@@ -151,7 +168,8 @@ function runCardBacktest(coin) {
 
         const mKey = c.monthKey;
         if (!monthlyMap[mKey]) {
-            const mIdx = parseInt(mKey.split('-')[1], 10) - 1;
+            const mParts = mKey.split('-');
+            const mIdx = parseInt(mParts[1], 10) - 1;
             monthlyMap[mKey] = { monthKey: mKey, name: monthNames[mIdx] || mKey, trades: 0, pnl: 0, isLocked: false };
         }
 
@@ -349,6 +367,13 @@ function loadStorage() {
     if (savedSlots) {
         KZ_STATE.maxSlots = parseInt(savedSlots, 10) || 2;
         if (elSlotSelector) elSlotSelector.value = KZ_STATE.maxSlots;
+    }
+
+    const savedYear = localStorage.getItem('kuzgun_selected_year');
+    if (savedYear) {
+        KZ_STATE.selectedYear = savedYear;
+        const sel = document.getElementById('headerYearSelector');
+        if (sel) sel.value = savedYear;
     }
 
     const savedBase = localStorage.getItem('kuzgun_base_usd');
@@ -593,7 +618,7 @@ function renderSingleCard(coin) {
                 ${strategyFixedHtml}
                 <div class="space-y-2 pt-1">
                     <div class="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-semibold text-slate-600 dark:text-slate-300">
-                        <button id="subtab-btn-${coin.id}-monthly" onclick="setCardSubTab('${coin.id}', 'monthly')" class="flex-1 py-1 rounded-md transition ${activeSubTab === 'monthly' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'}">Aylık Tablo (2026)</button>
+                        <button id="subtab-btn-${coin.id}-monthly" onclick="setCardSubTab('${coin.id}', 'monthly')" class="flex-1 py-1 rounded-md transition ${activeSubTab === 'monthly' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'}">Aylık Tablo (${KZ_STATE.selectedYear})</button>
                         <button id="subtab-btn-${coin.id}-trades" onclick="setCardSubTab('${coin.id}', 'trades')" class="flex-1 py-1 rounded-md transition ${activeSubTab === 'trades' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm font-semibold' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 font-medium'}">Son 10 İşlem</button>
                     </div>
                     <div class="overflow-hidden w-full relative pt-1">
@@ -679,7 +704,7 @@ function updateCardTablesOnly(coin) {
                                 <span class="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">${t.reason}</span>
                                 <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">• ${t.duration}</span>
                             </div>
-                            <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} →${formatCryptoPrice(t.exitPrice)}</div>
+                            <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</div>
                         </div>
                         <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
                             ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
@@ -1048,26 +1073,39 @@ async function fetchLiveTickerFallback() {
     }
 }
 
+// 🎯 SEÇİLEN YILIN TÜM MUMLARINI ÇEKEN SAYFALAMALI MOTOR
 async function fetchInitialCandles(coin) {
+    const year = parseInt(KZ_STATE.selectedYear, 10) || 2026;
+    const startTime = new Date(Date.UTC(year, 0, 1, 0, 0, 0)).getTime();
+    const endTime = year === new Date().getFullYear() 
+        ? Date.now() 
+        : new Date(Date.UTC(year, 11, 31, 23, 59, 59)).getTime();
+
+    let allCandles = [];
+    let currentStart = startTime;
+
+    const endpoints = [
+        'https://data-api.binance.vision/api/v3/klines',
+        'https://api.binance.com/api/v3/klines'
+    ];
+
     try {
-        const endpoints = [
-            `https://api.binance.com/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000`,
-            `https://data-api.binance.vision/api/v3/klines?symbol=${coin.symbol}&interval=${coin.interval}&limit=1000`
-        ];
+        while (currentStart < endTime) {
+            let batch = null;
+            for (const ep of endpoints) {
+                try {
+                    const url = `${ep}?symbol=${coin.symbol}&interval=${coin.interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
+                    const res = await fetch(url);
+                    if (res.ok) {
+                        batch = await res.json();
+                        if (batch && batch.length > 0) break;
+                    }
+                } catch (e) {}
+            }
 
-        let batch = null;
-        for (const ep of endpoints) {
-            try {
-                const res = await fetch(ep);
-                if (res.ok) {
-                    batch = await res.json();
-                    if (batch && batch.length > 0) break;
-                }
-            } catch (e) {}
-        }
+            if (!batch || batch.length === 0) break;
 
-        if (batch && batch.length > 0) {
-            const all = batch.map(item => ({
+            const mapped = batch.map(item => ({
                 time: item[0],
                 open: parseFloat(item[1]),
                 high: parseFloat(item[2]),
@@ -1076,8 +1114,15 @@ async function fetchInitialCandles(coin) {
                 monthKey: getTurkeyMonthKey(item[0])
             }));
 
-            coin.rawCandles = all;
-            coin.candles = all.map(c => c.close);
+            allCandles.push(...mapped);
+
+            if (batch.length < 1000) break;
+            currentStart = batch[batch.length - 1][0] + 1;
+        }
+
+        if (allCandles.length > 0) {
+            coin.rawCandles = allCandles;
+            coin.candles = allCandles.map(c => c.close);
             coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
             coin.prevRsi = coin.rsi;
 
@@ -1187,10 +1232,13 @@ async function fetchBinanceSpotSymbols() {
     } catch (err) {}
 }
 
-// 🎯 Yedekli ve Kesintisiz 2026 Mum Çekici
-async function fetchAllCandlesSince2026(symbol, interval) {
-    const startTime = new Date('2026-01-01T00:00:00Z').getTime();
-    const endTime = Date.now();
+// 🎯 Yedekli ve Kesintisiz Mum Çekici (Sihirbaz İçin)
+async function fetchAllCandlesForYear(symbol, interval, year) {
+    const startTime = new Date(Date.UTC(year, 0, 1, 0, 0, 0)).getTime();
+    const endTime = year === new Date().getFullYear() 
+        ? Date.now() 
+        : new Date(Date.UTC(year, 11, 31, 23, 59, 59)).getTime();
+
     let allCandles = [];
     let currentStart = startTime;
 
@@ -1230,7 +1278,7 @@ async function fetchAllCandlesSince2026(symbol, interval) {
     return allCandles;
 }
 
-// 🎯 Swift ile Birebir Eşitlenmiş Sihirbaz Motoru (Buy 10..35 / Sell 65..92)
+// 🎯 Swift ile Birebir Eşitlenmiş Sihirbaz Motoru
 async function runWizardForNewCoin() {
     let rawSym = document.getElementById('wizardSymbolInput').value.trim().toUpperCase();
     if (!rawSym) {
@@ -1246,11 +1294,12 @@ async function runWizardForNewCoin() {
 
     const btn = document.getElementById('btnWizardRun');
     wizardLoadingStatus.classList.remove('hidden');
-    wizardLoadingStatus.textContent = "2026 tüm mum verisi taranıyor (Binance)...";
+    wizardLoadingStatus.textContent = `${KZ_STATE.selectedYear} yılı tüm mum verisi taranıyor (Binance)...`;
     btn.disabled = true;
 
     try {
-        const allCandles = await fetchAllCandlesSince2026(rawSym, interval);
+        const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
+        const allCandles = await fetchAllCandlesForYear(rawSym, interval, targetYear);
         if (!allCandles || allCandles.length < (rsiLength + 10)) {
             throw new Error("Yeterli mum verisi alınamadı.");
         }
@@ -1393,7 +1442,6 @@ async function startEngine() {
         await fetchInitialCandles(coin);
     }
 
-    // URL'den ?openWizard=true ile gelindiyse sihirbazı otomatik aç
     if (window.location.search.includes('openWizard=true')) {
         setTimeout(() => {
             openAddCoinModal();
