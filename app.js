@@ -1661,48 +1661,99 @@ async function fetchBinanceSpotSymbols() {
     } catch (err) {}
 }
 
-async function fetchAllCandlesForYear(symbol, interval, year) {
+async function fetchJsonWithTimeout(url, timeoutMs = 6000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    } finally {
+        clearTimeout(timeoutId);
+    }
+}
+
+async function fetchKlinePage(symbol, interval, startTime, endTime) {
+    // Ana Binance uç noktası genellikle GitHub Pages üzerinde daha hızlıdır.
+    // Arşiv uç noktası yalnızca yedek olarak denenir.
+    const endpoints = [
+        'https://api.binance.com/api/v3/klines',
+        'https://data-api.binance.vision/api/v3/klines'
+    ];
+
+    let lastError = null;
+    for (const endpoint of endpoints) {
+        try {
+            const url = `${endpoint}?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${endTime}&limit=1000`;
+            const batch = await fetchJsonWithTimeout(url);
+            return Array.isArray(batch) ? batch : [];
+        } catch (error) {
+            lastError = error;
+        }
+    }
+    throw lastError || new Error('Binance mum verisi alınamadı.');
+}
+
+async function fetchAllCandlesForYear(symbol, interval, year, onProgress = null) {
     const startTime = new Date(Date.UTC(year, 0, 1, 0, 0, 0)).getTime();
     const endTime = year === new Date().getFullYear() 
         ? Date.now() 
         : new Date(Date.UTC(year, 11, 31, 23, 59, 59)).getTime();
 
-    let allCandles = [];
-    let currentStart = startTime;
+    const cacheKey = `kuzgun_candles_${symbol}_${interval}_${year}`;
+    const cached = (await CandleCache.get(cacheKey) || [])
+        .filter(c => c.time >= startTime && c.time <= endTime)
+        .sort((a, b) => a.time - b.time);
 
-    const endpoints = [
-        'https://data-api.binance.vision/api/v3/klines',
-        'https://api.binance.com/api/v3/klines'
-    ];
+    // Son önbellek mumunu tekrar çekerek açık mumun OHLC değerlerini de tazeleriz.
+    const missingStart = cached.length > 0
+        ? Math.max(startTime, cached[cached.length - 1].time)
+        : startTime;
+    const intervalMs = getIntervalMilliseconds(interval);
+    const pageSpanMs = intervalMs * 1000;
+    const pages = [];
 
-    while (currentStart < endTime) {
-        let batch = null;
-        for (const ep of endpoints) {
-            try {
-                const url = `${ep}?symbol=${symbol}&interval=${interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
-                const res = await fetch(url);
-                if (res.ok) {
-                    batch = await res.json();
-                    if (batch && batch.length > 0) break;
-                }
-            } catch (e) {}
-        }
-
-        if (!batch || batch.length === 0) break;
-
-        const mapped = batch.map(item => ({
-            time: item[0],
-            open: parseFloat(item[1]),
-            high: parseFloat(item[2]),
-            low: parseFloat(item[3]),
-            close: parseFloat(item[4]),
-            monthKey: getTurkeyMonthKey(item[0])
-        }));
-
-        allCandles.push(...mapped);
-        if (batch.length < 1000) break;
-        currentStart = batch[batch.length - 1][0] + 1;
+    for (let pageStart = missingStart; pageStart <= endTime; pageStart += pageSpanMs) {
+        pages.push({
+            start: pageStart,
+            end: Math.min(endTime, pageStart + pageSpanMs - 1)
+        });
     }
+
+    if (pages.length === 0) return cached;
+
+    const downloaded = [];
+    let nextPageIndex = 0;
+    let completedPages = 0;
+    const workerCount = Math.min(6, pages.length);
+
+    async function downloadWorker() {
+        while (nextPageIndex < pages.length) {
+            const page = pages[nextPageIndex++];
+            const batch = await fetchKlinePage(symbol, interval, page.start, page.end);
+            downloaded.push(...batch.map(item => ({
+                time: item[0],
+                open: parseFloat(item[1]),
+                high: parseFloat(item[2]),
+                low: parseFloat(item[3]),
+                close: parseFloat(item[4]),
+                monthKey: getTurkeyMonthKey(item[0])
+            })));
+            completedPages++;
+            if (onProgress) onProgress(completedPages, pages.length, cached.length > 0);
+        }
+    }
+
+    await Promise.all(Array.from({ length: workerCount }, () => downloadWorker()));
+
+    const candleMap = new Map();
+    cached.forEach(candle => candleMap.set(candle.time, candle));
+    downloaded.forEach(candle => candleMap.set(candle.time, candle));
+    const allCandles = Array.from(candleMap.values())
+        .filter(c => c.time >= startTime && c.time <= endTime)
+        .sort((a, b) => a.time - b.time);
+
+    await CandleCache.set(cacheKey, allCandles);
     return allCandles;
 }
 
@@ -1726,11 +1777,17 @@ async function runWizardForNewCoin() {
 
     try {
         const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
-        const allCandles = await fetchAllCandlesForYear(rawSym, interval, targetYear);
+        const allCandles = await fetchAllCandlesForYear(rawSym, interval, targetYear, (done, total, fromCache) => {
+            const percent = Math.round((done / total) * 100);
+            wizardLoadingStatus.textContent = fromCache
+                ? `Önbellek güncelleniyor... %${percent}`
+                : `Mum verileri indiriliyor... %${percent}`;
+        });
         if (!allCandles || allCandles.length < (rsiLength + 10)) {
             throw new Error("Yeterli mum verisi alınamadı.");
         }
 
+        wizardLoadingStatus.textContent = `${allCandles.length.toLocaleString('tr-TR')} mum üzerinde AL/SAT değerleri hesaplanıyor...`;
         const closePrices = allCandles.map(c => c.close);
         const rsiValues = calculateRSIHistory(closePrices, rsiLength);
         let bestCandidate = null;
@@ -1794,6 +1851,13 @@ async function runWizardForNewCoin() {
                         bestCandidate = { buyRsi: buy, sellRsi: sell, winRate, lossCount, totalTrades, netPnl: totPnl, score };
                     }
                 }
+            }
+
+            // Uzun 5m taramalarında arayüzün donmasını engeller ve ilerlemeyi gösterir.
+            const scanPercent = Math.round(((buy - 9) / 26) * 100);
+            wizardLoadingStatus.textContent = `Stratejiler karşılaştırılıyor... %${scanPercent}`;
+            if ((buy - 10) % 2 === 1) {
+                await new Promise(resolve => requestAnimationFrame(resolve));
             }
         }
 
