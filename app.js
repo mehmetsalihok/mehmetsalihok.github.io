@@ -68,6 +68,7 @@ const KZ_STATE = {
     coinRealStats: {},
     cachedRealizedBalance: 1000.00,
     executedGlobalTrades: [],
+    lastTimeframeStats: null,
     historyPage: 0
 };
 
@@ -259,6 +260,16 @@ function calculateRSI(closes, period = 14) {
 
 function isCoinMonthlyLocked(coin) {
     const currentMonthStr = getTurkeyMonthKey();
+    const simulatedMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === currentMonthStr);
+    if (simulatedMonth && (simulatedMonth.isLocked || (simulatedMonth.pnl + 0.001) >= coin.monthlyCap)) {
+        return true;
+    }
+
+    const realMonth = KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[currentMonthStr];
+    if (realMonth && (realMonth.pnl + 0.001) >= coin.monthlyCap) {
+        return true;
+    }
+
     const currentMonthTrades = (KZ_STATE.closedTrades || []).filter(t => (t.coinId === coin.id || t.symbol === coin.symbol) && t.exitMonth === currentMonthStr);
     const totalMonthPnl = currentMonthTrades.reduce((sum, t) => sum + t.pnlPercent, 0);
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
@@ -407,6 +418,7 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
 
     // Arayüzü hafifçe güncelle
     updateCardPriceOnly(coin);
+    updateActivePositionsLive();
     updateLivePortfolioQuick();
 
     // Mum devri gerçekleştiyse önbelleği ve tabloları arka planda mühürle
@@ -1165,23 +1177,47 @@ function renderActivePositionsList() {
         const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
         const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
         const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
+        const pnlUsd = pos.allocatedUsd * (pnl / 100);
         const isWin = pnl >= 0;
+        const entryDate = formatShortDate(pos.entryTime || Date.now());
 
         return `
             <div class="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-lg p-2.5 space-y-2">
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-xs text-slate-900 dark:text-white">${pos.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-800">%${pos.profitTarget.toFixed(1)} TP</span></span>
-                    <span class="font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${pnl.toFixed(2)}%</span>
+                    <span id="active-pos-pnl-${pos.id}" class="font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)</span>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/90 p-2 rounded border border-slate-100 dark:border-slate-700/60">
                     <div>Giriş: <span class="text-slate-800 dark:text-slate-200 font-medium">${formatCryptoPrice(pos.entryPrice)}</span></div>
                     <div>Hedef: <span class="text-emerald-600 dark:text-emerald-400 font-medium">${formatCryptoPrice(pos.targetPrice)}</span></div>
-                    <div>Anlık: <span class="text-slate-900 dark:text-white font-medium">${formatCryptoPrice(currentPrice)}</span></div>
+                    <div>Anlık: <span id="active-pos-price-${pos.id}" class="text-slate-900 dark:text-white font-medium">${formatCryptoPrice(currentPrice)}</span></div>
                     <div>Bütçe: <span class="text-slate-800 dark:text-slate-200 font-medium">${fmtUsd(pos.allocatedUsd)}</span></div>
+                    <div class="col-span-2 pt-1 border-t border-slate-100 dark:border-slate-700/60">Giriş zamanı: <span class="text-slate-800 dark:text-slate-200 font-semibold tabular-nums">${entryDate}</span></div>
                 </div>
                 <button onclick="closePosition('${pos.id}')" class="w-full py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-medium border border-slate-200 dark:border-slate-700 transition cursor-pointer">Pozisyonu Kapat</button>
             </div>`;
     }).join('');
+}
+
+function updateActivePositionsLive() {
+    (KZ_STATE.activePositions || []).forEach(pos => {
+        const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
+        const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
+        const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
+        const pnlUsd = pos.allocatedUsd * (pnl / 100);
+        const isWin = pnl >= 0;
+
+        pos.livePnlPercent = pnl;
+        pos.livePnlUsd = pnlUsd;
+
+        const pnlEl = document.getElementById(`active-pos-pnl-${pos.id}`);
+        const priceEl = document.getElementById(`active-pos-price-${pos.id}`);
+        if (pnlEl) {
+            pnlEl.textContent = `${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)`;
+            pnlEl.className = `font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+        }
+        if (priceEl) priceEl.textContent = formatCryptoPrice(currentPrice);
+    });
 }
 
 function renderPendingSignalsList() {
@@ -1474,6 +1510,26 @@ function updateLivePortfolioQuick() {
     const elDashTry = document.getElementById('dashCompoundedTry');
     if (elDashUsd) elDashUsd.textContent = fmtUsd(totalUsd);
     if (elDashTry) elDashTry.textContent = `≈ ${fmtTry(totalTry)} TRY`;
+
+    const lastStats = KZ_STATE.lastTimeframeStats;
+    if (lastStats) {
+        const liveGainUsd = Number(lastStats.realizedUsdtGain || 0) + (lastStats.includeUnrealized ? unrealizedPnlUsd : 0);
+        const liveGainTry = liveGainUsd * KZ_STATE.usdtTryRate;
+        const liveCapitalPnl = KZ_STATE.portfolioBaseUsd > 0 ? (liveGainUsd / KZ_STATE.portfolioBaseUsd) * 100 : 0;
+        const elTfUsd = document.getElementById('dashTfUsdGain');
+        const elTfTry = document.getElementById('dashTfTryGain');
+        const elTfCapital = document.getElementById('dashTfCapitalPnl');
+
+        if (elTfUsd) {
+            elTfUsd.textContent = `${liveGainUsd >= 0 ? '+' : ''}${fmtUsd(liveGainUsd)}`;
+            elTfUsd.className = `text-xl font-black tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+        }
+        if (elTfTry) {
+            elTfTry.textContent = `(${liveGainUsd >= 0 ? '+' : ''}${fmtTry(liveGainTry)})`;
+            elTfTry.className = `text-xs font-bold tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
+        }
+        if (elTfCapital) elTfCapital.textContent = `Ana Paraya: ${liveCapitalPnl >= 0 ? '+' : ''}${liveCapitalPnl.toFixed(2)}%`;
+    }
 }
 
 // REST Fiyat Yedekleme
@@ -2213,8 +2269,11 @@ function recalculateFullPortfolio() {
             startDateTimestamp: startTs,
             customStartDate: KZ_STATE.customStartDate,
             customEndDate: KZ_STATE.customEndDate,
-            initialBalance: KZ_STATE.portfolioBaseUsd
+            initialBalance: KZ_STATE.portfolioBaseUsd,
+            unrealizedPnlUSD: engineResult.unrealizedPnlUSD
         });
+
+        KZ_STATE.lastTimeframeStats = tfStats;
 
         renderPortfolioShowcaseUI(engineResult, tfStats);
         renderHistoryTrades();
