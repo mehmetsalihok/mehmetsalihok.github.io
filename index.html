@@ -22,7 +22,7 @@
             }
         }
     </script>
-    <!-- Parlama Önleyici 3 Aşamalı Tema Başlatıcı (FOUC Önleyici) -->
+    <!-- Parlama Önleyici 3 Aşamalı Tema Başlatıcı -->
     <script>
         const savedTheme = localStorage.getItem('kuzgun_theme');
         if (savedTheme === 'oled') {
@@ -83,7 +83,7 @@
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
 
-    <!-- 1️⃣ ORTAK ÜST KONSOL (Terminal Aktif) -->
+    <!-- 1️⃣ ORTAK ÜST KONSOL -->
     <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
             
@@ -167,17 +167,26 @@
 
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
 
-                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton (Açık -> Koyu -> OLED) -->
+                <!-- 🎯 YIL SEÇİCİ -->
+                <div class="flex items-center space-x-1.5">
+                    <span class="text-slate-400 dark:text-slate-500 font-bold text-[9px] uppercase">YIL:</span>
+                    <select id="headerYearSelector" onchange="changeYearFromHeader(this.value)" 
+                        class="bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 font-bold text-xs focus:outline-none cursor-pointer">
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                    </select>
+                </div>
+
+                <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
+
+                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton -->
                 <button onclick="cycleTheme()" class="px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0 flex items-center space-x-1.5" title="Tema: Açık / Koyu / OLED">
-                    <!-- Güneş İkonu (Açık modda görünür) -->
                     <svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
                     </svg>
-                    <!-- Ay İkonu (Standart Koyu modda görünür) -->
                     <svg id="themeIconDark" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
                     </svg>
-                    <!-- OLED Rozeti (Saf Siyah modda görünür) -->
                     <span id="themeBadgeOled" class="hidden text-[10px] font-black px-1.5 py-0.5 rounded bg-black text-white border border-neutral-700 uppercase tracking-wider">OLED</span>
                 </button>
             </div>
@@ -266,7 +275,7 @@
                     <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">⚙️</div>
                     <div>
                         <h3 class="font-bold text-sm text-slate-900 dark:text-white">Coin & Strateji Optimizatörü</h3>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">2026 yılı tüm mumları taranarak en kârlı AL/SAT değerleri saptanır.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Seçilen yılın tüm mumları taranarak en kârlı AL/SAT değerleri saptanır.</p>
                     </div>
                 </div>
                 <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-semibold">✕</button>
@@ -359,7 +368,7 @@
                     </div>
 
                     <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4 fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
                 </div>
@@ -415,6 +424,6 @@
     </script>
 
     <!-- SÜRÜM ETİKETLİ GÜNCEL JS MOTORU -->
-    <script src="app.js?v=10"></script>
+    <script src="app.js?v=11"></script>
 </body>
 </html>
