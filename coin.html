@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUZGUN — Coin Odak Terminali</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Parlama Önleyici Tema Başlatıcı -->
+    <script>
+        const savedTheme = localStorage.getItem('kuzgun_theme');
+        if (savedTheme === 'oled') {
+            document.documentElement.classList.add('dark', 'oled');
+        } else if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.remove('oled');
+        } else {
+            document.documentElement.classList.remove('dark', 'oled');
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; letter-spacing: -0.015em; }
+        .tabular-nums { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dark ::-webkit-scrollbar-track { background: #0f172a; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        .price-transition { transition: color 0.35s ease-out; }
+
+        html.oled, html.oled body { background-color: #000000 !important; }
+        html.oled header, html.oled section, html.oled div[class*="dark:bg-slate-900"] {
+            background-color: #000000 !important;
+            border-color: #171717 !important;
+        }
+        html.oled div[class*="dark:bg-slate-800"] {
+            background-color: #0a0a0a !important;
+            border-color: #222222 !important;
+        }
+    </style>
+</head>
+<body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
+
+    <!-- 1️⃣ MİNİMAL ÜST KONSOL -->
+    <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
+        <div class="max-w-[1400px] mx-auto px-5 h-14 flex items-center justify-between gap-4">
+            
+            <div class="flex items-center space-x-3">
+                <a href="index.html" class="flex items-center space-x-1.5 hover:opacity-85 transition">
+                    <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
+                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">ODAK</span>
+                </a>
+                <span class="h-4 w-px bg-slate-200 dark:bg-slate-800"></span>
+                <div class="flex items-center space-x-2">
+                    <span id="headerCoinSymbol" class="font-extrabold text-sm text-slate-900 dark:text-white">---</span>
+                    <span id="headerCoinTf" class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">--</span>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3 text-xs">
+                <!-- Canlı WebSocket Durumu -->
+                <div class="flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
+                    <span id="wsDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="wsText" class="font-bold text-[10px] text-emerald-600 dark:text-emerald-400">CANLI</span>
+                </div>
+
+                <a href="index.html" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition">
+                    ← Tüm Terminal
+                </a>
+
+                <!-- Tema Değiştirici -->
+                <button onclick="cycleTheme()" class="px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition" title="Tema Değiştir">
+                    <svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg id="themeIconDark" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                    <span id="themeBadgeOled" class="hidden text-[10px] font-black px-1.5 py-0.5 rounded bg-black text-white border border-neutral-700">OLED</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 2️⃣ ANA ODAK PANELİ -->
+    <main class="max-w-[1400px] w-full mx-auto px-5 py-6 space-y-5 flex-1">
+        
+        <!-- ÜST VİTRİN: BÜYÜK FİYAT & RSI GÖSTERGESİ -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                
+                <!-- Canlı Fiyat -->
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span id="displaySymbolMain" class="text-2xl font-black text-slate-900 dark:text-white tracking-tight">---</span>
+                        <span class="text-xs font-bold text-slate-400">/USDT</span>
+                        <span id="liveStatusBadge" class="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500">BOŞTA</span>
+                    </div>
+                    
+                    <div class="flex items-baseline space-x-3">
+                        <span id="bigPrice" class="text-4xl sm:text-5xl font-black tabular-nums tracking-tight price-transition text-slate-900 dark:text-white">$---.--</span>
+                    </div>
+
+                    <div class="flex items-center space-x-3 text-xs text-slate-400 pt-1 font-medium">
+                        <span>24s En Düşük: <strong id="low24" class="text-rose-500 tabular-nums">---</strong></span>
+                        <span>•</span>
+                        <span>En Yüksek: <strong id="high24" class="text-emerald-500 tabular-nums">---</strong></span>
+                    </div>
+                </div>
+
+                <!-- RSI Durumu -->
+                <div class="flex flex-col md:items-end space-y-2">
+                    <div id="rsiContainerBox" class="flex items-center space-x-2 px-4 py-2 rounded-xl border bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">CANLI RSI:</span>
+                        <span id="rsiValue" class="text-2xl font-black tabular-nums text-slate-800 dark:text-slate-100">50.0</span>
+                    </div>
+                    <span id="rsiStatusText" class="text-xs font-black tracking-wide text-slate-400">NÖTR BÖLGE</span>
+                </div>
+            </div>
+
+            <!-- RSI Spektrum Çubuğu -->
+            <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-lg h-4 relative overflow-hidden flex border border-slate-300/60 dark:border-slate-700 shadow-inner">
+                    <div id="spectrumBuyZone" class="bg-emerald-500/25 border-r border-emerald-500/60 h-full w-[30%]"></div>
+                    <div class="flex-1 bg-slate-100/40 dark:bg-slate-700/40 h-full"></div>
+                    <div id="spectrumSellZone" class="bg-rose-500/25 border-l border-rose-500/60 h-full w-[30%]"></div>
+                    <div id="rsiNeedle" class="absolute top-0 bottom-0 w-1.5 bg-slate-900 dark:bg-white shadow-md transition-all duration-300 z-10 -ml-0.5" style="left: 50%;">
+                        <div class="w-3 h-2 bg-slate-900 dark:bg-white rounded-sm -mt-0.5 -ml-[3px]"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between text-[10px] font-bold tabular-nums text-slate-400 px-1">
+                    <span>0</span>
+                    <span id="lblBuyRsi" class="text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">AL: ≤ --</span>
+                    <span id="lblSellRsi" class="text-rose-600 bg-rose-50 dark:bg-rose-950/50 px-2 py-0.5 rounded border border-rose-200 dark:border-rose-800">SAT: ≥ --</span>
+                    <span>100</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- ORTA BÖLÜM: AKTİF POZİSYON BANNERI (EĞER İŞLEMDİYSE) -->
+        <div id="activePositionBanner" class="hidden p-4 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-3">
+                <span class="w-3 h-3 rounded-full bg-blue-500 animate-ping"></span>
+                <div>
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white">Şu An Açık Pozisyonda</h3>
+                    <p class="text-xs text-slate-500 dark:text-slate-400">Giriş: <strong id="posEntryPrice" class="font-mono text-slate-800 dark:text-slate-200">---</strong> → Hedef: <strong id="posTargetPrice" class="font-mono text-emerald-600">---</strong></p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="posLivePnl" class="text-xl font-black tabular-nums text-emerald-600">+0.00%</span>
+                <button onclick="closeCurrentPosition()" class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-sm transition">
+                    Pozisyonu Kapat
+                </button>
+            </div>
+        </div>
+
+        <!-- ALT BÖLÜM: AYARLAR & AYLIK TABLO & SON İŞLEMLER (GRID) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+            
+            <!-- SOL 5 KOLON: STRATEJİ PARAMETRELERİ -->
+            <section class="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <h3 class="font-bold text-xs uppercase tracking-wider text-slate-400">STRATEJİ PARAMETRELERİ</h3>
+                    <span id="txtHoldDuration" class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Ort. Süre: --</span>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-slate-400 font-semibold text-[10px] mb-1">ZAMAN DİLİMİ</label>
+                            <select id="selInterval" onchange="updateCoinParams()" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white focus:outline-none">
+                                <option value="5m">5m</option>
+                                <option value="15m">15m</option>
+                                <option value="30m">30m</option>
+                                <option value="1h">1h</option>
+                                <option value="4h">4h</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-slate-400 font-semibold text-[10px] mb-1">RSI BOYU</label>
+                            <input type="number" id="numRsiLen" onchange="updateCoinParams()" min="2" max="50" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-emerald-600 font-semibold text-[10px] mb-1">AL SINIRI (RSI ≤)</label>
+                            <input type="number" id="numBuyRsi" onchange="updateCoinParams()" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-emerald-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-rose-600 font-semibold text-[10px] mb-1">SAT SINIRI (RSI ≥)</label>
+                            <input type="number" id="numSellRsi" onchange="updateCoinParams()" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-rose-600 focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-blue-600 font-semibold text-[10px] mb-1">HEDEF KÂR (%)</label>
+                            <input type="number" step="0.1" id="numProfitTarget" onchange="updateCoinParams()" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-blue-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-indigo-600 font-semibold text-[10px] mb-1">AY KİLİT (%)</label>
+                            <input type="number" step="0.1" id="numMonthlyCap" onchange="updateCoinParams()" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-black text-indigo-600 focus:outline-none">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SAĞ 7 KOLON: AYLIK GEÇMİŞ & İŞLEM LİSTESİ -->
+            <section class="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                    <div class="flex items-center space-x-2">
+                        <button onclick="switchTab('monthly')" id="tabBtnMonthly" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition">Aylık Tablo</button>
+                        <button onclick="switchTab('trades')" id="tabBtnTrades" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition">Son İşlemler</button>
+                    </div>
+                    <span id="totalStatsSummary" class="text-xs font-bold text-slate-700 dark:text-slate-300">--</span>
+                </div>
+
+                <div id="tabContentMonthly" class="space-y-1.5 max-h-[460px] overflow-y-auto pr-1"></div>
+                <div id="tabContentTrades" class="hidden space-y-2 max-h-[460px] overflow-y-auto pr-1"></div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // 🎯 TEKLİ COİN MOTORU & İNDEXEDDB ENTEGRASYONU
+        let targetSymbol = new URLSearchParams(window.location.search).get('symbol') || 'ASTERUSDT';
+        targetSymbol = targetSymbol.toUpperCase().trim();
+        if (!targetSymbol.endsWith('USDT')) targetSymbol += 'USDT';
+
+        let coinConfig = {
+            symbol: targetSymbol,
+            displaySymbol: targetSymbol.replace('USDT', ''),
+            interval: '15m',
+            rsiLength: 14,
+            buyRsi: 28,
+            sellRsi: 72,
+            profitTarget: 1.5,
+            monthlyCap: 9.0,
+            price: 0,
+            prevPrice: 0,
+            high24: 0,
+            low24: 0,
+            rsi: 50.0,
+            rawCandles: [],
+            candles: []
+        };
+
+        const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+        let wsInstance = null;
+
+        function loadSavedConfig() {
+            try {
+                const list = JSON.parse(localStorage.getItem('kuzgun_web_coins')) || [];
+                const found = list.find(c => c.symbol === targetSymbol);
+                if (found) {
+                    coinConfig = Object.assign(coinConfig, found);
+                }
+            } catch (e) {}
+
+            document.getElementById('headerCoinSymbol').textContent = coinConfig.displaySymbol;
+            document.getElementById('displaySymbolMain').textContent = coinConfig.displaySymbol;
+            document.getElementById('headerCoinTf').textContent = coinConfig.interval;
+
+            document.getElementById('selInterval').value = coinConfig.interval;
+            document.getElementById('numRsiLen').value = coinConfig.rsiLength;
+            document.getElementById('numBuyRsi').value = coinConfig.buyRsi;
+            document.getElementById('numSellRsi').value = coinConfig.sellRsi;
+            document.getElementById('numProfitTarget').value = coinConfig.profitTarget;
+            document.getElementById('numMonthlyCap').value = coinConfig.monthlyCap;
+
+            document.getElementById('lblBuyRsi').textContent = `AL: ≤ ${coinConfig.buyRsi}`;
+            document.getElementById('lblSellRsi').textContent = `SAT: ≥ ${coinConfig.sellRsi}`;
+            document.getElementById('spectrumBuyZone').style.width = `${coinConfig.buyRsi}%`;
+            document.getElementById('spectrumSellZone').style.width = `${100 - coinConfig.sellRsi}%`;
+        }
+
+        function calculateRSIHistory(prices, period = 14) {
+            const rsiValues = new Array(prices.length).fill(null);
+            if (prices.length <= period) return rsiValues;
+            let gains = 0, losses = 0;
+            for (let i = 1; i <= period; i++) {
+                const diff = prices[i] - prices[i - 1];
+                if (diff >= 0) gains += diff; else losses += Math.abs(diff);
+            }
+            let avgGain = gains / period, avgLoss = losses / period;
+            rsiValues[period] = avgLoss === 0 ? 100.0 : 100.0 - (100.0 / (1.0 + avgGain / avgLoss));
+
+            for (let i = period + 1; i < prices.length; i++) {
+                const diff = prices[i] - prices[i - 1];
+                const gain = diff >= 0 ? diff : 0;
+                const loss = diff < 0 ? Math.abs(diff) : 0;
+                avgGain = (avgGain * (period - 1) + gain) / period;
+                avgLoss = (avgLoss * (period - 1) + loss) / period;
+                rsiValues[i] = avgLoss === 0 ? 100.0 : 100.0 - (100.0 / (1.0 + (avgGain / avgLoss)));
+            }
+            return rsiValues;
+        }
+
+        function runBacktest() {
+            const currentYear = new Date().getFullYear();
+            const maxMonthIdx = new Date().getMonth();
+            const monthlyMap = {};
+            for (let m = 0; m <= maxMonthIdx; m++) {
+                const mKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
+                monthlyMap[mKey] = { name: monthNames[m], trades: 0, pnl: 0, isLocked: false };
+            }
+
+            if (!coinConfig.rawCandles || coinConfig.rawCandles.length < (coinConfig.rsiLength + 5)) return;
+
+            const closes = coinConfig.rawCandles.map(c => c.close);
+            const rsiVals = calculateRSIHistory(closes, coinConfig.rsiLength);
+            let inPos = false, entryP = 0, entryT = 0;
+            const trades = [];
+            let totalHoldSeconds = 0;
+
+            for (let i = coinConfig.rsiLength + 1; i < coinConfig.rawCandles.length; i++) {
+                const c = coinConfig.rawCandles[i];
+                const rsi = rsiVals[i];
+                const prevRsi = rsiVals[i - 1];
+                if (rsi === null || prevRsi === null) continue;
+
+                const mKey = c.monthKey;
+                if (!monthlyMap[mKey]) monthlyMap[mKey] = { name: mKey, trades: 0, pnl: 0, isLocked: false };
+                const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= coinConfig.monthlyCap;
+
+                if (!inPos && !isCapReached) {
+                    if (prevRsi <= coinConfig.buyRsi && rsi > coinConfig.buyRsi) {
+                        inPos = true;
+                        entryP = c.close;
+                        entryT = c.time;
+                    }
+                } else if (inPos) {
+                    const targetP = entryP * (1.0 + coinConfig.profitTarget / 100.0);
+                    let exited = false, pnl = 0, reason = '';
+
+                    if (c.high >= targetP) {
+                        exited = true;
+                        pnl = coinConfig.profitTarget;
+                        reason = `Kâr (%${coinConfig.profitTarget.toFixed(1)})`;
+                    } else if (rsi >= coinConfig.sellRsi) {
+                        exited = true;
+                        pnl = ((c.close - entryP) / entryP) * 100.0;
+                        reason = `RSI Sat (${rsi.toFixed(0)})`;
+                    }
+
+                    if (exited) {
+                        inPos = false;
+                        monthlyMap[mKey].trades++;
+                        monthlyMap[mKey].pnl += pnl;
+                        if ((monthlyMap[mKey].pnl + 0.001) >= coinConfig.monthlyCap) {
+                            monthlyMap[mKey].isLocked = true;
+                        }
+
+                        const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
+                        totalHoldSeconds += diffSec;
+
+                        const hours = Math.floor(diffSec / 3600);
+                        const mins = Math.floor((diffSec % 3600) / 60);
+                        const exitD = new Date(c.time);
+
+                        trades.push({
+                            entryPrice: entryP,
+                            exitPrice: c.close,
+                            pnl: pnl,
+                            reason: reason,
+                            duration: hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`,
+                            dateStr: `${exitD.getDate()} ${monthNames[exitD.getMonth()]} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`,
+                            isWin: pnl >= 0
+                        });
+                    }
+                }
+            }
+
+            if (trades.length > 0) {
+                const avgSec = Math.floor(totalHoldSeconds / trades.length);
+                const avgH = Math.floor(avgSec / 3600);
+                const avgM = Math.floor((avgSec % 3600) / 60);
+                document.getElementById('txtHoldDuration').textContent = `Ort. Süre: ${avgH > 0 ? `${avgH}sa${avgM}dk` : `${avgM}dk`}`;
+            }
+
+            // Aylık Tablo Dökümü
+            const sortedMonths = Object.entries(monthlyMap).sort((a, b) => b[0].localeCompare(a[0]));
+            const totalPnl = sortedMonths.reduce((sum, m) => sum + m[1].pnl, 0);
+            const totalTrades = sortedMonths.reduce((sum, m) => sum + m[1].trades, 0);
+
+            document.getElementById('totalStatsSummary').textContent = `Toplam ${totalTrades} İşlem • %${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}`;
+
+            document.getElementById('tabContentMonthly').innerHTML = sortedMonths.map(([k, m]) => `
+                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold text-slate-800 dark:text-slate-200 w-20">${m.name}</span>
+                        <span class="text-slate-400 tabular-nums">${m.trades} İşlem</span>
+                        ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold border border-indigo-200 dark:border-indigo-800">Kilitlendi</span>` : ''}
+                    </div>
+                    <span class="font-black tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                        ${m.pnl >= 0 ? '+' : ''}${m.pnl.toFixed(1)}%
+                    </span>
+                </div>
+            `).join('');
+
+            // Son İşlemler Dökümü
+            document.getElementById('tabContentTrades').innerHTML = trades.slice(-20).reverse().map(t => `
+                <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                    <div class="space-y-0.5">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-slate-800 dark:text-slate-200">${t.reason}</span>
+                            <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">• ${t.duration}</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-mono">${formatPrice(t.entryPrice)} → ${formatPrice(t.exitPrice)} (${t.dateStr})</div>
+                    </div>
+                    <span class="font-black tabular-nums text-xs px-2.5 py-1 rounded-lg ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
+                        ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        async function fetchCandles() {
+            const year = new Date().getFullYear();
+            const startTime = new Date(Date.UTC(year, 0, 1)).getTime();
+            const endTime = Date.now();
+            let all = [];
+            let currentStart = startTime;
+
+            while (currentStart < endTime) {
+                try {
+                    const url = `https://api.binance.com/api/v3/klines?symbol=${targetSymbol}&interval=${coinConfig.interval}&startTime=${currentStart}&endTime=${endTime}&limit=1000`;
+                    const res = await fetch(url);
+                    if (!res.ok) break;
+                    const batch = await res.json();
+                    if (!batch || batch.length === 0) break;
+
+                    const mapped = batch.map(b => {
+                        const d = new Date(b[0] + (3 * 3600 * 1000));
+                        return {
+                            time: b[0],
+                            close: parseFloat(b[4]),
+                            high: parseFloat(b[2]),
+                            low: parseFloat(b[3]),
+                            monthKey: `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+                        };
+                    });
+
+                    all.push(...mapped);
+                    if (batch.length < 1000) break;
+                    currentStart = batch[batch.length - 1][0] + 1;
+                } catch (e) { break; }
+            }
+
+            if (all.length > 0) {
+                coinConfig.rawCandles = all;
+                coinConfig.candles = all.map(c => c.close);
+                runBacktest();
+            }
+        }
+
+        function initSingleWebSocket() {
+            if (wsInstance) { try { wsInstance.close(); } catch(e){} }
+            const stream = `${targetSymbol.toLowerCase()}@miniTicker`;
+            wsInstance = new WebSocket(`wss://stream.binance.com/stream?streams=${stream}`);
+
+            wsInstance.onopen = () => {
+                document.getElementById('wsDot').className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+                document.getElementById('wsText').textContent = "CANLI";
+            };
+
+            wsInstance.onmessage = (e) => {
+                try {
+                    const data = JSON.parse(e.data)?.data;
+                    if (!data) return;
+                    const liveClose = parseFloat(data.c);
+                    const high = parseFloat(data.h);
+                    const low = parseFloat(data.l);
+
+                    const elBigPrice = document.getElementById('bigPrice');
+                    elBigPrice.textContent = formatPrice(liveClose);
+
+                    if (coinConfig.price > 0 && liveClose !== coinConfig.price) {
+                        elBigPrice.classList.remove('text-emerald-600', 'text-rose-600', 'dark:text-white', 'text-slate-900');
+                        elBigPrice.classList.add(liveClose > coinConfig.price ? 'text-emerald-600' : 'text-rose-600');
+                        setTimeout(() => {
+                            elBigPrice.classList.remove('text-emerald-600', 'text-rose-600');
+                            elBigPrice.classList.add('text-slate-900', 'dark:text-white');
+                        }, 350);
+                    }
+
+                    coinConfig.price = liveClose;
+                    document.getElementById('low24').textContent = formatPrice(low);
+                    document.getElementById('high24').textContent = formatPrice(high);
+
+                    if (coinConfig.candles && coinConfig.candles.length > 0) {
+                        coinConfig.candles[coinConfig.candles.length - 1] = liveClose;
+                        const rsi = calculateRSI(coinConfig.candles, coinConfig.rsiLength);
+                        updateRsiUI(rsi);
+                    }
+
+                    checkPositionBanner(liveClose);
+                } catch(err) {}
+            };
+
+            wsInstance.onclose = () => {
+                document.getElementById('wsDot').className = "w-2 h-2 rounded-full bg-amber-500 animate-ping";
+                document.getElementById('wsText').textContent = "BAĞLANIYOR..";
+                setTimeout(initSingleWebSocket, 3000);
+            };
+        }
+
+        function updateRsiUI(rsi) {
+            document.getElementById('rsiValue').textContent = rsi.toFixed(1);
+            document.getElementById('rsiNeedle').style.left = `${Math.min(100, Math.max(0, rsi))}%`;
+
+            const txt = document.getElementById('rsiStatusText');
+            const box = document.getElementById('rsiContainerBox');
+
+            if (rsi <= coinConfig.buyRsi) {
+                txt.textContent = "AŞIRI SATIM (AL)";
+                txt.className = "text-xs font-black tracking-wide text-emerald-600 dark:text-emerald-400";
+                box.className = "flex items-center space-x-2 px-4 py-2 rounded-xl border bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 shadow-sm";
+            } else if (rsi >= coinConfig.sellRsi) {
+                txt.textContent = "AŞIRI ALIM (SAT)";
+                txt.className = "text-xs font-black tracking-wide text-rose-600 dark:text-rose-400";
+                box.className = "flex items-center space-x-2 px-4 py-2 rounded-xl border bg-rose-50 dark:bg-rose-950/50 border-rose-200 dark:border-rose-800 shadow-sm";
+            } else {
+                txt.textContent = "NÖTR BÖLGE";
+                txt.className = "text-xs font-black tracking-wide text-slate-400";
+                box.className = "flex items-center space-x-2 px-4 py-2 rounded-xl border bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-sm";
+            }
+        }
+
+        function checkPositionBanner(livePrice) {
+            try {
+                const positions = JSON.parse(localStorage.getItem('kuzgun_active_pos')) || [];
+                const pos = positions.find(p => p.symbol === targetSymbol);
+                const banner = document.getElementById('activePositionBanner');
+                const badge = document.getElementById('liveStatusBadge');
+
+                if (pos) {
+                    banner.classList.remove('hidden');
+                    badge.textContent = "POZİSYONDA";
+                    badge.className = "px-2.5 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950 text-[10px] font-bold text-blue-600 border border-blue-200 dark:border-blue-800 animate-pulse";
+                    
+                    document.getElementById('posEntryPrice').textContent = formatPrice(pos.entryPrice);
+                    document.getElementById('posTargetPrice').textContent = formatPrice(pos.targetPrice);
+
+                    const pnl = ((livePrice - pos.entryPrice) / pos.entryPrice) * 100;
+                    const pnlEl = document.getElementById('posLivePnl');
+                    pnlEl.textContent = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%`;
+                    pnlEl.className = `text-xl font-black tabular-nums ${pnl >= 0 ? 'text-emerald-600' : 'text-rose-600'}`;
+                } else {
+                    banner.classList.add('hidden');
+                    badge.textContent = "BOŞTA";
+                    badge.className = "px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-bold text-slate-500";
+                }
+            } catch(e){}
+        }
+
+        function closeCurrentPosition() {
+            try {
+                let positions = JSON.parse(localStorage.getItem('kuzgun_active_pos')) || [];
+                positions = positions.filter(p => p.symbol !== targetSymbol);
+                localStorage.setItem('kuzgun_active_pos', JSON.stringify(positions));
+                checkPositionBanner(coinConfig.price);
+            } catch(e){}
+        }
+
+        function updateCoinParams() {
+            coinConfig.interval = document.getElementById('selInterval').value;
+            coinConfig.rsiLength = parseInt(document.getElementById('numRsiLen').value, 10);
+            coinConfig.buyRsi = parseFloat(document.getElementById('numBuyRsi').value);
+            coinConfig.sellRsi = parseFloat(document.getElementById('numSellRsi').value);
+            coinConfig.profitTarget = parseFloat(document.getElementById('numProfitTarget').value);
+            coinConfig.monthlyCap = parseFloat(document.getElementById('numMonthlyCap').value);
+
+            document.getElementById('headerCoinTf').textContent = coinConfig.interval;
+            document.getElementById('lblBuyRsi').textContent = `AL: ≤ ${coinConfig.buyRsi}`;
+            document.getElementById('lblSellRsi').textContent = `SAT: ≥ ${coinConfig.sellRsi}`;
+            document.getElementById('spectrumBuyZone').style.width = `${coinConfig.buyRsi}%`;
+            document.getElementById('spectrumSellZone').style.width = `${100 - coinConfig.sellRsi}%`;
+
+            // LocalStorage'daki listeyi de güncelle
+            try {
+                let list = JSON.parse(localStorage.getItem('kuzgun_web_coins')) || [];
+                const idx = list.findIndex(c => c.symbol === targetSymbol);
+                if (idx !== -1) {
+                    list[idx] = Object.assign(list[idx], {
+                        interval: coinConfig.interval,
+                        rsiLength: coinConfig.rsiLength,
+                        buyRsi: coinConfig.buyRsi,
+                        sellRsi: coinConfig.sellRsi,
+                        profitTarget: coinConfig.profitTarget,
+                        monthlyCap: coinConfig.monthlyCap
+                    });
+                    localStorage.setItem('kuzgun_web_coins', JSON.stringify(list));
+                }
+            } catch(e){}
+
+            runBacktest();
+        }
+
+        function switchTab(type) {
+            const btnM = document.getElementById('tabBtnMonthly');
+            const btnT = document.getElementById('tabBtnTrades');
+            const conM = document.getElementById('tabContentMonthly');
+            const conT = document.getElementById('tabContentTrades');
+
+            if (type === 'monthly') {
+                btnM.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition";
+                btnT.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition";
+                conM.classList.remove('hidden');
+                conT.classList.add('hidden');
+            } else {
+                btnT.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition";
+                btnM.className = "px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 transition";
+                conT.classList.remove('hidden');
+                conM.classList.add('hidden');
+            }
+        }
+
+        function formatPrice(val) {
+            if (!val || val <= 0) return '$--.--';
+            if (val >= 1000) return '$' + val.toLocaleString('en-US', { minimumFractionDigits: 2 });
+            if (val >= 1) return '$' + val.toFixed(4);
+            return '$' + val.toFixed(6);
+        }
+
+        function cycleTheme() {
+            const current = localStorage.getItem('kuzgun_theme') || 'light';
+            const next = current === 'light' ? 'dark' : (current === 'dark' ? 'oled' : 'light');
+            document.documentElement.classList.remove('dark', 'oled');
+            if (next === 'dark') document.documentElement.classList.add('dark');
+            if (next === 'oled') document.documentElement.classList.add('dark', 'oled');
+            localStorage.setItem('kuzgun_theme', next);
+            updateThemeIcons(next);
+        }
+
+        function updateThemeIcons(theme) {
+            const l = document.getElementById('themeIconLight');
+            const d = document.getElementById('themeIconDark');
+            const o = document.getElementById('themeBadgeOled');
+            l.classList.add('hidden'); d.classList.add('hidden'); o.classList.add('hidden');
+            if (theme === 'oled') o.classList.remove('hidden');
+            else if (theme === 'dark') d.classList.remove('hidden');
+            else l.classList.remove('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            loadSavedConfig();
+            updateThemeIcons(localStorage.getItem('kuzgun_theme') || 'light');
+            await fetchCandles();
+            initSingleWebSocket();
+        });
+    </script>
+</body>
+</html>
