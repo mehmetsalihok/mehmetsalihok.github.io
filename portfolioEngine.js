@@ -154,7 +154,7 @@ const PortfolioEngine = {
         initialBalance = 1000.0
     }) {
         if (!initialBalance || initialBalance <= 0) {
-            return { usdtGain: 0, directTradePnlSum: 0, initialPnlPercentage: 0, totalFeesUSD: 0, tradesCount: 0 };
+            return { usdtGain: 0, directTradePnlSum: 0, netTradePnlSum: 0, initialPnlPercentage: 0, totalFeesUSD: 0, tradesCount: 0 };
         }
 
         const now = new Date();
@@ -206,11 +206,13 @@ const PortfolioEngine = {
 
         let usdtGain = 0;
         let directTradePnlSum = 0;
+        let netTradePnlSum = 0;
         let totalFeesUSD = 0;
 
         for (const t of filtered) {
             usdtGain += (t.netGainUSD !== undefined) ? t.netGainUSD : (t.positionSizeUSD * (t.pnlPercent / 100));
             directTradePnlSum += t.pnlPercent;
+            netTradePnlSum += (t.effectivePnl !== undefined) ? t.effectivePnl : t.pnlPercent;
             totalFeesUSD += (t.feeUSD || 0);
         }
 
@@ -219,6 +221,7 @@ const PortfolioEngine = {
         return {
             usdtGain,
             directTradePnlSum,
+            netTradePnlSum,
             initialPnlPercentage,
             totalFeesUSD,
             tradesCount: filtered.length
