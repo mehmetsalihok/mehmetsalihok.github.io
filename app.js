@@ -1,4 +1,4 @@
-// KUZGUN PRO — INDEXEDDB CANDLE CACHE (Swift Disk Cache Eşdeğeri)
+// KUZGUN PRO — INDEXEDDB CANDLE CACHE
 const CandleCache = {
     db: null,
     async init() {
@@ -40,7 +40,6 @@ const CandleCache = {
     }
 };
 
-// KUZGUN PRO ENGINE & UI CONTROLLER
 const KZ_STATE = {
     portfolioBaseUsd: 1000.00,
     selectedYear: localStorage.getItem('kuzgun_selected_year') || '2026',
@@ -55,7 +54,6 @@ const KZ_STATE = {
     activeFilter: 'all',
     pendingWizardCandidate: null,
     
-    // Varsayılan olarak "Başlangıçtan Beri" seçilidir
     selectedTimeframe: 'sinceStart',
     selectedTimeframeMonth: new Date().getMonth() + 1,
     customStartDate: null,
@@ -64,17 +62,30 @@ const KZ_STATE = {
     activeMonthModal: {
         coinId: null,
         monthKey: null
-    }
+    },
+
+    // Slota giren işlemlerin kümesi ve coin istatistikleri
+    acceptedTradeIds: new Set(),
+    coinRealStats: {}
 };
 
 let binanceWs = null;
 
-// Türkiye Saat Dilimi (UTC+3) Ay Çözücü
 function getTurkeyMonthKey(timestamp = Date.now()) {
     return new Date(timestamp).toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' }).slice(0, 7);
 }
 
-// Header üzerinden yıl değiştirildiğinde
+function getIntervalMilliseconds(interval) {
+    switch (interval) {
+        case '5m': return 5 * 60 * 1000;
+        case '15m': return 15 * 60 * 1000;
+        case '30m': return 30 * 60 * 1000;
+        case '1h': return 60 * 60 * 1000;
+        case '4h': return 4 * 60 * 60 * 1000;
+        default: return 15 * 60 * 1000;
+    }
+}
+
 async function changeYearFromHeader(year) {
     KZ_STATE.selectedYear = year;
     localStorage.setItem('kuzgun_selected_year', year);
@@ -192,11 +203,12 @@ function isCoinMonthlyLocked(coin) {
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
 }
 
-// Backtest Motoru
+// 🎯 BACKTEST MOTORU (Mum periyodu kadar çıkış süresini koruyan tam kod)
 function runCardBacktest(coin) {
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
     const now = new Date();
+    const intervalMs = getIntervalMilliseconds(coin.interval);
     
     const maxMonthIdx = (targetYear === now.getFullYear()) ? now.getMonth() : 11;
 
@@ -242,7 +254,7 @@ function runCardBacktest(coin) {
                 trades: 0, 
                 pnl: 0, 
                 isLocked: false,
-                tradesList: []
+                tradesList: [] 
             };
         }
 
@@ -270,30 +282,35 @@ function runCardBacktest(coin) {
 
             if (exited) {
                 inPos = false;
+                const exitTime = c.time + intervalMs; // 🎯 Mumun tam kapanış anı
                 monthlyMap[mKey].trades++;
                 monthlyMap[mKey].pnl += pnl;
                 if ((monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap) {
                     monthlyMap[mKey].isLocked = true;
                 }
 
-                const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
+                const diffSec = Math.max(0, Math.floor((exitTime - entryT) / 1000));
                 totalHoldSeconds += diffSec;
 
                 const hours = Math.floor(diffSec / 3600);
                 const mins = Math.floor((diffSec % 3600) / 60);
                 
                 const entryD = new Date(entryT);
-                const exitD = new Date(c.time);
+                const exitD = new Date(exitTime);
                 
                 const entryDateFormatted = `${entryD.getDate()} ${monthNames[entryD.getMonth()]} ${entryD.getHours().toString().padStart(2, '0')}:${entryD.getMinutes().toString().padStart(2, '0')}`;
                 const exitDateFormatted = `${exitD.getDate()} ${monthNames[exitD.getMonth()]} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
 
                 const tradeItem = {
+                    id: `sim_${coin.id}_${entryT}_${exitTime}`,
+                    coinId: coin.id,
                     entryTime: entryT,
-                    exitTime: c.time,
+                    exitTime: exitTime,
                     entryPrice: entryP,
                     exitPrice: c.close,
                     pnl: pnl,
+                    pnlPercent: pnl,
+                    monthKey: mKey,
                     reason: reason,
                     duration: hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`,
                     entryDateStr: entryDateFormatted,
@@ -320,7 +337,6 @@ function runCardBacktest(coin) {
     coin.simLastTrades = trades.slice(-10).reverse();
 }
 
-// Aylık Detay Modalını Aç
 function openMonthTradesModal(coinId, monthKey) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId);
     if (!coin || !coin.simMonthlyStats || coin.simMonthlyStats.length === 0) return;
@@ -338,6 +354,7 @@ function openMonthTradesModal(coinId, monthKey) {
     }
 }
 
+// 🎯 MODALDA HER İŞLEMİN SLOTA GİRİP GİRMEDİĞİNİ GÖSTEREN GÖRÜNÜM
 function renderModalTabsAndContent(coin, selectedMonthKey) {
     const months = coin.simMonthlyStats || [];
     if (months.length === 0) return;
@@ -384,17 +401,28 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
         } else {
             modalTradesListContainer.innerHTML = trades.map(t => {
                 const isWin = t.pnl >= 0;
+                // Bu işlem slota girdi mi yoksa slot dolu olduğu için pas mı geçildi?
+                const isAccepted = KZ_STATE.acceptedTradeIds.has(t.id);
+
                 return `
-                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-2 text-xs transition hover:border-slate-300 dark:hover:border-slate-700">
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border ${isAccepted ? 'border-slate-200/70 dark:border-slate-800' : 'border-dashed border-slate-300 dark:border-slate-700 opacity-70'} space-y-2 text-xs transition">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-2">
                                 <span class="w-2 h-2 rounded-full ${isWin ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
                                 <span class="font-bold text-slate-900 dark:text-white">${t.reason}</span>
                                 <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">• Süre: ${t.duration}</span>
                             </div>
-                            <span class="font-black tabular-nums text-xs px-2 py-0.5 rounded ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
-                                ${isWin ? '+' : ''}${t.pnl.toFixed(2)}%
-                            </span>
+                            
+                            <div class="flex items-center space-x-2">
+                                ${isAccepted ? `
+                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">✓ Slota Girdi</span>
+                                ` : `
+                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">✕ Slot Doluydu (Pas)</span>
+                                `}
+                                <span class="font-black tabular-nums text-xs px-2 py-0.5 rounded ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
+                                    ${isWin ? '+' : ''}${t.pnl.toFixed(2)}%
+                                </span>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-2 gap-2 text-[11px] bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
@@ -431,39 +459,60 @@ function closeMonthTradesModal() {
     KZ_STATE.activeMonthModal = { coinId: null, monthKey: null };
 }
 
+// 🎯 SWIFT GİBİ ÇİFT KATMANLI AYLIK TABLO: Strateji (Reel Kâr)
 function generateMonthlyTableHtml(coin) {
     const months = coin.simMonthlyStats || [];
     const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
     const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
 
+    const realStats = KZ_STATE.coinRealStats[coin.id] || { totalTrades: 0, totalPnl: 0, monthly: {} };
+
     return `
         <div class="space-y-1">
             <div class="space-y-0.5 max-h-56 overflow-y-auto pr-1 divide-y divide-slate-100 dark:divide-slate-800">
-                ${months.map(m => `
-                    <div onclick="openMonthTradesModal('${coin.id}', '${m.monthKey}')" 
-                        class="flex items-center justify-between py-1.5 px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs transition cursor-pointer group" title="${m.name} ayı işlemlerini aç">
-                        <div class="flex items-center space-x-2">
-                            <span class="font-bold text-slate-800 dark:text-slate-200 w-16 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">${m.name}</span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${m.trades} İşlem</span>
-                            ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="font-black tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
-                                ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
-                            </span>
-                            <span class="text-[10px] text-slate-400 group-hover:text-blue-600 transition">→</span>
-                        </div>
-                    </div>`).join('')}
+                ${months.map(m => {
+                    const rMonth = realStats.monthly[m.monthKey] || { trades: 0, pnl: 0 };
+                    return `
+                        <div onclick="openMonthTradesModal('${coin.id}', '${m.monthKey}')" 
+                            class="flex items-center justify-between py-1.5 px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs transition cursor-pointer group" title="${m.name} ayı işlemlerini aç">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-slate-800 dark:text-slate-200 w-16 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">${m.name}</span>
+                                
+                                <!-- İşlem Sayısı: Strateji (Reel Slota Giren) -->
+                                <span class="text-[10px] tabular-nums text-slate-500">
+                                    ${m.trades} <strong class="text-blue-600 font-bold">(${rMonth.trades})</strong> İşlem
+                                </span>
+                                ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
+                            </div>
+                            
+                            <!-- Kâr Oranı: Strateji (Reel Kâr) -->
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                                    ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
+                                </span>
+                                <span class="font-bold tabular-nums text-[11px] text-blue-600 dark:text-blue-400">
+                                    (${rMonth.pnl >= 0 ? '+' : ''}${rMonth.pnl.toFixed(1)}%)
+                                </span>
+                                <span class="text-[10px] text-slate-400 group-hover:text-blue-600 transition">→</span>
+                            </div>
+                        </div>`;
+                }).join('')}
             </div>
             <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
-                <span class="text-slate-700 dark:text-slate-300">Toplam (${totalTrades} İşlem):</span>
-                <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
+                <div class="flex items-center space-x-1">
+                    <span class="text-slate-700 dark:text-slate-300">Toplam:</span>
+                    <span class="tabular-nums text-slate-900 dark:text-white">${totalTrades} <strong class="text-blue-600">(${realStats.totalTrades})</strong> İşlem</span>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                    <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
+                    <span class="tabular-nums text-blue-600 dark:text-blue-400">(${realStats.totalPnl >= 0 ? '+' : ''}${realStats.totalPnl.toFixed(2)}%)</span>
+                </div>
             </div>
         </div>
     `;
 }
 
-// Portföy Hesaplama & Zaman Tüneli Entegrasyonu
+// 🎯 TÜM COİNLERİN GEÇMİŞ VE CANLI İŞLEMLERİNİ BİRLEŞTİRİP PORTFÖYÜ HESAPLAYAN METOD
 function updatePortfolioCalculations() {
     const isSlotConstraint = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
     const isFeeDeduction = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
@@ -474,6 +523,7 @@ function updatePortfolioCalculations() {
     (KZ_STATE.closedTrades || []).forEach(t => {
         allRawTrades.push({
             id: t.id,
+            coinId: t.coinId,
             symbol: t.symbol,
             entryTime: t.entryTime || (t.exitTime - 3600000),
             exitTime: t.exitTime || Date.now(),
@@ -490,13 +540,15 @@ function updatePortfolioCalculations() {
                 if (m.tradesList) {
                     m.tradesList.forEach(t => {
                         allRawTrades.push({
-                            id: `sim_${coin.id}_${t.entryTime}_${t.exitTime}`,
+                            id: t.id,
+                            coinId: coin.id,
                             symbol: coin.symbol,
                             entryTime: t.entryTime,
                             exitTime: t.exitTime,
                             entryPrice: t.entryPrice,
                             exitPrice: t.exitPrice,
                             pnlPercent: t.pnl,
+                            monthKey: m.monthKey,
                             reason: t.reason
                         });
                     });
@@ -518,6 +570,9 @@ function updatePortfolioCalculations() {
             selectedYear: KZ_STATE.selectedYear
         });
 
+        KZ_STATE.acceptedTradeIds = engineResult.acceptedTradeIds;
+        KZ_STATE.coinRealStats = engineResult.coinRealStats;
+
         const tfStats = PortfolioEngine.calculateTimeframeStats({
             executedTrades: engineResult.executedTrades,
             timeframe: KZ_STATE.selectedTimeframe,
@@ -530,6 +585,9 @@ function updatePortfolioCalculations() {
         });
 
         renderPortfolioShowcaseUI(engineResult, tfStats);
+
+        // Kartların altındaki tabloları da yeni reel istatistiklerle anında tazele
+        KZ_STATE.coins.forEach(coin => updateCardTablesOnly(coin));
     }
 }
 
@@ -817,7 +875,6 @@ function loadStorage() {
         if (sel) sel.value = savedYear;
     }
 
-    // Başlangıç tarihi yoksa varsayılan olarak seçilen yılın 1 Ocak'ı ayarlanır
     if (!localStorage.getItem('kuzgun_portfolio_start_date')) {
         const yearInt = parseInt(KZ_STATE.selectedYear, 10) || 2026;
         const defTs = new Date(yearInt, 0, 1, 0, 0, 0).getTime() / 1000;
@@ -1193,6 +1250,71 @@ function renderHistoryTrades() {
     }).join('');
 }
 
+function loadStorage() {
+    const savedCoins = localStorage.getItem('kuzgun_web_coins');
+    if (savedCoins) {
+        try { KZ_STATE.coins = JSON.parse(savedCoins); } catch (e) { KZ_STATE.coins = []; }
+    }
+    if (!KZ_STATE.coins || KZ_STATE.coins.length === 0) {
+        KZ_STATE.coins = [
+            { id: 'c1', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '30m', rsiLength: 14, buyRsi: 30, sellRsi: 70, profitTarget: 1.5, monthlyCap: 10.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' },
+            { id: 'c2', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 28, sellRsi: 72, profitTarget: 2.0, monthlyCap: 8.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' }
+        ];
+        saveCoins();
+    }
+
+    const savedSlots = localStorage.getItem('kuzgun_max_slots');
+    if (savedSlots) {
+        KZ_STATE.maxSlots = parseInt(savedSlots, 10) || 2;
+        if (elSlotSelector) elSlotSelector.value = KZ_STATE.maxSlots;
+    }
+
+    const savedYear = localStorage.getItem('kuzgun_selected_year');
+    if (savedYear) {
+        KZ_STATE.selectedYear = savedYear;
+        const sel = document.getElementById('headerYearSelector');
+        if (sel) sel.value = savedYear;
+    }
+
+    if (!localStorage.getItem('kuzgun_portfolio_start_date')) {
+        const yearInt = parseInt(KZ_STATE.selectedYear, 10) || 2026;
+        const defTs = new Date(yearInt, 0, 1, 0, 0, 0).getTime() / 1000;
+        localStorage.setItem('kuzgun_portfolio_start_date', defTs.toString());
+    }
+
+    const savedBase = localStorage.getItem('kuzgun_base_usd');
+    if (savedBase) KZ_STATE.portfolioBaseUsd = parseFloat(savedBase) || 1000.00;
+
+    const savedPositions = localStorage.getItem('kuzgun_active_pos');
+    if (savedPositions) {
+        try { KZ_STATE.activePositions = JSON.parse(savedPositions); } catch(e) {}
+    }
+
+    const savedPending = localStorage.getItem('kuzgun_pending_signals');
+    if (savedPending) {
+        try { KZ_STATE.pendingSignals = JSON.parse(savedPending); } catch(e) {}
+    }
+
+    const savedClosedTrades = localStorage.getItem('kuzgun_closed_trades');
+    if (savedClosedTrades) {
+        try { KZ_STATE.closedTrades = JSON.parse(savedClosedTrades); } catch(e) {}
+    }
+}
+
+function saveCoins() { localStorage.setItem('kuzgun_web_coins', JSON.stringify(KZ_STATE.coins)); }
+function savePositions() { 
+    localStorage.setItem('kuzgun_active_pos', JSON.stringify(KZ_STATE.activePositions));
+    localStorage.setItem('kuzgun_base_usd', KZ_STATE.portfolioBaseUsd.toString());
+}
+function savePending() { localStorage.setItem('kuzgun_pending_signals', JSON.stringify(KZ_STATE.pendingSignals)); }
+function saveClosedTrades() { localStorage.setItem('kuzgun_closed_trades', JSON.stringify(KZ_STATE.closedTrades)); }
+
+function changeMaxSlots(newSlots) {
+    KZ_STATE.maxSlots = parseInt(newSlots, 10) || 2;
+    localStorage.setItem('kuzgun_max_slots', KZ_STATE.maxSlots.toString());
+    updatePortfolioCalculations();
+}
+
 function toggleCardExpand(coinId) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId);
     if (!coin) return;
@@ -1450,7 +1572,7 @@ async function fetchLiveTickerFallback() {
     }
 }
 
-// 🎯 ÖNBELLEK DESTEKLİ VE DELTA İNDİRMELİ HIZLI MUM ÇEKİCİ (0 Gecikme)
+// 🎯 ÖNBELLEK DESTEKLİ VE DELTA İNDİRMELİ HIZLI MUM ÇEKİCİ
 async function fetchInitialCandles(coin) {
     const year = parseInt(KZ_STATE.selectedYear, 10) || 2026;
     const cacheKey = `kuzgun_candles_${coin.symbol}_${coin.interval}_${year}`;
@@ -1459,7 +1581,7 @@ async function fetchInitialCandles(coin) {
         ? Date.now() 
         : new Date(Date.UTC(year, 11, 31, 23, 59, 59)).getTime();
 
-    // 1. Önce anında IndexedDB önbelleğinden oku (5ms içinde UI'yı ayağa kaldırır)
+    // 1. Önce anında IndexedDB önbelleğinden oku (5ms)
     let cached = await CandleCache.get(cacheKey) || [];
 
     if (cached.length > 0) {
@@ -1480,7 +1602,6 @@ async function fetchInitialCandles(coin) {
     let currentStart = startTime;
     if (cached.length > 0) {
         const lastCachedTime = cached[cached.length - 1].time;
-        // Eğer önbellek zaten güncelse tekrar ağ isteği atma
         if (lastCachedTime >= (endTime - 60000)) {
             return;
         }
@@ -1527,7 +1648,6 @@ async function fetchInitialCandles(coin) {
 
         if (newCandles.length > 0) {
             const merged = cached.concat(newCandles);
-            // Çift kayıtları engelle
             const seen = new Set();
             const uniqueCandles = merged.filter(c => {
                 if (seen.has(c.time)) return false;
@@ -1546,7 +1666,6 @@ async function fetchInitialCandles(coin) {
                 coin.price = latest;
             }
 
-            // Önbelleğe kaydet (Gelecek ziyaretler için)
             await CandleCache.set(cacheKey, uniqueCandles);
             runCardBacktest(coin);
             renderSingleCard(coin);
@@ -1834,21 +1953,18 @@ async function fetchMarketRate() {
     } catch (e) {}
 }
 
-// 🎯 HIZLANDIRILMIŞ BAŞLATMA MOTORU (PARALEL & CACHED)
+// Hızlı Başlatıcı (Önbellekten Paralel Yükleme)
 async function startEngine() {
     loadStorage();
 
-    // Kartları hemen DOM'a yerleştir
     KZ_STATE.coins.forEach(c => renderSingleCard(c));
     renderActivePositionsList();
     renderPendingSignalsList();
     renderHistoryTrades();
 
-    // 1. Önce önbellekten paralel oku ve portföyü anında hesapla (< 50ms)
     await Promise.all(KZ_STATE.coins.map(coin => fetchInitialCandles(coin)));
     updatePortfolioCalculations();
 
-    // 2. Canlı fiyatları ve kurları getir
     await fetchLiveTickerFallback();
     fetchMarketRate();
 
