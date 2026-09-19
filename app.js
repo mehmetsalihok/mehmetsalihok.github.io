@@ -119,6 +119,7 @@ function formatShortDate(timestampMs) {
     return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+// 📲 TELEGRAM BİLDİRİMİ GÖNDERİCİ
 function sendTelegramAlert(text) {
     const chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
     const botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
@@ -270,13 +271,14 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
         isRolloverOccurred = true;
         const nextStartTime = lastCandle.time + intervalMs;
 
+        // Kapanan mumu son fiyatla mühürle
         lastCandle.close = livePrice;
         if (livePrice > lastCandle.high) lastCandle.high = livePrice;
         if (livePrice < lastCandle.low) lastCandle.low = livePrice;
         coin.rawCandles[coin.rawCandles.length - 1] = lastCandle;
         coin.candles[coin.candles.length - 1] = lastCandle.close;
 
-        // Mum Kapanışında Kesinleşmiş Crossover Teyidi
+        // 🎯 MUM KAPANIŞINDA KESİNLEŞMİŞ CROSSOVER TEYİDİ (TradingView Uyumu)
         const isCandleCloseEnabled = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
         if (isCandleCloseEnabled) {
             const recentCandles = coin.rawCandles.slice(-150);
@@ -287,6 +289,7 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
                 const closedRsi = validRsis[validRsis.length - 1];
                 const prevClosedRsi = validRsis[validRsis.length - 2];
 
+                // Kesinleşmiş kapanış crossover kuralı
                 const isConfirmedCrossover = prevClosedRsi <= coin.buyRsi && closedRsi > coin.buyRsi;
                 const isAlreadyInPos = (KZ_STATE.activePositions || []).some(p => p.coinId === coin.id || p.symbol === coin.symbol);
                 const isCapReached = isCoinMonthlyLocked(coin);
@@ -317,6 +320,7 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
             }
         }
 
+        // Sıradaki yeni açık mumu başlat
         const newCandle = {
             time: nextStartTime,
             open: livePrice,
@@ -345,7 +349,7 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
     coin.prevRsi = coin.rsi;
     coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
 
-    // 3️⃣ CANLI POZİSYON ÇIKIŞ KONTROLÜ
+    // 3️⃣ CANLI POZİSYON ÇIKIŞ KONTROLÜ (Kâr Hedefi ve RSI Sat Anlık Çalışır)
     const activePos = (KZ_STATE.activePositions || []).find(p => p.coinId === coin.id || p.symbol === coin.symbol);
     if (activePos) {
         const pnl = ((coin.price - activePos.entryPrice) / activePos.entryPrice) * 100;
@@ -393,9 +397,11 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
         }
     }
 
+    // Arayüzü hafifçe güncelle
     updateCardPriceOnly(coin);
     updateLivePortfolioQuick();
 
+    // Mum devri gerçekleştiyse önbelleği ve tabloları arka planda mühürle
     if (isRolloverOccurred) {
         const cacheKey = `kuzgun_candles_${coin.symbol}_${coin.interval}_${KZ_STATE.selectedYear}`;
         CandleCache.set(cacheKey, coin.rawCandles);
@@ -802,7 +808,6 @@ function nextHistoryPage() {
     }
 }
 
-// 🎯 KARTLARI RENDER EDEN GÜVENLİ METOT (YENİ SEKME BUTONU EKLENDİ)
 function renderSingleCard(coin) {
     if (!elCardsGrid) return;
     let cardEl = document.getElementById(`card-${coin.id}`);
@@ -925,15 +930,6 @@ function renderSingleCard(coin) {
             </div>
             <div class="flex items-center space-x-1.5">
                 <span id="badge-wrapper-${coin.id}">${statusBadge}</span>
-
-                <!-- 🌟 AYRI SEKMEDE AÇMA BUTONU -->
-                <a href="coin.html?symbol=${coin.symbol}" target="_blank" 
-                   class="p-1.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 transition cursor-pointer" 
-                   title="Bu Coini Ayrı Sekmede Canlı İzle">
-                    <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                    </svg>
-                </a>
                 
                 <button type="button" onclick="toggleCardExpand('${coin.id}')" class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center space-x-1 cursor-pointer select-none">
                     <span class="pointer-events-none">${isExpanded ? 'Kapat' : 'Detay'}</span>
@@ -1389,6 +1385,7 @@ async function confirmAndAddCoinFromWizard() {
     playChime(true);
 }
 
+// ⚡️ ANLIK CANLI BAKİYE GÜNCELLEYİCİ
 function updateLivePortfolioQuick() {
     let unrealizedPnlUsd = 0;
     const currentSlotBudget = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) / Math.max(1, KZ_STATE.maxSlots);
@@ -1412,6 +1409,7 @@ function updateLivePortfolioQuick() {
     if (elDashTry) elDashTry.textContent = `≈ ${fmtTry(totalTry)} TRY`;
 }
 
+// REST Fiyat Yedekleme
 async function fetchLiveTickerFallback() {
     try {
         const endpoints = [
@@ -1449,6 +1447,7 @@ async function fetchLiveTickerFallback() {
         KZ_STATE.coins.forEach(coin => {
             const info = priceMap[coin.symbol];
             if (info && info.price > 0) {
+                // 🎯 REST fiyatı da mum devri ve teyit motoruna iletilir
                 processLivePriceUpdate(coin, info.price, info.high, info.low);
             }
         });
@@ -1457,6 +1456,7 @@ async function fetchLiveTickerFallback() {
     }
 }
 
+// Önbellek Destekli Mum Çekici
 async function fetchInitialCandles(coin) {
     const year = parseInt(KZ_STATE.selectedYear, 10) || 2026;
     const cacheKey = `kuzgun_candles_${coin.symbol}_${coin.interval}_${year}`;
@@ -1557,6 +1557,7 @@ async function fetchInitialCandles(coin) {
     }
 }
 
+// 🎯 WEBSOCKET: CANLI FİYATI DOĞRUDAN MUM DEVRİ & TEYİT MOTORUNA AKTARIR
 function initBinanceWebSocket() {
     if (binanceWs) {
         try { 
@@ -1602,6 +1603,7 @@ function initBinanceWebSocket() {
 
                 const coin = KZ_STATE.coins.find(c => c.symbol === sym);
                 if (coin && liveClose > 0) {
+                    // 🎯 Mum devri, kesinleşmiş teyit ve fiyat akışı tek merkezden yönetilir
                     processLivePriceUpdate(coin, liveClose, parseFloat(d.h), parseFloat(d.l));
                 }
             } catch (e) {}
