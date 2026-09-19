@@ -1,7 +1,7 @@
 // KUZGUN PRO ENGINE & UI CONTROLLER
 const KZ_STATE = {
     portfolioBaseUsd: 1000.00,
-    selectedYear: localStorage.getItem('kuzgun_selected_year') || '2026', // 🎯 Dinamik Yıl
+    selectedYear: localStorage.getItem('kuzgun_selected_year') || '2026',
     usdtTryRate: 36.50,
     btcPrice: 0.00,
     maxSlots: 2,
@@ -26,7 +26,6 @@ async function changeYearFromHeader(year) {
     KZ_STATE.selectedYear = year;
     localStorage.setItem('kuzgun_selected_year', year);
     
-    // Tüm kartları seçilen yıla göre yeniden çek ve tara
     for (const coin of KZ_STATE.coins) {
         await fetchInitialCandles(coin);
     }
@@ -132,19 +131,25 @@ function isCoinMonthlyLocked(coin) {
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
 }
 
-// 🎯 TÜM AYLARI DİNAMİK VE DOĞRU HESAPLAYAN BACKTEST MOTORU
+// 🎯 HER AYIN ALTINA DETAYLI İŞLEM LİSTESİNİ (tradesList) BAĞLAYAN MOTOR
 function runCardBacktest(coin) {
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
     const now = new Date();
     
-    // Eğer seçilen yıl bu yılsa şu anki aya kadar, geçmiş yılsa 12 ayın tamamı (0..11)
     const maxMonthIdx = (targetYear === now.getFullYear()) ? now.getMonth() : 11;
 
     const monthlyMap = {};
     for (let m = 0; m <= maxMonthIdx; m++) {
         const mKey = `${targetYear}-${String(m + 1).padStart(2, '0')}`;
-        monthlyMap[mKey] = { monthKey: mKey, name: monthNames[m], trades: 0, pnl: 0, isLocked: false };
+        monthlyMap[mKey] = { 
+            monthKey: mKey, 
+            name: monthNames[m], 
+            trades: 0, 
+            pnl: 0, 
+            isLocked: false,
+            tradesList: [] 
+        };
     }
 
     if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 5)) {
@@ -170,7 +175,14 @@ function runCardBacktest(coin) {
         if (!monthlyMap[mKey]) {
             const mParts = mKey.split('-');
             const mIdx = parseInt(mParts[1], 10) - 1;
-            monthlyMap[mKey] = { monthKey: mKey, name: monthNames[mIdx] || mKey, trades: 0, pnl: 0, isLocked: false };
+            monthlyMap[mKey] = { 
+                monthKey: mKey, 
+                name: monthNames[mIdx] || mKey, 
+                trades: 0, 
+                pnl: 0, 
+                isLocked: false,
+                tradesList: []
+            };
         }
 
         const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap;
@@ -209,16 +221,23 @@ function runCardBacktest(coin) {
                 const hours = Math.floor(diffSec / 3600);
                 const mins = Math.floor((diffSec % 3600) / 60);
                 const exitD = new Date(c.time);
+                const dayName = `${exitD.getDate()} ${monthNames[exitD.getMonth()]}`;
+                const timeStr = `${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
 
-                trades.push({
+                const tradeItem = {
                     entryPrice: entryP,
                     exitPrice: c.close,
                     pnl: pnl,
                     reason: reason,
                     duration: hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`,
-                    dateStr: `${exitD.getDate()} ${monthNames[exitD.getMonth()].slice(0, 3)} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`,
+                    dayStr: dayName,
+                    timeStr: timeStr,
+                    dateStr: `${dayName} ${timeStr}`,
                     isWin: pnl >= 0
-                });
+                };
+
+                trades.push(tradeItem);
+                monthlyMap[mKey].tradesList.unshift(tradeItem);
             }
         }
     }
@@ -234,6 +253,14 @@ function runCardBacktest(coin) {
 
     coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
     coin.simLastTrades = trades.slice(-10).reverse();
+}
+
+// 🎯 AYIN ÜZERİNE TIKLANDIĞINDA AÇILIP KAPANMASINI SAĞLAYAN AKORDEON METODU
+function toggleMonthTrades(coinId, monthKey) {
+    const coin = KZ_STATE.coins.find(c => c.id === coinId);
+    if (!coin) return;
+    coin.expandedMonthKey = (coin.expandedMonthKey === monthKey) ? null : monthKey;
+    updateCardTablesOnly(coin);
 }
 
 function evaluateTradingRules(coin) {
@@ -409,6 +436,82 @@ function changeMaxSlots(newSlots) {
     updatePortfolioCalculations();
 }
 
+// 🎯 AY LİSTESİ VE AKORDEON İŞLEMLERİNİ ÜRETEN ŞABLON METODU
+function generateMonthlyTableHtml(coin) {
+    const months = coin.simMonthlyStats || [];
+    const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
+    const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
+
+    return `
+        <div class="space-y-1">
+            <div class="space-y-1 max-h-72 overflow-y-auto pr-1">
+                ${months.map(m => {
+                    const isExpanded = coin.expandedMonthKey === m.monthKey;
+                    const tradesList = m.tradesList || [];
+                    const hasTrades = tradesList.length > 0;
+
+                    return `
+                        <div class="rounded-lg border border-slate-100 dark:border-slate-800/80 overflow-hidden bg-white dark:bg-slate-900/60 transition">
+                            <!-- AY SATIRI (TIKLANABİLİR) -->
+                            <div onclick="toggleMonthTrades('${coin.id}', '${m.monthKey}')" 
+                                class="flex items-center justify-between py-2 px-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/70 text-xs transition cursor-pointer select-none">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-3 h-3 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-90 text-blue-600 dark:text-blue-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                    </svg>
+                                    <span class="font-bold text-slate-800 dark:text-slate-200 w-16">${m.name}</span>
+                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${m.trades} İşlem</span>
+                                    ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
+                                </div>
+                                <span class="font-black tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                                    ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
+                                </span>
+                            </div>
+
+                            <!-- AÇILAN İŞLEM LİSTESİ (AKORDEON ÇEKMECESİ) -->
+                            ${isExpanded ? `
+                                <div class="p-2 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 space-y-1.5 transition-all">
+                                    <div class="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-700/60">
+                                        <span>${m.name} Ayı İşlem Geçmişi (${tradesList.length})</span>
+                                        <span class="text-blue-600 dark:text-blue-400">Detay</span>
+                                    </div>
+                                    ${hasTrades ? `
+                                        <div class="space-y-1 max-h-48 overflow-y-auto pr-0.5">
+                                            ${tradesList.map(t => `
+                                                <div class="flex items-center justify-between p-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-[11px] shadow-sm">
+                                                    <div class="space-y-0.5">
+                                                        <div class="flex items-center space-x-1.5">
+                                                            <span class="font-bold text-slate-800 dark:text-slate-200">${t.dayStr}</span>
+                                                            <span class="text-[10px] text-slate-400 font-medium">${t.timeStr}</span>
+                                                            <span class="text-[9px] font-semibold text-blue-600 dark:text-blue-400">• ${t.duration}</span>
+                                                        </div>
+                                                        <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+                                                            ${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)} <span class="text-[9px] text-slate-400">(${t.reason})</span>
+                                                        </div>
+                                                    </div>
+                                                    <span class="font-extrabold tabular-nums text-xs px-1.5 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
+                                                        ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
+                                                    </span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    ` : `
+                                        <p class="text-center py-2 text-[10px] text-slate-400">Bu ayda yapılmış işlem kaydı bulunmuyor.</p>
+                                    `}
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
+                <span class="text-slate-700 dark:text-slate-300">Toplam (${totalTrades} İşlem):</span>
+                <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
+            </div>
+        </div>
+    `;
+}
+
 function renderSingleCard(coin) {
     if (!elCardsGrid) return;
     let cardEl = document.getElementById(`card-${coin.id}`);
@@ -501,35 +604,15 @@ function renderSingleCard(coin) {
         </div>
     `;
 
-    const months = coin.simMonthlyStats || [];
-    const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
-    const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
-
     const monthlyPanelHtml = `
-        <div id="monthly-container-${coin.id}" class="space-y-1">
-            <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1 divide-y divide-slate-100 dark:divide-slate-800">
-                ${months.map(m => `
-                    <div class="flex items-center justify-between py-1 px-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs transition">
-                        <div class="flex items-center space-x-2">
-                            <span class="font-semibold text-slate-800 dark:text-slate-200 w-16">${m.name}</span>
-                            <span class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${m.trades} İşlem</span>
-                            ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
-                        </div>
-                        <span class="font-bold tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
-                            ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
-                        </span>
-                    </div>`).join('')}
-            </div>
-            <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
-                <span class="text-slate-700 dark:text-slate-300">Toplam (${totalTrades} İşlem):</span>
-                <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
-            </div>
+        <div id="monthly-container-${coin.id}">
+            ${generateMonthlyTableHtml(coin)}
         </div>
     `;
 
     const trades = coin.simLastTrades || [];
     const tradesPanelHtml = `
-        <div id="trades-container-${coin.id}" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+        <div id="trades-container-${coin.id}" class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
             ${trades.map(t => `
                 <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
                     <div class="space-y-0.5">
@@ -662,41 +745,19 @@ function renderSingleCard(coin) {
     cardEl.innerHTML = htmlContent;
 }
 
+// 🎯 SADECE TABLOLARI ANLIK GÜNCELLEYEN METOD (AKORDEON AÇILDIĞINDA TETİKLENİR)
 function updateCardTablesOnly(coin) {
     const mContainer = document.getElementById(`monthly-container-${coin.id}`);
     const tContainer = document.getElementById(`trades-container-${coin.id}`);
 
     if (mContainer) {
-        const months = coin.simMonthlyStats || [];
-        const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
-        const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
-
-        mContainer.innerHTML = `
-            <div class="space-y-1">
-                <div class="space-y-0.5 max-h-48 overflow-y-auto pr-1 divide-y divide-slate-100 dark:divide-slate-800">
-                    ${months.map(m => `
-                        <div class="flex items-center justify-between py-1 px-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800/60 text-xs transition">
-                            <div class="flex items-center space-x-2">
-                                <span class="font-semibold text-slate-800 dark:text-slate-200 w-16">${m.name}</span>
-                                <span class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${m.trades} İşlem</span>
-                                ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
-                            </div>
-                            <span class="font-bold tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
-                                ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
-                            </span>
-                        </div>`).join('')}
-                </div>
-                <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
-                    <span class="text-slate-700 dark:text-slate-300">Toplam (${totalTrades} İşlem):</span>
-                    <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
-                </div>
-            </div>`;
+        mContainer.innerHTML = generateMonthlyTableHtml(coin);
     }
 
     if (tContainer) {
         const trades = coin.simLastTrades || [];
         tContainer.innerHTML = trades.length === 0 ? `<p class="py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-medium">İşlem yok.</p>` : `
-            <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+            <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
                 ${trades.map(t => `
                     <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
                         <div class="space-y-0.5">
@@ -704,7 +765,7 @@ function updateCardTablesOnly(coin) {
                                 <span class="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">${t.reason}</span>
                                 <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">• ${t.duration}</span>
                             </div>
-                            <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</div>
+                            <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} →${formatCryptoPrice(t.exitPrice)}</div>
                         </div>
                         <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
                             ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
@@ -1232,7 +1293,6 @@ async function fetchBinanceSpotSymbols() {
     } catch (err) {}
 }
 
-// 🎯 Yedekli ve Kesintisiz Mum Çekici (Sihirbaz İçin)
 async function fetchAllCandlesForYear(symbol, interval, year) {
     const startTime = new Date(Date.UTC(year, 0, 1, 0, 0, 0)).getTime();
     const endTime = year === new Date().getFullYear() 
