@@ -1188,7 +1188,11 @@ function renderActivePositionsList() {
                     <span id="active-pos-pnl-${pos.id}" class="font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)</span>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/90 p-2 rounded border border-slate-100 dark:border-slate-700/60">
-                    <div>Giriş: <span class="text-slate-800 dark:text-slate-200 font-medium">${formatCryptoPrice(pos.entryPrice)}</span></div>
+                    <div class="flex items-center gap-1">Giriş: <span class="text-slate-800 dark:text-slate-200 font-medium">${formatCryptoPrice(pos.entryPrice)}</span>
+                        <button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="p-0.5 rounded text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">
+                            <svg class="w-3 h-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 15l-1 4 4-1 8.5-8.5a2.5 2.5 0 10-3.536-3.536L8.5 14.464 9 15z"></path></svg>
+                        </button>
+                    </div>
                     <div>Hedef: <span class="text-emerald-600 dark:text-emerald-400 font-medium">${formatCryptoPrice(pos.targetPrice)}</span></div>
                     <div>Anlık: <span id="active-pos-price-${pos.id}" class="text-slate-900 dark:text-white font-medium">${formatCryptoPrice(currentPrice)}</span></div>
                     <div>Bütçe: <span class="text-slate-800 dark:text-slate-200 font-medium">${fmtUsd(pos.allocatedUsd)}</span></div>
@@ -1218,6 +1222,32 @@ function updateActivePositionsLive() {
         }
         if (priceEl) priceEl.textContent = formatCryptoPrice(currentPrice);
     });
+}
+
+function editPositionEntryPrice(positionId) {
+    const pos = KZ_STATE.activePositions.find(p => p.id === positionId);
+    if (!pos) return;
+
+    const enteredValue = prompt(`${pos.displaySymbol} için gerçek giriş fiyatını yaz:`, String(pos.entryPrice));
+    if (enteredValue === null) return;
+
+    const newEntryPrice = Number(String(enteredValue).trim().replace(',', '.'));
+    if (!Number.isFinite(newEntryPrice) || newEntryPrice <= 0) {
+        alert('Geçerli ve sıfırdan büyük bir giriş fiyatı yazmalısın.');
+        return;
+    }
+
+    pos.entryPrice = newEntryPrice;
+    pos.targetPrice = newEntryPrice * (1 + (Number(pos.profitTarget || 0) / 100));
+
+    const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
+    const currentPrice = coin && coin.price > 0 ? coin.price : newEntryPrice;
+    pos.livePnlPercent = ((currentPrice - newEntryPrice) / newEntryPrice) * 100;
+    pos.livePnlUsd = Number(pos.allocatedUsd || 0) * (pos.livePnlPercent / 100);
+
+    savePositions();
+    renderActivePositionsList();
+    recalculateFullPortfolio();
 }
 
 function renderPendingSignalsList() {
@@ -2461,6 +2491,7 @@ function applyCustomDateRange() {
 // 🎯 GLOBAL WINDOW BAĞLANTILARI
 window.toggleCardExpand = toggleCardExpand;
 window.toggleCoinActive = toggleCoinActive;
+window.editPositionEntryPrice = editPositionEntryPrice;
 window.openCoinFocus = openCoinFocus;
 window.openWizardForExistingCoin = openWizardForExistingCoin;
 window.deleteCoinCard = deleteCoinCard;
