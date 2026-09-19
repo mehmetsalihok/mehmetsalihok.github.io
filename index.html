@@ -233,7 +233,7 @@
                 </div>
             </div>
 
-            <!-- DİNAMİK ZAMAN DİLİMİ BUTONLARI (BAŞLANGIÇTAN BERİ İLE BAŞLAR) -->
+            <!-- DİNAMİK ZAMAN DİLİMİ BUTONLARI -->
             <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <div class="flex items-center space-x-1.5 overflow-x-auto pb-1" id="timeframeButtonGroup">
                     <button onclick="changePortfolioTimeframe('sinceStart')" data-tf="sinceStart" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition shrink-0">Başlangıçtan Beri</button>
@@ -273,7 +273,7 @@
                 <div id="cardsGrid" class="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4 items-start"></div>
             </section>
 
-            <!-- SAĞ KONSOL -->
+            <!-- SAĞ KONSOL: SWIFT EŞDEĞERİ YENİ SON İŞLEMLER PANELİ -->
             <aside class="xl:col-span-3 space-y-3.5">
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3 transition-colors">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
@@ -303,11 +303,14 @@
                     <div id="pendingSignalsList" class="space-y-2"></div>
                 </div>
 
+                <!-- 🎯 SWIFT ACTIVEPOSITIONHEADERVIEW UYARLI: SON İŞLEMLER (50 İşlem, 5'erli Sayfalama) -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3 transition-colors">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
                         <div class="flex items-center space-x-2">
-                            <span class="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-600"></span>
-                            <h2 class="text-xs font-semibold tracking-tight text-slate-800 dark:text-slate-100">Kapanan İşlemler Günlüğü</h2>
+                            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <h2 class="text-xs font-bold tracking-tight text-slate-800 dark:text-slate-100">Son Tamamlanan İşlemler</h2>
                         </div>
                         <div class="flex items-center space-x-1.5">
                             <span id="historyStatsTotal" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">0 İşlem</span>
@@ -316,7 +319,16 @@
                             </button>
                         </div>
                     </div>
-                    <div class="max-h-[360px] overflow-y-auto space-y-2 pr-1" id="historyTradesContainer"></div>
+
+                    <!-- Swift Tarzı Sayfa Gösterge Noktaları & Sayfalama Kontrolleri -->
+                    <div id="historyPaginationControls" class="flex items-center justify-between px-1 text-[11px]">
+                        <button onclick="prevHistoryPage()" id="btnPrevHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">‹</button>
+                        <div id="historyPaginationDots" class="flex items-center space-x-1.5"></div>
+                        <button onclick="nextHistoryPage()" id="btnNextHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">›</button>
+                    </div>
+
+                    <!-- 5'li İşlem Listesi -->
+                    <div class="space-y-2 min-h-[290px]" id="historyTradesContainer"></div>
                 </div>
             </aside>
         </div>
@@ -493,7 +505,7 @@
                     </div>
 
                     <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4 fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
                 </div>
@@ -501,6 +513,7 @@
         </div>
     </div>
 
+    <!-- 3 AŞAMALI TEMA YÖNETİCİSİ -->
     <script>
         function applyTheme(theme) {
             const root = document.documentElement;
@@ -547,8 +560,8 @@
         });
     </script>
 
-    <!-- MOTOR MODÜLLERİ (Önce PortfolioEngine, ardından App) -->
-    <script src="portfolioEngine.js?v=2"></script>
-    <script src="app.js?v=15"></script>
+    <!-- MOTOR MODÜLLERİ -->
+    <script src="portfolioEngine.js?v=3"></script>
+    <script src="app.js?v=16"></script>
 </body>
 </html>
