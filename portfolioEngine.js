@@ -10,15 +10,15 @@ const PortfolioEngine = {
 
         for (const candidate of sortedCandidates) {
             const candidateStart = candidate.entryTime;
-            const candidateEnd = Math.max(candidate.exitTime, candidate.entryTime + 1);
+            // Mum süresi kadar slotu meşgul tutar
+            const candidateEnd = Math.max(candidate.exitTime, candidate.entryTime + 60000);
 
-            // Mevcut kabul edilmiş işlemlerin ve aktif pozisyonların zaman pencereleri
+            // Mevcut kabul edilmiş işlemlerin ve canlı pozisyonların zaman aralıkları
             const occupiedIntervals = acceptedTrades.map(t => ({
                 start: t.entryTime,
-                end: Math.max(t.exitTime, t.entryTime + 1)
+                end: Math.max(t.exitTime, t.entryTime + 60000)
             }));
 
-            // Şu an canlıda devam eden açık pozisyonlar
             activePositions.forEach(p => {
                 occupiedIntervals.push({
                     start: p.entryTime,
@@ -26,7 +26,7 @@ const PortfolioEngine = {
                 });
             });
 
-            // Kritik kontrol noktaları: Giriş anı ve aralıktaki diğer işlemlerin başlangıçları
+            // Kontrol noktaları
             const checkPoints = [candidateStart];
             for (const interval of occupiedIntervals) {
                 if (interval.start > candidateStart && interval.start < candidateEnd) {
@@ -34,7 +34,6 @@ const PortfolioEngine = {
                 }
             }
 
-            // Kapasite aşımı kontrolü
             let wouldExceed = false;
             for (const point of checkPoints) {
                 const occupiedCount = occupiedIntervals.reduce((count, interval) => {
@@ -47,13 +46,11 @@ const PortfolioEngine = {
                 }
             }
 
-            // Slot boşsa işleme giriş yapılır ve portföye kaydedilir
             if (!wouldExceed) {
                 acceptedTrades.push(candidate);
             }
         }
 
-        // Çıkış zamanına göre yeniden sırala (en güncel en üstte)
         return acceptedTrades.sort((a, b) => b.exitTime - a.exitTime);
     },
 
@@ -69,12 +66,13 @@ const PortfolioEngine = {
         startDateTimestamp = 0,
         selectedYear = '2026'
     }) {
-        // A) Slot kapasitesi kalkanını uygula
         const processedTrades = isSlotConstraintEnabled 
             ? this.filterTradesBySlotCapacity(trades, maxSlots, activePositions)
             : [...trades].sort((a, b) => a.exitTime - b.exitTime);
 
-        // B) Sermaye başlangıç tarihinden sonrasını filtrele (Eğer ayarlanmadıysa yılbaşından itibaren)
+        // Kabul edilen işlemlerin ID kümesi (Kartlarda filtrelemek için)
+        const acceptedTradeIds = new Set(processedTrades.map(t => t.id));
+
         const yearInt = parseInt(selectedYear, 10) || 2026;
         const defaultYearStartSec = new Date(Date.UTC(yearInt, 0, 1, 0, 0, 0)).getTime() / 1000;
         const effectiveStartSec = startDateTimestamp > 0 ? startDateTimestamp : defaultYearStartSec;
@@ -88,7 +86,9 @@ const PortfolioEngine = {
         let totalFeesAccumulated = 0;
         const executedTrades = [];
 
-        // C) İşlemleri bileşik olarak cüzdana işlet
+        // Her coin için slota giren reel istatistikler
+        const coinRealStats = {};
+
         for (const trade of validTrades) {
             const slotBudget = runningBalance / slotsCount;
 
@@ -111,9 +111,22 @@ const PortfolioEngine = {
                 effectivePnl: effectivePnl,
                 feeUSD: totalFee
             });
+
+            // Coin bazlı reel kâr havuzunu güncelle
+            if (!coinRealStats[trade.coinId]) {
+                coinRealStats[trade.coinId] = { totalTrades: 0, totalPnl: 0, monthly: {} };
+            }
+            coinRealStats[trade.coinId].totalTrades++;
+            coinRealStats[trade.coinId].totalPnl += trade.pnlPercent;
+
+            const mKey = trade.monthKey || new Date(trade.exitTime).toISOString().slice(0, 7);
+            if (!coinRealStats[trade.coinId].monthly[mKey]) {
+                coinRealStats[trade.coinId].monthly[mKey] = { trades: 0, pnl: 0 };
+            }
+            coinRealStats[trade.coinId].monthly[mKey].trades++;
+            coinRealStats[trade.coinId].monthly[mKey].pnl += trade.pnlPercent;
         }
 
-        // D) Açık (gerçekleşmemiş) pozisyonların kâr/zararı
         let unrealizedPnlUSD = 0;
         const currentSlotBudget = runningBalance / slotsCount;
 
@@ -131,15 +144,17 @@ const PortfolioEngine = {
             realizedBalance: runningBalance,
             unrealizedPnlUSD: unrealizedPnlUSD,
             totalFeesUSD: totalFeesAccumulated,
-            executedTrades: executedTrades.sort((a, b) => b.exitTime - a.exitTime)
+            executedTrades: executedTrades.sort((a, b) => b.exitTime - a.exitTime),
+            acceptedTradeIds: acceptedTradeIds,
+            coinRealStats: coinRealStats
         };
     },
 
     // 3. DİNAMİK ZAMAN DİLİMİ İSTATİSTİKLERİ
     calculateTimeframeStats({
         executedTrades = [],
-        timeframe = 'sinceStart', // 'sinceStart', 'today', 'week', 'month', 'selectMonth', 'custom'
-        selectedMonthIndex = new Date().getMonth() + 1, // 1..12
+        timeframe = 'sinceStart',
+        selectedMonthIndex = new Date().getMonth() + 1,
         selectedYear = '2026',
         startDateTimestamp = 0,
         customStartDate = null,
