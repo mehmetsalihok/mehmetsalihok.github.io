@@ -194,7 +194,61 @@
     </header>
 
     <!-- 2️⃣ ANA ÇALIŞMA ALANI -->
-    <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-5">
+    <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-5 space-y-4">
+
+        <!-- 🌟 BİLEŞİK PORTFÖY & FİNANSAL VİTRİN KARTI (Swift ile Birebir) -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 transition-colors">
+            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                
+                <!-- SOL: DOLAR BAKİYESİ & CANLI TL -->
+                <div class="space-y-1">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] font-black tracking-wider uppercase text-slate-400 dark:text-slate-500">BİLEŞİK PORTFÖY</span>
+                        <span id="dashboardSlotBadge" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">0/2 SLOT</span>
+                    </div>
+                    <div class="flex items-baseline space-x-2">
+                        <span id="dashCompoundedUsd" class="text-3xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">$1,000.00</span>
+                        <span class="text-xs font-bold text-slate-400">USD</span>
+                    </div>
+                    <div class="flex items-center space-x-1.5 text-xs text-slate-500 font-semibold tabular-nums">
+                        <span>≈</span>
+                        <span id="dashCompoundedTry">₺36,500.00 TRY</span>
+                    </div>
+                </div>
+
+                <!-- SAĞ: SEÇİLİ ZAMAN DİLİMİ KAZANÇ VERİLERİ -->
+                <div class="flex flex-col md:items-end space-y-1.5">
+                    <span id="dashTimeframeLabel" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bugün Net Kazanç</span>
+                    
+                    <div class="flex items-baseline space-x-2">
+                        <span id="dashTfUsdGain" class="text-xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">+$0.00</span>
+                        <span id="dashTfTryGain" class="text-xs font-bold text-emerald-600/80 dark:text-emerald-400/80 tabular-nums">(+₺0.00)</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
+                        <span id="dashTfDirectPnl" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">Net Kâr: +%0.00</span>
+                        <span id="dashTfCapitalPnl" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">Ana Paraya: +%0.00</span>
+                        <span id="dashTfFeesBadge" class="hidden px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">Komisyon: -$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DİNAMİK ZAMAN DİLİMİ BUTONLARI -->
+            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
+                <div class="flex items-center space-x-1.5 overflow-x-auto pb-1" id="timeframeButtonGroup">
+                    <button onclick="changePortfolioTimeframe('today')" data-tf="today" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition shrink-0">Bugün</button>
+                    <button onclick="changePortfolioTimeframe('week')" data-tf="week" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Hafta</button>
+                    <button onclick="changePortfolioTimeframe('month')" data-tf="month" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Ay</button>
+                    <button onclick="changePortfolioTimeframe('selectMonth')" data-tf="selectMonth" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Ay Seç</button>
+                    <button onclick="openCustomDateRangeModal()" data-tf="custom" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Özel Aralık</button>
+                </div>
+
+                <!-- "Ay Seç" Tıklandığında Açılan Ay Butonları -->
+                <div id="subMonthPills" class="hidden flex items-center space-x-1.5 overflow-x-auto pt-1 pb-1"></div>
+            </div>
+        </section>
+
+        <!-- KARTLAR VE SAĞ KONSOL GRİDİ -->
         <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
             
             <!-- SOL ALAN: COIN KARTLARI -->
@@ -267,7 +321,7 @@
         </div>
     </main>
 
-    <!-- 3️⃣ AYLIK İŞLEMLER DETAY MODALI (YENİ EKLEME) -->
+    <!-- 3️⃣ AYLIK İŞLEMLER DETAY MODALI -->
     <div id="monthTradesModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-5 shadow-2xl flex flex-col max-h-[85vh] transition-colors">
             
@@ -286,7 +340,7 @@
                 <button onclick="closeMonthTradesModal()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-semibold transition">✕</button>
             </div>
 
-            <!-- Yatay Kaydırılabilir Ay Sekmeleri (Month Tabs) -->
+            <!-- Yatay Kaydırılabilir Ay Sekmeleri -->
             <div class="pt-3 pb-2 shrink-0 border-b border-slate-100 dark:border-slate-800">
                 <div class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mb-1.5">AY SEÇİMİ</div>
                 <div id="modalMonthTabsContainer" class="flex items-center space-x-1.5 overflow-x-auto pb-1"></div>
@@ -306,7 +360,7 @@
                 </div>
             </div>
 
-            <!-- İşlem Kartları Listesi (Scrollable) -->
+            <!-- İşlem Kartları Listesi -->
             <div id="modalTradesListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 py-2"></div>
 
             <!-- Modal Altı Kapatma Butonu -->
@@ -318,7 +372,28 @@
         </div>
     </div>
 
-    <!-- 4️⃣ SİHİRBAZ / AYARLAR MODALI -->
+    <!-- 4️⃣ ÖZEL TARİH ARALIĞI MODALI -->
+    <div id="customRangeModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
+                <h3 class="font-bold text-sm text-slate-900 dark:text-white">Özel Tarih Aralığı</h3>
+                <button onclick="closeCustomDateRangeModal()" class="text-slate-400 text-sm font-bold">✕</button>
+            </div>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-500 text-[10px] font-bold uppercase mb-1">Başlangıç Tarihi</label>
+                    <input type="date" id="inputCustomStart" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white">
+                </div>
+                <div>
+                    <label class="block text-slate-500 text-[10px] font-bold uppercase mb-1">Bitiş Tarihi</label>
+                    <input type="date" id="inputCustomEnd" class="w-full p-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-slate-900 dark:text-white">
+                </div>
+            </div>
+            <button onclick="applyCustomDateRange()" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow transition">Uygula ve Hesapla</button>
+        </div>
+    </div>
+
+    <!-- 5️⃣ SİHİRBAZ / COİN EKLEME MODALI -->
     <div id="addCoinModal" class="fixed inset-0 z-50 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 transition-colors">
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -419,7 +494,7 @@
                     </div>
 
                     <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4 fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
                 </div>
@@ -474,7 +549,8 @@
         });
     </script>
 
-    <!-- SÜRÜM ETİKETLİ GÜNCEL JS MOTORU -->
-    <script src="app.js?v=12"></script>
+    <!-- SCRIPT ENTEGRASYONU: Önce portfolioEngine.js, ardından app.js -->
+    <script src="portfolioEngine.js?v=1"></script>
+    <script src="app.js?v=14"></script>
 </body>
 </html>
