@@ -80,7 +80,7 @@
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
-    <!-- 1️⃣ ORTAK ÜST KONSOL (Ayarlar Aktif) -->
+    <!-- 1️⃣ ORTAK ÜST KONSOL -->
     <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
             
@@ -104,7 +104,7 @@
 
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
 
-                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton (Açık -> Koyu -> OLED) -->
+                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton -->
                 <button onclick="cycleTheme()" class="px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0 flex items-center space-x-1.5" title="Tema: Açık / Koyu / OLED">
                     <svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
@@ -118,11 +118,11 @@
         </div>
     </header>
 
-    <!-- 2️⃣ GENİŞ EKRAN DASHBOARD YERLEŞİMİ (3 SÜTUN) -->
+    <!-- 2️⃣ GENİŞ EKRAN DASHBOARD YERLEŞİMİ -->
     <main class="max-w-[1780px] w-full mx-auto px-6 py-6 flex-1">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-            <!-- SOL SÜTUN: KATEGORİ MENÜSÜ & SİSTEM ÖZETİ (3 Kolon) -->
+            <!-- SOL SÜTUN -->
             <aside class="lg:col-span-3 space-y-4">
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm space-y-1">
                     <div class="px-3 py-2 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">AYAR KATEGORİLERİ</div>
@@ -174,7 +174,7 @@
                 </div>
             </aside>
 
-            <!-- ORTA SÜTUN: GENİŞ FORM AYAR PANELLERİ (6 Kolon) -->
+            <!-- ORTA SÜTUN -->
             <div class="lg:col-span-6 space-y-5">
 
                 <!-- PANEL 1: SERMAYE VE ZAMAN YÖNETİMİ -->
@@ -189,7 +189,23 @@
                         </div>
                     </div>
 
+                    <!-- YENİ: VERİ YILI SEÇİMİ -->
                     <div class="space-y-1.5">
+                        <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">ANALİZ VE TARAMA YILI</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button type="button" onclick="setSelectedYear('2026')" id="btnYear2026"
+                                class="py-2.5 rounded-xl text-xs font-bold border transition text-center">
+                                2026 (Aktif Yıl)
+                            </button>
+                            <button type="button" onclick="setSelectedYear('2025')" id="btnYear2025"
+                                class="py-2.5 rounded-xl text-xs font-bold border transition text-center">
+                                2025 (Geçmiş Yıl)
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 Sistem seçilen yıla ait tüm aylık mumları tarayarak kâr ve kilitlenme tablosunu oluşturur.</p>
+                    </div>
+
+                    <div class="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
                         <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">BAŞLANGIÇ SERMAYESİ (USDT)</label>
                         <div class="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500 transition">
                             <span class="font-bold text-base text-slate-400 pl-2">$</span>
@@ -211,7 +227,7 @@
                             <button onclick="setQuickDate('today')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Bugün 00:00</button>
                             <button onclick="setQuickDate('24h')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">24 Sa. Önce</button>
                             <button onclick="setQuickDate('3d')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">3 Gün Önce</button>
-                            <button onclick="setQuickDate('year_start')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Yıl Başı (2026)</button>
+                            <button onclick="setQuickDate('year_start')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Yıl Başı</button>
                         </div>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 Cüzdanınız seçtiğiniz tarih ve saatteki paranızla başlatılır.</p>
                     </div>
@@ -338,7 +354,7 @@
                 </section>
             </div>
 
-            <!-- SAĞ SÜTUN: CANLI PARAMETRE ÖNİZLEME VİDGET'I (3 Kolon) -->
+            <!-- SAĞ SÜTUN -->
             <aside class="lg:col-span-3 space-y-4">
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 sticky top-20">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
@@ -362,6 +378,10 @@
                         </div>
 
                         <div class="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-500 dark:text-slate-400">Tarama Yılı:</span>
+                                <span id="badgeYear" class="font-bold text-blue-600 dark:text-blue-400">2026</span>
+                            </div>
                             <div class="flex justify-between items-center">
                                 <span class="text-slate-500 dark:text-slate-400">Çakışma Kalkanı:</span>
                                 <span id="badgeSlotConstraint" class="font-bold text-emerald-600 dark:text-emerald-400">Aktif</span>
@@ -465,6 +485,34 @@
             } catch (e) {}
         }
 
+        function getSelectedYear() {
+            return localStorage.getItem('kuzgun_selected_year') || '2026';
+        }
+
+        function setSelectedYear(year) {
+            localStorage.setItem('kuzgun_selected_year', year);
+            updateYearUI(year);
+            updateLivePreview();
+            showToast(`Veri yılı ${year} olarak ayarlandı`);
+        }
+
+        function updateYearUI(year) {
+            const btn2026 = document.getElementById('btnYear2026');
+            const btn2025 = document.getElementById('btnYear2025');
+            if (!btn2026 || !btn2025) return;
+
+            const activeClass = "bg-blue-600 text-white border-blue-600 shadow-sm";
+            const inactiveClass = "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700";
+
+            if (year === '2026') {
+                btn2026.className = `py-2.5 rounded-xl text-xs font-bold border transition text-center ${activeClass}`;
+                btn2025.className = `py-2.5 rounded-xl text-xs font-bold border transition text-center ${inactiveClass}`;
+            } else {
+                btn2025.className = `py-2.5 rounded-xl text-xs font-bold border transition text-center ${activeClass}`;
+                btn2026.className = `py-2.5 rounded-xl text-xs font-bold border transition text-center ${inactiveClass}`;
+            }
+        }
+
         function updateLivePreview() {
             const balance = parseFloat(document.getElementById('inputBalance').value) || 1000;
             const slots = parseInt(localStorage.getItem('kuzgun_max_slots'), 10) || 2;
@@ -474,6 +522,10 @@
             document.getElementById('previewBalance').textContent = '$' + balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('previewSlotBudget').textContent = '$' + slotBudget.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             document.getElementById('previewSlotRatio').textContent = `Toplam ${slots} Slot (%${pct}/İşlem)`;
+
+            const currentYear = getSelectedYear();
+            const badgeYear = document.getElementById('badgeYear');
+            if (badgeYear) badgeYear.textContent = currentYear;
 
             document.getElementById('badgeSlotConstraint').textContent = document.getElementById('toggleSlotConstraint').checked ? 'Aktif' : 'Pasif';
             document.getElementById('badgeSlotConstraint').className = document.getElementById('toggleSlotConstraint').checked ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'font-bold text-slate-400';
@@ -491,6 +543,8 @@
         function loadSettings() {
             const balance = localStorage.getItem('kuzgun_base_usd') || localStorage.getItem('kuzgun_user_balance') || '1000';
             document.getElementById('inputBalance').value = parseFloat(balance).toFixed(2);
+
+            updateYearUI(getSelectedYear());
 
             const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || (Date.now() / 1000);
             const dateObj = new Date(startTs * 1000);
@@ -550,7 +604,7 @@
                     targetDate = new Date(now.getTime() - (3 * 86400 * 1000));
                     break;
                 case 'year_start':
-                    targetDate = new Date(2026, 0, 1, 0, 0, 0);
+                    targetDate = new Date(parseInt(getSelectedYear(), 10), 0, 1, 0, 0, 0);
                     break;
             }
 
