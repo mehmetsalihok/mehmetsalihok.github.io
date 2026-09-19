@@ -11,7 +11,13 @@ const KZ_STATE = {
     pendingSignals: [],
     closedTrades: [],
     activeFilter: 'all',
-    pendingWizardCandidate: null
+    pendingWizardCandidate: null,
+    
+    // 🎯 Açık Olan Aylık Detay Modalının Durumu
+    activeMonthModal: {
+        coinId: null,
+        monthKey: null
+    }
 };
 
 let binanceWs = null;
@@ -59,6 +65,17 @@ const elHistoryTotal = document.getElementById('historyStatsTotal');
 const addCoinModal = document.getElementById('addCoinModal');
 const wizardResultCard = document.getElementById('wizardResultCard');
 const wizardLoadingStatus = document.getElementById('wizardLoadingStatus');
+
+// Aylık İşlem Detay Modalı Elemanları
+const monthTradesModal = document.getElementById('monthTradesModal');
+const modalCoinTitle = document.getElementById('modalCoinTitle');
+const modalCoinBadge = document.getElementById('modalCoinBadge');
+const modalMonthTabsContainer = document.getElementById('modalMonthTabsContainer');
+const modalActiveMonthName = document.getElementById('modalActiveMonthName');
+const modalActiveMonthTradesCount = document.getElementById('modalActiveMonthTradesCount');
+const modalActiveMonthPnl = document.getElementById('modalActiveMonthPnl');
+const modalActiveMonthLockBadge = document.getElementById('modalActiveMonthLockBadge');
+const modalTradesListContainer = document.getElementById('modalTradesListContainer');
 
 const fmtUsd = (val) => '$' + Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtTry = (val) => '₺' + Number(val || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -131,7 +148,7 @@ function isCoinMonthlyLocked(coin) {
     return (totalMonthPnl + 0.001) >= coin.monthlyCap;
 }
 
-// 🎯 HER AYIN ALTINA DETAYLI İŞLEM LİSTESİNİ (tradesList) BAĞLAYAN MOTOR
+// 🎯 GİRİŞ VE ÇIKIŞ GÜN/SAAT BİLGİLERİNİ EKSİKSİZ KAYDEDEN BACKTEST MOTORU
 function runCardBacktest(coin) {
     const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
     const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
@@ -220,9 +237,12 @@ function runCardBacktest(coin) {
 
                 const hours = Math.floor(diffSec / 3600);
                 const mins = Math.floor((diffSec % 3600) / 60);
+                
+                const entryD = new Date(entryT);
                 const exitD = new Date(c.time);
-                const dayName = `${exitD.getDate()} ${monthNames[exitD.getMonth()]}`;
-                const timeStr = `${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
+                
+                const entryDateFormatted = `${entryD.getDate()} ${monthNames[entryD.getMonth()]} ${entryD.getHours().toString().padStart(2, '0')}:${entryD.getMinutes().toString().padStart(2, '0')}`;
+                const exitDateFormatted = `${exitD.getDate()} ${monthNames[exitD.getMonth()]} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
 
                 const tradeItem = {
                     entryPrice: entryP,
@@ -230,9 +250,8 @@ function runCardBacktest(coin) {
                     pnl: pnl,
                     reason: reason,
                     duration: hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`,
-                    dayStr: dayName,
-                    timeStr: timeStr,
-                    dateStr: `${dayName} ${timeStr}`,
+                    entryDateStr: entryDateFormatted,
+                    exitDateStr: exitDateFormatted,
                     isWin: pnl >= 0
                 };
 
@@ -255,12 +274,152 @@ function runCardBacktest(coin) {
     coin.simLastTrades = trades.slice(-10).reverse();
 }
 
-// 🎯 AYIN ÜZERİNE TIKLANDIĞINDA AÇILIP KAPANMASINI SAĞLAYAN AKORDEON METODU
-function toggleMonthTrades(coinId, monthKey) {
+// 🎯 AYLIK DETAY MODALINI AÇAN FONKSİYON
+function openMonthTradesModal(coinId, monthKey) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId);
+    if (!coin || !coin.simMonthlyStats || coin.simMonthlyStats.length === 0) return;
+
+    KZ_STATE.activeMonthModal = { coinId, monthKey };
+
+    if (modalCoinTitle) modalCoinTitle.textContent = `${coin.displaySymbol}/USDT`;
+    if (modalCoinBadge) modalCoinBadge.textContent = `${coin.interval} • RSI(${coin.rsiLength})`;
+
+    renderModalTabsAndContent(coin, monthKey);
+
+    if (monthTradesModal) {
+        monthTradesModal.classList.remove('hidden');
+        monthTradesModal.classList.add('flex');
+    }
+}
+
+// 🎯 MODAL İÇİ AY SEÇİM VE İÇERİK OLUŞTURUCUSU
+function renderModalTabsAndContent(coin, selectedMonthKey) {
+    const months = coin.simMonthlyStats || [];
+    if (months.length === 0) return;
+
+    // Ay Sekmelerini Oluştur (Yatay Scroll)
+    if (modalMonthTabsContainer) {
+        modalMonthTabsContainer.innerHTML = months.map(m => {
+            const isSelected = m.monthKey === selectedMonthKey;
+            return `
+                <button onclick="selectModalMonth('${m.monthKey}')" 
+                    class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition flex items-center space-x-1.5 ${isSelected ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}">
+                    <span>${m.name}</span>
+                    <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-blue-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'} font-semibold">${m.trades}</span>
+                </button>
+            `;
+        }).join('');
+    }
+
+    const currentMonthData = months.find(m => m.monthKey === selectedMonthKey) || months[0];
+
+    // Özet Alanı Güncelle
+    if (modalActiveMonthName) modalActiveMonthName.textContent = `${currentMonthData.name} ${KZ_STATE.selectedYear}`;
+    if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent = `${currentMonthData.trades} Adet İşlem Gerçekleşti`;
+    if (modalActiveMonthPnl) {
+        modalActiveMonthPnl.textContent = `${currentMonthData.pnl >= 0 ? '+' : ''}${currentMonthData.pnl.toFixed(2)}%`;
+        modalActiveMonthPnl.className = `font-black text-base tabular-nums ${currentMonthData.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+    }
+    if (modalActiveMonthLockBadge) {
+        if (currentMonthData.isLocked) {
+            modalActiveMonthLockBadge.textContent = "🔒 Aylık Kâr Kilidine Ulaşıldı";
+            modalActiveMonthLockBadge.className = "text-[10px] font-bold text-indigo-600 dark:text-indigo-400";
+        } else {
+            modalActiveMonthLockBadge.textContent = `Aylık Kilit Limiti: %${coin.monthlyCap.toFixed(1)}`;
+            modalActiveMonthLockBadge.className = "text-[10px] font-medium text-slate-400";
+        }
+    }
+
+    // İşlem Listesini Dök
+    const trades = currentMonthData.tradesList || [];
+    if (modalTradesListContainer) {
+        if (trades.length === 0) {
+            modalTradesListContainer.innerHTML = `
+                <div class="py-12 text-center text-slate-400 text-xs">
+                    <p class="font-semibold text-slate-600 dark:text-slate-300">Bu ayda yapılmış işlem kaydı bulunmuyor.</p>
+                </div>
+            `;
+        } else {
+            modalTradesListContainer.innerHTML = trades.map(t => {
+                const isWin = t.pnl >= 0;
+                return `
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-2 text-xs transition hover:border-slate-300 dark:hover:border-slate-700">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full ${isWin ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
+                                <span class="font-bold text-slate-900 dark:text-white">${t.reason}</span>
+                                <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">• Süre: ${t.duration}</span>
+                            </div>
+                            <span class="font-black tabular-nums text-xs px-2 py-0.5 rounded ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
+                                ${isWin ? '+' : ''}${t.pnl.toFixed(2)}%
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 text-[11px] bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <div>
+                                <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">GİRİŞ ZAMANI & FİYATI</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200">${t.entryDateStr}</span>
+                                <span class="block text-slate-500 font-mono text-[10px]">${formatCryptoPrice(t.entryPrice)}</span>
+                            </div>
+                            <div>
+                                <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">ÇIKIŞ ZAMANI & FİYATI</span>
+                                <span class="font-bold text-slate-800 dark:text-slate-200">${t.exitDateStr}</span>
+                                <span class="block text-slate-500 font-mono text-[10px]">${formatCryptoPrice(t.exitPrice)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+    }
+}
+
+function selectModalMonth(monthKey) {
+    const coin = KZ_STATE.coins.find(c => c.id === KZ_STATE.activeMonthModal.coinId);
     if (!coin) return;
-    coin.expandedMonthKey = (coin.expandedMonthKey === monthKey) ? null : monthKey;
-    updateCardTablesOnly(coin);
+    KZ_STATE.activeMonthModal.monthKey = monthKey;
+    renderModalTabsAndContent(coin, monthKey);
+}
+
+function closeMonthTradesModal() {
+    if (monthTradesModal) {
+        monthTradesModal.classList.add('hidden');
+        monthTradesModal.classList.remove('flex');
+    }
+    KZ_STATE.activeMonthModal = { coinId: null, monthKey: null };
+}
+
+// 🎯 AYLIK TABLOYU OLUŞTURAN ŞABLON (HER SATIR TIKLANDIĞINDA PENCEREYİ AÇAR)
+function generateMonthlyTableHtml(coin) {
+    const months = coin.simMonthlyStats || [];
+    const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
+    const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
+
+    return `
+        <div class="space-y-1">
+            <div class="space-y-0.5 max-h-56 overflow-y-auto pr-1 divide-y divide-slate-100 dark:divide-slate-800">
+                ${months.map(m => `
+                    <div onclick="openMonthTradesModal('${coin.id}', '${m.monthKey}')" 
+                        class="flex items-center justify-between py-1.5 px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 text-xs transition cursor-pointer group" title="${m.name} ayı işlemlerini aç">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-slate-800 dark:text-slate-200 w-16 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">${m.name}</span>
+                            <span class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${m.trades} İşlem</span>
+                            ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="font-black tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
+                                ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
+                            </span>
+                            <span class="text-[10px] text-slate-400 group-hover:text-blue-600 transition">→</span>
+                        </div>
+                    </div>`).join('')}
+            </div>
+            <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
+                <span class="text-slate-700 dark:text-slate-300">Toplam (${totalTrades} İşlem):</span>
+                <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
+            </div>
+        </div>
+    `;
 }
 
 function evaluateTradingRules(coin) {
@@ -436,82 +595,6 @@ function changeMaxSlots(newSlots) {
     updatePortfolioCalculations();
 }
 
-// 🎯 AY LİSTESİ VE AKORDEON İŞLEMLERİNİ ÜRETEN ŞABLON METODU
-function generateMonthlyTableHtml(coin) {
-    const months = coin.simMonthlyStats || [];
-    const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
-    const totalTrades = months.reduce((acc, m) => acc + m.trades, 0);
-
-    return `
-        <div class="space-y-1">
-            <div class="space-y-1 max-h-72 overflow-y-auto pr-1">
-                ${months.map(m => {
-                    const isExpanded = coin.expandedMonthKey === m.monthKey;
-                    const tradesList = m.tradesList || [];
-                    const hasTrades = tradesList.length > 0;
-
-                    return `
-                        <div class="rounded-lg border border-slate-100 dark:border-slate-800/80 overflow-hidden bg-white dark:bg-slate-900/60 transition">
-                            <!-- AY SATIRI (TIKLANABİLİR) -->
-                            <div onclick="toggleMonthTrades('${coin.id}', '${m.monthKey}')" 
-                                class="flex items-center justify-between py-2 px-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/70 text-xs transition cursor-pointer select-none">
-                                <div class="flex items-center space-x-2">
-                                    <svg class="w-3 h-3 text-slate-400 dark:text-slate-500 transition-transform duration-200 ${isExpanded ? 'rotate-90 text-blue-600 dark:text-blue-400' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                    </svg>
-                                    <span class="font-bold text-slate-800 dark:text-slate-200 w-16">${m.name}</span>
-                                    <span class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${m.trades} İşlem</span>
-                                    ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
-                                </div>
-                                <span class="font-black tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
-                                    ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
-                                </span>
-                            </div>
-
-                            <!-- AÇILAN İŞLEM LİSTESİ (AKORDEON ÇEKMECESİ) -->
-                            ${isExpanded ? `
-                                <div class="p-2 bg-slate-50 dark:bg-slate-800/60 border-t border-slate-100 dark:border-slate-800 space-y-1.5 transition-all">
-                                    <div class="flex items-center justify-between text-[9px] font-bold uppercase tracking-wider text-slate-400 pb-1 border-b border-slate-200/60 dark:border-slate-700/60">
-                                        <span>${m.name} Ayı İşlem Geçmişi (${tradesList.length})</span>
-                                        <span class="text-blue-600 dark:text-blue-400">Detay</span>
-                                    </div>
-                                    ${hasTrades ? `
-                                        <div class="space-y-1 max-h-48 overflow-y-auto pr-0.5">
-                                            ${tradesList.map(t => `
-                                                <div class="flex items-center justify-between p-1.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 text-[11px] shadow-sm">
-                                                    <div class="space-y-0.5">
-                                                        <div class="flex items-center space-x-1.5">
-                                                            <span class="font-bold text-slate-800 dark:text-slate-200">${t.dayStr}</span>
-                                                            <span class="text-[10px] text-slate-400 font-medium">${t.timeStr}</span>
-                                                            <span class="text-[9px] font-semibold text-blue-600 dark:text-blue-400">• ${t.duration}</span>
-                                                        </div>
-                                                        <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
-                                                            ${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)} <span class="text-[9px] text-slate-400">(${t.reason})</span>
-                                                        </div>
-                                                    </div>
-                                                    <span class="font-extrabold tabular-nums text-xs px-1.5 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
-                                                        ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
-                                                    </span>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    ` : `
-                                        <p class="text-center py-2 text-[10px] text-slate-400">Bu ayda yapılmış işlem kaydı bulunmuyor.</p>
-                                    `}
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-            <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
-                <span class="text-slate-700 dark:text-slate-300">Toplam (${totalTrades} İşlem):</span>
-                <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
-            </div>
-        </div>
-    `;
-}
-
 function renderSingleCard(coin) {
     if (!elCardsGrid) return;
     let cardEl = document.getElementById(`card-${coin.id}`);
@@ -612,7 +695,7 @@ function renderSingleCard(coin) {
 
     const trades = coin.simLastTrades || [];
     const tradesPanelHtml = `
-        <div id="trades-container-${coin.id}" class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+        <div id="trades-container-${coin.id}" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
             ${trades.map(t => `
                 <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
                     <div class="space-y-0.5">
@@ -745,7 +828,6 @@ function renderSingleCard(coin) {
     cardEl.innerHTML = htmlContent;
 }
 
-// 🎯 SADECE TABLOLARI ANLIK GÜNCELLEYEN METOD (AKORDEON AÇILDIĞINDA TETİKLENİR)
 function updateCardTablesOnly(coin) {
     const mContainer = document.getElementById(`monthly-container-${coin.id}`);
     const tContainer = document.getElementById(`trades-container-${coin.id}`);
@@ -757,7 +839,7 @@ function updateCardTablesOnly(coin) {
     if (tContainer) {
         const trades = coin.simLastTrades || [];
         tContainer.innerHTML = trades.length === 0 ? `<p class="py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-medium">İşlem yok.</p>` : `
-            <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+            <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                 ${trades.map(t => `
                     <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
                         <div class="space-y-0.5">
@@ -1509,6 +1591,14 @@ async function startEngine() {
         }, 250);
     }
 }
+
+// ESC Tuşu ile Modal Kapatma Desteği
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeMonthTradesModal();
+        closeAddCoinModal();
+    }
+});
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', startEngine);
