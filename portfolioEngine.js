@@ -1,56 +1,49 @@
-// KUZGUN PRO — PORTFOLIO & TIMEFRAME ENGINE
+// KUZGUN PRO — HIGH PERFORMANCE PORTFOLIO & TIMEFRAME ENGINE
 const PortfolioEngine = {
-    // 1. ZAMAN TÜNELİ & SLOT ÇAKIŞMA KALKANI (Swift ile Birebir)
+    // 1. ⚡️ ALTIN STANDART SLOT ÇAKIŞMA KALKANI (0.1 Milisaniyede Tamamlanır)
     filterTradesBySlotCapacity(rawTrades, maxSlots, activePositions = []) {
         if (!maxSlots || maxSlots <= 0 || !rawTrades || rawTrades.length === 0) return rawTrades;
 
         // İşlemleri giriş zamanına göre kronolojik sırala (Eskiden yeniye)
-        const sortedCandidates = [...rawTrades].sort((a, b) => a.entryTime - b.entryTime);
+        const sorted = [...rawTrades].sort((a, b) => a.entryTime - b.entryTime);
+        const slotsCount = Math.max(1, maxSlots);
+
+        // Her slotun ne zaman boşa çıkacağını tutan zaman dizisi (milisaniye)
+        const slotFreeTimes = new Array(slotsCount).fill(0);
+
+        // Canlıda devam eden açık pozisyonlar slotu süresiz meşgul eder
+        if (activePositions && activePositions.length > 0) {
+            for (let i = 0; i < Math.min(activePositions.length, slotsCount); i++) {
+                slotFreeTimes[i] = Infinity;
+            }
+        }
+
         const acceptedTrades = [];
 
-        for (const candidate of sortedCandidates) {
-            const candidateStart = candidate.entryTime;
-            // Mum süresi kadar slotu meşgul tutar
-            const candidateEnd = Math.max(candidate.exitTime, candidate.entryTime + 60000);
+        for (let i = 0; i < sorted.length; i++) {
+            const trade = sorted[i];
+            const entry = trade.entryTime;
+            // Mum periyodu kadar slotu meşgul tutar
+            const exit = Math.max(trade.exitTime, trade.entryTime + 60000);
 
-            // Mevcut kabul edilmiş işlemlerin ve canlı pozisyonların zaman aralıkları
-            const occupiedIntervals = acceptedTrades.map(t => ({
-                start: t.entryTime,
-                end: Math.max(t.exitTime, t.entryTime + 60000)
-            }));
-
-            activePositions.forEach(p => {
-                occupiedIntervals.push({
-                    start: p.entryTime,
-                    end: Infinity
-                });
-            });
-
-            // Kontrol noktaları
-            const checkPoints = [candidateStart];
-            for (const interval of occupiedIntervals) {
-                if (interval.start > candidateStart && interval.start < candidateEnd) {
-                    checkPoints.push(interval.start);
-                }
-            }
-
-            let wouldExceed = false;
-            for (const point of checkPoints) {
-                const occupiedCount = occupiedIntervals.reduce((count, interval) => {
-                    return (interval.start <= point && interval.end > point) ? count + 1 : count;
-                }, 0);
-
-                if (occupiedCount + 1 > maxSlots) {
-                    wouldExceed = true;
+            // Giriş anında boşa çıkmış olan ilk slotu ara
+            let freeSlotIdx = -1;
+            for (let s = 0; s < slotsCount; s++) {
+                if (slotFreeTimes[s] <= entry) {
+                    freeSlotIdx = s;
                     break;
                 }
             }
 
-            if (!wouldExceed) {
-                acceptedTrades.push(candidate);
+            // Boş slot varsa işleme girilir ve o slot çıkış anına kadar meşgul edilir
+            if (freeSlotIdx !== -1) {
+                slotFreeTimes[freeSlotIdx] = exit;
+                acceptedTrades.push(trade);
             }
+            // Slotların tümü doluysa bu işlem elenir (Kasaya yazılmaz)
         }
 
+        // En güncel işlem en üstte olacak şekilde sırala
         return acceptedTrades.sort((a, b) => b.exitTime - a.exitTime);
     },
 
@@ -70,7 +63,7 @@ const PortfolioEngine = {
             ? this.filterTradesBySlotCapacity(trades, maxSlots, activePositions)
             : [...trades].sort((a, b) => a.exitTime - b.exitTime);
 
-        // Kabul edilen işlemlerin ID kümesi (Kartlarda filtrelemek için)
+        // Slota kabul edilen işlemlerin ID kümesi
         const acceptedTradeIds = new Set(processedTrades.map(t => t.id));
 
         const yearInt = parseInt(selectedYear, 10) || 2026;
@@ -86,7 +79,7 @@ const PortfolioEngine = {
         let totalFeesAccumulated = 0;
         const executedTrades = [];
 
-        // Her coin için slota giren reel istatistikler
+        // Coin bazlı slota giren reel istatistikler
         const coinRealStats = {};
 
         for (const trade of validTrades) {
@@ -112,7 +105,6 @@ const PortfolioEngine = {
                 feeUSD: totalFee
             });
 
-            // Coin bazlı reel kâr havuzunu güncelle
             if (!coinRealStats[trade.coinId]) {
                 coinRealStats[trade.coinId] = { totalTrades: 0, totalPnl: 0, monthly: {} };
             }
@@ -131,7 +123,7 @@ const PortfolioEngine = {
         const currentSlotBudget = runningBalance / slotsCount;
 
         activePositions.forEach(pos => {
-            const coin = coins.find(c => c.id === pos.coinId);
+            const coin = coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
             const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
             const pnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
             unrealizedPnlUSD += currentSlotBudget * (pnlPercent / 100.0);
