@@ -948,11 +948,6 @@ function renderSingleCard(coin) {
                     </svg>
                 </button>
                 
-                <button type="button" onclick="toggleCardExpand('${coin.id}')" class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center space-x-1 cursor-pointer select-none">
-                    <span class="pointer-events-none">${isExpanded ? 'Kapat' : 'Detay'}</span>
-                    <svg class="w-3 h-3 transition-transform pointer-events-none ${isExpanded ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                </button>
-                
                 <button type="button" onclick="openWizardForExistingCoin('${coin.id}')" class="text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 p-1 rounded-lg transition cursor-pointer" title="Strateji Ayarları">
                     <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
@@ -1052,6 +1047,13 @@ function renderSingleCard(coin) {
                     <strong class="text-amber-600 dark:text-amber-400 font-extrabold tabular-nums text-[10px]">${coin.avgHoldDurationStr || '--'}</strong>
                 </div>
             </div>`}
+
+        <button type="button" onclick="toggleCardExpand('${coin.id}')" aria-expanded="${isExpanded}" class="group w-full flex items-center justify-center gap-1 pt-2 border-t border-slate-100 dark:border-slate-800 text-[9px] font-bold tracking-wider text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 transition-colors cursor-pointer select-none" title="${isExpanded ? 'Detayları kapat' : 'Detayları aç'}">
+            <span class="pointer-events-none">${isExpanded ? 'DETAYLARI KAPAT' : 'DETAYLARI AÇ'}</span>
+            <svg class="w-3.5 h-3.5 pointer-events-none transition-transform duration-300 ease-in-out group-hover:translate-y-0.5 ${isExpanded ? 'rotate-180' : 'animate-bounce'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+            </svg>
+        </button>
     `;
 
     if (!cardEl) {
