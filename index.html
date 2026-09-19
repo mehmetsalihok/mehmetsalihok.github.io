@@ -161,8 +161,8 @@
 
                 <!-- WS DURUMU -->
                 <div class="hidden sm:flex items-center space-x-1">
-                    <span id="wsStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping"></span>
-                    <span id="wsStatusText" class="text-amber-600 dark:text-amber-400 font-semibold text-[10px]">WS</span>
+                    <span id="wsStatusDot" class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span id="wsStatusText" class="text-emerald-600 dark:text-emerald-400 font-semibold text-[10px]">WS</span>
                 </div>
 
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
@@ -218,7 +218,7 @@
 
                 <!-- SAĞ: SEÇİLİ ZAMAN DİLİMİ KAZANÇ VERİLERİ -->
                 <div class="flex flex-col md:items-end space-y-1.5">
-                    <span id="dashTimeframeLabel" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Bugün Net Kazanç</span>
+                    <span id="dashTimeframeLabel" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sermaye Başlangıcından Beri</span>
                     
                     <div class="flex items-baseline space-x-2">
                         <span id="dashTfUsdGain" class="text-xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">+$0.00</span>
@@ -233,10 +233,11 @@
                 </div>
             </div>
 
-            <!-- DİNAMİK ZAMAN DİLİMİ BUTONLARI -->
+            <!-- DİNAMİK ZAMAN DİLİMİ BUTONLARI (BAŞLANGIÇTAN BERİ İLE BAŞLAR) -->
             <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <div class="flex items-center space-x-1.5 overflow-x-auto pb-1" id="timeframeButtonGroup">
-                    <button onclick="changePortfolioTimeframe('today')" data-tf="today" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition shrink-0">Bugün</button>
+                    <button onclick="changePortfolioTimeframe('sinceStart')" data-tf="sinceStart" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition shrink-0">Başlangıçtan Beri</button>
+                    <button onclick="changePortfolioTimeframe('today')" data-tf="today" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bugün</button>
                     <button onclick="changePortfolioTimeframe('week')" data-tf="week" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Hafta</button>
                     <button onclick="changePortfolioTimeframe('month')" data-tf="month" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Ay</button>
                     <button onclick="changePortfolioTimeframe('selectMonth')" data-tf="selectMonth" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Ay Seç</button>
@@ -325,7 +326,6 @@
     <div id="monthTradesModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-5 shadow-2xl flex flex-col max-h-[85vh] transition-colors">
             
-            <!-- Modal Başlığı -->
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
                 <div class="flex items-center space-x-2.5">
                     <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">📅</span>
@@ -363,7 +363,6 @@
             <!-- İşlem Kartları Listesi -->
             <div id="modalTradesListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 py-2"></div>
 
-            <!-- Modal Altı Kapatma Butonu -->
             <div class="pt-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
                 <button onclick="closeMonthTradesModal()" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 transition">
                     Pencereyi Kapat
@@ -494,7 +493,7 @@
                     </div>
 
                     <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        <svg class="w-4 h-4 fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
                 </div>
@@ -502,7 +501,6 @@
         </div>
     </div>
 
-    <!-- 3 AŞAMALI TEMA YÖNETİCİSİ -->
     <script>
         function applyTheme(theme) {
             const root = document.documentElement;
@@ -549,8 +547,8 @@
         });
     </script>
 
-    <!-- SCRIPT ENTEGRASYONU: Önce portfolioEngine.js, ardından app.js -->
-    <script src="portfolioEngine.js?v=1"></script>
-    <script src="app.js?v=14"></script>
+    <!-- MOTOR MODÜLLERİ (Önce PortfolioEngine, ardından App) -->
+    <script src="portfolioEngine.js?v=2"></script>
+    <script src="app.js?v=15"></script>
 </body>
 </html>
