@@ -13,7 +13,13 @@ const KZ_STATE = {
     activeFilter: 'all',
     pendingWizardCandidate: null,
     
-    // 🎯 Açık Olan Aylık Detay Modalının Durumu
+    // Zaman Dilimi Seçenekleri
+    selectedTimeframe: 'today', // 'today', 'week', 'month', 'selectMonth', 'custom'
+    selectedTimeframeMonth: new Date().getMonth() + 1, // 1..12
+    customStartDate: null,
+    customEndDate: null,
+
+    // Açık Olan Aylık Detay Modalının Durumu
     activeMonthModal: {
         coinId: null,
         monthKey: null
@@ -245,6 +251,8 @@ function runCardBacktest(coin) {
                 const exitDateFormatted = `${exitD.getDate()} ${monthNames[exitD.getMonth()]} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
 
                 const tradeItem = {
+                    entryTime: entryT,
+                    exitTime: c.time,
                     entryPrice: entryP,
                     exitPrice: c.close,
                     pnl: pnl,
@@ -297,7 +305,6 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
     const months = coin.simMonthlyStats || [];
     if (months.length === 0) return;
 
-    // Ay Sekmelerini Oluştur (Yatay Scroll)
     if (modalMonthTabsContainer) {
         modalMonthTabsContainer.innerHTML = months.map(m => {
             const isSelected = m.monthKey === selectedMonthKey;
@@ -313,7 +320,6 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
 
     const currentMonthData = months.find(m => m.monthKey === selectedMonthKey) || months[0];
 
-    // Özet Alanı Güncelle
     if (modalActiveMonthName) modalActiveMonthName.textContent = `${currentMonthData.name} ${KZ_STATE.selectedYear}`;
     if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent = `${currentMonthData.trades} Adet İşlem Gerçekleşti`;
     if (modalActiveMonthPnl) {
@@ -330,7 +336,6 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
         }
     }
 
-    // İşlem Listesini Dök
     const trades = currentMonthData.tradesList || [];
     if (modalTradesListContainer) {
         if (trades.length === 0) {
@@ -389,7 +394,7 @@ function closeMonthTradesModal() {
     KZ_STATE.activeMonthModal = { coinId: null, monthKey: null };
 }
 
-// 🎯 AYLIK TABLOYU OLUŞTURAN ŞABLON (HER SATIR TIKLANDIĞINDA PENCEREYİ AÇAR)
+// 🎯 AYLIK TABLO ŞABLONU (HER SATIR TIKLANDIĞINDA MODALI AÇAR)
 function generateMonthlyTableHtml(coin) {
     const months = coin.simMonthlyStats || [];
     const totalPnl = months.reduce((acc, m) => acc + m.pnl, 0);
@@ -420,6 +425,218 @@ function generateMonthlyTableHtml(coin) {
             </div>
         </div>
     `;
+}
+
+// 🎯 TÜM COİNLERİN GEÇMİŞ VE CANLI İŞLEMLERİNİ BİRLEŞTİRİP PORTFÖYÜ HESAPLAYAN METOD
+function updatePortfolioCalculations() {
+    const isSlotConstraint = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
+    const isFeeDeduction = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
+    const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
+
+    // 1. Tüm coinlerin backtest işlemlerini ve canlı gerçekleşen işlemleri topla
+    const allRawTrades = [];
+
+    (KZ_STATE.closedTrades || []).forEach(t => {
+        allRawTrades.push({
+            id: t.id,
+            symbol: t.symbol,
+            entryTime: t.entryTime || (t.exitTime - 3600000),
+            exitTime: t.exitTime || Date.now(),
+            entryPrice: t.entryPrice,
+            exitPrice: t.exitPrice,
+            pnlPercent: t.pnlPercent,
+            reason: t.reason
+        });
+    });
+
+    KZ_STATE.coins.forEach(coin => {
+        if (coin.simMonthlyStats) {
+            coin.simMonthlyStats.forEach(m => {
+                if (m.tradesList) {
+                    m.tradesList.forEach(t => {
+                        allRawTrades.push({
+                            id: `sim_${coin.id}_${t.entryTime}_${t.exitTime}`,
+                            symbol: coin.symbol,
+                            entryTime: t.entryTime,
+                            exitTime: t.exitTime,
+                            entryPrice: t.entryPrice,
+                            exitPrice: t.exitPrice,
+                            pnlPercent: t.pnl,
+                            reason: t.reason
+                        });
+                    });
+                }
+            });
+        }
+    });
+
+    // 2. PortfolioEngine ile Çakışma Kalkanı ve Bileşik Getiriyi Çalıştır
+    if (typeof PortfolioEngine !== 'undefined') {
+        const engineResult = PortfolioEngine.calculateCompoundedBalance({
+            baseBalance: KZ_STATE.portfolioBaseUsd,
+            maxSlots: KZ_STATE.maxSlots,
+            trades: allRawTrades,
+            activePositions: KZ_STATE.activePositions,
+            coins: KZ_STATE.coins,
+            isSlotConstraintEnabled: isSlotConstraint,
+            isFeeDeductionEnabled: isFeeDeduction,
+            startDateTimestamp: startTs
+        });
+
+        const tfStats = PortfolioEngine.calculateTimeframeStats({
+            executedTrades: engineResult.executedTrades,
+            timeframe: KZ_STATE.selectedTimeframe,
+            selectedMonthIndex: KZ_STATE.selectedTimeframeMonth,
+            selectedYear: KZ_STATE.selectedYear,
+            customStartDate: KZ_STATE.customStartDate,
+            customEndDate: KZ_STATE.customEndDate,
+            initialBalance: KZ_STATE.portfolioBaseUsd,
+            isFeeDeductionEnabled: isFeeDeduction
+        });
+
+        renderPortfolioShowcaseUI(engineResult, tfStats);
+    }
+}
+
+// 🎯 VİTRİN ARAYÜZÜNÜ GÜNCELLEYEN METOD
+function renderPortfolioShowcaseUI(engineResult, tfStats) {
+    const totalUsd = engineResult.compoundedBalance;
+    const totalTry = totalUsd * KZ_STATE.usdtTryRate;
+    const gainTry = tfStats.usdtGain * KZ_STATE.usdtTryRate;
+
+    // Üst Bar Metrikleri
+    if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(totalUsd);
+    if (elPortfolioTry) elPortfolioTry.textContent = `≈ ${fmtTry(totalTry)}`;
+    if (elSlotCountDisplay) elSlotCountDisplay.textContent = `${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots}`;
+
+    // Ana Vitrin Paneli
+    const elDashUsd = document.getElementById('dashCompoundedUsd');
+    const elDashTry = document.getElementById('dashCompoundedTry');
+    const elDashSlotBadge = document.getElementById('dashboardSlotBadge');
+    
+    if (elDashUsd) elDashUsd.textContent = fmtUsd(totalUsd);
+    if (elDashTry) elDashTry.textContent = `≈ ${fmtTry(totalTry)} TRY`;
+    if (elDashSlotBadge) elDashSlotBadge.textContent = `${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots} SLOT`;
+
+    // Zaman Dilimi Kazançları
+    const elTfUsd = document.getElementById('dashTfUsdGain');
+    const elTfTry = document.getElementById('dashTfTryGain');
+    const elTfDirect = document.getElementById('dashTfDirectPnl');
+    const elTfCapital = document.getElementById('dashTfCapitalPnl');
+    const elTfFees = document.getElementById('dashTfFeesBadge');
+
+    if (elTfUsd) {
+        elTfUsd.textContent = `${tfStats.usdtGain >= 0 ? '+' : ''}${fmtUsd(tfStats.usdtGain)}`;
+        elTfUsd.className = `text-xl font-black tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+    }
+
+    if (elTfTry) {
+        elTfTry.textContent = `(${tfStats.usdtGain >= 0 ? '+' : ''}${fmtTry(gainTry)})`;
+        elTfTry.className = `text-xs font-bold tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
+    }
+
+    if (elTfDirect) {
+        elTfDirect.textContent = `Net Kâr: ${tfStats.directTradePnlSum >= 0 ? '+' : ''}${tfStats.directTradePnlSum.toFixed(2)}%`;
+        elTfDirect.className = `px-2 py-0.5 rounded border text-[10px] font-bold ${tfStats.directTradePnlSum >= 0 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`;
+    }
+
+    if (elTfCapital) {
+        elTfCapital.textContent = `Ana Paraya: ${tfStats.initialPnlPercentage >= 0 ? '+' : ''}${tfStats.initialPnlPercentage.toFixed(2)}%`;
+    }
+
+    if (elTfFees) {
+        if (tfStats.totalFeesUSD > 0) {
+            elTfFees.classList.remove('hidden');
+            elTfFees.textContent = `Komisyon: -${fmtUsd(tfStats.totalFeesUSD)}`;
+        } else {
+            elTfFees.classList.add('hidden');
+        }
+    }
+}
+
+// 🎯 ZAMAN DİLİMİ ETKİLEŞİMLERİ (Bugün, Bu Hafta, Bu Ay, Ay Seç, Özel Aralık)
+function changePortfolioTimeframe(tf) {
+    KZ_STATE.selectedTimeframe = tf;
+
+    const labels = {
+        today: 'Bugün Net Kazanç',
+        week: 'Bu Hafta Net Kazanç',
+        month: 'Bu Ay Net Kazanç',
+        selectMonth: 'Seçili Ay Net Kazanç',
+        custom: 'Özel Aralık Net Kazanç'
+    };
+
+    const labelEl = document.getElementById('dashTimeframeLabel');
+    if (labelEl) labelEl.textContent = labels[tf] || 'Net Kazanç';
+
+    const activeClass = "px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition shrink-0";
+    const inactiveClass = "px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0";
+
+    document.querySelectorAll('#timeframeButtonGroup button').forEach(btn => {
+        btn.className = (btn.dataset.tf === tf) ? activeClass : inactiveClass;
+    });
+
+    const subMonthBox = document.getElementById('subMonthPills');
+    if (tf === 'selectMonth') {
+        renderSubMonthPills();
+        if (subMonthBox) subMonthBox.classList.remove('hidden');
+    } else {
+        if (subMonthBox) subMonthBox.classList.add('hidden');
+    }
+
+    updatePortfolioCalculations();
+}
+
+function renderSubMonthPills() {
+    const subMonthBox = document.getElementById('subMonthPills');
+    if (!subMonthBox) return;
+
+    const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+    
+    subMonthBox.innerHTML = monthNames.map((name, idx) => {
+        const mNum = idx + 1;
+        const isSelected = KZ_STATE.selectedTimeframeMonth === mNum;
+        return `
+            <button onclick="selectTimeframeMonth(${mNum})" 
+                class="px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition ${isSelected ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'}">
+                ${name}
+            </button>
+        `;
+    }).join('');
+}
+
+function selectTimeframeMonth(mNum) {
+    KZ_STATE.selectedTimeframeMonth = mNum;
+    renderSubMonthPills();
+    updatePortfolioCalculations();
+}
+
+function openCustomDateRangeModal() {
+    const modal = document.getElementById('customRangeModal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function closeCustomDateRangeModal() {
+    const modal = document.getElementById('customRangeModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+function applyCustomDateRange() {
+    const startVal = document.getElementById('inputCustomStart').value;
+    const endVal = document.getElementById('inputCustomEnd').value;
+
+    if (startVal && endVal) {
+        KZ_STATE.customStartDate = startVal;
+        KZ_STATE.customEndDate = endVal;
+        closeCustomDateRangeModal();
+        changePortfolioTimeframe('custom');
+    }
 }
 
 function evaluateTradingRules(coin) {
@@ -847,7 +1064,7 @@ function updateCardTablesOnly(coin) {
                                 <span class="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">${t.reason}</span>
                                 <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">• ${t.duration}</span>
                             </div>
-                            <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} →${formatCryptoPrice(t.exitPrice)}</div>
+                            <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</div>
                         </div>
                         <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
                             ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
@@ -931,36 +1148,6 @@ function renderHistoryTrades() {
     }).join('');
 }
 
-function updatePortfolioCalculations() {
-    let unrealizedPnlUsd = 0;
-    (KZ_STATE.activePositions || []).forEach(p => {
-        const coin = KZ_STATE.coins.find(c => c.id === p.coinId);
-        if (coin && coin.price > 0) {
-            unrealizedPnlUsd += p.allocatedUsd * (((coin.price - p.entryPrice) / p.entryPrice));
-        }
-    });
-
-    const currentTotalUsd = KZ_STATE.portfolioBaseUsd + unrealizedPnlUsd;
-    const netGainUsd = currentTotalUsd - 1000.00;
-    const netGainPct = (netGainUsd / 1000.00) * 100;
-
-    if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(currentTotalUsd);
-    if (elNetGainUsd) {
-        elNetGainUsd.textContent = `${netGainUsd >= 0 ? '+' : ''}${fmtUsd(netGainUsd)}`;
-        elNetGainUsd.className = `font-bold tabular-nums tracking-tight text-xs ${netGainUsd >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-    }
-    if (elNetGainPercent) {
-        elNetGainPercent.textContent = `%${netGainPct >= 0 ? '+' : ''}${netGainPct.toFixed(2)}`;
-        elNetGainPercent.className = `text-[10px] font-semibold tabular-nums ${netGainPct >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-    }
-
-    if (KZ_STATE.usdtTryRate > 0 && elPortfolioTry) {
-        elPortfolioTry.textContent = `≈ ${fmtTry(currentTotalUsd * KZ_STATE.usdtTryRate)}`;
-    }
-    if (elSlotCountDisplay) elSlotCountDisplay.textContent = `${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots}`;
-    renderActivePositionsList();
-}
-
 function toggleCardExpand(coinId) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId);
     if (!coin) return;
@@ -1002,6 +1189,7 @@ function handleLiveParamChange(coinId) {
     runCardBacktest(coin);
     saveCoins();
     updateCardTablesOnly(coin);
+    updatePortfolioCalculations();
 }
 
 async function handleLiveIntervalChange(coinId) {
@@ -1011,6 +1199,7 @@ async function handleLiveIntervalChange(coinId) {
     saveCoins();
     await fetchInitialCandles(coin);
     initBinanceWebSocket();
+    updatePortfolioCalculations();
 }
 
 function filterCards(type) {
@@ -1596,6 +1785,7 @@ async function startEngine() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeMonthTradesModal();
+        closeCustomDateRangeModal();
         closeAddCoinModal();
     }
 });
