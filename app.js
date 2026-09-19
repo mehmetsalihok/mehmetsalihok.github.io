@@ -72,6 +72,13 @@ const KZ_STATE = {
 };
 
 let binanceWs = null;
+const kuzgunSyncChannel = typeof BroadcastChannel !== 'undefined'
+    ? new BroadcastChannel('kuzgun_terminal_sync')
+    : null;
+
+function notifyKuzgunTabs(type, payload = {}) {
+    if (kuzgunSyncChannel) kuzgunSyncChannel.postMessage({ type, payload });
+}
 
 function getTurkeyMonthKey(timestamp = Date.now()) {
     const d = new Date(Number(timestamp) + (3 * 3600 * 1000));
@@ -930,6 +937,12 @@ function renderSingleCard(coin) {
             </div>
             <div class="flex items-center space-x-1.5">
                 <span id="badge-wrapper-${coin.id}">${statusBadge}</span>
+
+                <button type="button" onclick="openCoinFocus('${coin.id}')" class="text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 p-1 rounded-lg transition cursor-pointer" title="Ayrı sekmede canlı takip et">
+                    <svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 3h7m0 0v7m0-7L10 14M5 7v12h12v-5"></path>
+                    </svg>
+                </button>
                 
                 <button type="button" onclick="toggleCardExpand('${coin.id}')" class="px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold transition flex items-center space-x-1 cursor-pointer select-none">
                     <span class="pointer-events-none">${isExpanded ? 'Kapat' : 'Detay'}</span>
@@ -1271,6 +1284,16 @@ function openWizardForExistingCoin(coinId) {
     if (elRsi) elRsi.value = coin.rsiLength;
     if (elPrf) elPrf.value = coin.profitTarget;
     if (elCap) elCap.value = coin.monthlyCap;
+}
+
+function openCoinFocus(coinId) {
+    const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
+    if (!coin) return;
+
+    // URL'yi mevcut sayfaya göre kurmak GitHub Pages alt klasörlerinde de çalışır.
+    const focusUrl = new URL('coin.html', window.location.href);
+    focusUrl.searchParams.set('symbol', coin.symbol);
+    window.open(focusUrl.href, `kuzgun_${coin.symbol}`, 'noopener');
 }
 
 function deleteCoinCard(id) {
@@ -1970,6 +1993,7 @@ function saveCoins() {
             activeSubTab: c.activeSubTab || 'monthly'
         }));
         localStorage.setItem('kuzgun_web_coins', JSON.stringify(sanitized));
+        notifyKuzgunTabs('coins-updated');
     } catch (e) {
         console.warn("LocalStorage kotası korundu:", e);
     }
@@ -2226,6 +2250,7 @@ function applyCustomDateRange() {
 
 // 🎯 GLOBAL WINDOW BAĞLANTILARI
 window.toggleCardExpand = toggleCardExpand;
+window.openCoinFocus = openCoinFocus;
 window.openWizardForExistingCoin = openWizardForExistingCoin;
 window.deleteCoinCard = deleteCoinCard;
 window.setCardSubTab = setCardSubTab;
@@ -2253,6 +2278,37 @@ window.changeYearFromHeader = changeYearFromHeader;
 window.closePosition = closePosition;
 window.forceEnterFromPending = forceEnterFromPending;
 window.dismissPending = dismissPending;
+
+function syncMainAppFromStorage(event) {
+    const key = event && event.key;
+    if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_theme'].includes(key)) return;
+
+    if (!key || key === 'kuzgun_web_coins') {
+        try {
+            const saved = JSON.parse(localStorage.getItem('kuzgun_web_coins')) || [];
+            saved.forEach(savedCoin => {
+                const liveCoin = KZ_STATE.coins.find(c => c.id === savedCoin.id || c.symbol === savedCoin.symbol);
+                if (liveCoin) Object.assign(liveCoin, savedCoin);
+            });
+            KZ_STATE.coins.forEach(c => renderSingleCard(c));
+        } catch (e) {}
+    }
+
+    if (!key || key === 'kuzgun_active_pos') {
+        try { KZ_STATE.activePositions = JSON.parse(localStorage.getItem('kuzgun_active_pos')) || []; } catch (e) {}
+        renderActivePositionsList();
+        KZ_STATE.coins.forEach(c => renderSingleCard(c));
+    }
+
+    if (!key || key === 'kuzgun_closed_trades') {
+        try { KZ_STATE.closedTrades = JSON.parse(localStorage.getItem('kuzgun_closed_trades')) || []; } catch (e) {}
+        renderHistoryTrades();
+        recalculateFullPortfolio();
+    }
+}
+
+window.addEventListener('storage', syncMainAppFromStorage);
+if (kuzgunSyncChannel) kuzgunSyncChannel.addEventListener('message', () => syncMainAppFromStorage());
 
 // Başlatıcı
 async function startEngine() {
