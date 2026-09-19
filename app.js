@@ -148,7 +148,7 @@ function sendTelegramAlert(text) {
 async function changeYearFromHeader(year) {
     KZ_STATE.selectedYear = year;
     localStorage.setItem('kuzgun_selected_year', year);
-    await Promise.all(KZ_STATE.coins.map(c => fetchInitialCandles(c)));
+    await Promise.all(KZ_STATE.coins.filter(c => c.isActive !== false).map(c => fetchInitialCandles(c)));
     recalculateFullPortfolio();
 }
 
@@ -266,6 +266,7 @@ function isCoinMonthlyLocked(coin) {
 
 // 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
 function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
+    if (coin.isActive === false) return;
     if (!coin.rawCandles || coin.rawCandles.length === 0) return;
 
     const intervalMs = getIntervalMilliseconds(coin.interval);
@@ -818,6 +819,7 @@ function nextHistoryPage() {
 function renderSingleCard(coin) {
     if (!elCardsGrid) return;
     let cardEl = document.getElementById(`card-${coin.id}`);
+    const isActive = coin.isActive !== false;
     const isPos = (KZ_STATE.activePositions || []).some(p => p.coinId === coin.id || p.symbol === coin.symbol);
     const isLocked = isCoinMonthlyLocked(coin);
 
@@ -843,7 +845,9 @@ function renderSingleCard(coin) {
     }
 
     let statusBadge = `<span id="status-badge-${coin.id}" class="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[9px] font-semibold text-slate-500 dark:text-slate-400">BOŞTA</span>`;
-    if (isPos) {
+    if (!isActive) {
+        statusBadge = `<span id="status-badge-${coin.id}" class="px-2.5 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-300 dark:border-slate-700 text-[9px] font-semibold">PASİF</span>`;
+    } else if (isPos) {
         statusBadge = `<span id="status-badge-${coin.id}" class="flex items-center space-x-1 px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[9px] font-semibold">
             <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span><span>POZİSYONDA</span>
         </span>`;
@@ -936,6 +940,12 @@ function renderSingleCard(coin) {
                 <span class="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">${coin.interval} • RSI(${coin.rsiLength})</span>
             </div>
             <div class="flex items-center space-x-1.5">
+                <button type="button" onclick="toggleCoinActive('${coin.id}')" aria-pressed="${isActive}" class="flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-bold transition ${isActive ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700'}" title="${isActive ? 'Coini pasife al' : 'Coini yeniden aktifleştir'}">
+                    <span class="relative inline-flex w-7 h-4 rounded-full transition ${isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}">
+                        <span class="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${isActive ? 'left-3.5' : 'left-0.5'}"></span>
+                    </span>
+                    <span>${isActive ? 'AKTİF' : 'PASİF'}</span>
+                </button>
                 <span id="badge-wrapper-${coin.id}">${statusBadge}</span>
 
                 <button type="button" onclick="openCoinFocus('${coin.id}')" class="text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 p-1 rounded-lg transition cursor-pointer" title="Ayrı sekmede canlı takip et">
@@ -1050,6 +1060,7 @@ function renderSingleCard(coin) {
         cardEl.className = 'bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 space-y-3 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between';
         elCardsGrid.appendChild(cardEl);
     }
+    cardEl.className = `bg-white dark:bg-slate-900 border rounded-xl p-4 space-y-3 shadow-sm transition flex flex-col justify-between ${isActive ? 'border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700' : 'border-dashed border-slate-300 dark:border-slate-700 opacity-60'}`;
     cardEl.innerHTML = htmlContent;
 }
 
@@ -1269,6 +1280,35 @@ function toggleCardExpand(coinId) {
     renderSingleCard(coin);
 }
 
+async function toggleCoinActive(coinId) {
+    const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
+    if (!coin) return;
+
+    const isCurrentlyActive = coin.isActive !== false;
+    if (isCurrentlyActive) {
+        const hasOpenPosition = (KZ_STATE.activePositions || []).some(p => p.coinId === coin.id || p.symbol === coin.symbol);
+        if (hasOpenPosition) {
+            alert(`${coin.displaySymbol} açık pozisyonda. Pasife almadan önce pozisyonu kapatmalısın.`);
+            return;
+        }
+
+        coin.isActive = false;
+        KZ_STATE.pendingSignals = (KZ_STATE.pendingSignals || []).filter(p => p.coinId !== coin.id && p.symbol !== coin.symbol);
+        savePending();
+    } else {
+        coin.isActive = true;
+        if (!coin.rawCandles || coin.rawCandles.length === 0) {
+            await fetchInitialCandles(coin);
+        }
+    }
+
+    saveCoins();
+    renderSingleCard(coin);
+    renderPendingSignalsList();
+    initBinanceWebSocket();
+    recalculateFullPortfolio();
+}
+
 function openWizardForExistingCoin(coinId) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
     if (!coin) return;
@@ -1393,6 +1433,7 @@ async function confirmAndAddCoinFromWizard() {
     } else {
         const newCoin = Object.assign({
             id: 'c_' + Date.now(),
+            isActive: true,
             price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0,
             candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--'
         }, cand);
@@ -1415,6 +1456,7 @@ function updateLivePortfolioQuick() {
 
     (KZ_STATE.activePositions || []).forEach(pos => {
         const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
+        if (coin && coin.isActive === false) return;
         const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
         const pnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
         unrealizedPnlUsd += currentSlotBudget * (pnlPercent / 100.0);
@@ -1468,6 +1510,7 @@ async function fetchLiveTickerFallback() {
         }
 
         KZ_STATE.coins.forEach(coin => {
+            if (coin.isActive === false) return;
             const info = priceMap[coin.symbol];
             if (info && info.price > 0) {
                 // 🎯 REST fiyatı da mum devri ve teyit motoruna iletilir
@@ -1594,7 +1637,7 @@ function initBinanceWebSocket() {
     const streamSet = new Set();
     streamSet.add('btcusdt@miniTicker');
     KZ_STATE.coins.forEach(c => {
-        if (c.symbol) streamSet.add(`${c.symbol.toLowerCase()}@miniTicker`);
+        if (c.symbol && c.isActive !== false) streamSet.add(`${c.symbol.toLowerCase()}@miniTicker`);
     });
 
     const streamPath = Array.from(streamSet).join('/');
@@ -1625,7 +1668,7 @@ function initBinanceWebSocket() {
                 }
 
                 const coin = KZ_STATE.coins.find(c => c.symbol === sym);
-                if (coin && liveClose > 0) {
+                if (coin && coin.isActive !== false && liveClose > 0) {
                     // 🎯 Mum devri, kesinleşmiş teyit ve fiyat akışı tek merkezden yönetilir
                     processLivePriceUpdate(coin, liveClose, parseFloat(d.h), parseFloat(d.l));
                 }
@@ -1911,6 +1954,7 @@ async function fetchMarketRate() {
 }
 
 function openPosition(coin, customPrice = null, customTime = null) {
+    if (!coin || coin.isActive === false) return;
     const entryP = customPrice || coin.price;
     const posTime = customTime || Date.now();
     const slotBudget = KZ_STATE.portfolioBaseUsd / KZ_STATE.maxSlots;
@@ -1988,13 +2032,17 @@ function loadStorage() {
     }
     if (!KZ_STATE.coins || KZ_STATE.coins.length === 0) {
         KZ_STATE.coins = [
-            { id: 'c_sol', symbol: 'SOLUSDT', displaySymbol: 'SOL', interval: '30m', rsiLength: 14, buyRsi: 30, sellRsi: 70, profitTarget: 1.5, monthlyCap: 10.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' },
-            { id: 'c_btc', symbol: 'BTCUSDT', displaySymbol: 'BTC', interval: '15m', rsiLength: 14, buyRsi: 28, sellRsi: 72, profitTarget: 2.0, monthlyCap: 8.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' }
+            { id: 'c_sol', symbol: 'SOLUSDT', displaySymbol: 'SOL', isActive: true, interval: '30m', rsiLength: 14, buyRsi: 30, sellRsi: 70, profitTarget: 1.5, monthlyCap: 10.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' },
+            { id: 'c_btc', symbol: 'BTCUSDT', displaySymbol: 'BTC', isActive: true, interval: '15m', rsiLength: 14, buyRsi: 28, sellRsi: 72, profitTarget: 2.0, monthlyCap: 8.0, price: 0, prevPrice: 0, high24: 0, low24: 0, rsi: 50.0, prevRsi: 50.0, candles: [], isExpanded: false, activeSubTab: 'monthly', avgHoldDurationStr: '--' }
         ];
         saveCoins();
     } else {
         let needsSave = false;
         KZ_STATE.coins.forEach((c, idx) => {
+            if (c.isActive === undefined) {
+                c.isActive = true;
+                needsSave = true;
+            }
             if (!c.id) {
                 c.id = 'c_' + (c.displaySymbol || c.symbol || idx).toLowerCase() + '_' + idx;
                 needsSave = true;
@@ -2053,6 +2101,7 @@ function saveCoins() {
             sellRsi: c.sellRsi,
             profitTarget: c.profitTarget,
             monthlyCap: c.monthlyCap,
+            isActive: c.isActive !== false,
             isExpanded: !!c.isExpanded,
             activeSubTab: c.activeSubTab || 'monthly'
         }));
@@ -2094,8 +2143,11 @@ function recalculateFullPortfolio() {
     const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
 
     const allRawTrades = [];
+    const inactiveCoinIds = new Set(KZ_STATE.coins.filter(c => c.isActive === false).map(c => c.id));
+    const inactiveSymbols = new Set(KZ_STATE.coins.filter(c => c.isActive === false).map(c => c.symbol));
 
     (KZ_STATE.closedTrades || []).forEach(t => {
+        if (inactiveCoinIds.has(t.coinId) || inactiveSymbols.has(t.symbol)) return;
         allRawTrades.push({
             id: t.id,
             coinId: t.coinId,
@@ -2110,6 +2162,7 @@ function recalculateFullPortfolio() {
     });
 
     KZ_STATE.coins.forEach(coin => {
+        if (coin.isActive === false) return;
         if (coin.simMonthlyStats) {
             coin.simMonthlyStats.forEach(m => {
                 if (m.tradesList) {
@@ -2137,8 +2190,8 @@ function recalculateFullPortfolio() {
             baseBalance: KZ_STATE.portfolioBaseUsd,
             maxSlots: KZ_STATE.maxSlots,
             trades: allRawTrades,
-            activePositions: KZ_STATE.activePositions,
-            coins: KZ_STATE.coins,
+            activePositions: KZ_STATE.activePositions.filter(pos => !inactiveCoinIds.has(pos.coinId) && !inactiveSymbols.has(pos.symbol)),
+            coins: KZ_STATE.coins.filter(c => c.isActive !== false),
             isSlotConstraintEnabled: isSlotConstraint,
             isFeeDeductionEnabled: isFeeDeduction,
             startDateTimestamp: startTs,
@@ -2321,6 +2374,7 @@ function applyCustomDateRange() {
 
 // 🎯 GLOBAL WINDOW BAĞLANTILARI
 window.toggleCardExpand = toggleCardExpand;
+window.toggleCoinActive = toggleCoinActive;
 window.openCoinFocus = openCoinFocus;
 window.openWizardForExistingCoin = openWizardForExistingCoin;
 window.deleteCoinCard = deleteCoinCard;
@@ -2390,7 +2444,7 @@ async function startEngine() {
     renderPendingSignalsList();
     renderHistoryTrades();
 
-    await Promise.all(KZ_STATE.coins.map(coin => fetchInitialCandles(coin)));
+    await Promise.all(KZ_STATE.coins.filter(coin => coin.isActive !== false).map(coin => fetchInitialCandles(coin)));
     recalculateFullPortfolio();
 
     await fetchLiveTickerFallback();
