@@ -127,6 +127,35 @@ function formatShortDate(timestampMs) {
     return `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+function formatTradeDuration(entryTime, exitTime) {
+    const diffSec = Math.max(0, Math.floor((Number(exitTime) - Number(entryTime)) / 1000));
+    const hours = Math.floor(diffSec / 3600);
+    const mins = Math.floor((diffSec % 3600) / 60);
+    return hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`;
+}
+
+function getCoinDisplayTrades(coin) {
+    const realTrades = (KZ_STATE.closedTrades || [])
+        .filter(t => t.coinId === coin.id || t.symbol === coin.symbol)
+        .map(t => ({
+            ...t,
+            pnl: Number(t.pnlPercent || 0),
+            isWin: Number(t.pnlPercent || 0) >= 0,
+            duration: formatTradeDuration(t.entryTime, t.exitTime),
+            isRealTrade: true
+        }));
+
+    const combined = [...realTrades, ...(coin.simLastTrades || [])]
+        .sort((a, b) => Number(b.exitTime || 0) - Number(a.exitTime || 0));
+    const seen = new Set();
+    return combined.filter(t => {
+        const key = t.id || `${t.entryTime}_${t.exitTime}_${t.entryPrice}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    }).slice(0, 10);
+}
+
 // 📲 TELEGRAM BİLDİRİMİ GÖNDERİCİ
 function sendTelegramAlert(text) {
     const chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
@@ -315,9 +344,10 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
 
                 if (isConfirmedCrossover && !isAlreadyInPos && !isCapReached) {
                     if (KZ_STATE.activePositions.length < KZ_STATE.maxSlots) {
-                        openPosition(coin, livePrice, nextStartTime);
-                        playChime(true);
-                        sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (Mum Teyitli)</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Giriş Fiyatı:</b> ${formatCryptoPrice(livePrice)}\n<b>Kapanış RSI:</b> ${closedRsi.toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}`);
+                        if (openPosition(coin, livePrice, nextStartTime)) {
+                            playChime(true);
+                            sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (Mum Teyitli)</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Giriş Fiyatı:</b> ${formatCryptoPrice(livePrice)}\n<b>Kapanış RSI:</b> ${closedRsi.toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}`);
+                        }
                     } else {
                         const alreadyPending = (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol);
                         if (!alreadyPending) {
@@ -396,8 +426,7 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
             if (isCrossedUp) {
                 const alreadyPending = (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol);
                 if (KZ_STATE.activePositions.length < KZ_STATE.maxSlots) {
-                    openPosition(coin);
-                    playChime(true);
+                    if (openPosition(coin)) playChime(true);
                 } else if (!alreadyPending) {
                     KZ_STATE.pendingSignals.push({
                         id: 'pend_' + Date.now(),
@@ -925,7 +954,7 @@ function renderSingleCard(coin) {
         </div>
     `;
 
-    const trades = coin.simLastTrades || [];
+    const trades = getCoinDisplayTrades(coin);
     const tradesPanelHtml = `
         <div id="trades-container-${coin.id}" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
             ${trades.map(t => `
@@ -936,6 +965,7 @@ function renderSingleCard(coin) {
                             <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">• ${t.duration}</span>
                         </div>
                         <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</div>
+                        <div class="text-[9px] text-slate-400/80 dark:text-slate-500 tabular-nums">Giriş: ${formatShortDate(t.entryTime)} • Çıkış: ${formatShortDate(t.exitTime)}</div>
                     </div>
                     <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
                         ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
@@ -1145,7 +1175,7 @@ function updateCardTablesOnly(coin) {
     }
 
     if (tContainer) {
-        const trades = coin.simLastTrades || [];
+        const trades = getCoinDisplayTrades(coin);
         tContainer.innerHTML = trades.length === 0 ? `<p class="py-6 text-center text-xs text-slate-400 dark:text-slate-500 font-medium">İşlem yok.</p>` : `
             <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                 ${trades.map(t => `
@@ -1156,6 +1186,7 @@ function updateCardTablesOnly(coin) {
                                 <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">• ${t.duration}</span>
                             </div>
                             <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</div>
+                            <div class="text-[9px] text-slate-400/80 dark:text-slate-500 tabular-nums">Giriş: ${formatShortDate(t.entryTime)} • Çıkış: ${formatShortDate(t.exitTime)}</div>
                         </div>
                         <span class="font-bold tabular-nums text-xs px-2 py-0.5 rounded ${t.isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
                             ${t.pnl >= 0 ? '+' : ''}${t.pnl.toFixed(2)}%
@@ -1285,9 +1316,9 @@ function forceEnterFromPending(pendingId) {
     const pending = KZ_STATE.pendingSignals[idx];
     const coin = KZ_STATE.coins.find(c => c.id === pending.coinId || c.symbol === pending.symbol);
     if (coin && !isCoinMonthlyLocked(coin)) {
-        KZ_STATE.pendingSignals.splice(idx, 1);
-        savePending();
-        openPosition(coin);
+        if (openPosition(coin)) {
+            renderPendingSignalsList();
+        }
     }
 }
 
@@ -2042,7 +2073,9 @@ async function fetchMarketRate() {
 }
 
 function openPosition(coin, customPrice = null, customTime = null) {
-    if (!coin || coin.isActive === false) return;
+    if (!coin || coin.isActive === false || isCoinMonthlyLocked(coin)) return false;
+    const alreadyOpen = KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol);
+    if (alreadyOpen) return false;
     const entryP = customPrice || coin.price;
     const posTime = customTime || Date.now();
     const availableBalance = Number(KZ_STATE.cachedRealizedBalance) > 0
@@ -2071,6 +2104,7 @@ function openPosition(coin, customPrice = null, customTime = null) {
     renderActivePositionsList();
     renderPendingSignalsList();
     recalculateFullPortfolio();
+    return true;
 }
 
 function closePosition(positionId, reason = 'Manuel Kapatıldı') {
@@ -2573,6 +2607,7 @@ async function startEngine() {
 
     setInterval(fetchMarketRate, 10000);
     setInterval(fetchLiveTickerFallback, 5000);
+    setInterval(renderHistoryTrades, 30000);
 
     if (window.location.search.includes('openWizard=true')) {
         setTimeout(() => {
