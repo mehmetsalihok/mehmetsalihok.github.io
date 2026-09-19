@@ -2188,6 +2188,7 @@ function renderPortfolioShowcaseUI(engineResult, tfStats) {
     const elTfUsd = document.getElementById('dashTfUsdGain');
     const elTfTry = document.getElementById('dashTfTryGain');
     const elTfDirect = document.getElementById('dashTfDirectPnl');
+    const elTfNet = document.getElementById('dashTfNetPnl');
     const elTfCapital = document.getElementById('dashTfCapitalPnl');
     const elTfFees = document.getElementById('dashTfFeesBadge');
 
@@ -2202,8 +2203,14 @@ function renderPortfolioShowcaseUI(engineResult, tfStats) {
     }
 
     if (elTfDirect) {
-        elTfDirect.textContent = `Net Kâr: ${tfStats.directTradePnlSum >= 0 ? '+' : ''}${tfStats.directTradePnlSum.toFixed(2)}%`;
+        elTfDirect.textContent = `Brüt Getiri: ${tfStats.directTradePnlSum >= 0 ? '+' : ''}${tfStats.directTradePnlSum.toFixed(2)}%`;
         elTfDirect.className = `px-2 py-0.5 rounded border text-[10px] font-bold ${tfStats.directTradePnlSum >= 0 ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`;
+    }
+
+    if (elTfNet) {
+        const netTradePnl = Number(tfStats.netTradePnlSum || 0);
+        elTfNet.textContent = `Net Getiri: ${netTradePnl >= 0 ? '+' : ''}${netTradePnl.toFixed(2)}%`;
+        elTfNet.className = `px-2 py-0.5 rounded border text-[10px] font-bold ${netTradePnl >= 0 ? 'bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 border-teal-200 dark:border-teal-800' : 'bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800'}`;
     }
 
     if (elTfCapital) {
