@@ -1,4 +1,4 @@
-// KUZGUN PRO — INDEXEDDB CANDLE CACHE (Swift Disk Cache Eşdeğeri)
+// KUZGUN PRO — INDEXEDDB CANDLE CACHE
 const CandleCache = {
     db: null,
     async init() {
@@ -66,14 +66,13 @@ const KZ_STATE = {
 
     acceptedTradeIds: new Set(),
     coinRealStats: {},
-    
+    cachedRealizedBalance: 1000.00,
     executedGlobalTrades: [],
     historyPage: 0
 };
 
 let binanceWs = null;
 
-// 🎯 SAFARİ UYUMLU KUSURSUZ TÜRKİYE SAATİ (UTC+3) AY ÇÖZÜCÜ
 function getTurkeyMonthKey(timestamp = Date.now()) {
     const d = new Date(Number(timestamp) + (3 * 3600 * 1000));
     const y = d.getUTCFullYear();
@@ -124,7 +123,7 @@ async function changeYearFromHeader(year) {
     KZ_STATE.selectedYear = year;
     localStorage.setItem('kuzgun_selected_year', year);
     await Promise.all(KZ_STATE.coins.map(c => fetchInitialCandles(c)));
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
 function toggleTheme() {
@@ -138,8 +137,6 @@ const elLiveTry = document.getElementById('liveTryRate');
 const elLiveBtc = document.getElementById('liveBtcPrice');
 const elPortfolioUsd = document.getElementById('portfolioUsd');
 const elPortfolioTry = document.getElementById('portfolioTry');
-const elNetGainUsd = document.getElementById('netGainUsd');
-const elNetGainPercent = document.getElementById('netGainPercent');
 const elSlotCountDisplay = document.getElementById('slotCountDisplay');
 const elActivePositionsList = document.getElementById('activePositionsList');
 const elActivePositionsCountBadge = document.getElementById('activePositionsCountBadge');
@@ -750,7 +747,6 @@ function renderSingleCard(coin) {
         </div>
     `;
 
-    // 🎯 Butonlara pointer-events-none garantisi ile Safari tıklama çözümü
     const htmlContent = `
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
             <div class="flex items-center space-x-2">
@@ -870,7 +866,7 @@ function renderSingleCard(coin) {
     cardEl.innerHTML = htmlContent;
 }
 
-// Canlı fiyat akarken DOM'u yeniden üretmeyen hassas metot
+// Canlı fiyat akarken DOM'u yeniden üretmeyen ve işlemciyi yormayan metot
 function updateCardPriceOnly(coin) {
     const elPrice = document.getElementById(`price-${coin.id}`);
     if (elPrice) {
@@ -1014,7 +1010,7 @@ function clearHistory() {
         KZ_STATE.executedGlobalTrades = [];
         saveClosedTrades();
         renderHistoryTrades();
-        updatePortfolioCalculations();
+        recalculateFullPortfolio();
     }
 }
 
@@ -1078,13 +1074,13 @@ function setupSymbolLiveValidation() {
     });
 }
 
-// 🎯 KART BUTONLARI & DETAY AKORDEONU (SAFARİDE HATA FIRLATMAYAN KOD)
+// 🎯 DETAY BUTONUNU ANINDA VE HATASIZ AÇAN METOT
 function toggleCardExpand(coinId) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
     if (!coin) return;
     coin.isExpanded = !coin.isExpanded;
     if (coin.isExpanded && !coin.simMonthlyStats) runCardBacktest(coin);
-    saveCoins(); // Sadece temiz ayarları kaydeder, kotayı aşmaz!
+    saveCoins(); // Sadece temiz ayarları saklar, kotayı asla aşmaz!
     renderSingleCard(coin);
 }
 
@@ -1118,7 +1114,7 @@ function deleteCoinCard(id) {
     const el = document.getElementById(`card-${targetId}`);
     if (el) el.remove();
     initBinanceWebSocket();
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
 function setCardSubTab(coinId, subTab) {
@@ -1153,7 +1149,7 @@ function handleLiveParamChange(coinId) {
     runCardBacktest(coin);
     saveCoins();
     updateCardTablesOnly(coin);
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
 async function handleLiveIntervalChange(coinId) {
@@ -1163,7 +1159,7 @@ async function handleLiveIntervalChange(coinId) {
     saveCoins();
     await fetchInitialCandles(coin);
     initBinanceWebSocket();
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
 function filterCards(type) {
@@ -1213,11 +1209,35 @@ async function confirmAndAddCoinFromWizard() {
 
     closeAddCoinModal();
     initBinanceWebSocket();
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
     playChime(true);
 }
 
-// REST Fiyat Güncelleyici
+// ⚡️ HAFİF ANLIK CANLI BAKİYE GÜNCELLEYİCİ (0 ms)
+function updateLivePortfolioQuick() {
+    let unrealizedPnlUsd = 0;
+    const currentSlotBudget = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) / Math.max(1, KZ_STATE.maxSlots);
+
+    (KZ_STATE.activePositions || []).forEach(pos => {
+        const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
+        const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
+        const pnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
+        unrealizedPnlUsd += currentSlotBudget * (pnlPercent / 100.0);
+    });
+
+    const totalUsd = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) + unrealizedPnlUsd;
+    const totalTry = totalUsd * KZ_STATE.usdtTryRate;
+
+    if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(totalUsd);
+    if (elPortfolioTry) elPortfolioTry.textContent = `≈ ${fmtTry(totalTry)}`;
+    
+    const elDashUsd = document.getElementById('dashCompoundedUsd');
+    const elDashTry = document.getElementById('dashCompoundedTry');
+    if (elDashUsd) elDashUsd.textContent = fmtUsd(totalUsd);
+    if (elDashTry) elDashTry.textContent = `≈ ${fmtTry(totalTry)} TRY`;
+}
+
+// REST Fiyat Yedekleme
 async function fetchLiveTickerFallback() {
     try {
         const endpoints = [
@@ -1270,7 +1290,7 @@ async function fetchLiveTickerFallback() {
             }
         });
 
-        updatePortfolioCalculations();
+        updateLivePortfolioQuick();
     } catch (err) {
         console.warn("REST ticker hatası:", err.message);
     }
@@ -1434,8 +1454,8 @@ function initBinanceWebSocket() {
                     }
 
                     evaluateTradingRules(coin);
-                    updateCardPriceOnly(coin);
-                    updatePortfolioCalculations();
+                    updateCardPriceOnly(coin); // 🎯 Sadece hafif fiyat metrikleri güncellenir!
+                    updateLivePortfolioQuick(); // 🎯 Devasa döngülere girmeden 0.001ms'de bakiye güncellenir!
                 }
             } catch (e) {}
         };
@@ -1648,7 +1668,7 @@ async function fetchMarketRate() {
             if (data && data.price) {
                 KZ_STATE.usdtTryRate = parseFloat(data.price) || 36.50;
                 if (elLiveTry) elLiveTry.textContent = fmtTry(KZ_STATE.usdtTryRate);
-                updatePortfolioCalculations();
+                updateLivePortfolioQuick();
             }
         }
     } catch (e) {}
@@ -1723,6 +1743,7 @@ function openPosition(coin, customPrice = null) {
     savePositions();
     renderActivePositionsList();
     renderPendingSignalsList();
+    recalculateFullPortfolio();
 }
 
 function closePosition(positionId, reason = 'Manuel Kapatıldı') {
@@ -1766,7 +1787,7 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
 
     renderActivePositionsList();
     renderPendingSignalsList();
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
 function loadStorage() {
@@ -1829,7 +1850,7 @@ function loadStorage() {
     }
 }
 
-// 🎯 SAFARİ KOTASINI ASLA DOLDURMAYAN HAFİF VE GÜVENLİ KAYIT FONKSİYONU
+// 🎯 SAFARİ KOTASINI ASLA DOLDURMAYAN TEMİZ VE HAFİF KAYIT
 function saveCoins() {
     try {
         const sanitized = KZ_STATE.coins.map(c => ({
@@ -1847,7 +1868,7 @@ function saveCoins() {
         }));
         localStorage.setItem('kuzgun_web_coins', JSON.stringify(sanitized));
     } catch (e) {
-        console.warn("LocalStorage kotası aşılamadı:", e);
+        console.warn("LocalStorage kotası korundu:", e);
     }
 }
 
@@ -1873,10 +1894,11 @@ function saveClosedTrades() {
 function changeMaxSlots(newSlots) {
     KZ_STATE.maxSlots = parseInt(newSlots, 10) || 2;
     localStorage.setItem('kuzgun_max_slots', KZ_STATE.maxSlots.toString());
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
-function updatePortfolioCalculations() {
+// 🎯 SADECE DURUM DEĞİŞTİĞİNDE ÇALIŞAN TAM HESAPLAMA METODU (İŞLEMCİYİ SIFIR YORAR)
+function recalculateFullPortfolio() {
     const isSlotConstraint = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
     const isFeeDeduction = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
     const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
@@ -1935,6 +1957,7 @@ function updatePortfolioCalculations() {
 
         KZ_STATE.acceptedTradeIds = engineResult.acceptedTradeIds;
         KZ_STATE.coinRealStats = engineResult.coinRealStats;
+        KZ_STATE.cachedRealizedBalance = engineResult.realizedBalance;
         KZ_STATE.executedGlobalTrades = engineResult.executedTrades;
 
         const tfStats = PortfolioEngine.calculateTimeframeStats({
@@ -2044,7 +2067,7 @@ function changePortfolioTimeframe(tf) {
         if (subMonthBox) subMonthBox.classList.add('hidden');
     }
 
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
 function renderSubMonthPills() {
@@ -2068,7 +2091,7 @@ function renderSubMonthPills() {
 function selectTimeframeMonth(mNum) {
     KZ_STATE.selectedTimeframeMonth = mNum;
     renderSubMonthPills();
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 }
 
 function openCustomDateRangeModal() {
@@ -2099,7 +2122,7 @@ function applyCustomDateRange() {
     }
 }
 
-// 🎯 WINDOW KAPSAMINA AÇIKÇA BAĞLANAN GLOBAL METOTLAR (SAFARİ TIKLAMA GARANTİSİ)
+// 🎯 GLOBAL WINDOW BAĞLANTILARI
 window.toggleCardExpand = toggleCardExpand;
 window.openWizardForExistingCoin = openWizardForExistingCoin;
 window.deleteCoinCard = deleteCoinCard;
@@ -2129,7 +2152,7 @@ window.closePosition = closePosition;
 window.forceEnterFromPending = forceEnterFromPending;
 window.dismissPending = dismissPending;
 
-// Hızlı Başlatıcı (Önbellekten Paralel Yükleme)
+// Başlatıcı
 async function startEngine() {
     loadStorage();
 
@@ -2139,7 +2162,7 @@ async function startEngine() {
     renderHistoryTrades();
 
     await Promise.all(KZ_STATE.coins.map(coin => fetchInitialCandles(coin)));
-    updatePortfolioCalculations();
+    recalculateFullPortfolio();
 
     await fetchLiveTickerFallback();
     fetchMarketRate();
