@@ -934,18 +934,12 @@ function renderSingleCard(coin) {
 
     const htmlContent = `
         <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 min-w-0 flex-1">
                 <span class="font-bold text-base tracking-tight text-slate-900 dark:text-white">${coin.displaySymbol}</span>
                 <span class="text-[10px] text-slate-400 dark:text-slate-500 font-medium">/USDT</span>
-                <span class="text-[9px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">${coin.interval} • RSI(${coin.rsiLength})</span>
+                <span class="whitespace-nowrap text-[9px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">${coin.interval} • RSI(${coin.rsiLength})</span>
             </div>
-            <div class="flex items-center space-x-1.5">
-                <button type="button" onclick="toggleCoinActive('${coin.id}')" aria-pressed="${isActive}" class="flex items-center gap-1.5 px-2 py-1 rounded-full border text-[9px] font-bold transition ${isActive ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-700'}" title="${isActive ? 'Coini pasife al' : 'Coini yeniden aktifleştir'}">
-                    <span class="relative inline-flex w-7 h-4 rounded-full transition ${isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}">
-                        <span class="absolute top-0.5 w-3 h-3 rounded-full bg-white shadow transition-all ${isActive ? 'left-3.5' : 'left-0.5'}"></span>
-                    </span>
-                    <span>${isActive ? 'AKTİF' : 'PASİF'}</span>
-                </button>
+            <div class="flex items-center space-x-1 shrink-0">
                 <span id="badge-wrapper-${coin.id}">${statusBadge}</span>
 
                 <button type="button" onclick="openCoinFocus('${coin.id}')" class="text-slate-400 hover:text-emerald-600 dark:text-slate-500 dark:hover:text-emerald-400 p-1 rounded-lg transition cursor-pointer" title="Ayrı sekmede canlı takip et">
@@ -968,6 +962,12 @@ function renderSingleCard(coin) {
                 
                 <button type="button" onclick="deleteCoinCard('${coin.id}')" class="text-slate-400 hover:text-rose-600 dark:text-slate-500 dark:hover:text-rose-400 p-1 rounded-lg transition cursor-pointer" title="Kartı Sil">
                     <svg class="w-3.5 h-3.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                </button>
+
+                <button type="button" onclick="toggleCoinActive('${coin.id}')" aria-pressed="${isActive}" aria-label="${isActive ? 'Coini pasife al' : 'Coini aktifleştir'}" class="shrink-0 p-0.5 rounded-full focus:outline-none focus:ring-2 focus:ring-emerald-400/50" title="${isActive ? 'Aktif — pasife almak için tıkla' : 'Pasif — aktifleştirmek için tıkla'}">
+                    <span class="relative block w-8 h-[18px] rounded-full transition-colors ${isActive ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}">
+                        <span class="absolute top-[3px] w-3 h-3 rounded-full bg-white shadow transition-all ${isActive ? 'left-[17px]' : 'left-[3px]'}"></span>
+                    </span>
                 </button>
             </div>
         </div>
