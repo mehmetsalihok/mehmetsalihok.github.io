@@ -338,6 +338,41 @@
         </div>
     </main>
 
+    <!-- Alım Sinyali Karar Modalı -->
+    <div id="buySignalDecisionModal" class="fixed inset-0 z-[90] bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="w-full max-w-md overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-800 shadow-2xl shadow-emerald-950/30">
+            <div class="relative px-5 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white">
+                <div class="absolute right-4 top-4 flex items-center gap-2">
+                    <span class="relative flex h-2.5 w-2.5"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span><span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-white"></span></span>
+                    <span id="buySignalCountdown" class="min-w-[34px] text-right font-mono text-sm font-black">30 sn</span>
+                </div>
+                <div class="flex items-center gap-3 pr-20">
+                    <span class="w-11 h-11 rounded-xl bg-white/20 border border-white/25 flex items-center justify-center text-2xl animate-pulse">🔔</span>
+                    <div><div class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-100">Yeni teyitli sinyal</div><h3 class="text-lg font-black tracking-tight">ALIM SİNYALİ</h3></div>
+                </div>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div><span id="buySignalCoin" class="text-xl font-black text-slate-900 dark:text-white">--</span><span class="ml-1 text-xs font-semibold text-slate-400">/USDT</span></div>
+                    <span id="buySignalMode" class="px-2 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 text-[10px] font-bold">--</span>
+                </div>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700"><span class="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Sinyal fiyatı</span><strong id="buySignalPrice" class="block mt-1 text-sm text-slate-900 dark:text-white tabular-nums">--</strong></div>
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700"><span class="block text-[9px] font-bold uppercase tracking-wider text-slate-400">RSI</span><strong id="buySignalRsi" class="block mt-1 text-sm text-emerald-600 dark:text-emerald-400 tabular-nums">--</strong></div>
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700"><span class="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Hedef kâr</span><strong id="buySignalTarget" class="block mt-1 text-sm text-blue-600 dark:text-blue-400 tabular-nums">--</strong></div>
+                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700"><span class="block text-[9px] font-bold uppercase tracking-wider text-slate-400">Sinyal zamanı</span><strong id="buySignalTime" class="block mt-1 text-sm text-slate-900 dark:text-white tabular-nums">--</strong></div>
+                </div>
+                <div id="buySignalDecisionMessage" class="hidden text-[11px] font-medium rounded-lg px-3 py-2"></div>
+                <div class="grid grid-cols-3 gap-2">
+                    <button id="btnAcceptBuySignal" type="button" onclick="resolveBuySignalDecision('accept')" class="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-sm transition">Pozisyon Aç</button>
+                    <button type="button" onclick="resolveBuySignalDecision('pending')" class="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-[11px] font-bold shadow-sm transition">Beklemeye Al</button>
+                    <button type="button" onclick="resolveBuySignalDecision('reject')" class="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold shadow-sm transition">Reddet</button>
+                </div>
+                <p class="text-center text-[10px] text-slate-400">Karar verilmezse sinyal otomatik olarak bekleme listesine alınır.</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Manuel Pozisyon Ekleme Modalı -->
     <div id="manualPositionModal" class="fixed inset-0 z-[70] bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4" onclick="if(event.target === this) closeManualPositionModal()">
         <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
@@ -586,6 +621,6 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=6"></script>
-    <script src="app.js?v=26"></script>
+    <script src="app.js?v=27"></script>
 </body>
 </html>
