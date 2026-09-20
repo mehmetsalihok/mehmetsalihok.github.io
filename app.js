@@ -209,6 +209,7 @@ const elBtnNextHistory = document.getElementById('btnNextHistory');
 const addCoinModal = document.getElementById('addCoinModal');
 const wizardResultCard = document.getElementById('wizardResultCard');
 const wizardLoadingStatus = document.getElementById('wizardLoadingStatus');
+const manualPositionModal = document.getElementById('manualPositionModal');
 
 // Aylık Detay Modalı Elemanları
 const monthTradesModal = document.getElementById('monthTradesModal');
@@ -814,6 +815,7 @@ function renderHistoryTrades() {
                     <div class="space-y-0.5">
                         <div class="flex items-center space-x-1.5">
                             <span class="font-black text-[11px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600 text-slate-800 dark:text-slate-100">${t.symbol.replace('USDT', '')}</span>
+                            ${t.isManual ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
                             <span class="font-bold text-[11px] text-slate-700 dark:text-slate-200 truncate max-w-[130px]">${t.reason}</span>
                         </div>
                         
@@ -1183,6 +1185,7 @@ function updateCardTablesOnly(coin) {
                         <div class="space-y-0.5">
                             <div class="flex items-center space-x-1.5">
                                 <span class="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">${t.reason}</span>
+                                ${t.isManual ? '<span class="text-[9px] px-1 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
                                 <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">• ${t.duration}</span>
                             </div>
                             <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</div>
@@ -1215,7 +1218,7 @@ function renderActivePositionsList() {
         return `
             <div class="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-lg p-2.5 space-y-2">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-xs text-slate-900 dark:text-white">${pos.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-800">%${pos.profitTarget.toFixed(1)} TP</span></span>
+                    <span class="font-bold text-xs text-slate-900 dark:text-white">${pos.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-800">%${pos.profitTarget.toFixed(1)} TP</span>${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
                     <span id="active-pos-pnl-${pos.id}" class="font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)</span>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/90 p-2 rounded border border-slate-100 dark:border-slate-700/60">
@@ -1278,6 +1281,103 @@ function editPositionEntryPrice(positionId) {
 
     savePositions();
     renderActivePositionsList();
+    recalculateFullPortfolio();
+}
+
+function toLocalDateTimeInputValue(date = new Date()) {
+    const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 16);
+}
+
+function openManualPositionModal() {
+    if (!manualPositionModal) return;
+    const select = document.getElementById('manualPositionCoin');
+    const entryInput = document.getElementById('manualPositionEntryPrice');
+    const targetInput = document.getElementById('manualPositionProfitTarget');
+    const timeInput = document.getElementById('manualPositionEntryTime');
+    const errorEl = document.getElementById('manualPositionError');
+    const openKeys = new Set(KZ_STATE.activePositions.map(p => p.coinId || p.symbol));
+    const availableCoins = KZ_STATE.coins.filter(c => c.isActive !== false && !openKeys.has(c.id) && !openKeys.has(c.symbol));
+
+    select.innerHTML = availableCoins.length
+        ? availableCoins.map(c => `<option value="${c.id}">${c.displaySymbol || c.symbol.replace('USDT', '')}</option>`).join('')
+        : '<option value="">Eklenebilecek coin yok</option>';
+    select.disabled = availableCoins.length === 0;
+
+    const selectedCoin = availableCoins[0];
+    entryInput.value = selectedCoin && selectedCoin.price > 0 ? selectedCoin.price : '';
+    targetInput.value = selectedCoin ? Number(selectedCoin.profitTarget || 1).toFixed(2) : '';
+    timeInput.value = toLocalDateTimeInputValue();
+    timeInput.max = toLocalDateTimeInputValue();
+    errorEl.classList.add('hidden');
+    errorEl.textContent = '';
+
+    select.onchange = () => {
+        const coin = KZ_STATE.coins.find(c => c.id === select.value);
+        if (!coin) return;
+        if (coin.price > 0) entryInput.value = coin.price;
+        targetInput.value = Number(coin.profitTarget || 1).toFixed(2);
+    };
+
+    manualPositionModal.classList.remove('hidden');
+    manualPositionModal.classList.add('flex');
+}
+
+function closeManualPositionModal() {
+    if (!manualPositionModal) return;
+    manualPositionModal.classList.add('hidden');
+    manualPositionModal.classList.remove('flex');
+}
+
+function submitManualPosition(event) {
+    event.preventDefault();
+    const errorEl = document.getElementById('manualPositionError');
+    const coinId = document.getElementById('manualPositionCoin').value;
+    const entryPrice = Number(document.getElementById('manualPositionEntryPrice').value);
+    const profitTarget = Number(document.getElementById('manualPositionProfitTarget').value);
+    const entryTime = new Date(document.getElementById('manualPositionEntryTime').value).getTime();
+    const coin = KZ_STATE.coins.find(c => c.id === coinId);
+    const fail = (message) => {
+        errorEl.textContent = message;
+        errorEl.classList.remove('hidden');
+    };
+
+    if (!coin) return fail('Lütfen geçerli bir coin seç.');
+    if (coin.isActive === false) return fail('Pasif bir coin için canlı pozisyon açılamaz. Önce coin kartını aktifleştir.');
+    if (KZ_STATE.activePositions.length >= KZ_STATE.maxSlots) return fail('Boş slot yok. Önce bir pozisyonu kapatmalı veya slot sayısını artırmalısın.');
+    if (KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol)) return fail('Bu coin için zaten açık bir pozisyon var.');
+    if (!Number.isFinite(entryPrice) || entryPrice <= 0) return fail('Giriş fiyatı sıfırdan büyük olmalı.');
+    if (!Number.isFinite(profitTarget) || profitTarget <= 0) return fail('Hedef kâr yüzdesi sıfırdan büyük olmalı.');
+    if (!Number.isFinite(entryTime) || entryTime > Date.now()) return fail('Geçerli ve gelecekte olmayan bir giriş zamanı seçmelisin.');
+
+    const availableBalance = Number(KZ_STATE.cachedRealizedBalance) > 0 ? Number(KZ_STATE.cachedRealizedBalance) : KZ_STATE.portfolioBaseUsd;
+    const slotBudget = availableBalance / Math.max(1, KZ_STATE.maxSlots);
+    const currentPrice = coin.price > 0 ? coin.price : entryPrice;
+    const livePnlPercent = ((currentPrice - entryPrice) / entryPrice) * 100;
+
+    KZ_STATE.activePositions.push({
+        id: `pos_manual_${Date.now()}`,
+        coinId: coin.id,
+        symbol: coin.symbol,
+        displaySymbol: coin.displaySymbol,
+        entryPrice,
+        targetPrice: entryPrice * (1 + profitTarget / 100),
+        profitTarget,
+        allocatedUsd: slotBudget,
+        allocationVersion: 2,
+        entryTime,
+        livePnlPercent,
+        livePnlUsd: slotBudget * (livePnlPercent / 100),
+        isManual: true,
+        source: 'manual'
+    });
+
+    KZ_STATE.pendingSignals = KZ_STATE.pendingSignals.filter(p => p.coinId !== coin.id && p.symbol !== coin.symbol);
+    savePending();
+    savePositions();
+    closeManualPositionModal();
+    renderActivePositionsList();
+    renderPendingSignalsList();
     recalculateFullPortfolio();
 }
 
@@ -2130,7 +2230,9 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
         exitTime: now.getTime(),
         entryTimeStr: new Date(pos.entryTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
         exitTimeStr: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
-        exitMonth: getTurkeyMonthKey(now)
+        exitMonth: getTurkeyMonthKey(now),
+        isManual: pos.isManual === true,
+        source: pos.isManual === true ? 'manual' : (pos.source || 'automatic')
     });
 
     KZ_STATE.activePositions.splice(idx, 1);
@@ -2283,7 +2385,9 @@ function recalculateFullPortfolio() {
             entryPrice: t.entryPrice,
             exitPrice: t.exitPrice,
             pnlPercent: t.pnlPercent,
-            reason: t.reason
+            reason: t.reason,
+            isManual: t.isManual === true,
+            source: t.source || (t.isManual ? 'manual' : 'automatic')
         });
     });
 
@@ -2554,6 +2658,9 @@ window.changeYearFromHeader = changeYearFromHeader;
 window.closePosition = closePosition;
 window.forceEnterFromPending = forceEnterFromPending;
 window.dismissPending = dismissPending;
+window.openManualPositionModal = openManualPositionModal;
+window.closeManualPositionModal = closeManualPositionModal;
+window.submitManualPosition = submitManualPosition;
 
 function syncMainAppFromStorage(event) {
     const key = event && event.key;
