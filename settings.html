@@ -150,6 +150,12 @@
                         <span class="flex-1">Bildirim & Sesler</span>
                         <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
                     </button>
+
+                    <button onclick="scrollToSection('secBackup')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
+                        <span class="text-violet-600 dark:text-violet-400 font-bold">⇅</span>
+                        <span class="flex-1">Yedekle ve Geri Yükle</span>
+                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
+                    </button>
                 </div>
 
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
@@ -351,6 +357,24 @@
                             </label>
                         </div>
                     </div>
+                </section>
+
+                <section id="secBackup" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+                        <span class="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-sm">⇅</span>
+                        <div><h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">YEDEKLE VE GERİ YÜKLE</h2><p class="text-[11px] text-slate-400">Tüm terminal verilerini tek dosyayla başka cihaza taşı</p></div>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <button type="button" onclick="downloadKuzgunBackup()" class="text-left p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/70 bg-emerald-50/60 dark:bg-emerald-950/20 hover:bg-emerald-100/70 dark:hover:bg-emerald-950/40 transition">
+                            <span class="w-9 h-9 mb-3 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm">↓</span><span class="block text-xs font-bold text-slate-900 dark:text-white">Yedeği İndir</span><span class="block mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Coinler, açık pozisyonlar, işlem geçmişi, portföy ve uygulama tercihleri.</span>
+                        </button>
+                        <button type="button" onclick="document.getElementById('backupFileInput').click()" class="text-left p-4 rounded-xl border border-blue-200 dark:border-blue-900/70 bg-blue-50/60 dark:bg-blue-950/20 hover:bg-blue-100/70 dark:hover:bg-blue-950/40 transition">
+                            <span class="w-9 h-9 mb-3 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-sm">↑</span><span class="block text-xs font-bold text-slate-900 dark:text-white">Yedekten Yükle</span><span class="block mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Bir KUZGUN JSON yedeği seç ve kayıtlı durumu geri getir.</span>
+                        </button>
+                        <input id="backupFileInput" type="file" accept="application/json,.json" class="hidden" onchange="restoreKuzgunBackup(event)">
+                    </div>
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60"><span class="text-base leading-none mt-0.5">🛡️</span><div class="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400"><strong class="text-slate-700 dark:text-slate-200">Güvenli geri yükleme:</strong> Yeni dosya uygulanmadan önce mevcut verilerin otomatik güvenlik yedeği indirilir. Telegram Chat ID ve geçici mum önbelleği yedeğe eklenmez.</div></div>
+                    <div id="backupStatus" class="text-[11px] font-medium text-slate-400">Henüz yedekleme işlemi yapılmadı.</div>
                 </section>
             </div>
 
@@ -658,6 +682,90 @@
                 localStorage.setItem('kuzgun_telegram_chat_id', id);
                 updateLivePreview();
                 showToast('Telegram Chat ID kaydedildi: #' + id);
+            }
+        }
+
+        const KUZGUN_BACKUP_FORMAT = 'kuzgun-terminal-backup';
+        const KUZGUN_BACKUP_VERSION = 1;
+        const KUZGUN_BACKUP_EXCLUDED_KEYS = new Set(['kuzgun_telegram_chat_id', 'kuzgun_telegram_bot_token', 'kuzgun_bot_token']);
+
+        function isBackupStorageKey(key) {
+            return typeof key === 'string' && key.startsWith('kuzgun_') && !KUZGUN_BACKUP_EXCLUDED_KEYS.has(key);
+        }
+
+        function buildKuzgunBackup(reason = 'manual') {
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (isBackupStorageKey(key)) data[key] = localStorage.getItem(key);
+            }
+            return { format: KUZGUN_BACKUP_FORMAT, version: KUZGUN_BACKUP_VERSION, createdAt: new Date().toISOString(), reason, app: 'KUZGUN Pro Terminal', data };
+        }
+
+        function backupFileName(prefix = 'kuzgun-yedek') {
+            const stamp = new Date().toLocaleString('sv-SE').replace(' ', '_').replaceAll(':', '-');
+            return `${prefix}_${stamp}.json`;
+        }
+
+        function downloadJsonFile(payload, fileName) {
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        function setBackupStatus(message, type = 'normal') {
+            const el = document.getElementById('backupStatus');
+            if (!el) return;
+            el.textContent = message;
+            el.className = `text-[11px] font-medium ${type === 'error' ? 'text-rose-600 dark:text-rose-400' : type === 'success' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`;
+        }
+
+        function downloadKuzgunBackup(reason = 'manual', prefix = 'kuzgun-yedek') {
+            const backup = buildKuzgunBackup(reason);
+            downloadJsonFile(backup, backupFileName(prefix));
+            setBackupStatus(`${Object.keys(backup.data).length} veri kaydı yedeklendi • ${new Date().toLocaleString('tr-TR')}`, 'success');
+            if (reason === 'manual') showToast('KUZGUN yedeği indirildi');
+            return backup;
+        }
+
+        async function restoreKuzgunBackup(event) {
+            const input = event.target;
+            const file = input.files && input.files[0];
+            if (!file) return;
+            try {
+                if (file.size > 10 * 1024 * 1024) throw new Error('Yedek dosyası 10 MB sınırını aşıyor.');
+                const parsed = JSON.parse(await file.text());
+                if (!parsed || parsed.format !== KUZGUN_BACKUP_FORMAT || !Number.isInteger(parsed.version) || parsed.version < 1 || parsed.version > KUZGUN_BACKUP_VERSION || !parsed.data || typeof parsed.data !== 'object' || Array.isArray(parsed.data)) throw new Error('Bu dosya geçerli bir KUZGUN yedeği değil.');
+
+                const entries = Object.entries(parsed.data).filter(([key, value]) => isBackupStorageKey(key) && typeof value === 'string');
+                if (entries.length === 0) throw new Error('Yedekte geri yüklenecek veri bulunamadı.');
+                let coinCount = 0;
+                try { coinCount = JSON.parse(parsed.data.kuzgun_web_coins || '[]').length; } catch (_) {}
+                if (!confirm(`${file.name}\n\n${entries.length} kayıt ve ${coinCount} coin geri yüklenecek. Mevcut verilerin önce güvenlik yedeği indirilecek. Devam edilsin mi?`)) return;
+
+                downloadKuzgunBackup('pre-restore', 'kuzgun-geri-yukleme-oncesi');
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (isBackupStorageKey(key)) keysToRemove.push(key);
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                entries.forEach(([key, value]) => localStorage.setItem(key, value));
+
+                setBackupStatus(`${entries.length} kayıt başarıyla geri yüklendi. Terminal açılıyor…`, 'success');
+                showToast('Yedek başarıyla geri yüklendi');
+                setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+            } catch (error) {
+                setBackupStatus(error.message || 'Yedek yüklenemedi.', 'error');
+                showToast('Yedek yüklenemedi');
+            } finally {
+                input.value = '';
             }
         }
 
