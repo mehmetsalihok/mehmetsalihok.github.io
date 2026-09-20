@@ -364,6 +364,19 @@
                         <span class="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-sm">⇅</span>
                         <div><h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">YEDEKLE VE GERİ YÜKLE</h2><p class="text-[11px] text-slate-400">Tüm terminal verilerini tek dosyayla başka cihaza taşı</p></div>
                     </div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Yedeklenecek içerikler</span>
+                            <div class="flex items-center gap-2 text-[10px] font-semibold"><button type="button" onclick="setAllBackupCategories(true)" class="text-blue-600 dark:text-blue-400 hover:underline">Tümünü seç</button><span class="text-slate-300 dark:text-slate-700">•</span><button type="button" onclick="setAllBackupCategories(false)" class="text-slate-500 hover:underline">Temizle</button></div>
+                        </div>
+                        <div class="grid sm:grid-cols-2 gap-2" id="backupCategoryGrid">
+                            <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"><input type="checkbox" data-backup-category="coins" checked class="mt-0.5 accent-blue-600"><span><strong class="block text-xs text-slate-800 dark:text-slate-100">Coin ve strateji ayarları</strong><small class="block mt-0.5 text-[10px] leading-relaxed text-slate-400">Coin listesi, zaman aralığı, RSI, al-sat, hedef kâr, aylık kilit ve aktiflik.</small></span></label>
+                            <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"><input type="checkbox" data-backup-category="portfolio" checked class="mt-0.5 accent-blue-600"><span><strong class="block text-xs text-slate-800 dark:text-slate-100">Bütçe ve portföy</strong><small class="block mt-0.5 text-[10px] leading-relaxed text-slate-400">Sermaye, başlangıç tarihi, slot sayısı, yıl ve hesaplama kuralları.</small></span></label>
+                            <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"><input type="checkbox" data-backup-category="positions" checked class="mt-0.5 accent-blue-600"><span><strong class="block text-xs text-slate-800 dark:text-slate-100">Açık pozisyonlar</strong><small class="block mt-0.5 text-[10px] leading-relaxed text-slate-400">Canlı ve manuel pozisyonlar ile bekleyen sinyaller.</small></span></label>
+                            <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"><input type="checkbox" data-backup-category="history" checked class="mt-0.5 accent-blue-600"><span><strong class="block text-xs text-slate-800 dark:text-slate-100">İşlem geçmişi</strong><small class="block mt-0.5 text-[10px] leading-relaxed text-slate-400">Kapanmış işlemler, sonuçlar ve performans kayıtları.</small></span></label>
+                            <label class="sm:col-span-2 flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"><input type="checkbox" data-backup-category="preferences" checked class="mt-0.5 accent-blue-600"><span><strong class="block text-xs text-slate-800 dark:text-slate-100">Görünüm ve uygulama tercihleri</strong><small class="block mt-0.5 text-[10px] leading-relaxed text-slate-400">Tema, ses ve bildirim tercihleri gibi kişisel ayarlar.</small></span></label>
+                        </div>
+                    </div>
                     <div class="grid sm:grid-cols-2 gap-3">
                         <button type="button" onclick="downloadKuzgunBackup()" class="text-left p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/70 bg-emerald-50/60 dark:bg-emerald-950/20 hover:bg-emerald-100/70 dark:hover:bg-emerald-950/40 transition">
                             <span class="w-9 h-9 mb-3 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm">↓</span><span class="block text-xs font-bold text-slate-900 dark:text-white">Yedeği İndir</span><span class="block mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Coinler, açık pozisyonlar, işlem geçmişi, portföy ve uygulama tercihleri.</span>
@@ -686,20 +699,42 @@
         }
 
         const KUZGUN_BACKUP_FORMAT = 'kuzgun-terminal-backup';
-        const KUZGUN_BACKUP_VERSION = 1;
+        const KUZGUN_BACKUP_VERSION = 2;
         const KUZGUN_BACKUP_EXCLUDED_KEYS = new Set(['kuzgun_telegram_chat_id', 'kuzgun_telegram_bot_token', 'kuzgun_bot_token']);
+        const KUZGUN_BACKUP_CATEGORIES = ['coins', 'portfolio', 'positions', 'history', 'preferences'];
+        const KUZGUN_PORTFOLIO_KEYS = new Set(['kuzgun_base_usd', 'kuzgun_user_balance', 'kuzgun_portfolio_start_date', 'kuzgun_max_slots', 'kuzgun_selected_year', 'kuzgun_slot_constraint_enabled', 'kuzgun_fee_deduction_enabled']);
+        const KUZGUN_POSITION_KEYS = new Set(['kuzgun_active_pos', 'kuzgun_pending_signals']);
+        const KUZGUN_HISTORY_KEYS = new Set(['kuzgun_closed_trades']);
 
         function isBackupStorageKey(key) {
             return typeof key === 'string' && key.startsWith('kuzgun_') && !KUZGUN_BACKUP_EXCLUDED_KEYS.has(key);
         }
 
-        function buildKuzgunBackup(reason = 'manual') {
+        function backupCategoryForKey(key) {
+            if (key === 'kuzgun_web_coins') return 'coins';
+            if (KUZGUN_PORTFOLIO_KEYS.has(key)) return 'portfolio';
+            if (KUZGUN_POSITION_KEYS.has(key)) return 'positions';
+            if (KUZGUN_HISTORY_KEYS.has(key) || /(?:history|trade_history|executed_trades)/i.test(key)) return 'history';
+            return 'preferences';
+        }
+
+        function getSelectedBackupCategories() {
+            return [...document.querySelectorAll('[data-backup-category]:checked')].map(input => input.dataset.backupCategory);
+        }
+
+        function setAllBackupCategories(checked) {
+            document.querySelectorAll('[data-backup-category]').forEach(input => { input.checked = checked; });
+        }
+
+        function buildKuzgunBackup(reason = 'manual', requestedCategories = null) {
+            const categories = requestedCategories || getSelectedBackupCategories();
+            const selected = new Set(categories);
             const data = {};
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (isBackupStorageKey(key)) data[key] = localStorage.getItem(key);
+                if (isBackupStorageKey(key) && selected.has(backupCategoryForKey(key))) data[key] = localStorage.getItem(key);
             }
-            return { format: KUZGUN_BACKUP_FORMAT, version: KUZGUN_BACKUP_VERSION, createdAt: new Date().toISOString(), reason, app: 'KUZGUN Pro Terminal', data };
+            return { format: KUZGUN_BACKUP_FORMAT, version: KUZGUN_BACKUP_VERSION, createdAt: new Date().toISOString(), reason, app: 'KUZGUN Pro Terminal', categories, data };
         }
 
         function backupFileName(prefix = 'kuzgun-yedek') {
@@ -727,9 +762,15 @@
         }
 
         function downloadKuzgunBackup(reason = 'manual', prefix = 'kuzgun-yedek') {
-            const backup = buildKuzgunBackup(reason);
+            const categories = reason === 'pre-restore' ? KUZGUN_BACKUP_CATEGORIES : getSelectedBackupCategories();
+            if (categories.length === 0) {
+                setBackupStatus('Yedeklemek için en az bir kategori seçmelisin.', 'error');
+                showToast('En az bir yedek kategorisi seç');
+                return null;
+            }
+            const backup = buildKuzgunBackup(reason, categories);
             downloadJsonFile(backup, backupFileName(prefix));
-            setBackupStatus(`${Object.keys(backup.data).length} veri kaydı yedeklendi • ${new Date().toLocaleString('tr-TR')}`, 'success');
+            setBackupStatus(`${categories.length} kategori ve ${Object.keys(backup.data).length} veri kaydı yedeklendi • ${new Date().toLocaleString('tr-TR')}`, 'success');
             if (reason === 'manual') showToast('KUZGUN yedeği indirildi');
             return backup;
         }
@@ -745,15 +786,21 @@
 
                 const entries = Object.entries(parsed.data).filter(([key, value]) => isBackupStorageKey(key) && typeof value === 'string');
                 if (entries.length === 0) throw new Error('Yedekte geri yüklenecek veri bulunamadı.');
+                const backupCategories = Array.isArray(parsed.categories)
+                    ? parsed.categories.filter(category => KUZGUN_BACKUP_CATEGORIES.includes(category))
+                    : [...new Set(entries.map(([key]) => backupCategoryForKey(key)))];
+                if (backupCategories.length === 0) throw new Error('Yedekte geçerli bir veri kategorisi bulunamadı.');
                 let coinCount = 0;
                 try { coinCount = JSON.parse(parsed.data.kuzgun_web_coins || '[]').length; } catch (_) {}
-                if (!confirm(`${file.name}\n\n${entries.length} kayıt ve ${coinCount} coin geri yüklenecek. Mevcut verilerin önce güvenlik yedeği indirilecek. Devam edilsin mi?`)) return;
+                const categoryNames = { coins: 'Coin ayarları', portfolio: 'Bütçe ve portföy', positions: 'Açık pozisyonlar', history: 'İşlem geçmişi', preferences: 'Uygulama tercihleri' };
+                const categoryText = backupCategories.map(category => categoryNames[category]).join(', ');
+                if (!confirm(`${file.name}\n\nGeri yüklenecekler: ${categoryText}\n${entries.length} kayıt${coinCount ? ` ve ${coinCount} coin` : ''}.\n\nDiğer kategorilerdeki mevcut veriler korunacak. Önce tam güvenlik yedeği indirilecek. Devam edilsin mi?`)) return;
 
                 downloadKuzgunBackup('pre-restore', 'kuzgun-geri-yukleme-oncesi');
                 const keysToRemove = [];
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
-                    if (isBackupStorageKey(key)) keysToRemove.push(key);
+                    if (isBackupStorageKey(key) && backupCategories.includes(backupCategoryForKey(key))) keysToRemove.push(key);
                 }
                 keysToRemove.forEach(key => localStorage.removeItem(key));
                 entries.forEach(([key, value]) => localStorage.setItem(key, value));
