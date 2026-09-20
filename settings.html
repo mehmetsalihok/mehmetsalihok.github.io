@@ -357,6 +357,15 @@
                             </label>
                         </div>
                     </div>
+
+                    <div class="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/70 bg-blue-50/50 dark:bg-blue-950/20 space-y-2.5">
+                        <div><span class="block text-xs font-bold text-slate-900 dark:text-white">Alım Sinyali ve Alarm Testi</span><p class="mt-0.5 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Bir coin seçerek gerçek karar penceresini ve yüklediğin <strong>alarm.mp3</strong> dosyasını güvenle test et.</p></div>
+                        <div class="flex gap-2">
+                            <select id="alertTestCoinSelect" class="min-w-0 flex-1 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30"></select>
+                            <button type="button" onclick="startBuyAlertTest()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm transition shrink-0">Test Et 🔔</button>
+                        </div>
+                        <div id="alertTestStatus" class="text-[10px] text-slate-400">Test modu gerçek işlem veya Telegram bildirimi oluşturmaz.</div>
+                    </div>
                 </section>
 
                 <section id="secBackup" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
@@ -698,6 +707,32 @@
             }
         }
 
+        function loadAlertTestCoins() {
+            const select = document.getElementById('alertTestCoinSelect');
+            const status = document.getElementById('alertTestStatus');
+            if (!select) return;
+            let coins = [];
+            try { coins = JSON.parse(localStorage.getItem('kuzgun_web_coins') || '[]'); } catch (_) {}
+            coins = coins.filter(coin => coin && coin.isActive !== false && (coin.id || coin.symbol));
+            if (coins.length === 0) {
+                select.innerHTML = '<option value="">Aktif coin bulunamadı</option>';
+                select.disabled = true;
+                if (status) status.textContent = 'Önce terminale en az bir aktif coin eklemelisin.';
+                return;
+            }
+            select.disabled = false;
+            select.innerHTML = coins.map(coin => `<option value="${coin.id || coin.symbol}">${coin.displaySymbol || String(coin.symbol).replace('USDT', '')} • ${coin.interval || '--'} • RSI(${coin.rsiLength || '--'})</option>`).join('');
+        }
+
+        function startBuyAlertTest() {
+            const select = document.getElementById('alertTestCoinSelect');
+            if (!select || !select.value) {
+                showToast('Test için aktif bir coin seçmelisin');
+                return;
+            }
+            window.location.href = `index.html?testBuyAlert=${encodeURIComponent(select.value)}`;
+        }
+
         const KUZGUN_BACKUP_FORMAT = 'kuzgun-terminal-backup';
         const KUZGUN_BACKUP_VERSION = 2;
         const KUZGUN_BACKUP_EXCLUDED_KEYS = new Set(['kuzgun_telegram_chat_id', 'kuzgun_telegram_bot_token', 'kuzgun_bot_token']);
@@ -818,6 +853,7 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadSettings();
+            loadAlertTestCoins();
             const currentTheme = localStorage.getItem('kuzgun_theme') || (document.documentElement.classList.contains('dark') ? (document.documentElement.classList.contains('oled') ? 'oled' : 'dark') : 'light');
             updateThemeIcons(currentTheme);
         });

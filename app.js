@@ -294,7 +294,7 @@ function addBuySignalToPending(signal) {
     renderPendingSignalsList();
 }
 
-function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli') {
+function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli', options = {}) {
     if (!coin) return;
     const signalId = `${coin.id || coin.symbol}_${signalTime}`;
     if (activeBuySignalAlert?.id === signalId || buySignalAlertQueue.some(item => item.id === signalId)) return;
@@ -309,10 +309,13 @@ function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = D
         profitTarget: Number(coin.profitTarget || 0),
         interval: coin.interval,
         time: Number(signalTime || Date.now()),
-        mode: signalMode
+        mode: signalMode,
+        isTest: options.isTest === true
     });
 
-    sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (${signalMode})</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Sinyal Fiyatı:</b> ${formatCryptoPrice(triggerPrice || coin.price)}\n<b>RSI:</b> ${Number(triggerRsi || coin.rsi).toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}\n<b>Karar Süresi:</b> 30 saniye`);
+    if (!options.isTest) {
+        sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (${signalMode})</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Sinyal Fiyatı:</b> ${formatCryptoPrice(triggerPrice || coin.price)}\n<b>RSI:</b> ${Number(triggerRsi || coin.rsi).toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}\n<b>Karar Süresi:</b> 30 saniye`);
+    }
     showNextBuySignalAlert();
 }
 
@@ -352,6 +355,19 @@ function resolveBuySignalDecision(action, isTimeout = false) {
     if (!signal) return;
     const coin = KZ_STATE.coins.find(c => c.id === signal.coinId || c.symbol === signal.symbol);
     const message = document.getElementById('buySignalDecisionMessage');
+
+    if (signal.isTest) {
+        clearInterval(buySignalCountdownTimer);
+        buySignalCountdownTimer = null;
+        stopBuySignalAlarm();
+        const modal = document.getElementById('buySignalDecisionModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        activeBuySignalAlert = null;
+        showToast(isTimeout ? 'Alarm testi tamamlandı' : 'Test seçimi alındı; hiçbir işlem oluşturulmadı');
+        setTimeout(showNextBuySignalAlert, 200);
+        return;
+    }
 
     if (action === 'accept') {
         if (!coin || coin.isActive === false) {
@@ -2787,6 +2803,22 @@ function syncMainAppFromStorage(event) {
     }
 }
 
+function openBuyAlertTestFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const coinRef = params.get('testBuyAlert');
+    if (!coinRef) return;
+    const coin = KZ_STATE.coins.find(c => c.id === coinRef || c.symbol === coinRef);
+    params.delete('testBuyAlert');
+    const cleanQuery = params.toString();
+    window.history.replaceState({}, document.title, `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ''}`);
+    if (!coin) {
+        showToast('Test edilecek coin bulunamadı');
+        return;
+    }
+    const testPrice = Number(coin.price || coin.rawCandles?.at(-1)?.close || 0);
+    requestBuySignalDecision(coin, testPrice, Number(coin.rsi || coin.buyRsi || 30), Date.now(), 'TEST MODU', { isTest: true });
+}
+
 window.addEventListener('storage', syncMainAppFromStorage);
 if (kuzgunSyncChannel) kuzgunSyncChannel.addEventListener('message', () => syncMainAppFromStorage());
 
@@ -2804,6 +2836,7 @@ async function startEngine() {
 
     await fetchLiveTickerFallback();
     fetchMarketRate();
+    openBuyAlertTestFromQuery();
 
     initBinanceWebSocket();
     fetchBinanceSpotSymbols();
