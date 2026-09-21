@@ -77,6 +77,15 @@ let activeBuySignalAlert = null;
 let buySignalAlertQueue = [];
 let buySignalCountdownTimer = null;
 let buySignalAlarmAudio = null;
+const KZ_HEALTH = {
+    startedAt: Date.now(),
+    lastPriceAt: 0,
+    wsConnected: false,
+    wsDisconnectedAt: Date.now(),
+    online: navigator.onLine,
+    alerts: { offline: false, websocket: false, stalePrice: false },
+    startupSent: false
+};
 const kuzgunSyncChannel = typeof BroadcastChannel !== 'undefined'
     ? new BroadcastChannel('kuzgun_terminal_sync')
     : null;
@@ -161,13 +170,13 @@ function getCoinDisplayTrades(coin) {
 }
 
 // 📲 TELEGRAM BİLDİRİMİ GÖNDERİCİ
-function sendTelegramAlert(text) {
+async function sendTelegramAlert(text) {
     const chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
     const botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
-    if (!chatId || !botToken) return;
+    if (!chatId || !botToken) return false;
 
     try {
-        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -175,8 +184,121 @@ function sendTelegramAlert(text) {
                 text: text,
                 parse_mode: 'HTML'
             })
-        }).catch(() => {});
+        });
+        return response.ok;
+    } catch (e) {
+        return false;
+    }
+}
+
+function isHealthMonitorEnabled() {
+    return localStorage.getItem('kuzgun_health_enabled') !== 'false';
+}
+
+function healthDurationText(ms) {
+    const totalMinutes = Math.max(0, Math.floor(ms / 60000));
+    const days = Math.floor(totalMinutes / 1440);
+    const hours = Math.floor((totalMinutes % 1440) / 60);
+    const minutes = totalMinutes % 60;
+    if (days > 0) return `${days}g ${hours}sa`;
+    if (hours > 0) return `${hours}sa ${minutes}dk`;
+    return `${minutes}dk`;
+}
+
+function healthAgeText(timestamp) {
+    if (!timestamp) return 'veri yok';
+    const seconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
+    if (seconds < 60) return `${seconds} sn önce`;
+    return `${Math.floor(seconds / 60)} dk önce`;
+}
+
+function buildHealthTelegramMessage(title, icon = '🟢') {
+    const activeCoins = KZ_STATE.coins.filter(c => c.isActive !== false).length;
+    return `${icon} <b>${title}</b>\n\n<b>Çalışma süresi:</b> ${healthDurationText(Date.now() - KZ_HEALTH.startedAt)}\n<b>İnternet:</b> ${KZ_HEALTH.online ? 'Bağlı' : 'Kesik'}\n<b>Binance WS:</b> ${KZ_HEALTH.wsConnected ? 'Bağlı' : 'Bağlantı yok'}\n<b>Son fiyat:</b> ${healthAgeText(KZ_HEALTH.lastPriceAt)}\n<b>Aktif coin:</b> ${activeCoins}\n<b>Açık pozisyon:</b> ${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots}\n<b>Bekleyen sinyal:</b> ${KZ_STATE.pendingSignals.length}\n<b>VDS saati:</b> ${new Date().toLocaleString('tr-TR')}`;
+}
+
+function updateHealthIndicator(status, label, detail) {
+    const dot = document.getElementById('healthStatusDot');
+    const text = document.getElementById('healthStatusText');
+    const box = document.getElementById('healthStatusBox');
+    const styles = {
+        healthy: ['bg-emerald-500', 'text-emerald-600 dark:text-emerald-400'],
+        warning: ['bg-amber-500 animate-pulse', 'text-amber-600 dark:text-amber-400'],
+        error: ['bg-rose-500 animate-ping', 'text-rose-600 dark:text-rose-400'],
+        disabled: ['bg-slate-400', 'text-slate-400']
+    };
+    const chosen = styles[status] || styles.warning;
+    if (dot) dot.className = `w-1.5 h-1.5 rounded-full ${chosen[0]}`;
+    if (text) { text.textContent = label; text.className = `${chosen[1]} font-semibold text-[9px]`; }
+    if (box) box.title = detail;
+}
+
+function saveHealthPulse(status, problems) {
+    try {
+        localStorage.setItem('kuzgun_health_last_pulse', JSON.stringify({
+            timestamp: Date.now(), status, problems, wsConnected: KZ_HEALTH.wsConnected,
+            lastPriceAt: KZ_HEALTH.lastPriceAt, activeCoins: KZ_STATE.coins.filter(c => c.isActive !== false).length,
+            activePositions: KZ_STATE.activePositions.length, pendingSignals: KZ_STATE.pendingSignals.length
+        }));
     } catch (e) {}
+}
+
+async function runHealthCheck() {
+    if (!isHealthMonitorEnabled()) {
+        updateHealthIndicator('disabled', 'KAPALI', 'Sistem sağlık kontrolü ayarlardan kapalı.');
+        return;
+    }
+
+    KZ_HEALTH.online = navigator.onLine;
+    const now = Date.now();
+    const gracePassed = now - KZ_HEALTH.startedAt > 90000;
+    const staleLimitMs = (parseInt(localStorage.getItem('kuzgun_health_stale_seconds'), 10) || 120) * 1000;
+    const hasActiveCoins = KZ_STATE.coins.some(c => c.isActive !== false);
+    const wsFailed = gracePassed && !KZ_HEALTH.wsConnected && now - KZ_HEALTH.wsDisconnectedAt > 90000;
+    const priceStale = gracePassed && hasActiveCoins && (!KZ_HEALTH.lastPriceAt || now - KZ_HEALTH.lastPriceAt > staleLimitMs);
+    const problems = [];
+    if (!KZ_HEALTH.online) problems.push('İnternet bağlantısı kesik');
+    if (wsFailed) problems.push('Binance WebSocket bağlı değil');
+    if (priceStale) problems.push('Canlı fiyat akışı gecikmiş');
+    const status = problems.length ? 'error' : (!KZ_HEALTH.wsConnected || !KZ_HEALTH.lastPriceAt ? 'warning' : 'healthy');
+    updateHealthIndicator(status, status === 'healthy' ? 'SAĞLIKLI' : status === 'error' ? 'SORUN' : 'BAĞLANIYOR', problems.join(' • ') || `Son fiyat: ${healthAgeText(KZ_HEALTH.lastPriceAt)}`);
+    saveHealthPulse(status, problems);
+
+    const checks = [
+        ['offline', !KZ_HEALTH.online, '🔴 <b>VDS İNTERNET BAĞLANTISI KESİLDİ</b>', '🟢 <b>VDS İNTERNET BAĞLANTISI DÜZELDİ</b>'],
+        ['websocket', wsFailed, '🟠 <b>BINANCE WEBSOCKET BAĞLANTISI KESİLDİ</b>\n90 saniyedir bağlantı kurulamıyor.', '🟢 <b>BINANCE WEBSOCKET YENİDEN BAĞLANDI</b>'],
+        ['stalePrice', priceStale, `🔴 <b>CANLI FİYAT AKIŞI DURDU</b>\nSon fiyat: ${healthAgeText(KZ_HEALTH.lastPriceAt)}`, '🟢 <b>CANLI FİYAT AKIŞI YENİDEN BAŞLADI</b>']
+    ];
+    for (const [key, failed, failMessage, recoveryMessage] of checks) {
+        if (failed && !KZ_HEALTH.alerts[key]) {
+            KZ_HEALTH.alerts[key] = true;
+            await sendTelegramAlert(failMessage);
+        } else if (!failed && KZ_HEALTH.alerts[key]) {
+            KZ_HEALTH.alerts[key] = false;
+            await sendTelegramAlert(recoveryMessage);
+        }
+    }
+
+    const heartbeatMinutes = parseInt(localStorage.getItem('kuzgun_health_heartbeat_minutes'), 10);
+    const intervalMinutes = Number.isFinite(heartbeatMinutes) ? heartbeatMinutes : 60;
+    const lastHeartbeat = parseInt(localStorage.getItem('kuzgun_health_last_telegram'), 10) || 0;
+    if (intervalMinutes > 0 && now - lastHeartbeat >= intervalMinutes * 60000) {
+        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN ÇALIŞIYOR'))) {
+            localStorage.setItem('kuzgun_health_last_telegram', String(now));
+        }
+    }
+}
+
+async function startHealthMonitor() {
+    if (!isHealthMonitorEnabled()) return runHealthCheck();
+    if (localStorage.getItem('kuzgun_health_startup_notification') !== 'false' && !KZ_HEALTH.startupSent) {
+        KZ_HEALTH.startupSent = true;
+        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN TERMİNAL BAŞLATILDI', '🚀'))) {
+            localStorage.setItem('kuzgun_health_last_telegram', String(Date.now()));
+        }
+    }
+    await runHealthCheck();
+    setInterval(runHealthCheck, 15000);
 }
 
 async function changeYearFromHeader(year) {
@@ -1825,6 +1947,7 @@ async function fetchLiveTickerFallback() {
         }
 
         if (!data) return;
+        KZ_HEALTH.lastPriceAt = Date.now();
 
         const priceMap = {};
         data.forEach(item => {
@@ -1978,6 +2101,8 @@ function initBinanceWebSocket() {
         binanceWs = new WebSocket(streamUrl);
 
         binanceWs.onopen = () => {
+            KZ_HEALTH.wsConnected = true;
+            KZ_HEALTH.wsDisconnectedAt = 0;
             if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500';
             if (elWsStatusText) {
                 elWsStatusText.className = 'text-emerald-600 dark:text-emerald-400 font-semibold text-[9px]';
@@ -1992,6 +2117,7 @@ function initBinanceWebSocket() {
                 const d = msg.data;
                 const sym = d.s;
                 const liveClose = parseFloat(d.c);
+                if (liveClose > 0) KZ_HEALTH.lastPriceAt = Date.now();
 
                 if (sym === 'BTCUSDT') {
                     KZ_STATE.btcPrice = liveClose;
@@ -2007,6 +2133,8 @@ function initBinanceWebSocket() {
         };
 
         binanceWs.onclose = () => {
+            KZ_HEALTH.wsConnected = false;
+            if (!KZ_HEALTH.wsDisconnectedAt) KZ_HEALTH.wsDisconnectedAt = Date.now();
             if (elWsStatusDot) elWsStatusDot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping';
             if (elWsStatusText) {
                 elWsStatusText.className = 'text-amber-600 dark:text-amber-400 font-semibold text-[9px]';
@@ -2014,7 +2142,13 @@ function initBinanceWebSocket() {
             }
             setTimeout(initBinanceWebSocket, 3500);
         };
+        binanceWs.onerror = () => {
+            KZ_HEALTH.wsConnected = false;
+            if (!KZ_HEALTH.wsDisconnectedAt) KZ_HEALTH.wsDisconnectedAt = Date.now();
+        };
     } catch (e) {
+        KZ_HEALTH.wsConnected = false;
+        if (!KZ_HEALTH.wsDisconnectedAt) KZ_HEALTH.wsDisconnectedAt = Date.now();
         setTimeout(initBinanceWebSocket, 3500);
     }
 }
@@ -2820,6 +2954,8 @@ function openBuyAlertTestFromQuery() {
 }
 
 window.addEventListener('storage', syncMainAppFromStorage);
+window.addEventListener('online', () => { KZ_HEALTH.online = true; runHealthCheck(); });
+window.addEventListener('offline', () => { KZ_HEALTH.online = false; runHealthCheck(); });
 if (kuzgunSyncChannel) kuzgunSyncChannel.addEventListener('message', () => syncMainAppFromStorage());
 
 // Başlatıcı
@@ -2841,6 +2977,7 @@ async function startEngine() {
     initBinanceWebSocket();
     fetchBinanceSpotSymbols();
     setupSymbolLiveValidation();
+    setTimeout(startHealthMonitor, 3000);
 
     setInterval(fetchMarketRate, 10000);
     setInterval(fetchLiveTickerFallback, 5000);
