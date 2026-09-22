@@ -401,7 +401,7 @@ function playBuySignalAlarm() {
 
 function addBuySignalToPending(signal) {
     const alreadyPending = (KZ_STATE.pendingSignals || []).some(s => s.coinId === signal.coinId || s.symbol === signal.symbol);
-    if (alreadyPending) return;
+    if (alreadyPending) return false;
     KZ_STATE.pendingSignals.push({
         id: 'pend_' + Date.now(),
         coinId: signal.coinId,
@@ -414,6 +414,9 @@ function addBuySignalToPending(signal) {
     });
     savePending();
     renderPendingSignalsList();
+    buySignalAlertQueue = buySignalAlertQueue.filter(item => item.coinId !== signal.coinId && item.symbol !== signal.symbol);
+    sendTelegramAlert(`🟡 <b>COİN BEKLEMEYE ALINDI</b>\n\n<b>Coin:</b> #${signal.displaySymbol || signal.symbol}\n<b>Sinyal fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Sinyal zamanı:</b> ${formatShortDate(signal.time)}\n\nBu coin bekleme listesindeyken yeni alım bildirimi gönderilmeyecek.`);
+    return true;
 }
 
 function getBuySignalTimeoutAction() {
@@ -434,8 +437,10 @@ function tryOpenBuySignalPosition(signal, useCurrentPrice = false) {
 
 function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli', options = {}) {
     if (!coin) return;
+    if (!options.isTest && (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol)) return;
     const signalId = `${coin.id || coin.symbol}_${signalTime}`;
-    if (activeBuySignalAlert?.id === signalId || buySignalAlertQueue.some(item => item.id === signalId)) return;
+    if (activeBuySignalAlert && (activeBuySignalAlert.coinId === coin.id || activeBuySignalAlert.symbol === coin.symbol)) return;
+    if (buySignalAlertQueue.some(item => item.coinId === coin.id || item.symbol === coin.symbol)) return;
 
     const signal = {
         id: signalId,
