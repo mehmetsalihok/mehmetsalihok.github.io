@@ -80,12 +80,11 @@
         html.oled ::-webkit-scrollbar-thumb:hover { background: #333333 !important; }
 
         .league-shell { max-width: 1660px; }
-        .league-hero { background: radial-gradient(circle at 83% 8%, rgba(59,130,246,.22), transparent 34%), linear-gradient(125deg,#0f1f3a 0%,#162b4e 55%,#101d35 100%); }
-        .league-panel { box-shadow: 0 12px 34px -26px rgba(15,23,42,.35); }
+        .league-panel { box-shadow: 0 8px 25px -24px rgba(15,23,42,.28); }
         .league-card { transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease; }
         .league-card:hover { transform: translateY(-2px); box-shadow: 0 18px 36px -28px rgba(37,99,235,.5); border-color: rgba(96,165,250,.55); }
-        .league-stat { background: linear-gradient(135deg,rgba(239,246,255,.85),rgba(255,255,255,.95)); }
-        .dark .league-stat { background: linear-gradient(135deg,rgba(30,41,59,.75),rgba(15,23,42,.95)); }
+        .league-stat { background: #fff; }
+        .dark .league-stat { background: #0f172a; }
         .league-action:focus-visible, .league-card button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
         @media (prefers-reduced-motion: reduce) { .league-card, .league-action { transition: none !important; } }
     </style>
@@ -130,20 +129,14 @@
         </div>
     </header>
 
-    <main class="league-shell w-full mx-auto px-4 sm:px-6 py-5 lg:py-8 space-y-6 flex-1">
-        <section class="league-hero relative overflow-hidden rounded-3xl text-white px-5 sm:px-8 py-7 sm:py-9">
-            <div class="relative z-10 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6">
-                <div class="max-w-2xl space-y-3">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/10 text-blue-100 text-[10px] tracking-widest font-bold uppercase"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> KUZGUN ANALİZ MASASI</div>
-                    <h2 class="text-2xl sm:text-4xl font-black tracking-tight leading-tight">Coin karşılaştırma ligi</h2>
-                    <p class="text-sm text-slate-300 leading-relaxed">RSI 6 ve RSI 7 stratejilerini aynı dönem ve ayarlarla karşılaştır. Kazanma oranını, işlem sayısını ve aylık kilit performansını tek ekranda incele.</p>
-                </div>
-                <div class="sm:text-right shrink-0"><div class="text-[10px] font-bold uppercase tracking-widest text-blue-200">ANALİZ DÖNEMİ</div><div id="leaguePeriodLabel" class="mt-1 text-xl font-extrabold tabular-nums">2026 → Bugün</div><div class="mt-1 text-xs text-slate-300">Binance mum verileri</div></div>
-            </div>
+    <main class="league-shell w-full mx-auto px-4 sm:px-6 py-4 lg:py-6 space-y-4 flex-1">
+        <section class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
+            <div><h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Lig Kıyaslama</h2><p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">RSI 6 ve RSI 7 stratejilerini aynı verilerle karşılaştır.</p></div>
+            <span id="leaguePeriodLabel" class="shrink-0 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-semibold tabular-nums text-slate-600 dark:text-slate-300">2026 → Bugün</span>
         </section>
-        <div class="grid lg:grid-cols-[335px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] items-start gap-5 lg:gap-7">
+        <div class="grid lg:grid-cols-[335px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] items-start gap-4 lg:gap-6">
         <aside class="lg:sticky lg:top-20 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 league-panel space-y-4">
-            <div class="flex items-center justify-between"><div><div class="text-[10px] uppercase tracking-widest font-bold text-blue-600 dark:text-blue-400">KONTROL PANELİ</div><h3 class="text-base font-extrabold text-slate-900 dark:text-white mt-1">Analizi hazırla</h3></div><span class="text-lg" aria-hidden="true">⚙</span></div>
+            <div class="flex items-center justify-between"><h3 class="text-sm font-bold text-slate-900 dark:text-white">Analiz ayarları</h3><span class="text-[10px] font-semibold text-slate-400">RSI 6 / 7</span></div>
             <div>
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <div class="flex items-center space-x-2">
@@ -229,12 +222,12 @@
             </div>
         </aside>
 
-        <section class="min-w-0 space-y-5" aria-label="Lig sonuçları">
+        <section class="min-w-0 space-y-4" aria-label="Lig sonuçları">
             <div class="grid grid-cols-2 xl:grid-cols-4 gap-3" id="leagueSummary">
-                <div class="league-stat rounded-2xl border border-slate-200 dark:border-slate-800 p-4"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Karşılaştırılan</div><div id="summaryAnalyzed" class="mt-1 text-2xl font-black tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">coin</div></div>
-                <div class="league-stat rounded-2xl border border-slate-200 dark:border-slate-800 p-4"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">En yüksek getiri</div><div id="summaryProfit" class="mt-1 text-2xl font-black tabular-nums text-emerald-600 dark:text-emerald-400">—</div><div id="summaryProfitCoin" class="text-[10px] text-slate-400">analiz bekleniyor</div></div>
-                <div class="league-stat rounded-2xl border border-slate-200 dark:border-slate-800 p-4"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Toplam simülasyon</div><div id="summaryTrades" class="mt-1 text-2xl font-black tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">iki RSI stratejisi</div></div>
-                <div class="league-stat rounded-2xl border border-slate-200 dark:border-slate-800 p-4"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Lider</div><div id="summaryLeader" class="mt-1 text-2xl font-black text-blue-600 dark:text-blue-400">—</div><div class="text-[10px] text-slate-400">lig puanına göre</div></div>
+                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Karşılaştırılan</div><div id="summaryAnalyzed" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">coin</div></div>
+                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">En yüksek getiri</div><div id="summaryProfit" class="mt-1 text-xl font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">—</div><div id="summaryProfitCoin" class="text-[10px] text-slate-400">analiz bekleniyor</div></div>
+                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Toplam simülasyon</div><div id="summaryTrades" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">iki RSI stratejisi</div></div>
+                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Lider</div><div id="summaryLeader" class="mt-1 text-xl font-extrabold text-blue-600 dark:text-blue-400">—</div><div class="text-[10px] text-slate-400">lig puanına göre</div></div>
             </div>
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 league-panel">
                 <div class="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4">
