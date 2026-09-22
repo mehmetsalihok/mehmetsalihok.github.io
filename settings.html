@@ -364,6 +364,15 @@
                         </div>
                     </div>
 
+                    <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 space-y-3">
+                        <div class="flex items-start justify-between gap-3">
+                            <div><span class="block text-xs font-bold text-slate-900 dark:text-white">30 saniyelik alım karar penceresi</span><p class="mt-0.5 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Açıkken sinyal ekranda görünür ve alarm çalar. Kapalıyken uygun sinyaller eski davranıştaki gibi doğrudan pozisyon açar; slot doluysa beklemeye alınır. Telegram alım bildirimi devam eder.</p></div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1"><input type="checkbox" id="toggleBuySignalWindow" onchange="saveBuySignalDecisionSettings()" class="sr-only peer"><div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div></label>
+                        </div>
+                        <label class="block space-y-1.5" for="buySignalTimeoutAction"><span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">30 saniye yanıt gelmezse</span><select id="buySignalTimeoutAction" onchange="saveBuySignalDecisionSettings()" class="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"><option value="pending">Beklemeye al (önerilen)</option><option value="reject">Sinyali reddet</option><option value="accept">Güncel fiyatla otomatik pozisyon aç</option></select></label>
+                        <p id="buySignalDecisionHint" class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400"></p>
+                    </div>
+
                     <div class="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/70 bg-blue-50/50 dark:bg-blue-950/20 space-y-2.5">
                         <div><span class="block text-xs font-bold text-slate-900 dark:text-white">Alım Sinyali ve Alarm Testi</span><p class="mt-0.5 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Bir coin seçerek gerçek karar penceresini ve yüklediğin <strong>alarm.mp3</strong> dosyasını güvenle test et.</p></div>
                         <div class="flex gap-2">
@@ -612,6 +621,27 @@
             document.getElementById('badgeTelegram').textContent = '#' + tgId;
         }
 
+        function updateBuySignalDecisionHint() {
+            const enabled = document.getElementById('toggleBuySignalWindow').checked;
+            const action = document.getElementById('buySignalTimeoutAction');
+            action.disabled = !enabled;
+            const hint = document.getElementById('buySignalDecisionHint');
+            hint.textContent = !enabled
+                ? 'Pencere kapalıyken uygun sinyaller otomatik pozisyona dönüşür; boş slot veya güncel fiyat yoksa beklemeye alınır.'
+                : action.value === 'accept'
+                    ? '30 saniye sonunda boş slot ve güncel fiyat varsa pozisyon açılır; yoksa sinyal beklemeye alınır.'
+                    : action.value === 'reject'
+                        ? '30 saniye boyunca yanıt verilmezse sinyal reddedilir.'
+                        : '30 saniye boyunca yanıt verilmezse sinyal beklemeye alınır.';
+        }
+
+        function saveBuySignalDecisionSettings() {
+            localStorage.setItem('kuzgun_buy_signal_window_enabled', String(document.getElementById('toggleBuySignalWindow').checked));
+            localStorage.setItem('kuzgun_buy_signal_timeout_action', document.getElementById('buySignalTimeoutAction').value);
+            updateBuySignalDecisionHint();
+            showToast('Alım sinyali karar ayarları kaydedildi');
+        }
+
         function loadSettings() {
             const balance = localStorage.getItem('kuzgun_base_usd') || localStorage.getItem('kuzgun_user_balance') || '1000';
             document.getElementById('inputBalance').value = parseFloat(balance).toFixed(2);
@@ -633,6 +663,10 @@
             document.getElementById('toggleBuyNotification').checked = localStorage.getItem('kuzgun_buy_notification_enabled') !== 'false';
             document.getElementById('toggleSellNotification').checked = localStorage.getItem('kuzgun_sell_notification_enabled') !== 'false';
             document.getElementById('toggleSound').checked = localStorage.getItem('kuzgun_sound_enabled') !== 'false';
+            document.getElementById('toggleBuySignalWindow').checked = localStorage.getItem('kuzgun_buy_signal_window_enabled') !== 'false';
+            const timeoutAction = localStorage.getItem('kuzgun_buy_signal_timeout_action');
+            document.getElementById('buySignalTimeoutAction').value = ['pending', 'reject', 'accept'].includes(timeoutAction) ? timeoutAction : 'pending';
+            updateBuySignalDecisionHint();
 
             document.getElementById('inputTelegramChatId').value = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
 

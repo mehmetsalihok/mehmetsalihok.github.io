@@ -373,7 +373,7 @@
                     <button type="button" onclick="resolveBuySignalDecision('pending')" class="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-white text-[11px] font-bold shadow-sm transition">Beklemeye Al</button>
                     <button type="button" onclick="resolveBuySignalDecision('reject')" class="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-[11px] font-bold shadow-sm transition">Reddet</button>
                 </div>
-                <p class="text-center text-[10px] text-slate-400">Karar verilmezse sinyal otomatik olarak bekleme listesine alınır.</p>
+                <p id="buySignalTimeoutHint" class="text-center text-[10px] text-slate-400">Karar verilmezse sinyal beklemeye alınır.</p>
             </div>
         </div>
     </div>
@@ -626,6 +626,6 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=6"></script>
-    <script src="app.js?v=28"></script>
+    <script src="app.js?v=29"></script>
 </body>
 </html>
