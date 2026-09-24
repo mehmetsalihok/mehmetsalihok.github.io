@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portföy Laboratuvarı (Beta) · KUZGUN Pro</title>
+  <style>
+    :root { color-scheme: light; --bg:#f6f8fc; --surface:#fff; --surface2:#f8fafc; --ink:#172236; --muted:#73839a; --line:#dfe7f2; --blue:#215ee4; --bluebg:#edf3ff; --green:#087d58; --red:#c53045; --amber:#ad6818; --shadow:0 9px 26px -22px #24385870; }
+    :root.dark, :root.oled { color-scheme: dark; --bg:#0c1422; --surface:#141f31; --surface2:#1a2940; --ink:#f2f6ff; --muted:#a5b4c8; --line:#304059; --blue:#8bb4ff; --bluebg:#1e3456; --green:#67d9ae; --red:#ff8995; --amber:#f5c176; --shadow:none; }
+    :root.oled { --bg:#000; --surface:#090909; --surface2:#111; --line:#282828; }
+    * {box-sizing:border-box} body {margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif} button,input,select {font:inherit} button {cursor:pointer} button:disabled {cursor:wait;opacity:.55} a {color:inherit;text-decoration:none} :focus-visible {outline:2px solid var(--blue);outline-offset:3px} .wrap {max-width:1490px;padding:0 22px;margin:auto}
+    header {background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10} .nav {height:56px;display:flex;align-items:center;gap:25px} .brand {font-size:17px;font-weight:900;letter-spacing:-.04em;white-space:nowrap}.brand span {font-size:9px;letter-spacing:.05em;color:var(--blue);background:var(--bluebg);padding:3px 5px;border-radius:5px;vertical-align:middle} .navlinks {display:flex;gap:4px;align-items:center;flex:1} .navlinks a {font-size:12px;color:var(--muted);padding:7px 10px;border-radius:7px} .navlinks a:hover,.navlinks .active {background:var(--bluebg);color:var(--blue)} .back {font-size:12px;font-weight:700;color:var(--blue)}
+    main {padding-top:22px;padding-bottom:60px}.heading {display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:19px}.heading h1 {font-size:22px;letter-spacing:-.04em;margin:0}.heading p {margin:3px 0 0;color:var(--muted);font-size:12px}.beta {font-size:10px;font-weight:800;letter-spacing:.07em;padding:5px 9px;color:var(--blue);background:var(--bluebg);border-radius:7px} .layout {display:grid;grid-template-columns:310px minmax(0,1fr);align-items:start;gap:18px} .panel {background:var(--surface);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow)} .controls {padding:19px;position:sticky;top:74px}.controls h2,.sectiontitle h2 {margin:0;font-size:15px;letter-spacing:-.02em}.eyebrow {font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:800;color:var(--muted)}.controls h2 {margin-bottom:16px} .field {margin-bottom:16px}.field label {font-size:11px;font-weight:750;display:block;margin-bottom:7px}.field select {width:100%;background:var(--surface2);border:1px solid var(--line);border-radius:9px;color:var(--ink);padding:9px 10px}.field small {color:var(--muted);font-size:10px;display:block;margin-top:5px}.cfg {padding:11px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;font-size:11px}.cfg b {font-variant-numeric:tabular-nums}.coinbox {border-top:1px solid var(--line);padding:16px 0}.coinbox h3 {font-size:11px;margin:0 0 9px}.chips {display:flex;flex-wrap:wrap;gap:6px}.chip {font-weight:750;font-size:10px;border:1px solid var(--line);border-radius:6px;padding:4px 7px;background:var(--surface2)} .hint {color:var(--muted);font-size:11px;line-height:1.55}.run {width:100%;border:0;border-radius:10px;background:#2462df;color:white;padding:11px 12px;font-weight:750;margin:4px 0 9px}.run:hover {background:#164cba}.status {font-size:11px;color:var(--muted);min-height:17px}.progress {height:5px;background:var(--surface2);border-radius:5px;overflow:hidden;margin-top:8px}.progress>div {width:0;height:100%;background:var(--blue);transition:width .2s}
+    .results {min-width:0;display:grid;gap:16px}.notice {padding:17px 19px;font-size:12px;color:var(--muted)}.notice strong {color:var(--ink)} .notice.error {color:var(--red);border-color:var(--red)} .kpis {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.kpi {padding:14px}.kpi .label {font-size:10px;color:var(--muted);font-weight:750}.kpi .value {font-size:20px;line-height:1.25;letter-spacing:-.03em;font-weight:850;margin-top:5px;white-space:nowrap}.kpi .sub {font-size:10px;color:var(--muted);margin-top:4px}.good {color:var(--green)!important}.bad {color:var(--red)!important}.neutral {color:var(--muted)!important}.section {padding:18px}.sectiontitle {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.sectiontitle p {margin:4px 0 0;font-size:11px;color:var(--muted)}.tablewrap {overflow-x:auto}.compare {width:100%;border-collapse:collapse;min-width:680px;font-size:12px}.compare th {text-align:right;color:var(--muted);font-size:10px;font-weight:750;border-bottom:1px solid var(--line);padding:10px 8px}.compare th:first-child,.compare td:first-child {text-align:left}.compare td {text-align:right;border-bottom:1px solid var(--line);padding:12px 8px;font-variant-numeric:tabular-nums}.compare tr:last-child td {border-bottom:0}.compare tbody tr:hover {background:var(--surface2)}.name {font-weight:750}.micro {font-size:10px;color:var(--muted)}.tag {display:inline-block;padding:2px 6px;border-radius:5px;background:var(--bluebg);color:var(--blue);font-weight:800;font-size:10px}.explain {border-left:3px solid var(--blue);padding:10px 12px;background:var(--surface2);border-radius:0 8px 8px 0;font-size:11px;color:var(--muted);margin-top:13px}.notegrid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.notegrid div {background:var(--surface2);padding:11px;border-radius:8px;font-size:11px;color:var(--muted)}.notegrid strong {display:block;color:var(--ink);margin-bottom:3px}.hidden {display:none!important}
+    @media(max-width:950px){.layout{grid-template-columns:1fr}.controls{position:static}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}} @media(max-width:600px){.wrap{padding:0 14px}.nav{gap:11px}.navlinks{display:none}.back{margin-left:auto}.heading h1{font-size:19px}.kpi .value{font-size:17px}.notegrid{grid-template-columns:1fr}}
+  </style>
+  <script>
+    (function(){const theme=localStorage.getItem('kuzgun_theme');if(theme==='oled')document.documentElement.classList.add('dark','oled');else if(theme==='dark'||(!theme&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')})();
+  </script>
+</head>
+<body>
+  <header><div class="wrap nav"><a href="index.html" class="brand">KUZGUN <span>PRO</span></a><nav class="navlinks" aria-label="Sayfalar"><a href="index.html">Terminal</a><a href="league.html">Lig Kıyaslama</a><a href="portfolio-lab-beta.html" class="active" aria-current="page">Portföy Laboratuvarı</a><a href="settings.html">Ayarlar</a></nav><a href="index.html" class="back">← Terminale dön</a></div></header>
+  <main class="wrap">
+    <div class="heading"><div><h1>Portföy Laboratuvarı</h1><p>Bir coini çıkarmak, toplam portföy sonucunu değiştiriyor mu?</p></div><span class="beta">BETA · SALT OKUNUR</span></div>
+    <div class="layout">
+      <aside class="panel controls" aria-label="Analiz ayarları">
+        <div class="eyebrow">SENARYO AYARLARI</div><h2>Mevcut coinleri karşılaştır</h2>
+        <div class="field"><label for="days">Geçmiş dönem</label><select id="days"><option value="14">Son 14 gün</option><option value="30" selected>Son 30 gün</option><option value="60">Son 60 gün</option></select><small>Dönem, son tamamlanmış mumda biter.</small></div>
+        <div class="field"><label for="slotCount">Simülasyon slot sayısı</label><select id="slotCount"></select><small>Terminal ayarı başlangıçta seçilir; burada değiştirmek terminali etkilemez.</small></div>
+        <div class="cfg"><span>Başlangıç sermayesi</span><b id="baseValue">—</b></div><div class="cfg"><span>Komisyon</span><b id="feeValue">—</b></div>
+        <div class="coinbox"><h3>Analize alınacak aktif coinler <span class="tag" id="coinCount">0</span></h3><div class="chips" id="coinChips"></div></div>
+        <button class="run" id="runButton" type="button">Portföyü analiz et</button>
+        <div class="status" id="status" role="status" aria-live="polite">Terminaldeki kayıtlı coinler okunuyor…</div><div class="progress hidden" id="progress"><div id="progressFill"></div></div>
+        <p class="hint">Bu sayfa yalnızca mevcut ayarları okur. Gerçek pozisyonları, işlem geçmişini ve terminal ayarlarını değiştirmez.</p>
+      </aside>
+      <div class="results">
+        <div class="panel notice" id="intro"><strong>Başlamak için “Portföyü analiz et”e bas.</strong><br>Coinler aynı geçmiş dönem boyunca ortak bütçe ve slotlarla simüle edilir. Ardından her coin tek tek çıkarılıp sonuç yeniden hesaplanır.</div>
+        <div id="report" class="hidden results">
+          <div class="kpis">
+            <div class="panel kpi"><div class="label">Tüm coinlerle sonuç</div><div class="value" id="baselineReturn">—</div><div class="sub" id="baselineBalance">—</div></div>
+            <div class="panel kpi"><div class="label">Ortalama slot doluluğu</div><div class="value" id="baselineOccupancy">—</div><div class="sub" id="baselineOccupied">—</div></div>
+            <div class="panel kpi"><div class="label">Tamamlanan işlem</div><div class="value" id="baselineTrades">—</div><div class="sub" id="baselineBlocked">—</div></div>
+            <div class="panel kpi"><div class="label">En çok fark yaratan çıkarma</div><div class="value" id="bestRemoval">—</div><div class="sub" id="bestDelta">—</div></div>
+          </div>
+          <section class="panel section"><div class="sectiontitle"><div><h2>Coini çıkarınca ne değişiyor?</h2><p>Her satırda kalan coinler aynı tarih ve kurallarla baştan simüle edilir.</p></div></div>
+            <div class="tablewrap"><table class="compare"><thead><tr><th>Çıkarılan coin</th><th>Portföy getirisi</th><th>Fark</th><th>İşlem</th><th>Slot doluluğu</th><th>Kaçan sinyal</th></tr></thead><tbody id="compareRows"></tbody></table></div>
+            <div class="explain" id="readingHint"></div>
+          </section>
+          <section class="panel section"><div class="sectiontitle"><h2>Hesaplama notları</h2></div><div class="notegrid"><div><strong>Çakışmalar</strong>Sinyaller zaman sırasıyla değerlendirilir. Aynı anda gelirse alış RSI eşiğini en az aşan sinyal önce alınır; eşitlikte coin adı kullanılır.</div><div><strong>Getiri ve komisyon</strong>Her girişte sermaye slot sayısına bölünür. Terminalde komisyon açıksa alış ve satışta ayrı ayrı %0,075 hesaplanır.</div><div><strong>Dönem sonu</strong>Açık kalan pozisyonlar son tamamlanmış mum fiyatıyla varsayımsal kapatılarak karşılaştırılır; bu bir gerçek işlem değildir.</div><div><strong>Beta sınırları</strong>Gerçek ve manuel işlemler, alarm kararları, bekleme listesi, alış satış makası ve fiyat kayması bu analize dahil değildir.</div></div></section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script>
+    'use strict';
+    const $ = id => document.getElementById(id);
+    const INTERVAL_MS = { '5m':300000,'15m':900000,'30m':1800000,'1h':3600000,'4h':14400000 };
+    const money = n => '$' + Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    const pct = n => `${n>=0?'+':''}${n.toFixed(2)}%`;
+    const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    let config = null;
+
+    function readConfig() {
+      let raw;
+      try { raw=JSON.parse(localStorage.getItem('kuzgun_web_coins') || '[]'); } catch { raw=[]; }
+      const coins=Array.isArray(raw)?raw.filter(c=>c && c.isActive!==false && /^[A-Z0-9]{2,20}USDT$/.test(c.symbol || '') && INTERVAL_MS[c.interval] && Number.isInteger(Number(c.rsiLength)) && Number(c.rsiLength)>=2 && Number(c.rsiLength)<=50 && Number(c.buyRsi)>0 && Number(c.sellRsi)>Number(c.buyRsi) && Number(c.sellRsi)<=100 && Number(c.profitTarget)>0 && Number(c.monthlyCap)>0).map(c=>({symbol:c.symbol,name:c.displaySymbol || c.symbol.replace(/USDT$/,''),interval:c.interval,rsiLength:Number(c.rsiLength),buyRsi:Number(c.buyRsi),sellRsi:Number(c.sellRsi),profitTarget:Number(c.profitTarget),monthlyCap:Number(c.monthlyCap)})):[];
+      const balance=Number(localStorage.getItem('kuzgun_base_usd') || localStorage.getItem('kuzgun_user_balance') || 1000);
+      const slots=Number(localStorage.getItem('kuzgun_max_slots')) || 2;
+      return {coins,balance:Number.isFinite(balance)&&balance>0?balance:1000,slots:Math.min(12,Math.max(1,Math.floor(slots))),fees:localStorage.getItem('kuzgun_fee_deduction_enabled')!=='false',originalCount:Array.isArray(raw)?raw.filter(c=>c?.isActive!==false).length:0};
+    }
+
+    function loadConfig() {
+      config=readConfig();$('baseValue').textContent=money(config.balance);$('feeValue').textContent=config.fees?'Alış + satış %0,075':'Kapalı';
+      $('slotCount').innerHTML=Array.from({length:Math.max(4,config.slots)},(_,i)=>`<option value="${i+1}">${i+1} slot</option>`).join('');$('slotCount').value=String(config.slots);
+      $('coinCount').textContent=config.coins.length;
+      $('coinChips').innerHTML=config.coins.length?config.coins.map(c=>`<span class="chip" title="${esc(c.interval)} · RSI ${c.rsiLength}">${esc(c.name)} · ${esc(c.interval)}</span>`).join(''):'<span class="hint">Analiz edilecek uygun aktif coin yok.</span>';
+      if(!config.coins.length) $('status').textContent='Önce terminale geçerli, aktif coin ekle.';
+      else if(config.coins.length!==config.originalCount) $('status').textContent=`${config.coins.length} coin hazır; ${config.originalCount-config.coins.length} coin eksik veya desteklenmeyen ayarlı.`;
+      else $('status').textContent=`${config.coins.length} coin hazır.`;
+      $('runButton').disabled=!config.coins.length;
+    }
+
+    function rsiSeries(closes,period) {
+      const result=new Array(closes.length).fill(null);if(closes.length<=period)return result;
+      let gain=0,loss=0;for(let i=1;i<=period;i++){const d=closes[i]-closes[i-1];gain+=Math.max(0,d);loss+=Math.max(0,-d)}
+      gain/=period;loss/=period;result[period]=loss===0?100:100-100/(1+gain/loss);
+      for(let i=period+1;i<closes.length;i++){const d=closes[i]-closes[i-1];gain=(gain*(period-1)+Math.max(0,d))/period;loss=(loss*(period-1)+Math.max(0,-d))/period;result[i]=loss===0?100:100-100/(1+gain/loss)}return result;
+    }
+
+    function trMonth(time) {const d=new Date(time+10800000);return d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')}
+    async function getCandles(coin,start,end) {
+      const size=INTERVAL_MS[coin.interval],warmup=120*size;let cursor=Math.max(0,Math.floor((start-warmup)/size)*size),out=[];
+      const endpoints=['https://api.binance.com/api/v3/klines','https://data-api.binance.vision/api/v3/klines'];
+      while(cursor<end) {
+        let batch=null,lastError=null;
+        for(const ep of endpoints){const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
+          try {const url=`${ep}?symbol=${coin.symbol}&interval=${coin.interval}&startTime=${cursor}&endTime=${end-1}&limit=1000`;const response=await fetch(url,{signal:ctrl.signal});if(!response.ok)throw Error(`HTTP ${response.status}`);batch=await response.json();if(!Array.isArray(batch))throw Error('Geçersiz mum verisi');break}
+          catch(error){lastError=error}finally{clearTimeout(timer)}
+        }
+        if(!batch)throw Error(`${coin.name}: veri alınamadı (${lastError?.message||'bağlantı'}).`);
+        if(!batch.length)break;
+        for(const row of batch){const t=Number(row[0]),close=Number(row[4]),high=Number(row[2]);if(Number.isFinite(t)&&close>0&&high>0&&t+size<=end)out.push({t:t+size,close,high})}
+        const next=Number(batch.at(-1)[0])+size;if(next<=cursor)throw Error(`${coin.name}: mum verisi ilerlemiyor.`);cursor=next;
+        if(batch.length<1000)break;
+      }
+      out=Array.from(new Map(out.map(c=>[c.t,c])).values()).sort((a,b)=>a.t-b.t);
+      if(out.length<coin.rsiLength+15 || !out.some(c=>c.t>=start))throw Error(`${coin.name}: bu dönem için yeterli mum verisi yok.`);
+      return out;
+    }
+
+    function buildEvents(coin,candles,start,end) {
+      const rsis=rsiSeries(candles.map(c=>c.close),coin.rsiLength),events=[];
+      for(let i=coin.rsiLength+1;i<candles.length;i++){
+        const c=candles[i],r=rsis[i],prev=rsis[i-1];if(c.t<start||c.t>end||r===null||prev===null)continue;
+        events.push({t:c.t,symbol:coin.symbol,close:c.close,high:c.high,rsi:r,signal:prev<=coin.buyRsi&&r>coin.buyRsi,overshoot:r-coin.buyRsi});
+      }
+      return events;
+    }
+
+    function replay(coins,events,start,end,balance,slots,fees) {
+      const active=new Map(),monthly=new Map(),selected=new Map(coins.map(c=>[c.symbol,c]));
+      let equity=balance,trades=0,blocked=0,signals=0,slotMs=0,lastTime=start;
+      const timeline=events.filter(e=>selected.has(e.symbol)).sort((a,b)=>a.t-b.t||a.symbol.localeCompare(b.symbol));
+      let i=0;while(i<timeline.length){const t=timeline[i].t;if(t>end)break;
+        slotMs+=active.size*Math.max(0,t-lastTime);lastTime=t;
+        let j=i+1;while(j<timeline.length&&timeline[j].t===t)j++;
+        const group=timeline.slice(i,j);
+        for(const e of group){const pos=active.get(e.symbol);if(!pos||pos.time>=t)continue;const c=selected.get(e.symbol),target=pos.entry*(1+c.profitTarget/100);
+          if(e.high<target&&e.rsi<c.sellRsi)continue;
+          const exit=e.high>=target?target:e.close,gross=(exit/pos.entry-1)*100;
+          const fee=fees?pos.budget*.00075+pos.budget*(exit/pos.entry)*.00075:0;
+          equity+=pos.budget*gross/100-fee;
+          const key=e.symbol+'|'+trMonth(t);monthly.set(key,(monthly.get(key)||0)+gross);
+          active.delete(e.symbol);trades++;
+        }
+        const incoming=group.filter(e=>e.signal&&!active.has(e.symbol)).sort((a,b)=>a.overshoot-b.overshoot||a.symbol.localeCompare(b.symbol));
+        for(const e of incoming){const c=selected.get(e.symbol);if((monthly.get(e.symbol+'|'+trMonth(t))||0)+.001>=c.monthlyCap)continue;
+          signals++;if(active.size>=slots){blocked++;continue}
+          active.set(e.symbol,{entry:e.close,time:t,budget:Math.max(0,equity)/slots});
+        }
+        i=j;
+      }
+      slotMs+=active.size*Math.max(0,end-lastTime);
+      let floating=0;for(const [symbol,pos] of active){const candle=timeline.findLast(e=>e.symbol===symbol&&e.t<=end);if(!candle)continue;
+        const ratio=candle.close/pos.entry;floating+=pos.budget*(ratio-1)-(fees?pos.budget*.00075+pos.budget*ratio*.00075:0);
+      }
+      const finish=equity+floating;
+      return {balance:finish,returnPct:(finish/balance-1)*100,trades,blocked,signals,occupancy:slotMs/((end-start)*slots)*100,open:active.size};
+    }
+
+    function renderReport(base,variants,periodStart,periodEnd) {
+      $('intro').classList.add('hidden');$('report').classList.remove('hidden');
+      $('baselineReturn').textContent=pct(base.returnPct);$('baselineReturn').className='value '+(base.returnPct>=0?'good':'bad');
+      $('baselineBalance').textContent=money(base.balance)+' · tahmini dönem sonu';
+      $('baselineOccupancy').textContent=base.occupancy.toFixed(1)+'%';$('baselineOccupied').textContent=base.open+' açık pozisyon · dönem sonunda';
+      $('baselineTrades').textContent=base.trades;$('baselineBlocked').textContent=base.blocked+' sinyal slot dolu olduğu için kaçtı';
+      const rows=variants.map(({coin,result})=>({coin,result,difference:result.balance-base.balance})).sort((a,b)=>b.difference-a.difference);
+      const best=rows[0];$('bestRemoval').textContent=best?.difference>0?best.coin.name:'Yok';$('bestDelta').textContent=best?.difference>0?`+${money(best.difference)} tahmini fark`:'Çıkarma senaryoları getiriyi artırmadı';
+      $('compareRows').innerHTML=rows.map(({coin,result,difference})=>`<tr><td><span class="name">${esc(coin.name)}</span><div class="micro">${esc(coin.interval)} · RSI ${coin.rsiLength}</div></td><td>${pct(result.returnPct)}</td><td class="${difference>0?'good':difference<0?'bad':'neutral'}"><b>${difference>=0?'+':'−'}${money(Math.abs(difference))}</b><div class="micro">${difference>=0?'+':''}${(result.returnPct-base.returnPct).toFixed(2)} puan</div></td><td>${result.trades}</td><td>${result.occupancy.toFixed(1)}%</td><td>${result.blocked}</td></tr>`).join('');
+      $('readingHint').textContent=`Karşılaştırma dönemi: ${new Date(periodStart).toLocaleDateString('tr-TR')} – ${new Date(periodEnd).toLocaleString('tr-TR')}. Pozitif fark, o coin çıkarıldığında bu dönemin tahmini portföy değerinin yükseldiğini gösterir; gelecekte de aynı sonucun alınacağını göstermez.`;
+    }
+
+    async function run() {
+      config=readConfig();if(!config.coins.length){loadConfig();return}
+      const days=Number($('days').value),slots=Number($('slotCount').value),button=$('runButton');
+      if(!Number.isFinite(slots)||slots<1||slots>12)return;
+      const end=Math.floor(Date.now()/60000)*60000,start=end-days*86400000;
+      button.disabled=true;$('progress').classList.remove('hidden');$('progressFill').style.width='0%';$('status').textContent='Binance mum verileri yükleniyor…';$('report').classList.add('hidden');$('intro').classList.remove('error');$('intro').classList.remove('hidden');
+      try {
+        const all=[];
+        for(let i=0;i<config.coins.length;i++){
+          const c=config.coins[i];$('status').textContent=`${i+1}/${config.coins.length} · ${c.name} geçmişi yükleniyor…`;
+          const candles=await getCandles(c,start,end);all.push({coin:c,candles});$('progressFill').style.width=`${Math.round((i+1)/config.coins.length*78)}%`;
+          await new Promise(resolve=>setTimeout(resolve,0));
+        }
+        // Her coinin son tamamlanmış mumundan eski olanı ortak dönem sonu kabul edilir.
+        const commonEnd=Math.min(...all.map(x=>x.candles.at(-1).t));
+        if(commonEnd<=start)throw Error('Coinlerin ortak analiz dönemi bulunamadı.');
+        const events=all.flatMap(x=>buildEvents(x.coin,x.candles,start,commonEnd));
+        events.sort((a,b)=>a.t-b.t||a.symbol.localeCompare(b.symbol));
+        $('status').textContent='Portföy ve çıkarma senaryoları hesaplanıyor…';
+        await new Promise(resolve=>setTimeout(resolve,0));
+        const base=replay(config.coins,events,start,commonEnd,config.balance,slots,config.fees),variants=[];
+        for(let i=0;i<config.coins.length;i++){
+          const coin=config.coins[i],remaining=config.coins.filter(c=>c.symbol!==coin.symbol);
+          variants.push({coin,result:replay(remaining,events,start,commonEnd,config.balance,slots,config.fees)});
+          $('progressFill').style.width=`${78+Math.round((i+1)/config.coins.length*22)}%`;
+          await new Promise(resolve=>setTimeout(resolve,0));
+        }
+        renderReport(base,variants,start,commonEnd);$('status').textContent=`Tamamlandı · ${config.coins.length} coin · ${new Date(commonEnd).toLocaleString('tr-TR')}`;
+      } catch(err){$('status').textContent='Analiz tamamlanamadı.';$('intro').classList.add('error');$('intro').classList.remove('hidden');$('intro').textContent=err?.message||'Beklenmeyen hata. Sayfayı yenileyip tekrar dene.';
+      }finally{button.disabled=false;$('progress').classList.add('hidden')}
+    }
+    $('runButton').addEventListener('click',run);
+    loadConfig();
+  </script>
+</body>
+</html>
