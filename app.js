@@ -2654,7 +2654,7 @@ function recalculateFullPortfolio() {
     const inactiveSymbols = new Set(KZ_STATE.coins.filter(c => c.isActive === false).map(c => c.symbol));
 
     (KZ_STATE.closedTrades || []).forEach(t => {
-        if (inactiveCoinIds.has(t.coinId) || inactiveSymbols.has(t.symbol)) return;
+        // Coin sonradan kapatılsa da gerçekleşmiş işlem geçmişte kalır.
         allRawTrades.push({
             id: t.id,
             coinId: t.coinId,

@@ -4,12 +4,11 @@ const PortfolioEngine = {
     filterTradesBySlotCapacity(rawTrades, maxSlots, activePositions = []) {
         if (!maxSlots || maxSlots <= 0 || !rawTrades || rawTrades.length === 0) return rawTrades;
 
-        // İşlemleri giriş zamanına göre kronolojik sırala (Eskiden yeniye)
-        const sorted = [...rawTrades].sort((a, b) => a.entryTime - b.entryTime);
+        // Aynı anda başlayan gerçek işlemler, simüle işlemlerden önce değerlendirilir.
+        const sorted = [...rawTrades].sort((a, b) => a.entryTime - b.entryTime ||
+            (b.source === 'manual' || b.source === 'automatic') - (a.source === 'manual' || a.source === 'automatic'));
         const slotsCount = Math.max(1, maxSlots);
-
-        // Her slotun ne zaman boşa çıkacağını tutan zaman dizisi (milisaniye)
-        const slotFreeTimes = new Array(slotsCount).fill(0);
+        const occupied = [];
 
         // Açık pozisyonlar bugünkü slot durumudur; geçmiş simülasyonun başından
         // itibaren slotu dolu sayılmaz. Canlı slot sınırı sinyal motorunda ayrıca
@@ -20,28 +19,33 @@ const PortfolioEngine = {
         for (let i = 0; i < sorted.length; i++) {
             const trade = sorted[i];
             const entry = trade.entryTime;
-            // Mum periyodu kadar slotu meşgul tutar
             const exit = Math.max(trade.exitTime, trade.entryTime + 60000);
+            const isReal = trade.source === 'manual' || trade.source === 'automatic';
 
-            // Giriş anında boşa çıkmış olan ilk slotu ara
-            let freeSlotIdx = -1;
-            for (let s = 0; s < slotsCount; s++) {
-                if (slotFreeTimes[s] <= entry) {
-                    freeSlotIdx = s;
-                    break;
+            for (let s = occupied.length - 1; s >= 0; s--) {
+                if (occupied[s].exit <= entry) occupied.splice(s, 1);
+            }
+
+            if (occupied.length >= slotsCount && isReal) {
+                // Geçmişte gerçekten açılmış işlem, çakışan bir simülasyon
+                // yüzünden kayıttan veya portföy hesabından silinemez.
+                const simulatedIndex = occupied.findIndex(item => !item.isReal);
+                if (simulatedIndex !== -1) {
+                    occupied[simulatedIndex].accepted.active = false;
+                    occupied.splice(simulatedIndex, 1);
                 }
             }
 
-            // Boş slot varsa işleme girilir ve o slot çıkış anına kadar meşgul edilir
-            if (freeSlotIdx !== -1) {
-                slotFreeTimes[freeSlotIdx] = exit;
-                acceptedTrades.push(trade);
+            if (isReal || occupied.length < slotsCount) {
+                const accepted = { trade, active: true };
+                acceptedTrades.push(accepted);
+                occupied.push({ exit, isReal, accepted });
             }
-            // Slotların tümü doluysa bu işlem elenir (Kasaya yazılmaz)
         }
 
         // En güncel işlem en üstte olacak şekilde sırala
-        return acceptedTrades.sort((a, b) => b.exitTime - a.exitTime);
+        return acceptedTrades.filter(item => item.active).map(item => item.trade)
+            .sort((a, b) => b.exitTime - a.exitTime);
     },
 
     // 2. BİLEŞİK BAKİYE & KOMİSYON MOTORU
