@@ -1483,10 +1483,10 @@ function renderActivePositionsList() {
         const entryDate = formatShortDate(pos.entryTime || Date.now());
 
         return `
-            <div class="bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 rounded-lg p-2.5 space-y-2">
+            <div class="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2.5 shadow-sm">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-xs text-slate-900 dark:text-white">${pos.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-800">%${pos.profitTarget.toFixed(1)} TP</span>${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
-                    <span id="active-pos-pnl-${pos.id}" class="font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)</span>
+                    <span class="font-extrabold text-sm text-slate-900 dark:text-white">${pos.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-800">%${pos.profitTarget.toFixed(1)} TP</span>${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
+                    <span id="active-pos-pnl-${pos.id}" class="font-extrabold text-sm tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)</span>
                 </div>
                 <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/90 p-2 rounded border border-slate-100 dark:border-slate-700/60">
                     <div class="flex items-center gap-1">Giriş: <span class="text-slate-800 dark:text-slate-200 font-medium">${formatCryptoPrice(pos.entryPrice)}</span>
@@ -1519,7 +1519,7 @@ function updateActivePositionsLive() {
         const priceEl = document.getElementById(`active-pos-price-${pos.id}`);
         if (pnlEl) {
             pnlEl.textContent = `${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)`;
-            pnlEl.className = `font-semibold text-xs tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+            pnlEl.className = `font-extrabold text-sm tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
         }
         if (priceEl) priceEl.textContent = formatCryptoPrice(currentPrice);
     });
@@ -1950,11 +1950,11 @@ function updateLivePortfolioQuick() {
 
         if (elTfUsd) {
             elTfUsd.textContent = `${liveGainUsd >= 0 ? '+' : ''}${fmtUsd(liveGainUsd)}`;
-            elTfUsd.className = `text-xl font-black tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+            elTfUsd.className = `text-lg font-black tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
         }
         if (elTfTry) {
             elTfTry.textContent = `(${liveGainUsd >= 0 ? '+' : ''}${fmtTry(liveGainTry)})`;
-            elTfTry.className = `text-xs font-bold tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
+            elTfTry.className = `text-[11px] font-bold tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
         }
         if (elTfCapital) elTfCapital.textContent = `Ana Paraya: ${liveCapitalPnl >= 0 ? '+' : ''}${liveCapitalPnl.toFixed(2)}%`;
     }
@@ -2780,12 +2780,12 @@ function renderPortfolioShowcaseUI(engineResult, tfStats) {
 
     if (elTfUsd) {
         elTfUsd.textContent = `${tfStats.usdtGain >= 0 ? '+' : ''}${fmtUsd(tfStats.usdtGain)}`;
-        elTfUsd.className = `text-xl font-black tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+        elTfUsd.className = `text-lg font-black tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
     }
 
     if (elTfTry) {
         elTfTry.textContent = `(${tfStats.usdtGain >= 0 ? '+' : ''}${fmtTry(gainTry)})`;
-        elTfTry.className = `text-xs font-bold tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
+        elTfTry.className = `text-[11px] font-bold tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
     }
 
     if (elTfDirect) {

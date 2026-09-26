@@ -79,6 +79,7 @@
         html.oled ::-webkit-scrollbar-track { background: #000000 !important; }
         html.oled ::-webkit-scrollbar-thumb { background: #262626 !important; }
         html.oled ::-webkit-scrollbar-thumb:hover { background: #333333 !important; }
+        html.oled #livePositionsPanel { background: #000000 !important; border-color: #065f46 !important; }
     </style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
@@ -201,58 +202,58 @@
     <!-- 2️⃣ ANA ÇALIŞMA ALANI -->
     <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-5 space-y-4">
 
-        <!-- 🌟 BİLEŞİK PORTFÖY & FİNANSAL VİTRİN KARTI (Swift ile Birebir) -->
-        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 transition-colors">
-            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <!-- BİLEŞİK PORTFÖY: ÖZET ÖNDE, AYRINTILAR İSTEĞE BAĞLI -->
+        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl px-4 py-3 shadow-sm space-y-2.5 transition-colors">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-5">
                 
                 <!-- SOL: DOLAR BAKİYESİ & CANLI TL -->
-                <div class="space-y-1">
+                <div class="space-y-0.5">
                     <div class="flex items-center space-x-2">
                         <span class="text-[10px] font-black tracking-wider uppercase text-slate-400 dark:text-slate-500">BİLEŞİK PORTFÖY</span>
                         <span id="dashboardSlotBadge" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/60">0/2 SLOT</span>
                     </div>
-                    <div class="flex items-baseline space-x-2">
-                        <span id="dashCompoundedUsd" class="text-3xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">$1,000.00</span>
-                        <span class="text-xs font-bold text-slate-400">USD</span>
-                    </div>
-                    <div class="flex items-center space-x-1.5 text-xs text-slate-500 font-semibold tabular-nums">
-                        <span>≈</span>
-                        <span id="dashCompoundedTry">₺36,500.00 TRY</span>
+                    <div class="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                        <span id="dashCompoundedUsd" class="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tight">$1,000.00</span>
+                        <span class="text-[11px] font-bold text-slate-400">USD</span>
+                        <span id="dashCompoundedTry" class="text-[11px] text-slate-500 dark:text-slate-400 font-semibold tabular-nums">≈ ₺36,500.00 TRY</span>
                     </div>
                 </div>
 
                 <!-- SAĞ: SEÇİLİ ZAMAN DİLİMİ KAZANÇ VERİLERİ -->
-                <div class="flex flex-col md:items-end space-y-1.5">
+                <div class="flex flex-col md:items-end space-y-0.5">
                     <span id="dashTimeframeLabel" class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sermaye Başlangıcından Beri</span>
                     
                     <div class="flex items-baseline space-x-2">
-                        <span id="dashTfUsdGain" class="text-xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">+$0.00</span>
-                        <span id="dashTfTryGain" class="text-xs font-bold text-emerald-600/80 dark:text-emerald-400/80 tabular-nums">(+₺0.00)</span>
-                    </div>
-
-                    <div class="flex flex-wrap items-center gap-1.5 text-[10px] font-bold">
-                        <span id="dashTfDirectPnl" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">Brüt Getiri: +%0.00</span>
-                        <span id="dashTfNetPnl" class="px-2 py-0.5 rounded bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800">Net Getiri: +%0.00</span>
-                        <span id="dashTfCapitalPnl" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">Ana Paraya: +%0.00</span>
-                        <span id="dashTfFeesBadge" class="hidden px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">Komisyon: -$0.00</span>
+                        <span id="dashTfUsdGain" class="text-lg font-black text-emerald-600 dark:text-emerald-400 tabular-nums">+$0.00</span>
+                        <span id="dashTfTryGain" class="text-[11px] font-bold text-emerald-600/80 dark:text-emerald-400/80 tabular-nums">(+₺0.00)</span>
                     </div>
                 </div>
             </div>
 
             <!-- DİNAMİK ZAMAN DİLİMİ BUTONLARI -->
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                <div class="flex items-center space-x-1.5 overflow-x-auto pb-1" id="timeframeButtonGroup">
-                    <button onclick="changePortfolioTimeframe('sinceStart')" data-tf="sinceStart" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 text-white shadow-sm transition shrink-0">Başlangıçtan Beri</button>
-                    <button onclick="changePortfolioTimeframe('today')" data-tf="today" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bugün</button>
-                    <button onclick="changePortfolioTimeframe('week')" data-tf="week" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Hafta</button>
-                    <button onclick="changePortfolioTimeframe('month')" data-tf="month" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Ay</button>
-                    <button onclick="changePortfolioTimeframe('selectMonth')" data-tf="selectMonth" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Ay Seç</button>
-                    <button onclick="openCustomDateRangeModal()" data-tf="custom" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Özel Aralık</button>
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
+                <div class="flex items-center space-x-1.5 overflow-x-auto" id="timeframeButtonGroup">
+                    <button onclick="changePortfolioTimeframe('sinceStart')" data-tf="sinceStart" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white shadow-sm transition shrink-0">Başlangıçtan Beri</button>
+                    <button onclick="changePortfolioTimeframe('today')" data-tf="today" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bugün</button>
+                    <button onclick="changePortfolioTimeframe('week')" data-tf="week" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Hafta</button>
+                    <button onclick="changePortfolioTimeframe('month')" data-tf="month" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Bu Ay</button>
+                    <button onclick="changePortfolioTimeframe('selectMonth')" data-tf="selectMonth" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Ay Seç</button>
+                    <button onclick="openCustomDateRangeModal()" data-tf="custom" class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 transition shrink-0">Özel Aralık</button>
                 </div>
 
                 <!-- "Ay Seç" Tıklandığında Açılan Ay Butonları -->
                 <div id="subMonthPills" class="hidden flex items-center space-x-1.5 overflow-x-auto pt-1 pb-1"></div>
             </div>
+
+            <details class="group border-t border-slate-100 dark:border-slate-800 pt-1.5">
+                <summary class="w-fit cursor-pointer select-none text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 rounded">Getiri ve komisyon ayrıntıları</summary>
+                <div class="flex flex-wrap items-center gap-1.5 pt-2 text-[10px] font-bold">
+                    <span id="dashTfDirectPnl" class="px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">Brüt Getiri: +%0.00</span>
+                    <span id="dashTfNetPnl" class="px-2 py-0.5 rounded bg-teal-50 dark:bg-teal-950/50 text-teal-600 dark:text-teal-400 border border-teal-200 dark:border-teal-800">Net Getiri: +%0.00</span>
+                    <span id="dashTfCapitalPnl" class="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">Ana Paraya: +%0.00</span>
+                    <span id="dashTfFeesBadge" class="hidden px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">Komisyon: -$0.00</span>
+                </div>
+            </details>
         </section>
 
         <!-- KARTLAR VE SAĞ KONSOL GRİDİ -->
@@ -281,18 +282,18 @@
 
             <!-- SAĞ KONSOL: SWIFT EŞDEĞERİ YENİ SON İŞLEMLER PANELİ -->
             <aside class="xl:col-span-3 space-y-3.5">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3 transition-colors">
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
+                <div id="livePositionsPanel" class="bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 border-2 border-emerald-400 dark:border-emerald-700 rounded-2xl p-4 shadow-lg shadow-emerald-900/10 dark:shadow-emerald-950/30 space-y-3 transition-colors">
+                    <div class="flex items-center justify-between border-b border-emerald-200/70 dark:border-emerald-800/80 pb-2.5">
                         <div class="flex items-center space-x-2">
-                            <span class="flex h-2 w-2 relative">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                            <span class="flex h-2.5 w-2.5 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
                             </span>
-                            <h2 class="text-xs font-semibold tracking-tight text-slate-800 dark:text-slate-100">Canlı Pozisyonlar</h2>
+                            <h2 class="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white">Canlı Pozisyonlar</h2>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="openManualPositionModal()" class="w-6 h-6 inline-flex items-center justify-center rounded-md bg-blue-600 hover:bg-blue-500 text-white text-base font-medium leading-none shadow-sm transition" title="Manuel pozisyon ekle" aria-label="Manuel pozisyon ekle">+</button>
-                            <span id="activePositionsCountBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 border border-blue-100 dark:border-blue-900">0 / 2 Slot</span>
+                            <button type="button" onclick="openManualPositionModal()" class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-medium leading-none shadow-sm transition" title="Manuel pozisyon ekle" aria-label="Manuel pozisyon ekle">+</button>
+                            <span id="activePositionsCountBadge" class="text-[11px] font-bold px-2 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">0 / 2 Slot</span>
                         </div>
                     </div>
                     <div id="activePositionsList" class="space-y-2"></div>
@@ -626,6 +627,6 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=7"></script>
-    <script src="app.js?v=32"></script>
+    <script src="app.js?v=33"></script>
 </body>
 </html>
