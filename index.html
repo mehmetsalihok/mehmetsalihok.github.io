@@ -46,6 +46,17 @@
         .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
         .price-transition { transition: color 0.35s ease-out; }
 
+        .position-card { background: #fff; transition: background-color .2s, border-color .2s; }
+        .position-card[data-state="profit"] { --position-color: #047857; background: #ecfdf5; border-color: #6ee7b7; }
+        .position-card[data-state="loss"] { --position-color: #be123c; background: #fff1f2; border-color: #fda4af; }
+        .position-card[data-state="entry"] { --position-color: #c2410c; background: #fff7ed; border-color: #fdba74; }
+        .position-current, .position-pnl, .position-state-badge { color: var(--position-color); }
+        .position-state-badge { background: rgba(255,255,255,.75); border: 1px solid currentColor; }
+        .dark .position-card[data-state="profit"] { --position-color: #34d399; background: #052e25; border-color: #047857; }
+        .dark .position-card[data-state="loss"] { --position-color: #fb7185; background: #3b121d; border-color: #be123c; }
+        .dark .position-card[data-state="entry"] { --position-color: #fb923c; background: #3b220d; border-color: #c2410c; }
+        .dark .position-state-badge { background: rgba(0,0,0,.3); }
+
         /* 🌑 SAF OLED SİYAH MOTORU */
         html.oled, 
         html.oled body {
@@ -79,7 +90,8 @@
         html.oled ::-webkit-scrollbar-track { background: #000000 !important; }
         html.oled ::-webkit-scrollbar-thumb { background: #262626 !important; }
         html.oled ::-webkit-scrollbar-thumb:hover { background: #333333 !important; }
-        html.oled #livePositionsPanel { background: #000000 !important; border-color: #065f46 !important; }
+        html.oled #livePositionsPanel { background: #000000 !important; border-color: #1e40af !important; }
+        html.oled .position-card { background: #000000 !important; }
     </style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
@@ -282,18 +294,18 @@
 
             <!-- SAĞ KONSOL: SWIFT EŞDEĞERİ YENİ SON İŞLEMLER PANELİ -->
             <aside class="xl:col-span-3 space-y-3.5">
-                <div id="livePositionsPanel" class="bg-gradient-to-br from-emerald-50 via-white to-white dark:from-emerald-950/40 dark:via-slate-900 dark:to-slate-900 border-2 border-emerald-400 dark:border-emerald-700 rounded-2xl p-4 shadow-lg shadow-emerald-900/10 dark:shadow-emerald-950/30 space-y-3 transition-colors">
-                    <div class="flex items-center justify-between border-b border-emerald-200/70 dark:border-emerald-800/80 pb-2.5">
+                <div id="livePositionsPanel" class="bg-white dark:bg-slate-900 border-2 border-blue-300 dark:border-blue-800 rounded-2xl p-4 shadow-lg shadow-blue-900/10 dark:shadow-blue-950/30 space-y-3 transition-colors">
+                    <div class="flex items-center justify-between border-b border-blue-100 dark:border-blue-900 pb-2.5">
                         <div class="flex items-center space-x-2">
                             <span class="flex h-2.5 w-2.5 relative">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
-                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-600"></span>
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-60"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600"></span>
                             </span>
                             <h2 class="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white">Canlı Pozisyonlar</h2>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="openManualPositionModal()" class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-lg font-medium leading-none shadow-sm transition" title="Manuel pozisyon ekle" aria-label="Manuel pozisyon ekle">+</button>
-                            <span id="activePositionsCountBadge" class="text-[11px] font-bold px-2 py-1 rounded-md bg-emerald-100 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">0 / 2 Slot</span>
+                            <button type="button" onclick="openManualPositionModal()" class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-lg font-medium leading-none shadow-sm transition" title="Manuel pozisyon ekle" aria-label="Manuel pozisyon ekle">+</button>
+                            <span id="activePositionsCountBadge" class="text-[11px] font-bold px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">0 / 2 Slot</span>
                         </div>
                     </div>
                     <div id="activePositionsList" class="space-y-2"></div>
@@ -627,6 +639,6 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=7"></script>
-    <script src="app.js?v=33"></script>
+    <script src="app.js?v=34"></script>
 </body>
 </html>

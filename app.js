@@ -1466,6 +1466,15 @@ function updateCardTablesOnly(coin) {
     }
 }
 
+function positionPriceState(currentPrice, entryPrice) {
+    return currentPrice > entryPrice ? 'profit' : currentPrice < entryPrice ? 'loss' : 'entry';
+}
+
+function formatPositionPnl(pnlUsd, pnlPercent) {
+    const sign = pnlUsd > 0 ? '+' : pnlUsd < 0 ? '-' : '';
+    return `${sign}${fmtUsd(Math.abs(pnlUsd))} (${pnlPercent > 0 ? '+' : ''}${pnlPercent.toFixed(2)}%)`;
+}
+
 function renderActivePositionsList() {
     if (!elActivePositionsCountBadge || !elActivePositionsList) return;
     elActivePositionsCountBadge.textContent = `${KZ_STATE.activePositions.length} / ${KZ_STATE.maxSlots} Slot`;
@@ -1479,27 +1488,33 @@ function renderActivePositionsList() {
         const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
         const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
         const pnlUsd = pos.allocatedUsd * (pnl / 100);
-        const isWin = pnl >= 0;
+        const state = positionPriceState(currentPrice, pos.entryPrice);
+        const stateLabel = { profit: 'KÂRDA', loss: 'ZARARDA', entry: 'GİRİŞ FİYATINDA' }[state];
         const entryDate = formatShortDate(pos.entryTime || Date.now());
 
         return `
-            <div class="bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 rounded-xl p-3 space-y-2.5 shadow-sm">
-                <div class="flex items-center justify-between">
-                    <span class="font-extrabold text-sm text-slate-900 dark:text-white">${pos.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-semibold border border-blue-200 dark:border-blue-800">%${pos.profitTarget.toFixed(1)} TP</span>${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
-                    <span id="active-pos-pnl-${pos.id}" class="font-extrabold text-sm tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)</span>
+            <div id="active-pos-card-${pos.id}" data-state="${state}" class="position-card border-2 rounded-xl p-3 space-y-2.5 shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                    <span class="font-extrabold text-sm text-slate-900 dark:text-white">${pos.displaySymbol}${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
+                    <span id="active-pos-state-${pos.id}" class="position-state-badge text-[10px] font-black px-2 py-0.5 rounded-md">${stateLabel}</span>
                 </div>
-                <div class="grid grid-cols-2 gap-1.5 text-[10px] text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800/90 p-2 rounded border border-slate-100 dark:border-slate-700/60">
-                    <div class="flex items-center gap-1">Giriş: <span class="text-slate-800 dark:text-slate-200 font-medium">${formatCryptoPrice(pos.entryPrice)}</span>
-                        <button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="p-0.5 rounded text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">
-                            <svg class="w-3 h-3 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 15l-1 4 4-1 8.5-8.5a2.5 2.5 0 10-3.536-3.536L8.5 14.464 9 15z"></path></svg>
-                        </button>
+                <div class="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 border-b border-slate-200/70 dark:border-slate-700/70 pb-2">
+                    <div class="min-w-0">
+                        <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anlık fiyat</div>
+                        <div id="active-pos-price-${pos.id}" class="position-current text-xl font-black tabular-nums break-all">${formatCryptoPrice(currentPrice)}</div>
                     </div>
-                    <div>Hedef: <span class="text-emerald-600 dark:text-emerald-400 font-medium">${formatCryptoPrice(pos.targetPrice)}</span></div>
-                    <div>Anlık: <span id="active-pos-price-${pos.id}" class="text-slate-900 dark:text-white font-medium">${formatCryptoPrice(currentPrice)}</span></div>
-                    <div>Bütçe: <span class="text-slate-800 dark:text-slate-200 font-medium">${fmtUsd(pos.allocatedUsd)}</span></div>
-                    <div class="col-span-2 pt-1 border-t border-slate-100 dark:border-slate-700/60">Giriş zamanı: <span class="text-slate-800 dark:text-slate-200 font-semibold tabular-nums">${entryDate}</span></div>
+                    <div class="min-w-0 sm:text-right xl:text-left 2xl:text-right">
+                        <div class="text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">Anlık kâr / zarar</div>
+                        <div id="active-pos-pnl-${pos.id}" class="position-pnl text-sm font-extrabold tabular-nums">${formatPositionPnl(pnlUsd, pnl)}</div>
+                    </div>
                 </div>
-                <button onclick="closePosition('${pos.id}')" class="w-full py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-medium border border-slate-200 dark:border-slate-700 transition cursor-pointer">Pozisyonu Kapat</button>
+                <div class="grid grid-cols-2 gap-2 text-[10px]">
+                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Giriş fiyatı</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatCryptoPrice(pos.entryPrice)}</span><button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="ml-1 px-1 rounded text-blue-600 dark:text-blue-400 hover:underline" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">Düzenle</button></div>
+                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Hedef çıkış · %${pos.profitTarget.toFixed(1)}</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatCryptoPrice(pos.targetPrice)}</span></div>
+                    <div><span class="block text-slate-500 dark:text-slate-400">Pozisyon bütçesi</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${fmtUsd(pos.allocatedUsd)}</span></div>
+                    <div><span class="block text-slate-500 dark:text-slate-400">Giriş zamanı</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${entryDate}</span></div>
+                </div>
+                <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition cursor-pointer">Pozisyonu Kapat</button>
             </div>`;
     }).join('');
 }
@@ -1510,16 +1525,19 @@ function updateActivePositionsLive() {
         const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
         const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
         const pnlUsd = pos.allocatedUsd * (pnl / 100);
-        const isWin = pnl >= 0;
+        const state = positionPriceState(currentPrice, pos.entryPrice);
 
         pos.livePnlPercent = pnl;
         pos.livePnlUsd = pnlUsd;
 
         const pnlEl = document.getElementById(`active-pos-pnl-${pos.id}`);
         const priceEl = document.getElementById(`active-pos-price-${pos.id}`);
+        const cardEl = document.getElementById(`active-pos-card-${pos.id}`);
+        const stateEl = document.getElementById(`active-pos-state-${pos.id}`);
+        if (cardEl) cardEl.dataset.state = state;
+        if (stateEl) stateEl.textContent = { profit: 'KÂRDA', loss: 'ZARARDA', entry: 'GİRİŞ FİYATINDA' }[state];
         if (pnlEl) {
-            pnlEl.textContent = `${isWin ? '+' : ''}${fmtUsd(pnlUsd)} (${isWin ? '+' : ''}${pnl.toFixed(2)}%)`;
-            pnlEl.className = `font-extrabold text-sm tabular-nums ${isWin ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+            pnlEl.textContent = formatPositionPnl(pnlUsd, pnl);
         }
         if (priceEl) priceEl.textContent = formatCryptoPrice(currentPrice);
     });
