@@ -457,7 +457,8 @@ function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = D
     };
 
     if (!options.isTest) {
-        sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (${signalMode})</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Sinyal Fiyatı:</b> ${formatCryptoPrice(triggerPrice || coin.price)}\n<b>RSI:</b> ${Number(triggerRsi || coin.rsi).toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}\n<b>Karar Penceresi:</b> ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}`);
+        const targetExitPrice = signal.triggerPrice * (1 + signal.profitTarget / 100);
+        sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (${signalMode})</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Sinyal Fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Hedef Çıkış Fiyatı:</b> ${formatCryptoPrice(targetExitPrice)}\n<b>Hedef Kâr:</b> %${signal.profitTarget.toFixed(2)}\n<b>Sinyal Zamanı:</b> ${formatShortDate(signal.time)}\n<b>RSI:</b> ${signal.triggerRsi.toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}\n<b>Karar Penceresi:</b> ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}`);
         if (localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false') {
             const result = tryOpenBuySignalPosition(signal, true);
             if (result === 'full' || result === 'stale') addBuySignalToPending(signal);
