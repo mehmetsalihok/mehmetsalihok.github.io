@@ -435,6 +435,11 @@ function tryOpenBuySignalPosition(signal, useCurrentPrice = false) {
     return openPosition(coin, entryPrice, useCurrentPrice ? Date.now() : signal.time) ? 'opened' : 'blocked';
 }
 
+function buildBuySignalTelegramMessage(signal, isTest = false) {
+    const targetExitPrice = signal.triggerPrice * (1 + signal.profitTarget / 100);
+    return `${isTest ? '🧪 <b>TEST — ' : '🟢 <b>'}ALIM SİNYALİ (${signal.mode})</b>\n\n<b>Coin:</b> #${signal.displaySymbol}\n<b>Sinyal Fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Hedef Çıkış Fiyatı:</b> ${formatCryptoPrice(targetExitPrice)}\n<b>Hedef Kâr:</b> %${signal.profitTarget.toFixed(2)}\n<b>Sinyal Zamanı:</b> ${formatShortDate(signal.time)}\n<b>RSI:</b> ${signal.triggerRsi.toFixed(1)}\n<b>Zaman Dilimi:</b> ${signal.interval}\n<b>Karar Penceresi:</b> ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}${isTest ? '\n\nBu bir test mesajıdır; pozisyon açılmadı.' : ''}`;
+}
+
 function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli', options = {}) {
     if (!coin) return;
     if (!options.isTest && (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol)) return;
@@ -457,8 +462,7 @@ function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = D
     };
 
     if (!options.isTest) {
-        const targetExitPrice = signal.triggerPrice * (1 + signal.profitTarget / 100);
-        sendTelegramAlert(`🟢 <b>ALIM SİNYALİ (${signalMode})</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Sinyal Fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Hedef Çıkış Fiyatı:</b> ${formatCryptoPrice(targetExitPrice)}\n<b>Hedef Kâr:</b> %${signal.profitTarget.toFixed(2)}\n<b>Sinyal Zamanı:</b> ${formatShortDate(signal.time)}\n<b>RSI:</b> ${signal.triggerRsi.toFixed(1)}\n<b>Zaman Dilimi:</b> ${coin.interval}\n<b>Karar Penceresi:</b> ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}`);
+        sendTelegramAlert(buildBuySignalTelegramMessage(signal));
         if (localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false') {
             const result = tryOpenBuySignalPosition(signal, true);
             if (result === 'full' || result === 'stale') addBuySignalToPending(signal);
@@ -2982,6 +2986,33 @@ function openBuyAlertTestFromQuery() {
     requestBuySignalDecision(coin, testPrice, Number(coin.rsi || coin.buyRsi || 30), Date.now(), 'TEST MODU', { isTest: true });
 }
 
+async function sendBuyTelegramTestFromQuery() {
+    const params = new URLSearchParams(window.location.search);
+    const coinRef = params.get('testBuyTelegram');
+    if (!coinRef) return;
+    params.delete('testBuyTelegram');
+    const cleanQuery = params.toString();
+    window.history.replaceState({}, document.title, `${window.location.pathname}${cleanQuery ? `?${cleanQuery}` : ''}`);
+
+    const coin = KZ_STATE.coins.find(c => (c.id === coinRef || c.symbol === coinRef) && c.isActive !== false);
+    if (!coin) return showToast('Telegram testi için aktif coin bulunamadı');
+    const price = Number(coin.price);
+    if (!Number.isFinite(price) || price <= 0 || !coin.lastLivePriceAt || Date.now() - coin.lastLivePriceAt > 60000) {
+        return showToast('Güncel fiyat alınamadı; test mesajı gönderilmedi');
+    }
+    const signal = {
+        displaySymbol: coin.displaySymbol || coin.symbol.replace('USDT', ''),
+        triggerPrice: price,
+        profitTarget: Number(coin.profitTarget || 0),
+        triggerRsi: Number(coin.rsi || 0),
+        interval: coin.interval,
+        time: Date.now(),
+        mode: 'Örnek'
+    };
+    const sent = await sendTelegramAlert(buildBuySignalTelegramMessage(signal, true));
+    showToast(sent ? 'Örnek alım mesajı Telegram’a gönderildi' : 'Telegram mesajı gönderilemedi; Chat ID ve botu kontrol et');
+}
+
 window.addEventListener('storage', syncMainAppFromStorage);
 window.addEventListener('online', () => { KZ_HEALTH.online = true; runHealthCheck(); });
 window.addEventListener('offline', () => { KZ_HEALTH.online = false; runHealthCheck(); });
@@ -3002,6 +3033,7 @@ async function startEngine() {
     await fetchLiveTickerFallback();
     fetchMarketRate();
     openBuyAlertTestFromQuery();
+    await sendBuyTelegramTestFromQuery();
 
     initBinanceWebSocket();
     fetchBinanceSpotSymbols();

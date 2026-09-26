@@ -375,11 +375,12 @@
 
                     <div class="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/70 bg-blue-50/50 dark:bg-blue-950/20 space-y-2.5">
                         <div><span class="block text-xs font-bold text-slate-900 dark:text-white">Alım Sinyali ve Alarm Testi</span><p class="mt-0.5 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Bir coin seçerek gerçek karar penceresini ve yüklediğin <strong>alarm.mp3</strong> dosyasını güvenle test et.</p></div>
-                        <div class="flex gap-2">
+                        <div class="flex flex-wrap gap-2">
                             <select id="alertTestCoinSelect" class="min-w-0 flex-1 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30"></select>
                             <button type="button" onclick="startBuyAlertTest()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm transition shrink-0">Test Et 🔔</button>
+                            <button type="button" onclick="startBuyTelegramTest()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition shrink-0">Telegram’a Örnek Gönder ✉️</button>
                         </div>
-                        <div id="alertTestStatus" class="text-[10px] text-slate-400">Test modu gerçek işlem veya Telegram bildirimi oluşturmaz.</div>
+                        <div id="alertTestStatus" class="text-[10px] text-slate-400">Alarm testi Telegram bildirimi göndermez. Telegram örneği gerçek işlem açmaz; güncel fiyatla TEST etiketli mesaj gönderir.</div>
                     </div>
                 </section>
 
@@ -791,6 +792,15 @@
                 return;
             }
             window.location.href = `index.html?testBuyAlert=${encodeURIComponent(select.value)}`;
+        }
+
+        function startBuyTelegramTest() {
+            const select = document.getElementById('alertTestCoinSelect');
+            if (!select || !select.value) {
+                showToast('Telegram testi için aktif bir coin seçmelisin');
+                return;
+            }
+            window.location.href = `index.html?testBuyTelegram=${encodeURIComponent(select.value)}`;
         }
 
         function loadHealthSettings() {
