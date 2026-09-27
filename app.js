@@ -913,11 +913,15 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
     }
 
     const trades = currentMonthData.tradesList || [];
+    const realTrades = KZ_STATE.closedTrades.filter(t =>
+        (t.coinId === coin.id || t.symbol === coin.symbol) &&
+        (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === selectedMonthKey
+    ).sort((a, b) => b.exitTime - a.exitTime);
     if (modalTradesListContainer) {
         if (trades.length === 0) {
             modalTradesListContainer.innerHTML = `
                 <div class="py-12 text-center text-slate-400 text-xs">
-                    <p class="font-semibold text-slate-600 dark:text-slate-300">Bu ayda yapılmış işlem kaydı bulunmuyor.</p>
+                    <p class="font-semibold text-slate-600 dark:text-slate-300">Bu ay simülasyon işlemi bulunmuyor.</p>
                 </div>
             `;
         } else {
@@ -961,6 +965,15 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
                     </div>
                 `;
             }).join('');
+        }
+        if (realTrades.length) {
+            const realHtml = realTrades.map(t => `
+                <div class="p-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 text-xs space-y-1">
+                    <div class="flex items-center justify-between gap-2"><span class="font-bold text-slate-900 dark:text-white">${t.reason}</span><span class="font-black tabular-nums ${t.pnlPercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${t.pnlPercent >= 0 ? '+' : ''}${Number(t.pnlPercent).toFixed(2)}%</span></div>
+                    <div class="text-[11px] text-slate-600 dark:text-slate-300 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)} · ${formatShortDate(t.exitTime)}</div>
+                    <button type="button" onclick="openClosedTradeEditor('${t.id}')" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline">✎ Gerçek satışı düzenle</button>
+                </div>`).join('');
+            modalTradesListContainer.innerHTML = `<div class="space-y-2 mb-3"><h3 class="text-xs font-black text-blue-700 dark:text-blue-300">Gerçek kapanmış işlemler (${realTrades.length})</h3>${realHtml}</div><div class="text-[10px] font-bold text-slate-400 mb-2">GEÇMİŞ SİMÜLASYONU</div>` + modalTradesListContainer.innerHTML;
         }
     }
 }
@@ -1083,6 +1096,8 @@ function renderHistoryTrades() {
                         <div class="flex items-center space-x-1.5">
                             <span class="font-black text-[11px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600 text-slate-800 dark:text-slate-100">${t.symbol.replace('USDT', '')}</span>
                             ${t.isManual ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
+                            ${t.editedAt ? '<span class="text-[9px] px-1 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300">DÜZELTİLDİ</span>' : ''}
+                            ${t.source ? '' : '<span class="text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300">SİMÜLASYON</span>'}
                             <span class="font-bold text-[11px] text-slate-700 dark:text-slate-200 truncate max-w-[130px]">${t.reason}</span>
                         </div>
                         
@@ -1097,12 +1112,109 @@ function renderHistoryTrades() {
                     </div>
                 </div>
 
-                <span class="font-black tabular-nums text-xs px-2.5 py-1 rounded-lg shrink-0 ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
-                    ${isWin ? '+' : ''}${pnlValue.toFixed(2)}%
-                </span>
+                <div class="flex flex-col items-end gap-1 shrink-0">
+                    <span class="font-black tabular-nums text-xs px-2.5 py-1 rounded-lg ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${pnlValue.toFixed(2)}%</span>
+                    ${KZ_STATE.closedTrades.some(real => real.id === t.id) ? `<button type="button" onclick="openClosedTradeEditor('${t.id}')" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek giriş veya satış fiyatını düzelt">✎ Düzenle</button>` : ''}
+                </div>
             </div>
         `;
     }).join('');
+}
+
+let editingClosedTradeId = null;
+
+function openClosedTradeEditor(tradeId) {
+    const trade = KZ_STATE.closedTrades.find(t => t.id === tradeId);
+    const modal = document.getElementById('closedTradeEditModal');
+    if (!trade || !modal) return;
+    editingClosedTradeId = tradeId;
+    document.getElementById('closedTradeEditSubtitle').textContent = `${trade.displaySymbol || trade.symbol} · İlk kayıt: ${trade.originalReason || trade.reason}`;
+    document.getElementById('closedTradeEditEntry').value = trade.entryPrice;
+    document.getElementById('closedTradeEditExit').value = trade.exitPrice;
+    document.getElementById('closedTradeEditTime').value = toLocalDateTimeInputValue(new Date(trade.exitTime));
+    const error = document.getElementById('closedTradeEditError');
+    error.textContent = '';
+    error.classList.add('hidden');
+    updateClosedTradeEditPreview();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeClosedTradeEditor() {
+    const modal = document.getElementById('closedTradeEditModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    editingClosedTradeId = null;
+}
+
+function updateClosedTradeEditPreview() {
+    const entry = Number(document.getElementById('closedTradeEditEntry').value);
+    const exit = Number(document.getElementById('closedTradeEditExit').value);
+    const preview = document.getElementById('closedTradeEditPreview');
+    if (!preview) return;
+    if (!Number.isFinite(entry) || entry <= 0 || !Number.isFinite(exit) || exit <= 0) {
+        preview.textContent = 'Geçerli giriş ve satış fiyatı yaz.';
+        return;
+    }
+    const percent = ((exit - entry) / entry) * 100;
+    preview.textContent = `Yeni brüt getiri: ${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%`;
+}
+
+function saveClosedTradeEdit(event) {
+    event.preventDefault();
+    const trade = KZ_STATE.closedTrades.find(t => t.id === editingClosedTradeId);
+    const error = document.getElementById('closedTradeEditError');
+    const fail = message => { error.textContent = message; error.classList.remove('hidden'); };
+    if (!trade) return fail('İşlem kaydı bulunamadı. Sayfayı yenileyip tekrar dene.');
+
+    const entryPrice = Number(document.getElementById('closedTradeEditEntry').value);
+    const exitPrice = Number(document.getElementById('closedTradeEditExit').value);
+    const exitTime = new Date(document.getElementById('closedTradeEditTime').value).getTime();
+    if (!Number.isFinite(entryPrice) || entryPrice <= 0 || !Number.isFinite(exitPrice) || exitPrice <= 0) return fail('Fiyatlar sıfırdan büyük olmalı.');
+    if (!Number.isFinite(exitTime) || exitTime < Number(trade.entryTime) || exitTime > Date.now()) return fail('Satış zamanı girişten sonra ve gelecekte olmayan bir zaman olmalı.');
+
+    const oldPercent = Number(trade.pnlPercent);
+    const oldGain = Number(trade.pnlUsd);
+    const executed = KZ_STATE.executedGlobalTrades.find(t => t.id === trade.id);
+    const inferredBudget = Math.abs(oldPercent) > 1e-9 && Number.isFinite(oldGain) && oldGain !== 0
+        ? oldGain / (oldPercent / 100) : 0;
+    const budget = Number(trade.allocatedUsd) > 0 ? Number(trade.allocatedUsd)
+        : inferredBudget > 0 ? inferredBudget : Number(executed?.positionSizeUSD);
+    if (!Number.isFinite(budget) || budget <= 0) return fail('İşlem bütçesi belirlenemedi. Bu kaydı değiştirmeden önce verileri yedekle.');
+
+    const correctedPercent = ((exitPrice - entryPrice) / entryPrice) * 100;
+    const correctedGain = budget * correctedPercent / 100;
+
+    const corrected = {
+        ...trade,
+        originalReason: trade.originalReason || trade.reason,
+        originalRecord: trade.originalRecord || {
+            entryPrice: trade.entryPrice, exitPrice: trade.exitPrice, exitTime: trade.exitTime,
+            pnlPercent: trade.pnlPercent, pnlUsd: trade.pnlUsd
+        },
+        entryPrice, exitPrice, exitTime, allocatedUsd: budget,
+        pnlPercent: correctedPercent, pnlUsd: correctedGain,
+        exitTimeStr: new Date(exitTime).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+        exitMonth: getTurkeyMonthKey(exitTime),
+        reason: 'Gerçek Satış (Düzenlendi)',
+        editedAt: Date.now()
+    };
+    const revisedTrades = KZ_STATE.closedTrades.map(t => t.id === trade.id ? corrected : t);
+    try {
+        localStorage.setItem('kuzgun_closed_trades', JSON.stringify(revisedTrades));
+    } catch (e) {
+        return fail('Değişiklik kaydedilemedi. Tarayıcı depolama alanını kontrol et.');
+    }
+    KZ_STATE.closedTrades = revisedTrades;
+    closeClosedTradeEditor();
+    recalculateFullPortfolio();
+    if (KZ_STATE.activeMonthModal.coinId) {
+        const coin = KZ_STATE.coins.find(c => c.id === KZ_STATE.activeMonthModal.coinId);
+        if (coin) renderModalTabsAndContent(coin, KZ_STATE.activeMonthModal.monthKey);
+    }
+    showToast('Gerçek satış ve portföy hesapları güncellendi');
 }
 
 function setHistoryPage(pageIdx) {
@@ -1453,6 +1565,7 @@ function updateCardTablesOnly(coin) {
                             <div class="flex items-center space-x-1.5">
                                 <span class="font-semibold text-slate-800 dark:text-slate-200 text-[11px]">${t.reason}</span>
                                 ${t.isManual ? '<span class="text-[9px] px-1 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
+                                ${t.editedAt ? '<span class="text-[9px] px-1 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300">DÜZELTİLDİ</span>' : ''}
                                 <span class="text-[10px] text-blue-600 dark:text-blue-400 font-medium">• ${t.duration}</span>
                             </div>
                             <div class="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</div>
@@ -2522,6 +2635,7 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
         exitPrice: (pos.coinId && KZ_STATE.coins.find(c => c.id === pos.coinId)?.price) || pos.targetPrice,
         pnlPercent: pos.livePnlPercent,
         pnlUsd: exitPnlUsd,
+        allocatedUsd: pos.allocatedUsd,
         reason: reason,
         entryTime: pos.entryTime,
         exitTime: now.getTime(),
@@ -2682,7 +2796,9 @@ function recalculateFullPortfolio() {
             entryPrice: t.entryPrice,
             exitPrice: t.exitPrice,
             pnlPercent: t.pnlPercent,
+            monthKey: t.exitMonth || getTurkeyMonthKey(t.exitTime),
             reason: t.reason,
+            editedAt: t.editedAt,
             isManual: t.isManual === true,
             source: t.source || (t.isManual ? 'manual' : 'automatic')
         });
@@ -2959,10 +3075,19 @@ window.openManualPositionModal = openManualPositionModal;
 window.closeManualPositionModal = closeManualPositionModal;
 window.submitManualPosition = submitManualPosition;
 window.resolveBuySignalDecision = resolveBuySignalDecision;
+window.openClosedTradeEditor = openClosedTradeEditor;
+window.closeClosedTradeEditor = closeClosedTradeEditor;
+window.updateClosedTradeEditPreview = updateClosedTradeEditPreview;
+window.saveClosedTradeEdit = saveClosedTradeEdit;
 
 function syncMainAppFromStorage(event) {
     const key = event && event.key;
-    if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_theme'].includes(key)) return;
+    if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_base_usd', 'kuzgun_theme'].includes(key)) return;
+
+    if (!key || key === 'kuzgun_closed_trades' || key === 'kuzgun_base_usd') {
+        const storedBalance = Number(localStorage.getItem('kuzgun_base_usd'));
+        if (Number.isFinite(storedBalance) && storedBalance > 0) KZ_STATE.portfolioBaseUsd = storedBalance;
+    }
 
     if (!key || key === 'kuzgun_web_coins') {
         try {
@@ -2981,7 +3106,7 @@ function syncMainAppFromStorage(event) {
         KZ_STATE.coins.forEach(c => renderSingleCard(c));
     }
 
-    if (!key || key === 'kuzgun_closed_trades') {
+    if (!key || key === 'kuzgun_closed_trades' || key === 'kuzgun_base_usd') {
         try { KZ_STATE.closedTrades = JSON.parse(localStorage.getItem('kuzgun_closed_trades')) || []; } catch (e) {}
         renderHistoryTrades();
         recalculateFullPortfolio();
@@ -3072,6 +3197,7 @@ async function startEngine() {
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
+        closeClosedTradeEditor();
         closeMonthTradesModal();
         closeCustomDateRangeModal();
         closeAddCoinModal();
