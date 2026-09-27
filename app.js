@@ -352,10 +352,9 @@ const fmtUsd = (val) => '$' + Number(val || 0).toLocaleString('en-US', { minimum
 const fmtTry = (val) => '₺' + Number(val || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function formatCryptoPrice(price) {
-    if (!price || price <= 0) return "--.--";
-    if (price >= 1000) return '$' + price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    if (price >= 1) return '$' + price.toFixed(4);
-    return '$' + price.toFixed(6);
+    const value = Number(price);
+    if (!Number.isFinite(value) || value <= 0) return "--.--";
+    return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 12 });
 }
 
 function playChime(isSuccess = true) {
