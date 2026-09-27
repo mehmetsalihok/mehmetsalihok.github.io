@@ -1088,23 +1088,23 @@ function renderHistoryTrades() {
         const pnlValue = t.effectivePnl !== undefined ? t.effectivePnl : t.pnlPercent;
 
         return `
-            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 space-y-1.5 text-xs transition hover:border-slate-200 dark:hover:border-slate-700">
+            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 space-y-1 text-xs transition hover:border-slate-200 dark:hover:border-slate-700">
                 <div class="flex items-start justify-between gap-2">
-                    <div class="min-w-0 flex flex-wrap items-center gap-1.5">
+                    <div class="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                         <span class="w-2 h-2 rounded-full ${timeColor.dotClass} shrink-0 shadow-sm"></span>
                         <span class="font-black text-[11px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600 text-slate-800 dark:text-slate-100 whitespace-nowrap">${t.symbol.replace('USDT', '')}</span>
                         ${t.isManual ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800 whitespace-nowrap" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
-                        ${t.editedAt ? '<span class="text-[9px] px-1 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 whitespace-nowrap">DÜZELTİLDİ</span>' : ''}
+                        ${t.editedAt ? '<span class="text-[9px] px-1 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 whitespace-nowrap" title="Gerçek satış kaydı düzeltildi">DÜZ.</span>' : ''}
                         ${t.source ? '' : '<span class="text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 whitespace-nowrap">SİMÜLASYON</span>'}
+                        <span class="font-semibold text-[10px] leading-tight text-slate-700 dark:text-slate-200 break-words">${t.editedAt ? 'Gerçek Satış' : t.reason}</span>
                     </div>
                     <span class="font-black tabular-nums text-xs px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${pnlValue.toFixed(2)}%</span>
                 </div>
-                <div class="font-semibold text-[11px] leading-snug text-slate-700 dark:text-slate-200 break-words">${t.reason}</div>
                 <div class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
                     <span class="break-all">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</span>
                     <span class="font-bold ${timeColor.textClass}">• ${formatTimeAgo(t.exitTime)}</span>
                 </div>
-                <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 border-t border-slate-200/70 dark:border-slate-700/70 pt-1.5">
+                <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
                     <span class="text-[9px] font-mono text-slate-400 dark:text-slate-500 tabular-nums">Giriş: ${formatShortDate(t.entryTime)} • Çıkış: ${formatShortDate(t.exitTime)}</span>
                     ${KZ_STATE.closedTrades.some(real => real.id === t.id) ? `<button type="button" onclick="openClosedTradeEditor('${t.id}')" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap" title="Gerçek giriş veya satış fiyatını düzelt">✎ Düzenle</button>` : ''}
                 </div>
