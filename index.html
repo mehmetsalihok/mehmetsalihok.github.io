@@ -347,6 +347,7 @@
                         <button role="tab" data-history-tab="pending" onclick="setHistoryTab('pending')" class="px-2 py-1 rounded-lg font-semibold">Beklemede kapananlar</button>
                         <button role="tab" data-history-tab="simulation" onclick="setHistoryTab('simulation')" class="px-2 py-1 rounded-lg font-semibold">Simülasyon</button>
                     </div>
+                    <p id="pendingHistoryNote" class="hidden text-[9px] leading-relaxed text-slate-500 dark:text-slate-400">● CANLI: site çalışırken kaydedilen kapanış. ◷ SİMÜLASYON: mevcut strateji ve slot sayısıyla geçmiş mumlardan hesaplanan tahmin. Slot boşalmadan hedefe ulaşanlar gösterilir. Saatler mum kapanışına göredir; portföye dahil değildir.</p>
                     <!-- Swift Tarzı Sayfa Gösterge Noktaları & Sayfalama Kontrolleri -->
                     <div id="historyPaginationControls" class="flex items-center justify-between px-1 text-[11px]">
                         <button onclick="prevHistoryPage()" id="btnPrevHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">‹</button>
@@ -663,6 +664,6 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=7"></script>
-    <script src="app.js?v=40"></script>
+    <script src="app.js?v=41"></script>
 </body>
 </html>
