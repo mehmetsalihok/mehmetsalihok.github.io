@@ -176,7 +176,7 @@ function getCoinDisplayTrades(coin) {
 async function sendTelegramAlert(text, options = {}) {
     let chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
     let botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
-    if (options.channel === 'pending' || options.channel === 'system') {
+    if (options.channel === 'pending' || options.channel === 'system' || options.channel === 'sell') {
         const prefix = `kuzgun_${options.channel}_telegram`;
         if (localStorage.getItem(`${prefix}_enabled`) !== 'true') return false;
         botToken = (localStorage.getItem(`${prefix}_token`) || '').trim();
@@ -725,14 +725,14 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
         if (coin.price >= activePos.targetPrice) {
             closePosition(activePos.id, `Kâr Hedefi (%${activePos.profitTarget.toFixed(1)})`);
             playChime(true);
-            sendTelegramAlert(`🔴 <b>HEDEF KÂR ALINDI</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Kâr:</b> +%${pnl.toFixed(2)}`);
+            sendTelegramAlert(`🔴 <b>HEDEF KÂR ALINDI</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Kâr:</b> +%${pnl.toFixed(2)}`, {channel: 'sell'});
             return;
         }
 
         if (coin.rsi >= coin.sellRsi) {
             closePosition(activePos.id, `RSI Sat (${coin.rsi.toFixed(1)})`);
             playChime(pnl >= 0);
-            sendTelegramAlert(`🔴 <b>RSI SAT SİNYALİ</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Net PnL:</b> ${pnl >= 0 ? '+' : ''}%${pnl.toFixed(2)}`);
+            sendTelegramAlert(`🔴 <b>RSI SAT SİNYALİ</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Net PnL:</b> ${pnl >= 0 ? '+' : ''}%${pnl.toFixed(2)}`, {channel: 'sell'});
             return;
         }
     } else {
