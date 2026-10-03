@@ -221,9 +221,24 @@ function healthAgeText(timestamp) {
     return `${Math.floor(seconds / 60)} dk önce`;
 }
 
-function buildHealthTelegramMessage(title, icon = '🟢') {
+function telegramDate(timestamp = Date.now()) {
+    return new Date(timestamp).toLocaleString('tr-TR', {timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
+}
+
+function telegramSymbol(signal) {
+    const symbol = String(signal.displaySymbol || signal.symbol || '').replace(/^#/, '');
+    if (symbol.includes('/')) return symbol;
+    const pair = /USDT$/.test(symbol) ? symbol : String(signal.symbol || symbol);
+    return pair.replace(/USDT$/, '/USDT');
+}
+
+function buildHealthTelegramMessage(title) {
     const activeCoins = KZ_STATE.coins.filter(c => c.isActive !== false).length;
-    return `${icon} <b>${title}</b>\n\n<b>Çalışma süresi:</b> ${healthDurationText(Date.now() - KZ_HEALTH.startedAt)}\n<b>İnternet:</b> ${KZ_HEALTH.online ? 'Bağlı' : 'Kesik'}\n<b>Binance WS:</b> ${KZ_HEALTH.wsConnected ? 'Bağlı' : 'Bağlantı yok'}\n<b>Son fiyat:</b> ${healthAgeText(KZ_HEALTH.lastPriceAt)}\n<b>Aktif coin:</b> ${activeCoins}\n<b>Açık pozisyon:</b> ${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots}\n<b>Bekleyen sinyal:</b> ${KZ_STATE.pendingSignals.length}\n<b>VDS saati:</b> ${new Date().toLocaleString('tr-TR')}`;
+    return `${title}\n\n${title === 'Terminal başlatıldı' ? 'Başlangıç' : 'Kontrol zamanı'}: ${telegramDate()}\nÇalışma süresi: ${healthDurationText(Date.now() - KZ_HEALTH.startedAt)}\nİnternet: ${KZ_HEALTH.online ? 'Bağlı' : 'Kesildi'}\nBinance bağlantısı: ${KZ_HEALTH.wsConnected ? 'Aktif' : 'Kesildi'}\nSon fiyat verisi: ${healthAgeText(KZ_HEALTH.lastPriceAt)}\nTakip edilen coin: ${activeCoins}\nDolu slot: ${KZ_STATE.activePositions.length} / ${KZ_STATE.maxSlots}\nBekleme listesi: ${KZ_STATE.pendingSignals.length} coin`;
+}
+
+function buildHealthEventMessage(title, recovered = false) {
+    return `${title}\n\n${recovered ? 'Düzelme' : 'Tespit'} zamanı: ${telegramDate()}\nİnternet: ${KZ_HEALTH.online ? 'Bağlı' : 'Kesildi'}\nBinance bağlantısı: ${KZ_HEALTH.wsConnected ? 'Aktif' : 'Kesildi'}\nSon fiyat verisi: ${healthAgeText(KZ_HEALTH.lastPriceAt)}`;
 }
 
 function updateHealthIndicator(status, label, detail) {
@@ -274,9 +289,9 @@ async function runHealthCheck() {
     saveHealthPulse(status, problems);
 
     const checks = [
-        ['offline', !KZ_HEALTH.online, '🔴 <b>VDS İNTERNET BAĞLANTISI KESİLDİ</b>', '🟢 <b>VDS İNTERNET BAĞLANTISI DÜZELDİ</b>'],
-        ['websocket', wsFailed, '🟠 <b>BINANCE WEBSOCKET BAĞLANTISI KESİLDİ</b>\n90 saniyedir bağlantı kurulamıyor.', '🟢 <b>BINANCE WEBSOCKET YENİDEN BAĞLANDI</b>'],
-        ['stalePrice', priceStale, `🔴 <b>CANLI FİYAT AKIŞI DURDU</b>\nSon fiyat: ${healthAgeText(KZ_HEALTH.lastPriceAt)}`, '🟢 <b>CANLI FİYAT AKIŞI YENİDEN BAŞLADI</b>']
+        ['offline', !KZ_HEALTH.online, buildHealthEventMessage('İnternet bağlantısı kesildi'), buildHealthEventMessage('İnternet bağlantısı düzeldi', true)],
+        ['websocket', wsFailed, buildHealthEventMessage('Binance bağlantısı kesildi'), buildHealthEventMessage('Binance bağlantısı yeniden kuruldu', true)],
+        ['stalePrice', priceStale, buildHealthEventMessage('Fiyat akışında kesinti'), buildHealthEventMessage('Fiyat akışı yeniden başladı', true)]
     ];
     for (const [key, failed, failMessage, recoveryMessage] of checks) {
         if (failed && !KZ_HEALTH.alerts[key]) {
@@ -292,7 +307,7 @@ async function runHealthCheck() {
     const intervalMinutes = Number.isFinite(heartbeatMinutes) ? heartbeatMinutes : 60;
     const lastHeartbeat = parseInt(localStorage.getItem('kuzgun_health_last_telegram'), 10) || 0;
     if (intervalMinutes > 0 && now - lastHeartbeat >= intervalMinutes * 60000) {
-        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN ÇALIŞIYOR'), {channel: 'system'})) {
+        if (await sendTelegramAlert(buildHealthTelegramMessage(status === 'healthy' ? 'Sistem çalışıyor' : status === 'error' ? 'Sistemde sorun var' : 'Sistem bağlantısı bekleniyor'), {channel: 'system'})) {
             localStorage.setItem('kuzgun_health_last_telegram', String(now));
         }
     }
@@ -302,7 +317,7 @@ async function startHealthMonitor() {
     if (!isHealthMonitorEnabled()) return runHealthCheck();
     if (localStorage.getItem('kuzgun_health_startup_notification') !== 'false' && !KZ_HEALTH.startupSent) {
         KZ_HEALTH.startupSent = true;
-        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN TERMİNAL BAŞLATILDI', '🚀'), {channel: 'system'})) {
+        if (await sendTelegramAlert(buildHealthTelegramMessage('Terminal başlatıldı'), {channel: 'system'})) {
             localStorage.setItem('kuzgun_health_last_telegram', String(Date.now()));
         }
     }
@@ -407,7 +422,7 @@ function playBuySignalAlarm() {
     }
 }
 
-function addBuySignalToPending(signal) {
+function addBuySignalToPending(signal, reason = 'manual') {
     const alreadyPending = (KZ_STATE.pendingSignals || []).some(s => s.coinId === signal.coinId || s.symbol === signal.symbol);
     if (alreadyPending) return false;
     KZ_STATE.pendingSignals.push({
@@ -425,7 +440,7 @@ function addBuySignalToPending(signal) {
     savePending();
     renderPendingSignalsList();
     buySignalAlertQueue = buySignalAlertQueue.filter(item => item.coinId !== signal.coinId && item.symbol !== signal.symbol);
-    sendPendingTelegramAlert(`🟡 <b>COİN BEKLEMEYE ALINDI</b>\n\n<b>Coin:</b> #${signal.displaySymbol || signal.symbol}\n<b>Sinyal fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Hedef çıkış:</b> ${formatCryptoPrice(signal.triggerPrice * (1 + Number(signal.profitTarget || 0) / 100))}\n<b>Hedef kâr:</b> %${Number(signal.profitTarget || 0).toFixed(2)}\n<b>Sinyal zamanı:</b> ${formatShortDate(signal.time)}\n\nPozisyon açılmadı; coin bekleme listesine alındı.`);
+    sendPendingTelegramAlert(buildPendingTelegramMessage(signal, reason));
     return true;
 }
 
@@ -454,7 +469,20 @@ function tryOpenBuySignalPosition(signal, useCurrentPrice = false) {
 
 function buildBuySignalTelegramMessage(signal, isTest = false) {
     const targetExitPrice = signal.triggerPrice * (1 + signal.profitTarget / 100);
-    return `${isTest ? '🧪 <b>TEST — ' : '🟢 <b>'}ALIM SİNYALİ (${signal.mode})</b>\n\n<b>Coin:</b> #${signal.displaySymbol}\n<b>Sinyal Fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Hedef Çıkış Fiyatı:</b> ${formatCryptoPrice(targetExitPrice)}\n<b>Hedef Kâr:</b> %${signal.profitTarget.toFixed(2)}\n<b>Sinyal Zamanı:</b> ${formatShortDate(signal.time)}\n<b>RSI:</b> ${signal.triggerRsi.toFixed(1)}\n<b>Zaman Dilimi:</b> ${signal.interval}\n<b>Karar Penceresi:</b> ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}${isTest ? '\n\nBu bir test mesajıdır; pozisyon açılmadı.' : ''}`;
+    return `${isTest ? 'Test · ' : ''}Alım sinyali · ${telegramSymbol(signal)}\n\nSinyal fiyatı: ${formatCryptoPrice(signal.triggerPrice)} USDT\nHedef satış: ${formatCryptoPrice(targetExitPrice)} USDT\nHedef kâr: %${signal.profitTarget.toFixed(2)}\nSinyal zamanı: ${telegramDate(signal.time)}\nRSI: ${signal.triggerRsi.toFixed(1)}\nZaman dilimi: ${signal.interval}\nSinyal türü: ${signal.mode}\nKarar penceresi: ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}${isTest ? '\n\nBu bir test mesajıdır; pozisyon açılmadı.' : ''}`;
+}
+
+function buildPendingTelegramMessage(signal, reason) {
+    const explanation = reason === 'full' || KZ_STATE.activePositions.length >= KZ_STATE.maxSlots
+        ? 'Slot dolu olduğu için pozisyon açılmadı. Coin bekleme listesine eklendi.'
+        : reason === 'stale' ? 'Güncel fiyat alınamadığı için pozisyon açılmadı. Coin bekleme listesine eklendi.'
+        : reason === 'timeout' ? 'Karar süresi doldu; varsayılan seçimle coin bekleme listesine eklendi. Pozisyon açılmadı.'
+        : 'Tercihin üzerine pozisyon açılmadı; coin bekleme listesine eklendi.';
+    return `Beklemeye alındı · ${telegramSymbol(signal)}\n\nSinyal fiyatı: ${formatCryptoPrice(signal.triggerPrice)} USDT\nHedef satış: ${formatCryptoPrice(signal.triggerPrice * (1 + Number(signal.profitTarget || 0) / 100))} USDT\nHedef kâr: %${Number(signal.profitTarget || 0).toFixed(2)}\nSinyal zamanı: ${telegramDate(signal.time)}\n\n${explanation}`;
+}
+
+function buildSellTelegramMessage(coin, pnl, isTarget, timestamp = Date.now()) {
+    return `${isTarget ? 'Hedef kâr alındı' : 'RSI satım sinyali'} · ${telegramSymbol(coin)}\n\nÇıkış fiyatı: ${formatCryptoPrice(coin.price)} USDT\nGetiri: ${pnl >= 0 ? '+' : '-'}%${Math.abs(pnl).toFixed(2)}\nÇıkış zamanı: ${telegramDate(timestamp)}`;
 }
 
 function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli', options = {}) {
@@ -483,7 +511,7 @@ function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = D
     if (!options.isTest) {
         if (localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false') {
             const result = tryOpenBuySignalPosition(signal, true);
-            if (result === 'full' || result === 'stale') addBuySignalToPending(signal);
+            if (result === 'full' || result === 'stale') addBuySignalToPending(signal, result);
             else if (result === 'opened') {
                 signal.buyTelegramSent = true;
                 sendTelegramAlert(buildBuySignalTelegramMessage(signal));
@@ -562,7 +590,7 @@ function resolveBuySignalDecision(action, isTimeout = false) {
             sendTelegramAlert(buildBuySignalTelegramMessage(signal));
         }
         if (isTimeout && (result === 'full' || result === 'stale')) {
-            addBuySignalToPending(signal);
+            addBuySignalToPending(signal, result);
             action = 'pending';
         } else if (result !== 'opened') {
             message.textContent = result === 'full' ? 'Boş slot yok. Sinyali beklemeye alabilir veya reddedebilirsin.' : result === 'stale' ? 'Güncel fiyat alınamadı. Sinyali beklemeye alabilirsin.' : 'Coin pasif, kilitli veya zaten açık pozisyonda.';
@@ -571,7 +599,7 @@ function resolveBuySignalDecision(action, isTimeout = false) {
             action = 'reject';
         }
     } else if (action === 'pending') {
-        addBuySignalToPending(signal);
+        addBuySignalToPending(signal, isTimeout ? 'timeout' : 'manual');
     }
 
     clearInterval(buySignalCountdownTimer);
@@ -725,14 +753,14 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
         if (coin.price >= activePos.targetPrice) {
             closePosition(activePos.id, `Kâr Hedefi (%${activePos.profitTarget.toFixed(1)})`);
             playChime(true);
-            sendTelegramAlert(`🔴 <b>HEDEF KÂR ALINDI</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Kâr:</b> +%${pnl.toFixed(2)}`, {channel: 'sell'});
+            sendTelegramAlert(buildSellTelegramMessage(coin, pnl, true), {channel: 'sell'});
             return;
         }
 
         if (coin.rsi >= coin.sellRsi) {
             closePosition(activePos.id, `RSI Sat (${coin.rsi.toFixed(1)})`);
             playChime(pnl >= 0);
-            sendTelegramAlert(`🔴 <b>RSI SAT SİNYALİ</b>\n\n<b>Coin:</b> #${coin.displaySymbol}\n<b>Çıkış Fiyatı:</b> ${formatCryptoPrice(coin.price)}\n<b>Net PnL:</b> ${pnl >= 0 ? '+' : ''}%${pnl.toFixed(2)}`, {channel: 'sell'});
+            sendTelegramAlert(buildSellTelegramMessage(coin, pnl, false), {channel: 'sell'});
             return;
         }
     } else {
