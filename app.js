@@ -870,7 +870,7 @@ function openMonthTradesModal(coinId, monthKey) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
     if (!coin || !coin.simMonthlyStats || coin.simMonthlyStats.length === 0) return;
 
-    KZ_STATE.activeMonthModal = { coinId: coin.id, monthKey };
+    KZ_STATE.activeMonthModal = { coinId: coin.id, monthKey, page: 0 };
 
     if (modalCoinTitle) modalCoinTitle.textContent = `${coin.displaySymbol}/USDT`;
     if (modalCoinBadge) modalCoinBadge.textContent = `${coin.interval} • RSI(${coin.rsiLength})`;
@@ -892,7 +892,7 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
             const isSelected = m.monthKey === selectedMonthKey;
             return `
                 <button onclick="selectModalMonth('${m.monthKey}')" 
-                    class="px-3 py-1.5 rounded-xl text-xs font-bold shrink-0 transition flex items-center space-x-1.5 cursor-pointer ${isSelected ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}">
+                    class="px-2 py-1 rounded-lg text-[10px] font-semibold transition flex items-center gap-1 cursor-pointer ${isSelected ? 'bg-blue-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}">
                     <span>${m.name}</span>
                     <span class="text-[10px] px-1.5 py-0.2 rounded-full ${isSelected ? 'bg-blue-700 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'} font-semibold">${m.trades}</span>
                 </button>
@@ -923,71 +923,54 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
         (t.coinId === coin.id || t.symbol === coin.symbol) &&
         (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === selectedMonthKey
     ).sort((a, b) => b.exitTime - a.exitTime);
+    const rows = [...realTrades.map(t => ({...t, isReal: true})), ...trades.map(t => ({...t, isReal: false}))]
+        .sort((a, b) => b.exitTime - a.exitTime || Number(b.isReal) - Number(a.isReal));
+    if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent = `${trades.length} simülasyon · ${realTrades.length} kayıtlı işlem`;
+    const compact = window.innerWidth < 640;
+    const availableHeight = Math.min(window.innerHeight * .92, window.innerHeight - 24);
+    const pageSize = Math.max(1, Math.floor((availableHeight - (compact ? 285 : 235)) / (compact ? 44 : 34)));
+    const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+    const page = Math.min(Math.max(0, KZ_STATE.activeMonthModal.page || 0), totalPages - 1);
+    KZ_STATE.activeMonthModal.page = page;
+    const visible = rows.slice(page * pageSize, (page + 1) * pageSize);
+    const dateText = value => new Date(value).toLocaleString('tr-TR', {timeZone:'Europe/Istanbul', day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
     if (modalTradesListContainer) {
-        if (trades.length === 0) {
-            modalTradesListContainer.innerHTML = `
-                <div class="py-12 text-center text-slate-400 text-xs">
-                    <p class="font-semibold text-slate-600 dark:text-slate-300">Bu ay simülasyon işlemi bulunmuyor.</p>
-                </div>
-            `;
-        } else {
-            modalTradesListContainer.innerHTML = trades.map(t => {
-                const isWin = t.pnl >= 0;
-                const isAccepted = KZ_STATE.acceptedTradeIds.has(t.id);
-
-                return `
-                    <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border ${isAccepted ? 'border-slate-200/70 dark:border-slate-800' : 'border-dashed border-slate-300 dark:border-slate-700 opacity-70'} space-y-2 text-xs transition">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center space-x-2">
-                                <span class="w-2 h-2 rounded-full ${isWin ? 'bg-emerald-500' : 'bg-rose-500'}"></span>
-                                <span class="font-bold text-slate-900 dark:text-white">${t.reason}</span>
-                                <span class="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">• Süre: ${t.duration}</span>
-                            </div>
-                            
-                            <div class="flex items-center space-x-2">
-                                ${isAccepted ? `
-                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">✓ Slota Girdi</span>
-                                ` : `
-                                    <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800">✕ Slot Doluydu (Pas)</span>
-                                `}
-                                <span class="font-black tabular-nums text-xs px-2 py-0.5 rounded ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">
-                                    ${isWin ? '+' : ''}${t.pnl.toFixed(2)}%
-                                </span>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-2 text-[11px] bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
-                            <div>
-                                <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">GİRİŞ ZAMANI & FİYATI</span>
-                                <span class="font-bold text-slate-800 dark:text-slate-200">${t.entryDateStr}</span>
-                                <span class="block text-slate-500 font-mono text-[10px]">${formatCryptoPrice(t.entryPrice)}</span>
-                            </div>
-                            <div>
-                                <span class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">ÇIKIŞ ZAMANI & FİYATI</span>
-                                <span class="font-bold text-slate-800 dark:text-slate-200">${t.exitDateStr}</span>
-                                <span class="block text-slate-500 font-mono text-[10px]">${formatCryptoPrice(t.exitPrice)}</span>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-        if (realTrades.length) {
-            const realHtml = realTrades.map(t => `
-                <div class="p-3 rounded-xl border border-blue-200 dark:border-blue-800 bg-blue-50/50 dark:bg-blue-950/20 text-xs space-y-1">
-                    <div class="flex items-center justify-between gap-2"><span class="font-bold text-slate-900 dark:text-white">${t.reason}</span><span class="font-black tabular-nums ${t.pnlPercent >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${t.pnlPercent >= 0 ? '+' : ''}${Number(t.pnlPercent).toFixed(2)}%</span></div>
-                    <div class="text-[11px] text-slate-600 dark:text-slate-300 tabular-nums">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)} · ${formatShortDate(t.exitTime)}</div>
-                    <button type="button" onclick="openClosedTradeEditor('${t.id}')" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline">✎ Gerçek satışı düzenle</button>
-                </div>`).join('');
-            modalTradesListContainer.innerHTML = `<div class="space-y-2 mb-3"><h3 class="text-xs font-black text-blue-700 dark:text-blue-300">Gerçek kapanmış işlemler (${realTrades.length})</h3>${realHtml}</div><div class="text-[10px] font-bold text-slate-400 mb-2">GEÇMİŞ SİMÜLASYONU</div>` + modalTradesListContainer.innerHTML;
-        }
+        modalTradesListContainer.innerHTML = rows.length === 0
+            ? '<div class="py-6 text-center text-xs text-slate-400">Bu ay işlem bulunmuyor.</div>'
+            : `<table class="month-trades-table w-full table-fixed text-left"><thead><tr>
+                <th style="width:28%">İşlem / Durum</th><th style="width:26%">Giriş</th><th style="width:26%">Çıkış</th><th style="width:20%" class="text-right">Sonuç</th>
+            </tr></thead><tbody>${visible.map(t => {
+                const pnl = Number(t.isReal ? t.pnlPercent : t.pnl);
+                const accepted = KZ_STATE.acceptedTradeIds?.has(t.id);
+                const status = t.isReal ? '● Kayıtlı' : accepted ? '✓ Slot sim.' : '◷ Slota alınmadı';
+                const statusColor = t.isReal || accepted ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400';
+                const duration = t.duration || (() => { const mins = Math.max(0, Math.round((t.exitTime - t.entryTime)/60000)); return mins >= 60 ? `${Math.floor(mins/60)}sa ${mins%60}dk` : `${mins}dk`; })();
+                return `<tr>
+                    <td><div class="month-trade-reason font-semibold text-slate-800 dark:text-slate-200" title="${t.reason}">${t.reason}</div><div class="month-trade-meta ${statusColor}">${status}${t.isReal ? ` <button onclick="openClosedTradeEditor('${t.id}')" class="text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek satışı düzenle">✎</button>` : ''}</div></td>
+                    <td><div class="month-trade-date text-slate-600 dark:text-slate-300">${dateText(t.entryTime)}</div><div class="month-trade-price text-slate-400">${formatCryptoPrice(t.entryPrice)}</div></td>
+                    <td><div class="month-trade-date text-slate-600 dark:text-slate-300">${dateText(t.exitTime)}</div><div class="month-trade-price text-slate-400">${formatCryptoPrice(t.exitPrice)}</div></td>
+                    <td class="text-right"><div class="font-bold tabular-nums ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%</div><div class="month-trade-meta text-slate-400">${duration}</div></td>
+                </tr>`;
+            }).join('')}</tbody></table>`;
     }
+    const pagination = document.getElementById('monthModalPagination');
+    if (pagination) pagination.innerHTML = `<span class="text-[10px] text-slate-400">${rows.length ? page * pageSize + 1 : 0}–${Math.min((page + 1) * pageSize, rows.length)} / ${rows.length}</span>${totalPages > 1 ? `<button onclick="changeMonthModalPage(-1)" ${page === 0 ? 'disabled' : ''} class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 disabled:opacity-30" aria-label="Önceki sayfa">‹</button><span class="text-[10px] text-slate-500">${page+1}/${totalPages}</span><button onclick="changeMonthModalPage(1)" ${page === totalPages - 1 ? 'disabled' : ''} class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 disabled:opacity-30" aria-label="Sonraki sayfa">›</button>` : ''}`;
 }
+
+function changeMonthModalPage(step) {
+    const state = KZ_STATE.activeMonthModal;
+    const coin = KZ_STATE.coins.find(c => c.id === state.coinId);
+    if (!coin) return;
+    state.page = Math.max(0, (state.page || 0) + step);
+    renderModalTabsAndContent(coin, state.monthKey);
+}
+
 
 function selectModalMonth(monthKey) {
     const coin = KZ_STATE.coins.find(c => c.id === KZ_STATE.activeMonthModal.coinId);
     if (!coin) return;
     KZ_STATE.activeMonthModal.monthKey = monthKey;
+    KZ_STATE.activeMonthModal.page = 0;
     renderModalTabsAndContent(coin, monthKey);
 }
 
@@ -3552,6 +3535,11 @@ async function sendBuyTelegramTestFromQuery() {
     showToast(sent ? 'Örnek alım mesajı Telegram’a gönderildi' : 'Telegram mesajı gönderilemedi; Chat ID ve botu kontrol et');
 }
 
+window.addEventListener('resize', () => {
+    const state = KZ_STATE.activeMonthModal;
+    const coin = state && KZ_STATE.coins.find(c => c.id === state.coinId);
+    if (coin) renderModalTabsAndContent(coin, state.monthKey);
+});
 window.addEventListener('storage', syncMainAppFromStorage);
 window.addEventListener('online', () => { KZ_HEALTH.online = true; runHealthCheck(); });
 window.addEventListener('offline', () => { KZ_HEALTH.online = false; runHealthCheck(); });

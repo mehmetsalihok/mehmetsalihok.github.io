@@ -99,6 +99,12 @@
         .coin-details-toggle { margin-top: .375rem !important; transition: color .2s ease; }
         .coin-details-toggle svg { transition: transform .28s cubic-bezier(.22,1,.36,1); }
         @media (prefers-reduced-motion: reduce) { .coin-details, .coin-details-toggle svg { transition: none; } }
+        .month-trades-table th { padding: 4px 6px; font-size: 9px; color: #94a3b8; font-weight: 600; }
+        .month-trades-table td { padding: 4px 6px; font-size: 10px; line-height: 12px; border-top: 1px solid rgba(148,163,184,.15); vertical-align: middle; }
+        .month-trade-reason { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .month-trade-meta, .month-trade-price { font-size: 9px; line-height: 12px; }
+        .month-trade-date { white-space: nowrap; font-size: 10px; }
+        @media (max-width: 639px) { .month-trades-table td, .month-trades-table th { padding: 5px 3px; font-size: 9px; } .month-trade-date, .month-trade-meta, .month-trade-price { font-size: 8px; } }
     </style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
@@ -445,9 +451,9 @@
 
     <!-- 3️⃣ AYLIK İŞLEMLER DETAY MODALI -->
     <div id="monthTradesModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-2xl w-full p-5 shadow-2xl flex flex-col max-h-[85vh] transition-colors">
+        <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-5xl w-full p-3 shadow-2xl flex flex-col max-h-[92vh] transition-colors">
             
-            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 shrink-0">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                 <div class="flex items-center space-x-2.5">
                     <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">📅</span>
                     <div>
@@ -455,21 +461,21 @@
                             <h3 id="modalCoinTitle" class="font-extrabold text-sm text-slate-900 dark:text-white">ASTERUSDT</h3>
                             <span id="modalCoinBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">15m</span>
                         </div>
-                        <p class="text-[11px] text-slate-400">Aylık geçmiş gerçekleşen tüm işlemler ve giriş/çıkış zamanları</p>
+                        <p class="text-[11px] text-slate-400">Aylık işlem özeti · giriş, çıkış, süre ve sonuç</p>
                     </div>
                 </div>
                 <button onclick="closeMonthTradesModal()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-semibold transition">✕</button>
             </div>
 
             <!-- Yatay Kaydırılabilir Ay Sekmeleri -->
-            <div class="pt-3 pb-2 shrink-0 border-b border-slate-100 dark:border-slate-800">
-                <div class="text-[10px] font-bold tracking-wider uppercase text-slate-400 mb-1.5">AY SEÇİMİ</div>
-                <div id="modalMonthTabsContainer" class="flex items-center space-x-1.5 overflow-x-auto pb-1"></div>
+            <div class="pt-2 pb-1 shrink-0 border-b border-slate-100 dark:border-slate-800">
+                <div class="hidden">AY SEÇİMİ</div>
+                <div id="modalMonthTabsContainer" class="flex flex-wrap items-center gap-1"></div>
             </div>
 
             <!-- Seçili Ayın Özet Kartı -->
-            <div class="pt-3 pb-2 shrink-0">
-                <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
+            <div class="pt-2 pb-1 shrink-0">
+                <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-700/60">
                     <div>
                         <span id="modalActiveMonthName" class="font-extrabold text-sm text-slate-900 dark:text-white block">Eylül 2026</span>
                         <span id="modalActiveMonthTradesCount" class="text-[11px] text-slate-400">9 İşlem Gerçekleşti</span>
@@ -482,12 +488,11 @@
             </div>
 
             <!-- İşlem Kartları Listesi -->
-            <div id="modalTradesListContainer" class="flex-1 overflow-y-auto space-y-2 pr-1 py-2"></div>
+            <div id="modalTradesListContainer" class="min-h-0 overflow-hidden py-1"></div>
 
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 shrink-0">
-                <button onclick="closeMonthTradesModal()" class="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-bold text-xs text-slate-700 dark:text-slate-300 transition">
-                    Pencereyi Kapat
-                </button>
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 shrink-0 flex items-center justify-between gap-2">
+                <div id="monthModalPagination" class="flex items-center gap-1.5 text-xs"></div>
+                <button onclick="closeMonthTradesModal()" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 font-semibold text-[10px] text-slate-700 dark:text-slate-300 transition">Kapat</button>
             </div>
         </div>
     </div>
@@ -671,6 +676,6 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=7"></script>
-    <script src="app.js?v=46"></script>
+    <script src="app.js?v=47"></script>
 </body>
 </html>
