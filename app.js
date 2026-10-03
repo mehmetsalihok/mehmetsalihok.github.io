@@ -1728,15 +1728,117 @@ function positionExtremeText(pos, value) {
     return `${formatCryptoPrice(Number(value))} (${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%)`;
 }
 
+const positionExtremaHistoryJobs = new Map();
+const positionExtremaHistoryAttempt = new Map();
+
+function positionExtremaCoverageText(pos) {
+    if (pos.extremaHistoryStatus === 'loading') return 'Girişten sonraki geçmiş fiyatlar yükleniyor…';
+    if (pos.extremaHistoryStatus === 'error') return 'Geçmiş veri alınamadı · canlı takip devam ediyor, tekrar denenecek';
+    if (pos.extremaHistoryEntryTime === Number(pos.entryTime) && pos.extremaHistoryThrough >= Number(pos.entryTime)) {
+        return `Girişten itibaren: ${formatShortDate(pos.entryTime)} · geçmiş + canlı`;
+    }
+    return pos.extremaTrackingStartedAt ? `Canlı takip: ${formatShortDate(pos.extremaTrackingStartedAt)} · geçmiş kontrolü bekleniyor`
+        : 'Geçmiş kontrolü ve ilk güncel fiyat bekleniyor';
+}
+
+async function fetchPositionHistoryData(path, params) {
+    let error;
+    for (const host of ['https://data-api.binance.vision', 'https://api.binance.com']) {
+        try {
+            const data = await fetchJsonWithTimeout(`${host}/api/v3/${path}?${new URLSearchParams(params)}`, 8000);
+            if (!Array.isArray(data)) throw new Error('Geçersiz geçmiş veri');
+            return data;
+        } catch (e) { error = e; }
+    }
+    throw error;
+}
+
+async function readPositionExtremaHistory(symbol, start, end) {
+    const minute = 60000;
+    let low = Infinity, high = -Infinity, lowAt = null, highAt = null;
+    const merge = (price, time) => {
+        price = Number(price);
+        if (!Number.isFinite(price) || price <= 0) throw new Error('Geçersiz fiyat');
+        if (price < low) { low = price; lowAt = time; }
+        if (price > high) { high = price; highAt = time; }
+    };
+    let cursor = start;
+    // Giriş dakikasının tamamı kullanılamaz: girişten önceki iğneler dışarıda kalmalı.
+    if (cursor % minute !== 0) {
+        const partialEnd = Math.min(end, Math.ceil(cursor / minute) * minute - 1);
+        let fromId = null, finished = false;
+        for (let page = 0; page < 100; page++) {
+            const params = fromId === null ? {symbol, startTime: cursor, endTime: partialEnd, limit: 1000}
+                : {symbol, fromId, limit: 1000};
+            const trades = await fetchPositionHistoryData('aggTrades', params);
+            for (const t of trades) if (Number(t.T) >= cursor && Number(t.T) <= partialEnd) merge(t.p, Number(t.T));
+            if (trades.length < 1000 || Number(trades[trades.length - 1].T) > partialEnd) { finished = true; break; }
+            const nextId = Number(trades[trades.length - 1].a) + 1;
+            if (!Number.isSafeInteger(nextId) || (fromId !== null && nextId <= fromId)) throw new Error('Geçmiş sayfalama hatası');
+            fromId = nextId;
+        }
+        if (!finished) throw new Error('Giriş dakikası henüz tamamlanamadı');
+        cursor = partialEnd + 1;
+    }
+    while (cursor <= end) {
+        const pageEnd = Math.min(end, cursor + 1000 * minute - 1);
+        const candles = await fetchPositionHistoryData('klines', {symbol, interval: '1m', startTime: cursor, endTime: pageEnd, limit: 1000});
+        const expected = Math.floor((pageEnd - cursor + 1) / minute);
+        if (candles.length !== expected) throw new Error('Geçmiş mum verisinde eksik var');
+        for (let i = 0; i < candles.length; i++) {
+            const candle = candles[i];
+            if (Number(candle[0]) !== cursor + i * minute) throw new Error('Geçmiş mum sırası hatalı');
+            merge(candle[3], Number(candle[0]));
+            merge(candle[2], Number(candle[0]));
+        }
+        cursor = pageEnd + 1;
+    }
+    return {low, high, lowAt, highAt};
+}
+
+async function backfillPositionExtrema(pos) {
+    const entry = Number(pos.entryTime);
+    const end = Math.floor(Date.now() / 60000) * 60000 - 1;
+    if (!Number.isFinite(entry) || entry <= 0 || end < entry || !pos.symbol) return;
+    const start = pos.extremaHistoryEntryTime === entry && Number.isFinite(pos.extremaHistoryThrough)
+        ? Math.max(entry, pos.extremaHistoryThrough + 1) : entry;
+    if (start > end || positionExtremaHistoryJobs.has(pos.id)) return;
+    if (Date.now() - (positionExtremaHistoryAttempt.get(pos.id) || 0) < 60000) return;
+    positionExtremaHistoryAttempt.set(pos.id, Date.now());
+    positionExtremaHistoryJobs.set(pos.id, true);
+    pos.extremaHistoryStatus = 'loading';
+    updatePositionExtremaDisplay(pos);
+    try {
+        const history = await readPositionExtremaHistory(pos.symbol, start, end);
+        if (!KZ_STATE.activePositions.includes(pos) || Number(pos.entryTime) !== entry) return;
+        const low = Math.min(Number(pos.entryPrice), history.low);
+        const high = Math.max(Number(pos.entryPrice), history.high);
+        if (!(pos.lowestObservedPrice > 0) || low < pos.lowestObservedPrice) { pos.lowestObservedPrice = low; pos.lowestObservedAt = history.lowAt || entry; }
+        if (!(pos.highestObservedPrice > 0) || high > pos.highestObservedPrice) { pos.highestObservedPrice = high; pos.highestObservedAt = history.highAt || entry; }
+        pos.extremaHistoryEntryTime = entry;
+        pos.extremaHistoryThrough = end;
+        pos.extremaHistoryStatus = 'ready';
+        savePositions();
+    } catch (e) {
+        if (KZ_STATE.activePositions.includes(pos)) pos.extremaHistoryStatus = 'error';
+    } finally {
+        positionExtremaHistoryJobs.delete(pos.id);
+        if (KZ_STATE.activePositions.includes(pos)) updatePositionExtremaDisplay(pos);
+    }
+}
+
+function refreshPositionExtremaHistory() {
+    // Ardışık işleme, aynı anda çok sayıda geçmiş veri isteğini önler.
+    return (KZ_STATE.activePositions || []).slice().reduce((job, pos) => job.then(() => backfillPositionExtrema(pos)), Promise.resolve());
+}
+
 function updatePositionExtremaDisplay(pos) {
     const low = document.getElementById(`active-pos-low-${pos.id}`);
     const high = document.getElementById(`active-pos-high-${pos.id}`);
     const since = document.getElementById(`active-pos-extrema-since-${pos.id}`);
     if (low) low.textContent = positionExtremeText(pos, pos.lowestObservedPrice);
     if (high) high.textContent = positionExtremeText(pos, pos.highestObservedPrice);
-    if (since) since.textContent = pos.extremaTrackingStartedAt
-        ? `Canlı takip: ${formatShortDate(pos.extremaTrackingStartedAt)}`
-        : 'Takip ilk güncel fiyatla başlayacak';
+    if (since) since.textContent = positionExtremaCoverageText(pos);
 }
 
 function trackPositionExtrema(coin, price) {
@@ -1765,6 +1867,7 @@ function trackPositionExtrema(coin, price) {
 }
 
 function renderActivePositionsList() {
+    refreshPositionExtremaHistory();
     if (!elActivePositionsCountBadge || !elActivePositionsList) return;
     elActivePositionsCountBadge.textContent = `${KZ_STATE.activePositions.length} / ${KZ_STATE.maxSlots} Slot`;
     if (KZ_STATE.activePositions.length === 0) {
@@ -1808,7 +1911,7 @@ function renderActivePositionsList() {
                         <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">İzlenen en düşük</span><span id="active-pos-low-${pos.id}" class="font-bold text-rose-600 dark:text-rose-400 tabular-nums break-words">${positionExtremeText(pos, pos.lowestObservedPrice)}</span></div>
                         <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">İzlenen en yüksek</span><span id="active-pos-high-${pos.id}" class="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums break-words">${positionExtremeText(pos, pos.highestObservedPrice)}</span></div>
                     </div>
-                    <div id="active-pos-extrema-since-${pos.id}" class="text-[9px] text-slate-400 dark:text-slate-500" title="Sitenin aldığı canlı fiyatlar izlenir. Site kapalıyken oluşan fiyat hareketleri bu kayıtta yer almaz.">${pos.extremaTrackingStartedAt ? 'Canlı takip: ' + formatShortDate(pos.extremaTrackingStartedAt) : 'Takip ilk güncel fiyatla başlayacak'}</div>
+                    <div id="active-pos-extrema-since-${pos.id}" class="text-[9px] text-slate-400 dark:text-slate-500" title="Girişten sonraki tamamlanmış dakikalar geçmiş veriden, güncel dakika canlı akıştan izlenir. Giriş dakikası giriş saatinden sonraki işlemlerle hesaplanır.">${positionExtremaCoverageText(pos)}</div>
                 </div>
                 <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition cursor-pointer">Pozisyonu Kapat</button>
             </div>`;
@@ -3462,6 +3565,7 @@ async function startEngine() {
     setupSymbolLiveValidation();
     setTimeout(startHealthMonitor, 3000);
 
+    setInterval(refreshPositionExtremaHistory, 60000);
     setInterval(fetchMarketRate, 10000);
     setInterval(fetchLiveTickerFallback, 5000);
     setInterval(renderHistoryTrades, 30000);
