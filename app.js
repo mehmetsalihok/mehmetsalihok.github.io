@@ -50,6 +50,8 @@ const KZ_STATE = {
     validSymbols: new Set(),
     activePositions: [],
     pendingSignals: [],
+    pendingClosedTrades: [],
+    historyTab: 'slot',
     closedTrades: [],
     activeFilter: 'all',
     pendingWizardCandidate: null,
@@ -409,6 +411,8 @@ function addBuySignalToPending(signal) {
         triggerPrice: signal.triggerPrice,
         triggerRsi: signal.triggerRsi,
         time: signal.time,
+        profitTarget: signal.profitTarget,
+        targetPrice: signal.triggerPrice * (1 + signal.profitTarget / 100),
         source: 'buy-alert'
     });
     savePending();
@@ -610,6 +614,7 @@ function isCoinMonthlyLocked(coin) {
 // 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
 function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
     if (coin.isActive === false) return;
+    updatePendingSignalLive(coin, livePrice);
     if (!coin.rawCandles || coin.rawCandles.length === 0) return;
 
     const intervalMs = getIntervalMilliseconds(coin.interval);
@@ -1041,10 +1046,27 @@ function generateMonthlyTableHtml(coin) {
     `;
 }
 
+function setHistoryTab(tab) {
+    if (!['slot', 'pending', 'simulation'].includes(tab)) return;
+    KZ_STATE.historyTab = tab;
+    KZ_STATE.historyPage = 0;
+    renderHistoryTrades();
+}
+
 function renderHistoryTrades() {
     if (!elHistoryContainer) return;
     
-    const allTrades = (KZ_STATE.executedGlobalTrades || []).slice(0, 50);
+    const tab = KZ_STATE.historyTab || 'slot';
+    document.querySelectorAll('[data-history-tab]').forEach(button => {
+        const selected = button.dataset.historyTab === tab;
+        button.setAttribute('aria-selected', String(selected));
+        button.classList.toggle('bg-blue-600', selected);
+        button.classList.toggle('text-white', selected);
+    });
+    const trades = tab === 'pending' ? KZ_STATE.pendingClosedTrades
+        : tab === 'slot' ? KZ_STATE.closedTrades
+        : (KZ_STATE.executedGlobalTrades || []).filter(t => !t.source);
+    const allTrades = (trades || []).slice().sort((a, b) => b.exitTime - a.exitTime).slice(0, 50);
     const totalTradesCount = allTrades.length;
     const pageSize = 5;
     const totalPages = Math.max(1, Math.ceil(totalTradesCount / pageSize));
@@ -1094,6 +1116,7 @@ function renderHistoryTrades() {
                         <span class="font-black text-[11px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600 text-slate-800 dark:text-slate-100 whitespace-nowrap">${t.symbol.replace('USDT', '')}</span>
                         ${t.isManual ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800 whitespace-nowrap" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
                         ${t.editedAt ? '<span class="text-[9px] px-1 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 whitespace-nowrap" title="Gerçek satış kaydı düzeltildi">DÜZ.</span>' : ''}
+                        ${t.source === 'pending' ? '<span class="text-[9px] text-amber-600">BEKLEME · Portföye dahil değil</span>' : ''}
                         ${t.source ? '' : '<span class="text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 whitespace-nowrap">SİMÜLASYON</span>'}
                         <span class="font-semibold text-[10px] leading-tight text-slate-700 dark:text-slate-200 break-words">${t.editedAt ? 'Gerçek Satış' : t.reason}</span>
                     </div>
@@ -1221,7 +1244,8 @@ function prevHistoryPage() {
 }
 
 function nextHistoryPage() {
-    const totalTrades = (KZ_STATE.executedGlobalTrades || []).slice(0, 50).length;
+    const records = KZ_STATE.historyTab === 'pending' ? KZ_STATE.pendingClosedTrades : KZ_STATE.historyTab === 'simulation' ? (KZ_STATE.executedGlobalTrades || []).filter(t => !t.source) : KZ_STATE.closedTrades;
+    const totalTrades = (records || []).slice(0, 50).length;
     const totalPages = Math.max(1, Math.ceil(totalTrades / 5));
     if (KZ_STATE.historyPage < totalPages - 1) {
         KZ_STATE.historyPage++;
@@ -1770,6 +1794,40 @@ function submitManualPosition(event) {
     recalculateFullPortfolio();
 }
 
+function ensurePendingTarget(item, coin) {
+    if (!Number.isFinite(Number(item.profitTarget))) item.profitTarget = Number(coin?.profitTarget || 0);
+    if (!(Number(item.targetPrice) > 0)) item.targetPrice = Number(item.triggerPrice) * (1 + Number(item.profitTarget) / 100);
+}
+
+function savePendingClosedTrades() {
+    localStorage.setItem('kuzgun_pending_closed_trades', JSON.stringify(KZ_STATE.pendingClosedTrades));
+}
+
+function updatePendingSignalLive(coin, price) {
+    if (!coin || !Number.isFinite(Number(price)) || Number(price) <= 0) return;
+    let changed = false;
+    for (const item of KZ_STATE.pendingSignals.slice()) {
+        if (item.coinId !== coin.id && item.symbol !== coin.symbol) continue;
+        ensurePendingTarget(item, coin);
+        item.livePrice = Number(price);
+        changed = true;
+        if (!(Number(item.profitTarget) > 0) || Number(price) < item.targetPrice) continue;
+        KZ_STATE.pendingSignals = KZ_STATE.pendingSignals.filter(p => p.id !== item.id);
+        KZ_STATE.pendingClosedTrades.unshift({
+            id: 'pending_closed_' + item.id, coinId: item.coinId, symbol: item.symbol,
+            displaySymbol: item.displaySymbol, entryPrice: Number(item.triggerPrice),
+            exitPrice: Number(price), targetPrice: item.targetPrice, profitTarget: item.profitTarget,
+            pnlPercent: (Number(price) / Number(item.triggerPrice) - 1) * 100,
+            entryTime: item.time, exitTime: Date.now(), source: 'pending',
+            reason: 'Beklemede kâr hedefi'
+        });
+        savePendingClosedTrades();
+        savePending();
+        renderHistoryTrades();
+    }
+    if (changed) renderPendingSignalsList();
+}
+
 function renderPendingSignalsList() {
     if (!elPendingSignalsCountBadge || !elPendingSignalsList) return;
     elPendingSignalsCountBadge.textContent = `${KZ_STATE.pendingSignals.length} Bekleyen`;
@@ -1778,19 +1836,45 @@ function renderPendingSignalsList() {
         return;
     }
 
-    elPendingSignalsList.innerHTML = KZ_STATE.pendingSignals.map(item => `
+    elPendingSignalsList.innerHTML = KZ_STATE.pendingSignals.map(item => {
+        const coin = KZ_STATE.coins.find(c => c.id === item.coinId || c.symbol === item.symbol);
+        ensurePendingTarget(item, coin);
+        const livePrice = Number(item.livePrice || coin?.price);
+        const hasPrice = Number.isFinite(livePrice) && livePrice > 0;
+        const pnl = hasPrice ? (livePrice / item.triggerPrice - 1) * 100 : 0;
+        const color = !hasPrice || Math.abs(pnl) < 0.005 ? 'text-amber-600' : pnl > 0 ? 'text-emerald-600' : 'text-rose-600';
+        return `
         <div class="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 rounded-lg p-2.5 space-y-2">
-            <div class="flex items-center justify-between">
-                <span class="font-bold text-xs text-slate-900 dark:text-white">${item.displaySymbol} <span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 font-semibold tabular-nums">RSI: ${(item.triggerRsi || 0).toFixed(1)}</span></span>
-                <button onclick="dismissPending('${item.id}')" class="text-slate-400 hover:text-rose-600 text-xs font-semibold cursor-pointer">✕</button>
+            <div class="flex items-center justify-between gap-2">
+                <span class="font-bold text-xs text-slate-900 dark:text-white">${item.displaySymbol || item.symbol}</span>
+                <span class="font-bold text-xs tabular-nums ${color}">${hasPrice ? (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%' : 'Fiyat bekleniyor'}</span>
+                <button onclick="dismissPending('${item.id}')" class="text-slate-400 hover:text-rose-600 text-xs font-semibold cursor-pointer" title="Listeden kaldır">✕</button>
             </div>
-            <div class="text-[10px] text-slate-600 dark:text-slate-300">Tetiklenme: <strong class="text-slate-900 dark:text-white tabular-nums">${formatCryptoPrice(item.triggerPrice)}</strong></div>
+            <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-600 dark:text-slate-300 tabular-nums">
+                <span>Sinyal: <strong>${formatCryptoPrice(item.triggerPrice)}</strong></span>
+                <span>Güncel: <strong>${hasPrice ? formatCryptoPrice(livePrice) : '—'}</strong></span>
+                <span>Hedef: <strong>${formatCryptoPrice(item.targetPrice)}</strong></span>
+                <span>Hedef kâr: <strong>%${Number(item.profitTarget || 0).toFixed(2)}</strong></span>
+            </div>
+            <div class="text-[9px] text-slate-400">${formatShortDate(item.time)} · Portföye dahil değil</div>
             <button onclick="forceEnterFromPending('${item.id}')" class="w-full py-1 rounded bg-blue-600 hover:bg-blue-500 text-white text-[11px] font-semibold transition shadow-sm cursor-pointer">Slot Aç & Dahil Et</button>
-        </div>`).join('');
+        </div>`;
+    }).join('');
 }
 
 function clearHistory() {
-    if (confirm("İşlem geçmişi sıfırlansın mı?")) {
+    if (KZ_STATE.historyTab === 'simulation') {
+        showToast('Simülasyon kayıtları strateji verilerinden hesaplanır.');
+        return;
+    }
+    const message = KZ_STATE.historyTab === 'pending' ? 'Beklemede kapanan sinyal geçmişi sıfırlansın mı?' : 'Slotta kapanan işlem geçmişi sıfırlansın mı?';
+    if (confirm(message)) {
+        if (KZ_STATE.historyTab === 'pending') {
+            KZ_STATE.pendingClosedTrades = [];
+            savePendingClosedTrades();
+            renderHistoryTrades();
+            return;
+        }
         KZ_STATE.closedTrades = [];
         KZ_STATE.executedGlobalTrades = [];
         saveClosedTrades();
@@ -1803,7 +1887,10 @@ function forceEnterFromPending(pendingId) {
     const idx = KZ_STATE.pendingSignals.findIndex(p => p.id === pendingId);
     if (idx === -1) return;
     const pending = KZ_STATE.pendingSignals[idx];
+    if (KZ_STATE.activePositions.length >= KZ_STATE.maxSlots) return;
     const coin = KZ_STATE.coins.find(c => c.id === pending.coinId || c.symbol === pending.symbol);
+    if (coin) updatePendingSignalLive(coin, coin.price);
+    if (!KZ_STATE.pendingSignals.some(p => p.id === pendingId)) return;
     if (coin && !isCoinMonthlyLocked(coin)) {
         if (openPosition(coin)) {
             renderPendingSignalsList();
@@ -2641,6 +2728,8 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
     savePositions();
     saveClosedTrades();
 
+    // Önce hedefini tamamlamış bekleyen sinyalleri ayıkla.
+    for (const pendingCoin of KZ_STATE.coins) updatePendingSignalLive(pendingCoin, pendingCoin.price);
     if (KZ_STATE.pendingSignals.length > 0 && KZ_STATE.activePositions.length < KZ_STATE.maxSlots) {
         const next = KZ_STATE.pendingSignals.shift();
         savePending();
@@ -2712,6 +2801,13 @@ function loadStorage() {
     if (savedPending) {
         try { KZ_STATE.pendingSignals = JSON.parse(savedPending); } catch(e) {}
     }
+
+    try {
+        const records = JSON.parse(localStorage.getItem('kuzgun_pending_closed_trades') || '[]');
+        KZ_STATE.pendingClosedTrades = Array.isArray(records) ? records : [];
+    } catch (e) { KZ_STATE.pendingClosedTrades = []; }
+    KZ_STATE.pendingSignals.forEach(item => ensurePendingTarget(item, KZ_STATE.coins.find(c => c.id === item.coinId || c.symbol === item.symbol)));
+    savePending();
 
     const savedClosedTrades = localStorage.getItem('kuzgun_closed_trades');
     if (savedClosedTrades) {

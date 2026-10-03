@@ -855,7 +855,7 @@
         const KUZGUN_BACKUP_CATEGORIES = ['coins', 'portfolio', 'positions', 'history', 'preferences'];
         const KUZGUN_PORTFOLIO_KEYS = new Set(['kuzgun_base_usd', 'kuzgun_user_balance', 'kuzgun_portfolio_start_date', 'kuzgun_max_slots', 'kuzgun_selected_year', 'kuzgun_slot_constraint_enabled', 'kuzgun_fee_deduction_enabled']);
         const KUZGUN_POSITION_KEYS = new Set(['kuzgun_active_pos', 'kuzgun_pending_signals']);
-        const KUZGUN_HISTORY_KEYS = new Set(['kuzgun_closed_trades']);
+        const KUZGUN_HISTORY_KEYS = new Set(['kuzgun_closed_trades', 'kuzgun_pending_closed_trades']);
 
         function isBackupStorageKey(key) {
             return typeof key === 'string' && key.startsWith('kuzgun_') && !KUZGUN_BACKUP_EXCLUDED_KEYS.has(key);
