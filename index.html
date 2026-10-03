@@ -92,6 +92,13 @@
         html.oled ::-webkit-scrollbar-thumb:hover { background: #333333 !important; }
         html.oled #livePositionsPanel { background: #000000 !important; border-color: #1e40af !important; }
         html.oled .position-card { background: #000000 !important; }
+        #cardsGrid { align-items: start; }
+        .coin-details { display: grid; grid-template-rows: 0fr; opacity: 0; margin-top: 0 !important; transition: grid-template-rows .28s cubic-bezier(.22,1,.36,1), opacity .2s ease, margin-top .28s ease; }
+        .coin-details[data-open="true"] { grid-template-rows: 1fr; opacity: 1; margin-top: .5rem !important; }
+        .coin-details-clip { min-height: 0; overflow: hidden; }
+        .coin-details-toggle { margin-top: .375rem !important; transition: color .2s ease; }
+        .coin-details-toggle svg { transition: transform .28s cubic-bezier(.22,1,.36,1); }
+        @media (prefers-reduced-motion: reduce) { .coin-details, .coin-details-toggle svg { transition: none; } }
     </style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
@@ -664,6 +671,6 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=7"></script>
-    <script src="app.js?v=45"></script>
+    <script src="app.js?v=46"></script>
 </body>
 </html>

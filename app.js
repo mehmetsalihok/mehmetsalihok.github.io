@@ -1454,10 +1454,10 @@ function renderSingleCard(coin) {
     const subTabIndex = activeSubTab === 'monthly' ? 0 : 1;
 
     const strategyFixedHtml = `
-        <div class="bg-slate-50/80 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200/80 dark:border-slate-700/80 space-y-2.5 text-xs">
-            <div class="grid grid-cols-2 gap-2">
+        <div class="bg-slate-50/80 dark:bg-slate-800/50 p-2 rounded-lg border border-slate-200/80 dark:border-slate-700/80 grid grid-cols-3 gap-2 text-xs">
+            <div class="contents">
                 <div>
-                    <label class="block text-slate-500 dark:text-slate-400 text-[10px] font-semibold mb-0.5">Zaman Dilimi</label>
+                    <label class="block text-slate-500 dark:text-slate-400 text-[9px] font-medium mb-0.5">Zaman</label>
                     <select id="select-interval-${coin.id}" onchange="handleLiveIntervalChange('${coin.id}')"
                         class="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-semibold text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:border-blue-500">
                         <option value="5m" ${coin.interval === '5m' ? 'selected' : ''}>5m</option>
@@ -1468,31 +1468,31 @@ function renderSingleCard(coin) {
                     </select>
                 </div>
                 <div>
-                    <label class="block text-slate-500 dark:text-slate-400 text-[10px] font-semibold mb-0.5">RSI Boyu</label>
+                    <label class="block text-slate-500 dark:text-slate-400 text-[9px] font-medium mb-0.5">RSI Boyu</label>
                     <input type="number" id="input-rsiLen-${coin.id}" value="${coin.rsiLength}" min="2" max="50" oninput="handleLiveParamChange('${coin.id}')"
                         class="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-semibold text-slate-800 dark:text-slate-100 text-xs focus:outline-none focus:border-blue-500">
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="contents">
                 <div>
-                    <label class="block text-slate-500 dark:text-slate-400 text-[10px] font-semibold mb-0.5">AL Sinyali (RSI ≤)</label>
+                    <label class="block text-slate-500 dark:text-slate-400 text-[9px] font-medium mb-0.5">AL RSI (≤)</label>
                     <input type="number" id="input-buy-${coin.id}" value="${coin.buyRsi}" step="1" oninput="handleLiveParamChange('${coin.id}')"
                         class="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-bold text-emerald-600 dark:text-emerald-400 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
                 </div>
                 <div>
-                    <label class="block text-slate-500 dark:text-slate-400 text-[10px] font-semibold mb-0.5">SAT Sinyali (RSI ≥)</label>
+                    <label class="block text-slate-500 dark:text-slate-400 text-[9px] font-medium mb-0.5">SAT RSI (≥)</label>
                     <input type="number" id="input-sell-${coin.id}" value="${coin.sellRsi}" step="1" oninput="handleLiveParamChange('${coin.id}')"
                         class="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-bold text-rose-600 dark:text-rose-400 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
                 </div>
             </div>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="contents">
                 <div>
-                    <label class="block text-slate-500 dark:text-slate-400 text-[10px] font-semibold mb-0.5">Hedef Kâr (%)</label>
+                    <label class="block text-slate-500 dark:text-slate-400 text-[9px] font-medium mb-0.5">Hedef (%)</label>
                     <input type="number" id="input-profit-${coin.id}" value="${coin.profitTarget}" step="0.1" oninput="handleLiveParamChange('${coin.id}')"
                         class="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-bold text-blue-600 dark:text-blue-400 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
                 </div>
                 <div>
-                    <label class="block text-slate-500 dark:text-slate-400 text-[10px] font-semibold mb-0.5">Aylık Kilit (%)</label>
+                    <label class="block text-slate-500 dark:text-slate-400 text-[9px] font-medium mb-0.5">Kilit (%)</label>
                     <input type="number" id="input-cap-${coin.id}" value="${coin.monthlyCap}" step="0.1" oninput="handleLiveParamChange('${coin.id}')"
                         class="w-full px-2 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded font-bold text-indigo-600 dark:text-indigo-400 text-xs focus:outline-none focus:border-blue-500 tabular-nums">
                 </div>
@@ -1501,14 +1501,14 @@ function renderSingleCard(coin) {
     `;
 
     const monthlyPanelHtml = `
-        <div id="monthly-container-${coin.id}">
+        <div id="monthly-container-${coin.id}" class="max-h-40 overflow-y-auto pr-1">
             ${generateMonthlyTableHtml(coin)}
         </div>
     `;
 
     const trades = getCoinDisplayTrades(coin);
     const tradesPanelHtml = `
-        <div id="trades-container-${coin.id}" class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+        <div id="trades-container-${coin.id}" class="space-y-1.5 max-h-40 overflow-y-auto pr-1">
             ${trades.map(t => `
                 <div class="flex items-center justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">
                     <div class="space-y-0.5">
@@ -1581,8 +1581,9 @@ function renderSingleCard(coin) {
 
         <div id="coin-overview-${coin.id}" class="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2">${coinCardMonthSummary(coin)}</div>
 
-        ${isExpanded ? `
-            <div class="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
+        <div id="coin-details-${coin.id}" class="coin-details" data-open="${isExpanded}" aria-hidden="${!isExpanded}" ${isExpanded ? '' : 'inert'}>
+            <div class="coin-details-clip">
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <div class="flex flex-wrap justify-between gap-1 text-[10px] text-slate-500 dark:text-slate-400">
                     <span>24s düşük <strong id="low24-${coin.id}" class="text-rose-500">${formatCryptoPrice(coin.low24)}</strong></span>
                     <span>24s yüksek <strong id="high24-${coin.id}" class="text-emerald-600">${formatCryptoPrice(coin.high24)}</strong></span>
@@ -1601,12 +1602,14 @@ function renderSingleCard(coin) {
                         </div>
                     </div>
                 </div>
-            </div>` : ''}
+            </div>
+            </div>
+        </div>
 
-        <button type="button" onclick="toggleCardExpand('${coin.id}')" aria-expanded="${isExpanded}" class="group w-full flex items-center justify-center gap-1 pt-2 border-t border-slate-100 dark:border-slate-800 text-[9px] font-bold tracking-wider text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 transition-colors cursor-pointer select-none" title="${isExpanded ? 'Detayları kapat' : 'Detayları aç'}">
-            <span class="pointer-events-none">${isExpanded ? 'DETAYLARI KAPAT' : 'DETAYLARI AÇ'}</span>
-            <svg class="w-3.5 h-3.5 pointer-events-none transition-transform duration-300 ease-in-out group-hover:translate-y-0.5 ${isExpanded ? 'rotate-180' : 'animate-bounce'}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+        <button id="coin-details-toggle-${coin.id}" type="button" onclick="toggleCardExpand('${coin.id}')" aria-controls="coin-details-${coin.id}" aria-expanded="${isExpanded}" class="coin-details-toggle self-end flex items-center justify-center gap-1 px-1 py-1 text-[9px] font-medium text-slate-400 hover:text-blue-600 dark:text-slate-500 dark:hover:text-blue-400 cursor-pointer select-none" title="${isExpanded ? 'Detayları kapat' : 'Detayları aç'}">
+            <span id="coin-details-label-${coin.id}">${isExpanded ? 'Kapat' : 'Detaylar'}</span>
+            <svg id="coin-details-chevron-${coin.id}" class="w-3 h-3 pointer-events-none" style="transform:rotate(${isExpanded ? 180 : 0}deg)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
         </button>
     `;
@@ -2230,9 +2233,20 @@ function toggleCardExpand(coinId) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
     if (!coin) return;
     coin.isExpanded = !coin.isExpanded;
-    if (coin.isExpanded && !coin.simMonthlyStats) runCardBacktest(coin);
+    if (coin.isExpanded && !coin.simMonthlyStats) { runCardBacktest(coin); updateCardTablesOnly(coin); }
     saveCoins();
-    renderSingleCard(coin);
+    const panel = document.getElementById(`coin-details-${coin.id}`);
+    const button = document.getElementById(`coin-details-toggle-${coin.id}`);
+    const label = document.getElementById(`coin-details-label-${coin.id}`);
+    const chevron = document.getElementById(`coin-details-chevron-${coin.id}`);
+    if (!panel || !button) { renderSingleCard(coin); return; }
+    panel.dataset.open = String(coin.isExpanded);
+    panel.inert = !coin.isExpanded;
+    panel.setAttribute('aria-hidden', String(!coin.isExpanded));
+    button.setAttribute('aria-expanded', String(coin.isExpanded));
+    button.title = coin.isExpanded ? 'Detayları kapat' : 'Detayları aç';
+    if (label) label.textContent = coin.isExpanded ? 'Kapat' : 'Detaylar';
+    if (chevron) chevron.style.transform = `rotate(${coin.isExpanded ? 180 : 0}deg)`;
 }
 
 async function toggleCoinActive(coinId) {
