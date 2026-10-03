@@ -176,9 +176,11 @@ function getCoinDisplayTrades(coin) {
 async function sendTelegramAlert(text, options = {}) {
     let chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
     let botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
-    if (options.channel === 'pending' && localStorage.getItem('kuzgun_pending_telegram_enabled') === 'true') {
-        botToken = (localStorage.getItem('kuzgun_pending_telegram_token') || '').trim();
-        chatId = (localStorage.getItem('kuzgun_pending_telegram_chat_id') || '').trim();
+    if (options.channel === 'pending' || options.channel === 'system') {
+        const prefix = `kuzgun_${options.channel}_telegram`;
+        if (localStorage.getItem(`${prefix}_enabled`) !== 'true') return false;
+        botToken = (localStorage.getItem(`${prefix}_token`) || '').trim();
+        chatId = (localStorage.getItem(`${prefix}_chat_id`) || '').trim();
     }
     if (!chatId || !botToken) return false;
 
@@ -279,10 +281,10 @@ async function runHealthCheck() {
     for (const [key, failed, failMessage, recoveryMessage] of checks) {
         if (failed && !KZ_HEALTH.alerts[key]) {
             KZ_HEALTH.alerts[key] = true;
-            await sendTelegramAlert(failMessage);
+            await sendTelegramAlert(failMessage, {channel: 'system'});
         } else if (!failed && KZ_HEALTH.alerts[key]) {
             KZ_HEALTH.alerts[key] = false;
-            await sendTelegramAlert(recoveryMessage);
+            await sendTelegramAlert(recoveryMessage, {channel: 'system'});
         }
     }
 
@@ -290,7 +292,7 @@ async function runHealthCheck() {
     const intervalMinutes = Number.isFinite(heartbeatMinutes) ? heartbeatMinutes : 60;
     const lastHeartbeat = parseInt(localStorage.getItem('kuzgun_health_last_telegram'), 10) || 0;
     if (intervalMinutes > 0 && now - lastHeartbeat >= intervalMinutes * 60000) {
-        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN ÇALIŞIYOR'))) {
+        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN ÇALIŞIYOR'), {channel: 'system'})) {
             localStorage.setItem('kuzgun_health_last_telegram', String(now));
         }
     }
@@ -300,7 +302,7 @@ async function startHealthMonitor() {
     if (!isHealthMonitorEnabled()) return runHealthCheck();
     if (localStorage.getItem('kuzgun_health_startup_notification') !== 'false' && !KZ_HEALTH.startupSent) {
         KZ_HEALTH.startupSent = true;
-        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN TERMİNAL BAŞLATILDI', '🚀'))) {
+        if (await sendTelegramAlert(buildHealthTelegramMessage('KUZGUN TERMİNAL BAŞLATILDI', '🚀'), {channel: 'system'})) {
             localStorage.setItem('kuzgun_health_last_telegram', String(Date.now()));
         }
     }
@@ -428,6 +430,7 @@ function addBuySignalToPending(signal) {
 }
 
 async function sendPendingTelegramAlert(message) {
+    if (localStorage.getItem('kuzgun_pending_telegram_enabled') !== 'true') return false;
     const sent = await sendTelegramAlert(message, {channel: 'pending'});
     if (!sent) showToast('Bekleme Telegram bildirimi gönderilemedi; bot ayarlarını kontrol et');
     return sent;

@@ -309,7 +309,7 @@
                         <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">✈️</span>
                         <div>
                             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">TELEGRAM SİNYAL BOTU</h2>
-                            <p class="text-[11px] text-slate-400">Bulut tabanlı anlık alım / satım mesaj entegrasyonu</p>
+                            <p class="text-[11px] text-slate-400">Üç ayrı bot: alım–satım, bekleme ve sistem bildirimleri</p>
                         </div>
                     </div>
 
@@ -321,16 +321,26 @@
                                 class="w-full bg-transparent font-semibold text-xs text-slate-900 dark:text-white focus:outline-none font-mono">
                             <button onclick="saveTelegramId()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition shrink-0 shadow-sm">Kaydet</button>
                         </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 RSI kırılımları bulut botu tarafından bu Chat ID'ye iletilir.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">İlk bot yalnızca alım ve satım sinyallerini gönderir. Kendi hesabına bildirim alıyorsan üç botta da aynı sayısal Chat ID kullanılır.</p>
                     </div>
                     <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
                         <label class="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200"><input id="pendingTelegramEnabled" type="checkbox" class="accent-amber-500">Bekleme bildirimleri için ayrı bot kullan</label>
-                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Kapalıysa bekleme mesajı mevcut bota gider. Açıkken yalnızca aşağıdaki bota gönderilir.</p>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Bekleme mesajları yalnızca bu bota gider. Kapalıysa bekleme bildirimi gönderilmez.</p>
                         <div class="grid sm:grid-cols-2 gap-2">
                             <label class="space-y-1"><span class="text-[10px] text-slate-500">Bekleme bot tokeni</span><input id="pendingTelegramToken" type="password" autocomplete="off" placeholder="BotFather'dan aldığın token" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></label>
                             <label class="space-y-1"><span class="text-[10px] text-slate-500">Bekleme Chat ID</span><input id="pendingTelegramChatId" type="text" placeholder="Aynı kişiyse mevcut Chat ID" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></label>
                         </div>
                         <div class="flex gap-2"><button type="button" onclick="savePendingTelegramSettings()" class="px-3 py-1.5 text-xs rounded-lg bg-amber-500 text-white font-semibold">Kaydet</button><button type="button" onclick="testPendingTelegram()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">Bekleme botunu test et</button></div>
+                        <p class="text-[10px] text-slate-400">BotFather’da /newbot ile bot oluştur, yeni botun sohbetinde Başlat’a bas. Token ve Chat ID yedeğe dahil edilmez.</p>
+                    </div>
+                    <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
+                        <label class="flex items-center gap-2 text-xs font-semibold text-slate-800 dark:text-slate-200"><input id="systemTelegramEnabled" type="checkbox" class="accent-emerald-500">Sistem bildirimleri için ayrı bot kullan</label>
+                        <p class="text-[10px] text-slate-500 dark:text-slate-400">Başlangıç, çalışıyor raporu, bağlantı sorunu ve düzelme mesajları yalnızca bu bota gider. Kapalıysa sistem Telegram bildirimi gönderilmez; sağlık kontrolü ekranda çalışmaya devam eder.</p>
+                        <div class="grid sm:grid-cols-2 gap-2">
+                            <label class="space-y-1"><span class="text-[10px] text-slate-500">Sistem bot tokeni</span><input id="systemTelegramToken" type="password" autocomplete="off" placeholder="BotFather'dan aldığın token" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></label>
+                            <label class="space-y-1"><span class="text-[10px] text-slate-500">Sistem Chat ID</span><input id="systemTelegramChatId" type="text" placeholder="Aynı kişiyse mevcut Chat ID" class="w-full px-2 py-2 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-white"></label>
+                        </div>
+                        <div class="flex gap-2"><button type="button" onclick="saveSystemTelegramSettings()" class="px-3 py-1.5 text-xs rounded-lg bg-emerald-500 text-white font-semibold">Kaydet</button><button type="button" onclick="testSystemTelegram()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">Sistem botunu test et</button></div>
                         <p class="text-[10px] text-slate-400">BotFather’da /newbot ile bot oluştur, yeni botun sohbetinde Başlat’a bas. Token ve Chat ID yedeğe dahil edilmez.</p>
                     </div>
                 </section>
@@ -683,7 +693,11 @@
 
             document.getElementById('pendingTelegramEnabled').checked = localStorage.getItem('kuzgun_pending_telegram_enabled') === 'true';
             document.getElementById('pendingTelegramToken').value = localStorage.getItem('kuzgun_pending_telegram_token') || '';
-            document.getElementById('pendingTelegramChatId').value = localStorage.getItem('kuzgun_pending_telegram_chat_id') || localStorage.getItem('kuzgun_telegram_chat_id') || '';
+            document.getElementById('pendingTelegramChatId').value = localStorage.getItem('kuzgun_pending_telegram_chat_id') || document.getElementById('inputTelegramChatId').value;
+            document.getElementById('systemTelegramEnabled').checked = localStorage.getItem('kuzgun_system_telegram_enabled') === 'true';
+            document.getElementById('systemTelegramToken').value = localStorage.getItem('kuzgun_system_telegram_token') || '';
+            document.getElementById('systemTelegramChatId').value = localStorage.getItem('kuzgun_system_telegram_chat_id') || document.getElementById('inputTelegramChatId').value;
+
             updateLivePreview();
         }
 
@@ -772,6 +786,15 @@
             }
         }
 
+        function telegramTestError(result) {
+            const detail = String(result.description || '').toLowerCase();
+            if (result.error_code === 401 || result.error_code === 404) return 'Bot tokeni geçersiz; BotFather tokenini kontrol et';
+            if (detail.includes('chat not found')) return 'Chat ID bulunamadı; kendi sayısal ID’ni kullan ve yeni botta /start gönder';
+            if (detail.includes('blocked')) return 'Bot engellenmiş; Telegram’da engeli kaldırıp /start gönder';
+            if (detail.includes('bots')) return 'Chat ID alanına botun ID’si yerine kendi sayısal Chat ID’ni yaz';
+            return 'Test başarısız; token, Chat ID ve botta Başlat durumunu kontrol et';
+        }
+
         function savePendingTelegramSettings() {
             const enabled = document.getElementById('pendingTelegramEnabled').checked;
             const token = document.getElementById('pendingTelegramToken').value.trim();
@@ -795,7 +818,34 @@
             try {
                 const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:chatId,text:'🧪 Bekleme botu testi. Bekleme listesine giriş mesajları bu sohbete gönderilecek.'})});
                 const result = await response.json();
-                showToast(response.ok && result.ok ? 'Bekleme botuna test mesajı gönderildi' : 'Test başarısız; token, Chat ID ve botta Başlat durumunu kontrol et');
+                showToast(response.ok && result.ok ? 'Bekleme botuna test mesajı gönderildi' : telegramTestError(result));
+            } catch (e) { showToast('Telegram bağlantısı kurulamadı'); }
+        }
+
+        function saveSystemTelegramSettings() {
+            const enabled = document.getElementById('systemTelegramEnabled').checked;
+            const token = document.getElementById('systemTelegramToken').value.trim();
+            const chatId = document.getElementById('systemTelegramChatId').value.trim();
+            if (enabled && (!/^\d+:[A-Za-z0-9_-]+$/.test(token) || !/^(?:-?\d+|@[A-Za-z0-9_]+)$/.test(chatId))) {
+                showToast('Geçerli bot tokeni ve Chat ID gir');
+                return false;
+            }
+            localStorage.setItem('kuzgun_system_telegram_enabled', String(enabled));
+            localStorage.setItem('kuzgun_system_telegram_token', token);
+            localStorage.setItem('kuzgun_system_telegram_chat_id', chatId);
+            showToast('Sistem Telegram ayarları kaydedildi');
+            return true;
+        }
+
+        async function testSystemTelegram() {
+            if (!document.getElementById('systemTelegramEnabled').checked) { showToast('Önce ayrı bot seçeneğini aç'); return; }
+            if (!saveSystemTelegramSettings()) return;
+            const token = localStorage.getItem('kuzgun_system_telegram_token');
+            const chatId = localStorage.getItem('kuzgun_system_telegram_chat_id');
+            try {
+                const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({chat_id:chatId,text:'🧪 Sistem botu testi. Başlangıç ve sistem sağlık bildirimleri bu sohbete gönderilecek.'})});
+                const result = await response.json();
+                showToast(response.ok && result.ok ? 'Sistem botuna test mesajı gönderildi' : telegramTestError(result));
             } catch (e) { showToast('Telegram bağlantısı kurulamadı'); }
         }
 
@@ -891,7 +941,7 @@
 
         const KUZGUN_BACKUP_FORMAT = 'kuzgun-terminal-backup';
         const KUZGUN_BACKUP_VERSION = 2;
-        const KUZGUN_BACKUP_EXCLUDED_KEYS = new Set(['kuzgun_telegram_chat_id', 'kuzgun_telegram_bot_token', 'kuzgun_bot_token', 'kuzgun_pending_telegram_token', 'kuzgun_pending_telegram_chat_id', 'kuzgun_pending_telegram_enabled']);
+        const KUZGUN_BACKUP_EXCLUDED_KEYS = new Set(['kuzgun_telegram_chat_id', 'kuzgun_telegram_bot_token', 'kuzgun_bot_token', 'kuzgun_pending_telegram_token', 'kuzgun_pending_telegram_chat_id', 'kuzgun_pending_telegram_enabled', 'kuzgun_system_telegram_token', 'kuzgun_system_telegram_chat_id', 'kuzgun_system_telegram_enabled']);
         const KUZGUN_BACKUP_CATEGORIES = ['coins', 'portfolio', 'positions', 'history', 'preferences'];
         const KUZGUN_PORTFOLIO_KEYS = new Set(['kuzgun_base_usd', 'kuzgun_user_balance', 'kuzgun_portfolio_start_date', 'kuzgun_max_slots', 'kuzgun_selected_year', 'kuzgun_slot_constraint_enabled', 'kuzgun_fee_deduction_enabled']);
         const KUZGUN_POSITION_KEYS = new Set(['kuzgun_active_pos', 'kuzgun_pending_signals']);
