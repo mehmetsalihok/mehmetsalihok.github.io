@@ -1389,6 +1389,33 @@ function updateCoinCardOverview(coin) {
     if (overview) overview.innerHTML = coinCardMonthSummary(coin);
 }
 
+function coinRsiScaleHtml(coin) {
+    const clampRsi = value => Math.min(100, Math.max(0, Number(value) || 0));
+    const buy = clampRsi(coin.buyRsi), sell = clampRsi(coin.sellRsi);
+    const closeLabels = Math.abs(sell - buy) < 22;
+    return `<div class="mx-6 space-y-1" aria-label="RSI ölçeği: 0–100">
+        <div class="w-full bg-slate-200/90 dark:bg-slate-800 rounded-md h-3 relative overflow-hidden flex ring-1 ring-inset ring-slate-300/60 dark:ring-slate-700 shadow-inner">
+            <div style="width:${buy}%" class="bg-emerald-500/25 border-r border-emerald-500/60 h-full shrink-0"></div>
+            <div style="width:${Math.max(0, sell - buy)}%" class="bg-slate-100/40 dark:bg-slate-700/40 h-full shrink-0"></div>
+            <div style="width:${Math.max(0, 100 - sell)}%" class="bg-rose-500/25 border-l border-rose-500/60 h-full shrink-0"></div>
+            <div id="rsi-needle-${coin.id}" class="absolute top-0 bottom-0 w-1 bg-slate-900 dark:bg-white shadow-md transition-all duration-300 z-10 -ml-0.5" style="left:${clampRsi(coin.rsi ?? 50)}%">
+                <div class="w-2.5 h-1.5 bg-slate-900 dark:bg-white rounded-sm -mt-0.5 -ml-[3px]"></div>
+            </div>
+        </div>
+        <div class="relative text-[8px] font-bold tabular-nums" style="height:${closeLabels ? 36 : 20}px">
+            <span class="absolute top-0 w-px h-1 bg-emerald-500" style="left:${buy}%"></span>
+            <span id="rsi-buy-label-${coin.id}" class="absolute whitespace-nowrap text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1 rounded border border-emerald-200 dark:border-emerald-800" style="left:${buy}%;top:4px;transform:translateX(-50%)">AL: ≤ ${coin.buyRsi}</span>
+            <span class="absolute top-0 w-px bg-rose-500" style="left:${sell}%;height:${closeLabels ? 20 : 4}px"></span>
+            <span id="rsi-sell-label-${coin.id}" class="absolute whitespace-nowrap text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1 rounded border border-rose-200 dark:border-rose-800" style="left:${sell}%;top:${closeLabels ? 20 : 4}px;transform:translateX(-50%)">SAT: ≥ ${coin.sellRsi}</span>
+        </div>
+    </div>`;
+}
+
+function updateCoinRsiScale(coin) {
+    const scale = document.getElementById(`rsi-scale-${coin.id}`);
+    if (scale) scale.innerHTML = coinRsiScaleHtml(coin);
+}
+
 function renderSingleCard(coin) {
     if (!elCardsGrid) return;
     let cardEl = document.getElementById(`card-${coin.id}`);
@@ -1549,22 +1576,7 @@ function renderSingleCard(coin) {
             </div>
         </div>
 
-        <div class="space-y-1.5 pt-1.5">
-            <div class="w-full bg-slate-200/90 dark:bg-slate-800 rounded-md h-3 relative overflow-hidden flex border border-slate-300/60 dark:border-slate-700 shadow-inner">
-                <div style="width: ${coin.buyRsi}%" class="bg-emerald-500/25 border-r border-emerald-500/60 h-full"></div>
-                <div style="width: ${Math.max(0, coin.sellRsi - coin.buyRsi)}%" class="bg-slate-100/40 dark:bg-slate-700/40 h-full"></div>
-                <div style="width: ${Math.max(0, 100 - coin.sellRsi)}%" class="bg-rose-500/25 border-l border-rose-500/60 h-full"></div>
-                <div id="rsi-needle-${coin.id}" class="absolute top-0 bottom-0 w-1 bg-slate-900 dark:bg-white shadow-md transition-all duration-300 z-10 -ml-0.5" style="left: ${Math.min(100, Math.max(0, coin.rsi || 50))}%">
-                    <div class="w-2.5 h-1.5 bg-slate-900 dark:bg-white rounded-sm -mt-0.5 -ml-[3px]"></div>
-                </div>
-            </div>
-            <div class="flex justify-between text-[8px] font-bold tabular-nums text-slate-400 dark:text-slate-500 px-0.5">
-                <span>0</span>
-                <span class="text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-1 py-0.2 rounded border border-emerald-200 dark:border-emerald-800">AL: ≤ ${coin.buyRsi}</span>
-                <span class="text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/50 px-1 py-0.2 rounded border border-rose-200 dark:border-rose-800">SAT: ≥ ${coin.sellRsi}</span>
-                <span>100</span>
-            </div>
-        </div>
+        <div id="rsi-scale-${coin.id}" class="pt-1.5">${coinRsiScaleHtml(coin)}</div>
 
         <div id="coin-overview-${coin.id}" class="pt-2.5 border-t border-slate-100 dark:border-slate-800 space-y-2">${coinCardMonthSummary(coin)}</div>
 
@@ -2165,6 +2177,7 @@ function handleLiveParamChange(coinId) {
     coin.monthlyCap = parseFloat(document.getElementById(`input-cap-${coin.id}`).value);
     coin.rsiLength = parseInt(document.getElementById(`input-rsiLen-${coin.id}`).value, 10);
 
+    updateCoinRsiScale(coin);
     runCardBacktest(coin);
     saveCoins();
     updateCardTablesOnly(coin);
