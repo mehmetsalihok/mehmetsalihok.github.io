@@ -173,9 +173,13 @@ function getCoinDisplayTrades(coin) {
 }
 
 // 📲 TELEGRAM BİLDİRİMİ GÖNDERİCİ
-async function sendTelegramAlert(text) {
-    const chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
-    const botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
+async function sendTelegramAlert(text, options = {}) {
+    let chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
+    let botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
+    if (options.channel === 'pending' && localStorage.getItem('kuzgun_pending_telegram_enabled') === 'true') {
+        botToken = (localStorage.getItem('kuzgun_pending_telegram_token') || '').trim();
+        chatId = (localStorage.getItem('kuzgun_pending_telegram_chat_id') || '').trim();
+    }
     if (!chatId || !botToken) return false;
 
     try {
@@ -419,8 +423,14 @@ function addBuySignalToPending(signal) {
     savePending();
     renderPendingSignalsList();
     buySignalAlertQueue = buySignalAlertQueue.filter(item => item.coinId !== signal.coinId && item.symbol !== signal.symbol);
-    sendTelegramAlert(`🟡 <b>COİN BEKLEMEYE ALINDI</b>\n\n<b>Coin:</b> #${signal.displaySymbol || signal.symbol}\n<b>Sinyal fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Sinyal zamanı:</b> ${formatShortDate(signal.time)}\n\nBu coin bekleme listesindeyken yeni alım bildirimi gönderilmeyecek.`);
+    sendPendingTelegramAlert(`🟡 <b>COİN BEKLEMEYE ALINDI</b>\n\n<b>Coin:</b> #${signal.displaySymbol || signal.symbol}\n<b>Sinyal fiyatı:</b> ${formatCryptoPrice(signal.triggerPrice)}\n<b>Hedef çıkış:</b> ${formatCryptoPrice(signal.triggerPrice * (1 + Number(signal.profitTarget || 0) / 100))}\n<b>Hedef kâr:</b> %${Number(signal.profitTarget || 0).toFixed(2)}\n<b>Sinyal zamanı:</b> ${formatShortDate(signal.time)}\n\nPozisyon açılmadı; coin bekleme listesine alındı.`);
     return true;
+}
+
+async function sendPendingTelegramAlert(message) {
+    const sent = await sendTelegramAlert(message, {channel: 'pending'});
+    if (!sent) showToast('Bekleme Telegram bildirimi gönderilemedi; bot ayarlarını kontrol et');
+    return sent;
 }
 
 function getBuySignalTimeoutAction() {
@@ -446,6 +456,7 @@ function buildBuySignalTelegramMessage(signal, isTest = false) {
 
 function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli', options = {}) {
     if (!coin) return;
+    if (!options.isTest && KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol)) return;
     if (!options.isTest && (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol)) return;
     const signalId = `${coin.id || coin.symbol}_${signalTime}`;
     if (activeBuySignalAlert && (activeBuySignalAlert.coinId === coin.id || activeBuySignalAlert.symbol === coin.symbol)) return;
@@ -465,12 +476,21 @@ function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = D
         isTest: options.isTest === true
     };
 
+    signal.buyTelegramSent = false;
     if (!options.isTest) {
-        sendTelegramAlert(buildBuySignalTelegramMessage(signal));
         if (localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false') {
             const result = tryOpenBuySignalPosition(signal, true);
             if (result === 'full' || result === 'stale') addBuySignalToPending(signal);
+            else if (result === 'opened') {
+                signal.buyTelegramSent = true;
+                sendTelegramAlert(buildBuySignalTelegramMessage(signal));
+            }
             return;
+        }
+        // Slot doluyken alım mesajı gönderme; beklemeye alınırsa tek bildirim gider.
+        if (KZ_STATE.activePositions.length < KZ_STATE.maxSlots) {
+            signal.buyTelegramSent = true;
+            sendTelegramAlert(buildBuySignalTelegramMessage(signal));
         }
     }
     buySignalAlertQueue.push(signal);
@@ -534,6 +554,10 @@ function resolveBuySignalDecision(action, isTimeout = false) {
 
     if (action === 'accept') {
         const result = tryOpenBuySignalPosition(signal, isTimeout);
+        if (result === 'opened' && !signal.buyTelegramSent) {
+            signal.buyTelegramSent = true;
+            sendTelegramAlert(buildBuySignalTelegramMessage(signal));
+        }
         if (isTimeout && (result === 'full' || result === 'stale')) {
             addBuySignalToPending(signal);
             action = 'pending';
