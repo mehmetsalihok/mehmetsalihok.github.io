@@ -615,6 +615,7 @@ function isCoinMonthlyLocked(coin) {
 // 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
 function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
     if (coin.isActive === false) return;
+    trackPositionExtrema(coin, livePrice);
     updatePendingSignalLive(coin, livePrice);
     if (!coin.rawCandles || coin.rawCandles.length === 0) return;
 
@@ -1721,6 +1722,48 @@ function formatPositionPnl(pnlUsd, pnlPercent) {
     return `${sign}${fmtUsd(Math.abs(pnlUsd))} (${pnlPercent > 0 ? '+' : ''}${pnlPercent.toFixed(2)}%)`;
 }
 
+function positionExtremeText(pos, value) {
+    if (!Number.isFinite(Number(value)) || Number(value) <= 0) return 'Fiyat bekleniyor';
+    const percent = (Number(value) / Number(pos.entryPrice) - 1) * 100;
+    return `${formatCryptoPrice(Number(value))} (${percent >= 0 ? '+' : ''}${percent.toFixed(2)}%)`;
+}
+
+function updatePositionExtremaDisplay(pos) {
+    const low = document.getElementById(`active-pos-low-${pos.id}`);
+    const high = document.getElementById(`active-pos-high-${pos.id}`);
+    const since = document.getElementById(`active-pos-extrema-since-${pos.id}`);
+    if (low) low.textContent = positionExtremeText(pos, pos.lowestObservedPrice);
+    if (high) high.textContent = positionExtremeText(pos, pos.highestObservedPrice);
+    if (since) since.textContent = pos.extremaTrackingStartedAt
+        ? `Canlı takip: ${formatShortDate(pos.extremaTrackingStartedAt)}`
+        : 'Takip ilk güncel fiyatla başlayacak';
+}
+
+function trackPositionExtrema(coin, price) {
+    price = Number(price);
+    if (!Number.isFinite(price) || price <= 0) return;
+    let changed = false;
+    for (const pos of KZ_STATE.activePositions || []) {
+        if (pos.coinId !== coin.id && pos.symbol !== coin.symbol) continue;
+        const now = Date.now();
+        if (!Number.isFinite(Number(pos.lowestObservedPrice)) || !(pos.lowestObservedPrice > 0)) {
+            pos.lowestObservedPrice = price;
+            pos.lowestObservedAt = now;
+            changed = true;
+        }
+        if (!Number.isFinite(Number(pos.highestObservedPrice)) || !(pos.highestObservedPrice > 0)) {
+            pos.highestObservedPrice = price;
+            pos.highestObservedAt = now;
+            changed = true;
+        }
+        if (!pos.extremaTrackingStartedAt) { pos.extremaTrackingStartedAt = now; changed = true; }
+        if (price < pos.lowestObservedPrice) { pos.lowestObservedPrice = price; pos.lowestObservedAt = now; changed = true; }
+        if (price > pos.highestObservedPrice) { pos.highestObservedPrice = price; pos.highestObservedAt = now; changed = true; }
+        updatePositionExtremaDisplay(pos);
+    }
+    if (changed) savePositions();
+}
+
 function renderActivePositionsList() {
     if (!elActivePositionsCountBadge || !elActivePositionsList) return;
     elActivePositionsCountBadge.textContent = `${KZ_STATE.activePositions.length} / ${KZ_STATE.maxSlots} Slot`;
@@ -1760,6 +1803,13 @@ function renderActivePositionsList() {
                     <div><span class="block text-slate-500 dark:text-slate-400">Pozisyon bütçesi</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${fmtUsd(pos.allocatedUsd)}</span></div>
                     <div><span class="block text-slate-500 dark:text-slate-400">Giriş zamanı</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${entryDate}</span></div>
                 </div>
+                <div class="border-t border-slate-200/70 dark:border-slate-700/60 pt-2 space-y-1">
+                    <div class="grid grid-cols-2 gap-2 text-[10px]">
+                        <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">İzlenen en düşük</span><span id="active-pos-low-${pos.id}" class="font-bold text-rose-600 dark:text-rose-400 tabular-nums break-words">${positionExtremeText(pos, pos.lowestObservedPrice)}</span></div>
+                        <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">İzlenen en yüksek</span><span id="active-pos-high-${pos.id}" class="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums break-words">${positionExtremeText(pos, pos.highestObservedPrice)}</span></div>
+                    </div>
+                    <div id="active-pos-extrema-since-${pos.id}" class="text-[9px] text-slate-400 dark:text-slate-500" title="Sitenin aldığı canlı fiyatlar izlenir. Site kapalıyken oluşan fiyat hareketleri bu kayıtta yer almaz.">${pos.extremaTrackingStartedAt ? 'Canlı takip: ' + formatShortDate(pos.extremaTrackingStartedAt) : 'Takip ilk güncel fiyatla başlayacak'}</div>
+                </div>
                 <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition cursor-pointer">Pozisyonu Kapat</button>
             </div>`;
     }).join('');
@@ -1775,6 +1825,7 @@ function updateActivePositionsLive() {
 
         pos.livePnlPercent = pnl;
         pos.livePnlUsd = pnlUsd;
+        updatePositionExtremaDisplay(pos);
 
         const pnlEl = document.getElementById(`active-pos-pnl-${pos.id}`);
         const priceEl = document.getElementById(`active-pos-price-${pos.id}`);
@@ -1897,6 +1948,11 @@ function submitManualPosition(event) {
         allocatedUsd: slotBudget,
         allocationVersion: 2,
         entryTime,
+        lowestObservedPrice: currentPrice,
+        highestObservedPrice: currentPrice,
+        lowestObservedAt: Date.now(),
+        highestObservedAt: Date.now(),
+        extremaTrackingStartedAt: Date.now(),
         livePnlPercent,
         livePnlUsd: slotBudget * (livePnlPercent / 100),
         isManual: true,
@@ -2804,6 +2860,11 @@ function openPosition(coin, customPrice = null, customTime = null) {
         allocatedUsd: slotBudget,
         allocationVersion: 2,
         entryTime: posTime,
+        lowestObservedPrice: entryP,
+        highestObservedPrice: entryP,
+        lowestObservedAt: Date.now(),
+        highestObservedAt: Date.now(),
+        extremaTrackingStartedAt: Date.now(),
         livePnlPercent: 0,
         livePnlUsd: 0
     });
@@ -2843,6 +2904,11 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
         exitTimeStr: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
         exitMonth: getTurkeyMonthKey(now),
         isManual: pos.isManual === true,
+        lowestObservedPrice: pos.lowestObservedPrice,
+        highestObservedPrice: pos.highestObservedPrice,
+        lowestObservedAt: pos.lowestObservedAt,
+        highestObservedAt: pos.highestObservedAt,
+        extremaTrackingStartedAt: pos.extremaTrackingStartedAt,
         source: pos.isManual === true ? 'manual' : (pos.source || 'automatic')
     });
 
