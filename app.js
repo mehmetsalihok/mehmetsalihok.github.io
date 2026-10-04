@@ -1164,9 +1164,18 @@ function getTransactionHistoryTrades() {
     const key = trade => trade.id || `${trade.coinId || trade.symbol}_${trade.entryTime}_${trade.exitTime}`;
     (KZ_STATE.executedGlobalTrades || []).filter(trade => !trade.source).forEach(trade =>
         records.set(key(trade), {...trade, historyOrigin: 'past'}));
-    // Canlı kayıt aynı kimlikteki geçmiş hesabından önce gelir.
-    (KZ_STATE.closedTrades || []).forEach(trade =>
-        records.set(key(trade), {...trade, historyOrigin: 'live'}));
+    // Canlı kaydın ham oranı yerine portföy motorunun komisyon sonrası oranını göster.
+    const calculated = new Map((KZ_STATE.executedGlobalTrades || []).map(trade => [key(trade), trade]));
+    (KZ_STATE.closedTrades || []).forEach(trade => {
+        const result = calculated.get(key(trade));
+        const grossPnl = Number(trade.pnlPercent || 0);
+        const feeEnabled = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
+        // Tarih filtresinin dışında kalan canlı kayıtlar için de aynı ücret modeli.
+        const effectivePnl = result?.effectivePnl ?? (grossPnl - (feeEnabled ? (2 + grossPnl / 100) * 0.075 : 0));
+        records.set(key(trade), {...trade, effectivePnl,
+            feeUSD: result?.feeUSD, netGainUSD: result?.netGainUSD,
+            historyOrigin: 'live'});
+    });
     return [...records.values()].sort((a, b) => b.exitTime - a.exitTime);
 }
 
