@@ -381,6 +381,38 @@ function formatCryptoPrice(price) {
     return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 12 });
 }
 
+function formatTargetPrice(target, entry) {
+    const entryText = formatCryptoPrice(entry);
+    const decimals = entryText.includes('.') ? entryText.split('.')[1].length : 0;
+    return '$' + Number(target).toLocaleString('en-US', {
+        minimumFractionDigits: decimals, maximumFractionDigits: decimals
+    });
+}
+
+// İşlem akışındaki her fiyatı hedef için kontrol et; RSI/mum yenilemesini bekleme.
+function checkLiveProfitTarget(coin, price, tradeTime = Date.now()) {
+    price = Number(price);
+    if (!(price > 0) || coin.isActive === false) return false;
+    coin.price = price;
+    trackPositionExtrema(coin, price);
+    updatePendingSignalLive(coin, price);
+    let closed = false;
+    for (const pos of (KZ_STATE.activePositions || []).slice()) {
+        if (pos.coinId !== coin.id && pos.symbol !== coin.symbol) continue;
+        if (Number(tradeTime) < Number(pos.entryTime)) continue;
+        const pnl = (price / pos.entryPrice - 1) * 100;
+        pos.livePnlPercent = pnl;
+        pos.livePnlUsd = pos.allocatedUsd * pnl / 100;
+        if (!(Number(pos.profitTarget) > 0) || !(Number(pos.targetPrice) > 0) || price < pos.targetPrice) continue;
+        const message = buildSellTelegramMessage(coin, pnl, true, tradeTime);
+        closePosition(pos.id, `Kâr Hedefi (%${pos.profitTarget.toFixed(1)})`);
+        playChime(true);
+        sendTelegramAlert(message, {channel: 'sell'});
+        closed = true;
+    }
+    return closed;
+}
+
 function playChime(isSuccess = true) {
     const isSound = localStorage.getItem('kuzgun_sound_enabled') !== 'false';
     if (!isSound) return;
@@ -670,8 +702,7 @@ function isCoinMonthlyLocked(coin) {
 // 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
 function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
     if (coin.isActive === false) return;
-    trackPositionExtrema(coin, livePrice);
-    updatePendingSignalLive(coin, livePrice);
+    if (checkLiveProfitTarget(coin, livePrice)) return;
     if (!coin.rawCandles || coin.rawCandles.length === 0) return;
 
     const intervalMs = getIntervalMilliseconds(coin.interval);
@@ -2090,7 +2121,7 @@ function renderActivePositionsList() {
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-[10px]">
                     <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Giriş fiyatı</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatCryptoPrice(pos.entryPrice)}</span><button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="ml-1 px-1 rounded text-blue-600 dark:text-blue-400 hover:underline" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">Düzenle</button></div>
-                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Hedef çıkış · %${pos.profitTarget.toFixed(1)}</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatCryptoPrice(pos.targetPrice)}</span></div>
+                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Hedef çıkış · %${pos.profitTarget.toFixed(1)}</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatTargetPrice(pos.targetPrice, pos.entryPrice)}</span></div>
                     <div><span class="block text-slate-500 dark:text-slate-400">Pozisyon bütçesi</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${fmtUsd(pos.allocatedUsd)}</span></div>
                     <div><span class="block text-slate-500 dark:text-slate-400">Giriş zamanı</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${entryDate}</span></div>
                 </div>
@@ -2321,7 +2352,7 @@ function renderPendingSignalsList() {
             <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-600 dark:text-slate-300 tabular-nums">
                 <span>Sinyal: <strong>${formatCryptoPrice(item.triggerPrice)}</strong></span>
                 <span>Güncel: <strong>${hasPrice ? formatCryptoPrice(livePrice) : '—'}</strong></span>
-                <span>Hedef: <strong>${formatCryptoPrice(item.targetPrice)}</strong></span>
+                <span>Hedef: <strong>${formatTargetPrice(item.targetPrice, item.triggerPrice)}</strong></span>
                 <span>Hedef kâr: <strong>%${Number(item.profitTarget || 0).toFixed(2)}</strong></span>
             </div>
             <div class="text-[9px] text-slate-400">${formatShortDate(item.time)} · Portföye dahil değil</div>
@@ -2809,7 +2840,10 @@ function initBinanceWebSocket() {
     const streamSet = new Set();
     streamSet.add('btcusdt@miniTicker');
     KZ_STATE.coins.forEach(c => {
-        if (c.symbol && c.isActive !== false) streamSet.add(`${c.symbol.toLowerCase()}@miniTicker`);
+        if (c.symbol && c.isActive !== false) {
+            streamSet.add(`${c.symbol.toLowerCase()}@miniTicker`);
+            streamSet.add(`${c.symbol.toLowerCase()}@aggTrade`);
+        }
     });
 
     const streamPath = Array.from(streamSet).join('/');
@@ -2834,6 +2868,17 @@ function initBinanceWebSocket() {
                 if (!msg || !msg.data) return;
                 const d = msg.data;
                 const sym = d.s;
+                const tradeCoin = KZ_STATE.coins.find(c => c.symbol === sym);
+                if (d.e === 'aggTrade') {
+                    const price = Number(d.p), time = Number(d.T);
+                    if (tradeCoin && tradeCoin.isActive !== false && price > 0 && Number.isFinite(time)) {
+                        if (time < (tradeCoin.lastTradeStreamTime || 0)) return;
+                        tradeCoin.lastTradeStreamTime = time;
+                        KZ_HEALTH.lastPriceAt = Date.now();
+                        checkLiveProfitTarget(tradeCoin, price, time);
+                    }
+                    return;
+                }
                 const liveClose = parseFloat(d.c);
                 if (liveClose > 0) KZ_HEALTH.lastPriceAt = Date.now();
 
@@ -2845,7 +2890,7 @@ function initBinanceWebSocket() {
                 const coin = KZ_STATE.coins.find(c => c.symbol === sym);
                 if (coin && coin.isActive !== false && liveClose > 0) {
                     // 🎯 Mum devri, kesinleşmiş teyit ve fiyat akışı tek merkezden yönetilir
-                    processLivePriceUpdate(coin, liveClose, parseFloat(d.h), parseFloat(d.l));
+                    processLivePriceUpdate(coin, coin.lastTradeStreamTime > Number(d.E) ? coin.price : liveClose, parseFloat(d.h), parseFloat(d.l));
                 }
             } catch (e) {}
         };
