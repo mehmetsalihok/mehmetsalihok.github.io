@@ -381,12 +381,25 @@ function formatCryptoPrice(price) {
     return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 12 });
 }
 
-function formatTargetPrice(target, entry) {
+function positionPriceDecimals(entry, target) {
     const entryText = formatCryptoPrice(entry);
-    const decimals = entryText.includes('.') ? entryText.split('.')[1].length : 0;
-    return '$' + Number(target).toLocaleString('en-US', {
+    const entryDecimals = entryText.includes('.') ? entryText.split('.')[1].length : 0;
+    const gap = Math.abs(Number(target) - Number(entry));
+    // Küçük hedef farkları yuvarlama yüzünden girişle aynı görünmesin.
+    const gapDecimals = gap > 0 ? Math.max(0, Math.ceil(-Math.log10(gap)) + 1) : 0;
+    return Math.min(12, Math.max(4, entryDecimals, gapDecimals));
+}
+
+function formatPositionPrice(value, entry, target) {
+    if (!(Number(value) > 0)) return '--.--';
+    const decimals = positionPriceDecimals(entry, target);
+    return '$' + Number(value).toLocaleString('en-US', {
         minimumFractionDigits: decimals, maximumFractionDigits: decimals
     });
+}
+
+function formatTargetPrice(target, entry) {
+    return formatPositionPrice(target, entry, target);
 }
 
 // İşlem akışındaki her fiyatı hedef için kontrol et; RSI/mum yenilemesini bekleme.
@@ -2120,7 +2133,7 @@ function renderActivePositionsList() {
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-[10px]">
-                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Giriş fiyatı</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatCryptoPrice(pos.entryPrice)}</span><button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="ml-1 px-1 rounded text-blue-600 dark:text-blue-400 hover:underline" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">Düzenle</button></div>
+                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Giriş fiyatı</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatPositionPrice(pos.entryPrice, pos.entryPrice, pos.targetPrice)}</span><button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="ml-1 px-1 rounded text-blue-600 dark:text-blue-400 hover:underline" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">Düzenle</button></div>
                     <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Hedef çıkış · %${pos.profitTarget.toFixed(1)}</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatTargetPrice(pos.targetPrice, pos.entryPrice)}</span></div>
                     <div><span class="block text-slate-500 dark:text-slate-400">Pozisyon bütçesi</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${fmtUsd(pos.allocatedUsd)}</span></div>
                     <div><span class="block text-slate-500 dark:text-slate-400">Giriş zamanı</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${entryDate}</span></div>
@@ -2350,7 +2363,7 @@ function renderPendingSignalsList() {
                 <button onclick="dismissPending('${item.id}')" class="text-slate-400 hover:text-rose-600 text-xs font-semibold cursor-pointer" title="Listeden kaldır">✕</button>
             </div>
             <div class="grid grid-cols-2 gap-1 text-[10px] text-slate-600 dark:text-slate-300 tabular-nums">
-                <span>Sinyal: <strong>${formatCryptoPrice(item.triggerPrice)}</strong></span>
+                <span>Sinyal: <strong>${formatPositionPrice(item.triggerPrice, item.triggerPrice, item.targetPrice)}</strong></span>
                 <span>Güncel: <strong>${hasPrice ? formatCryptoPrice(livePrice) : '—'}</strong></span>
                 <span>Hedef: <strong>${formatTargetPrice(item.targetPrice, item.triggerPrice)}</strong></span>
                 <span>Hedef kâr: <strong>%${Number(item.profitTarget || 0).toFixed(2)}</strong></span>
