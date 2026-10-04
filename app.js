@@ -1393,6 +1393,115 @@ function nextHistoryPage() {
     }
 }
 
+let monthlyLimitPage = 0;
+let monthlyLimitFocus = null;
+
+function getMonthlyLimitRows() {
+    const month = getTurkeyMonthKey();
+    const transactions = getTransactionHistoryTrades();
+    return KZ_STATE.coins.map(coin => {
+        const matches = t => (t.coinId === coin.id || t.symbol === coin.symbol)
+            && (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === month;
+        const records = transactions.filter(matches);
+        const live = records.filter(t => t.historyOrigin === 'live').length;
+        const past = records.length - live;
+        const rawMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
+        const livePnl = (KZ_STATE.closedTrades || []).filter(matches).reduce((sum, t) => sum + Number(t.pnlPercent || 0), 0);
+        // Coin kartı ve kilit motoruyla aynı aylık ilerleme; bekleme kârları hariç.
+        const progress = Math.max(Number(rawMonth?.pnl || 0), livePnl,
+            Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
+        const cap = Number(coin.monthlyCap || 0);
+        const target = Number(coin.profitTarget || 0);
+        const locked = isCoinMonthlyLocked(coin);
+        const remainingPnl = locked ? 0 : Math.max(0, cap - progress);
+        const remaining = locked ? 0 : cap > 0 && target > 0 ? Math.max(0, Math.ceil((remainingPnl - 0.001) / target)) : null;
+        return {coin,live,past,count:records.length,remaining,remainingPnl,cap,locked,active:coin.isActive !== false};
+    });
+}
+
+function monthlyLimitTotals(rows) {
+    return rows.filter(row => row.active).reduce((total, row) => {
+        total.count += row.count;
+        total.remaining += row.remaining || 0;
+        if (row.remaining === null) total.unknown++;
+        return total;
+    }, {count:0,remaining:0,unknown:0});
+}
+
+function updateMonthlyLimitSummary() {
+    const button = document.getElementById('monthlyLimitSummary');
+    if (!button) return;
+    const rows = getMonthlyLimitRows();
+    const totals = monthlyLimitTotals(rows);
+    const month = new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',month:'long'});
+    button.querySelector('[data-limit-month]').textContent = `Bu ay · ${month}`;
+    button.querySelector('[data-limit-count]').textContent = totals.count;
+    button.querySelector('[data-limit-remaining]').textContent = `≈ ${totals.remaining}${totals.unknown ? ' + belirsiz' : ''}`;
+    const modal = document.getElementById('monthlyLimitModal');
+    if (modal && !modal.classList.contains('hidden')) renderMonthlyLimitModal(rows);
+}
+
+function openMonthlyLimitModal() {
+    const modal = document.getElementById('monthlyLimitModal');
+    if (!modal) return;
+    monthlyLimitFocus = document.activeElement;
+    monthlyLimitPage = 0;
+    renderMonthlyLimitModal();
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.getElementById('monthlyLimitClose').focus();
+}
+
+function closeMonthlyLimitModal() {
+    const modal = document.getElementById('monthlyLimitModal');
+    if (!modal || modal.classList.contains('hidden')) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    monthlyLimitFocus?.focus();
+}
+
+function changeMonthlyLimitPage(delta) {
+    monthlyLimitPage += delta;
+    renderMonthlyLimitModal();
+}
+
+function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
+    const totals = monthlyLimitTotals(rows);
+    const month = new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',month:'long',year:'numeric'});
+    document.getElementById('monthlyLimitTitle').textContent = `${month} · İşlem limitleri`;
+    document.getElementById('monthlyLimitTotals').textContent = `Aktif coinler: ${totals.count} gerçekleşen · ≈ ${totals.remaining} kalan${totals.unknown ? ' · '+totals.unknown+' coin için hedef tanımsız' : ''}`;
+    const pageSize = Math.max(2, Math.min(9, Math.floor((window.innerHeight * .9 - 260) / 48)));
+    const pages = Math.max(1, Math.ceil(rows.length / pageSize));
+    monthlyLimitPage = Math.max(0, Math.min(monthlyLimitPage, pages - 1));
+    const container = document.getElementById('monthlyLimitRows');
+    // Build with textContent to keep coin names out of HTML interpolation.
+    container.replaceChildren();
+    const visible = rows.slice(monthlyLimitPage * pageSize, (monthlyLimitPage + 1) * pageSize);
+    visible.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100 dark:border-slate-800 '+(row.active ? '' : 'opacity-50');
+        const cells = [String(row.coin.displaySymbol || row.coin.symbol).replace('USDT',''),
+            `${row.count} (${row.live} / ${row.past})`,
+            row.remaining === null ? '—' : `≈ ${row.remaining}`,
+            `%${row.remainingPnl.toFixed(2)} / %${row.cap.toFixed(1)}`,
+            !row.active ? 'Pasif' : row.locked ? 'Kilitli' : 'Aktif'];
+        cells.forEach((value, index) => {
+            const td = document.createElement('td');
+            td.className = 'py-2.5 px-1 text-[11px] tabular-nums '+(index === 0 ? 'font-bold' : 'text-right');
+            td.textContent = value;
+            tr.append(td);
+        });
+        container.append(tr);
+    });
+    if (!visible.length) {
+        const tr = document.createElement('tr'), td = document.createElement('td');
+        td.colSpan = 5;td.className = 'py-8 text-center text-xs text-slate-400';td.textContent = 'Henüz coin eklenmedi.';tr.append(td);container.append(tr);
+    }
+    document.getElementById('monthlyLimitPage').textContent = `${monthlyLimitPage + 1} / ${pages}`;
+    document.getElementById('monthlyLimitPrev').disabled = monthlyLimitPage === 0;
+    document.getElementById('monthlyLimitNext').disabled = monthlyLimitPage === pages - 1;
+}
+
 function coinCardStatus(coin) {
     if (coin.isActive === false) return {label: 'PASİF', color: 'bg-slate-800 text-slate-400'};
     if (KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol)) return {label: '● POZİSYONDA', color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'};
@@ -3334,6 +3443,7 @@ function recalculateFullPortfolio() {
 
         renderPortfolioShowcaseUI(engineResult, tfStats);
         renderHistoryTrades();
+        updateMonthlyLimitSummary();
 
         KZ_STATE.coins.forEach(coin => updateCardTablesOnly(coin));
     }
@@ -3608,6 +3718,8 @@ async function sendBuyTelegramTestFromQuery() {
 }
 
 window.addEventListener('resize', () => {
+    const limitModal = document.getElementById('monthlyLimitModal');
+    if (limitModal && !limitModal.classList.contains('hidden')) renderMonthlyLimitModal();
     const state = KZ_STATE.activeMonthModal;
     const coin = state && KZ_STATE.coins.find(c => c.id === state.coinId);
     if (coin) renderModalTabsAndContent(coin, state.monthKey);
@@ -3653,7 +3765,15 @@ async function startEngine() {
 }
 
 document.addEventListener('keydown', (e) => {
+    const limits = document.getElementById('monthlyLimitModal');
+    if (e.key === 'Tab' && limits && !limits.classList.contains('hidden')) {
+        const buttons = [...limits.querySelectorAll('button:not([disabled])')];
+        const first = buttons[0], last = buttons[buttons.length - 1];
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
     if (e.key === 'Escape') {
+        closeMonthlyLimitModal();
         closeClosedTradeEditor();
         closeMonthTradesModal();
         closeCustomDateRangeModal();

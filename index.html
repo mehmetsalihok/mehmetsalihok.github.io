@@ -270,6 +270,13 @@
                 <div id="subMonthPills" class="hidden flex items-center space-x-1.5 overflow-x-auto pt-1 pb-1"></div>
             </div>
 
+            <button id="monthlyLimitSummary" type="button" onclick="openMonthlyLimitModal()" aria-haspopup="dialog" class="w-fit max-w-full flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 rounded-xl bg-blue-50/60 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-900 text-[11px] text-slate-600 dark:text-slate-300 hover:border-blue-400 transition text-left">
+                <span data-limit-month class="font-semibold text-blue-600 dark:text-blue-400">Bu ay</span>
+                <span>Gerçekleşen işlem: <strong data-limit-count class="text-slate-900 dark:text-white">0</strong></span>
+                <span>Kalan işlem: <strong data-limit-remaining class="text-slate-900 dark:text-white">≈ 0</strong></span>
+                <span class="text-blue-600 dark:text-blue-400">Coin dökümü ›</span>
+            </button>
+
             <details class="group border-t border-slate-100 dark:border-slate-800 pt-1.5">
                 <summary class="w-fit cursor-pointer select-none text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-500 rounded">Getiri ve komisyon ayrıntıları</summary>
                 <div class="flex flex-wrap items-center gap-1.5 pt-2 text-[10px] font-bold">
@@ -675,6 +682,16 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=8"></script>
-    <script src="app.js?v=53"></script>
+    <script src="app.js?v=54"></script>
+    <div id="monthlyLimitModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3" onclick="if(event.target===this) closeMonthlyLimitModal()">
+        <section role="dialog" aria-modal="true" aria-labelledby="monthlyLimitTitle" aria-describedby="monthlyLimitExplanation" class="w-full max-w-2xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-2xl p-4 space-y-3">
+            <div class="flex items-center justify-between gap-2"><h2 id="monthlyLimitTitle" class="text-sm font-bold">İşlem limitleri</h2><button id="monthlyLimitClose" type="button" onclick="closeMonthlyLimitModal()" aria-label="Pencereyi kapat" class="px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">✕</button></div>
+            <p id="monthlyLimitTotals" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></p>
+            <p id="monthlyLimitExplanation" class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Gerçekleşen: Canlı ve Geçmişte işlem kayıtları. Beklemede kapananlar hariç. Kalan işlem, aylık kalan kâr / işlem başına hedef kâr hesabıyla tahmin edilir; zarar ve RSI çıkışlarıyla değişebilir. Toplama yalnızca aktif coinler dahildir.</p>
+            <table class="w-full table-fixed"><thead class="text-[9px] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><tr><th class="w-[18%] pb-2 text-left">Coin</th><th class="w-[25%] pb-2 text-right">Gerçekleşen<br>Canlı / Geçmişte</th><th class="w-[17%] pb-2 text-right">Kalan işlem</th><th class="w-[27%] pb-2 text-right">Kalan kâr / Limit</th><th class="w-[13%] pb-2 text-right">Durum</th></tr></thead><tbody id="monthlyLimitRows"></tbody></table>
+            <div class="flex items-center justify-between text-[11px]"><button id="monthlyLimitPrev" type="button" onclick="changeMonthlyLimitPage(-1)" class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-30">‹ Önceki</button><span id="monthlyLimitPage" class="text-slate-500">1 / 1</span><button id="monthlyLimitNext" type="button" onclick="changeMonthlyLimitPage(1)" class="px-3 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 disabled:opacity-30">Sonraki ›</button></div>
+        </section>
+    </div>
+
 </body>
 </html>
