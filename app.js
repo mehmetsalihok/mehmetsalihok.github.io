@@ -51,7 +51,7 @@ const KZ_STATE = {
     activePositions: [],
     pendingSignals: [],
     pendingClosedTrades: [],
-    historyTab: 'slot',
+    historyTab: 'transactions',
     simulatedPendingClosedTrades: [],
     closedTrades: [],
     activeFilter: 'all',
@@ -1159,8 +1159,26 @@ function getPendingHistoryTrades() {
         .filter(t => t.entryTime >= startMs);
 }
 
+function getTransactionHistoryTrades() {
+    const records = new Map();
+    const key = trade => trade.id || `${trade.coinId || trade.symbol}_${trade.entryTime}_${trade.exitTime}`;
+    (KZ_STATE.executedGlobalTrades || []).filter(trade => !trade.source).forEach(trade =>
+        records.set(key(trade), {...trade, historyOrigin: 'past'}));
+    // Canlı kayıt aynı kimlikteki geçmiş hesabından önce gelir.
+    (KZ_STATE.closedTrades || []).forEach(trade =>
+        records.set(key(trade), {...trade, historyOrigin: 'live'}));
+    return [...records.values()].sort((a, b) => b.exitTime - a.exitTime);
+}
+
+function historyOriginBadge(trade) {
+    const live = trade.historyOrigin === 'live' || trade.source === 'pending';
+    return live
+        ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400" title="Site çalışırken kaydedildi">Canlı</span>'
+        : '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400" title="Geçmiş mumlardan hesaplandı; gerçek işlem kaydı değildir">Geçmişte</span>';
+}
+
 function setHistoryTab(tab) {
-    if (!['slot', 'pending', 'simulation'].includes(tab)) return;
+    if (!['transactions', 'pending'].includes(tab)) return;
     KZ_STATE.historyTab = tab;
     KZ_STATE.historyPage = 0;
     renderHistoryTrades();
@@ -1169,7 +1187,7 @@ function setHistoryTab(tab) {
 function renderHistoryTrades() {
     if (!elHistoryContainer) return;
     
-    const tab = KZ_STATE.historyTab || 'slot';
+    const tab = KZ_STATE.historyTab === 'pending' ? 'pending' : 'transactions';
     const note = document.getElementById('pendingHistoryNote');
     if (note) note.classList.toggle('hidden', tab !== 'pending');
     document.querySelectorAll('[data-history-tab]').forEach(button => {
@@ -1178,9 +1196,7 @@ function renderHistoryTrades() {
         button.classList.toggle('bg-blue-600', selected);
         button.classList.toggle('text-white', selected);
     });
-    const trades = tab === 'pending' ? getPendingHistoryTrades()
-        : tab === 'slot' ? KZ_STATE.closedTrades
-        : (KZ_STATE.executedGlobalTrades || []).filter(t => !t.source);
+    const trades = tab === 'pending' ? getPendingHistoryTrades() : getTransactionHistoryTrades();
     const allTrades = (trades || []).slice().sort((a, b) => b.exitTime - a.exitTime).slice(0, 50);
     const totalTradesCount = allTrades.length;
     const pageSize = 5;
@@ -1231,10 +1247,8 @@ function renderHistoryTrades() {
                         <span class="font-black text-[11px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600 text-slate-800 dark:text-slate-100 whitespace-nowrap">${t.symbol.replace('USDT', '')}</span>
                         ${t.isManual ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800 whitespace-nowrap" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
                         ${t.editedAt ? '<span class="text-[9px] px-1 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 whitespace-nowrap" title="Gerçek satış kaydı düzeltildi">DÜZ.</span>' : ''}
-                        ${t.source === 'pending' ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400" title="Site çalışırken canlı kaydedildi">● CANLI</span>' : ''}
-                        ${t.source === 'pending-simulation' ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400" title="Geçmiş mumlardan hesaplandı; saat mum kapanışına göre yaklaşık">◷ SİMÜLASYON</span>' : ''}
+                        ${historyOriginBadge(t)}
                         ${t.source === 'pending' || t.source === 'pending-simulation' ? '<span class="text-[9px] text-slate-400">Portföye dahil değil</span>' : ''}
-                        ${t.source ? '' : '<span class="text-[9px] px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300 whitespace-nowrap">SİMÜLASYON</span>'}
                         <span class="font-semibold text-[10px] leading-tight text-slate-700 dark:text-slate-200 break-words">${t.editedAt ? 'Gerçek Satış' : t.reason}</span>
                     </div>
                     <span class="font-black tabular-nums text-xs px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${pnlValue.toFixed(2)}%</span>
@@ -1361,7 +1375,7 @@ function prevHistoryPage() {
 }
 
 function nextHistoryPage() {
-    const records = KZ_STATE.historyTab === 'pending' ? getPendingHistoryTrades() : KZ_STATE.historyTab === 'simulation' ? (KZ_STATE.executedGlobalTrades || []).filter(t => !t.source) : KZ_STATE.closedTrades;
+    const records = KZ_STATE.historyTab === 'pending' ? getPendingHistoryTrades() : getTransactionHistoryTrades();
     const totalTrades = (records || []).slice(0, 50).length;
     const totalPages = Math.max(1, Math.ceil(totalTrades / 5));
     if (KZ_STATE.historyPage < totalPages - 1) {
@@ -1411,11 +1425,11 @@ function coinCardMonthSummary(coin) {
                 <div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${slot.length} işlem</strong>${pnlHtml(slotPnl)}</div>
             </div>
             <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-2" title="Portföy filtresinden geçen geçmiş simülasyonlar">
-                <div class="text-[9px] text-slate-500 dark:text-slate-400">◷ Slot simülasyonu</div>
+                <div class="text-[9px] text-slate-500 dark:text-slate-400">Geçmişte</div>
                 <div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${simulation.length} işlem</strong>${pnlHtml(simPnl)}</div>
             </div>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><span><strong class="text-emerald-600 dark:text-emerald-400">● ${livePending} canlı</strong><span class="mx-1.5">·</span><strong class="text-amber-600 dark:text-amber-400">◷ ${simPending} sim.</strong></span></div>
+        <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><span><strong class="text-emerald-600 dark:text-emerald-400">${livePending} Canlı</strong><span class="mx-1.5">·</span><strong class="text-amber-600 dark:text-amber-400">${simPending} Geçmişte</strong></span></div>
         <div class="space-y-1" title="Kilit, mevcut aylık strateji ve işlem sonuçlarıyla belirlenir. Bekleme sonuçları dahil değildir.">
             <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
             <div class="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-indigo-500" style="width:${progress}%"></div></div>
@@ -2184,11 +2198,7 @@ function renderPendingSignalsList() {
 }
 
 function clearHistory() {
-    if (KZ_STATE.historyTab === 'simulation') {
-        showToast('Simülasyon kayıtları strateji verilerinden hesaplanır.');
-        return;
-    }
-    const message = KZ_STATE.historyTab === 'pending' ? 'Canlı bekleme geçmişi sıfırlansın mı? Geçmiş simülasyonu mum verilerinden yeniden hesaplanır.' : 'Slotta kapanan işlem geçmişi sıfırlansın mı?';
+    const message = KZ_STATE.historyTab === 'pending' ? 'Canlı bekleme geçmişi sıfırlansın mı? Geçmiş simülasyonu mum verilerinden yeniden hesaplanır.' : 'Canlı işlem kayıtları sıfırlansın mı? Geçmişte hesaplanan işlemler strateji verilerinden yeniden oluşturulur.';
     if (confirm(message)) {
         if (KZ_STATE.historyTab === 'pending') {
             KZ_STATE.pendingClosedTrades = [];
@@ -3212,8 +3222,6 @@ function recalculateFullPortfolio() {
     const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
 
     const allRawTrades = [];
-    const inactiveCoinIds = new Set(KZ_STATE.coins.filter(c => c.isActive === false).map(c => c.id));
-    const inactiveSymbols = new Set(KZ_STATE.coins.filter(c => c.isActive === false).map(c => c.symbol));
 
     (KZ_STATE.closedTrades || []).forEach(t => {
         // Coin sonradan kapatılsa da gerçekleşmiş işlem geçmişte kalır.
@@ -3263,7 +3271,7 @@ function recalculateFullPortfolio() {
             baseBalance: KZ_STATE.portfolioBaseUsd,
             maxSlots: KZ_STATE.maxSlots,
             trades: allRawTrades,
-            activePositions: KZ_STATE.activePositions.filter(pos => !inactiveCoinIds.has(pos.coinId) && !inactiveSymbols.has(pos.symbol)),
+            activePositions: KZ_STATE.activePositions,
             coins: KZ_STATE.coins.filter(c => c.isActive !== false),
             isSlotConstraintEnabled: isSlotConstraint,
             isFeeDeductionEnabled: isFeeDeduction,
@@ -3272,7 +3280,7 @@ function recalculateFullPortfolio() {
         };
 
         const slotAccepted = isSlotConstraint
-            ? PortfolioEngine.filterTradesBySlotCapacity(allRawTrades, KZ_STATE.maxSlots)
+            ? PortfolioEngine.filterTradesBySlotCapacity(allRawTrades, KZ_STATE.maxSlots, KZ_STATE.activePositions)
             : allRawTrades;
         KZ_STATE.simulatedPendingClosedTrades = buildPendingHistorySimulation(allRawTrades, slotAccepted, startTs, isSlotConstraint);
         let engineResult = PortfolioEngine.calculateCompoundedBalance(engineArgs);

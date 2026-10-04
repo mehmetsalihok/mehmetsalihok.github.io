@@ -5,14 +5,15 @@ const PortfolioEngine = {
         if (!maxSlots || maxSlots <= 0 || !rawTrades || rawTrades.length === 0) return rawTrades;
 
         // Aynı anda başlayan gerçek işlemler, simüle işlemlerden önce değerlendirilir.
-        const sorted = [...rawTrades].sort((a, b) => a.entryTime - b.entryTime ||
+        // Açık pozisyonları gerçek giriş anında başlayan slot olayları olarak ekle.
+        // Böylece girişten önce kapanan geçmiş işlemler etkilenmez.
+        const openEvents = activePositions.filter(pos => Number(pos.entryTime) > 0)
+            .map(pos => ({entryTime: Number(pos.entryTime), exitTime: Infinity,
+                source: 'automatic', isOpenSlotEvent: true}));
+        const sorted = [...rawTrades, ...openEvents].sort((a, b) => a.entryTime - b.entryTime ||
             (b.source === 'manual' || b.source === 'automatic') - (a.source === 'manual' || a.source === 'automatic'));
         const slotsCount = Math.max(1, maxSlots);
         const occupied = [];
-
-        // Açık pozisyonlar bugünkü slot durumudur; geçmiş simülasyonun başından
-        // itibaren slotu dolu sayılmaz. Canlı slot sınırı sinyal motorunda ayrıca
-        // KZ_STATE.activePositions.length ile uygulanır.
 
         const acceptedTrades = [];
 
@@ -38,7 +39,7 @@ const PortfolioEngine = {
 
             if (isReal || occupied.length < slotsCount) {
                 const accepted = { trade, active: true };
-                acceptedTrades.push(accepted);
+                if (!trade.isOpenSlotEvent) acceptedTrades.push(accepted);
                 occupied.push({ exit, isReal, accepted });
             }
         }
