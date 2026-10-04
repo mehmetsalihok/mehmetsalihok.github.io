@@ -231,8 +231,18 @@
 
                     <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
                         <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">SERMAYE BAŞLANGIÇ ZAMANI (SAAT / DAKİKA)</label>
-                        <input type="datetime-local" id="inputStartDate" onchange="handleDateChange()"
-                            class="w-full p-2.5 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500 transition">
+                        <input type="hidden" id="inputStartDate">
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="space-y-1"><span class="text-[10px] text-slate-500">Gün</span><input id="startDay" type="number" min="1" max="31" step="1" onchange="handleDatePartsChange()" class="w-full min-w-0 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"></label>
+                            <label class="space-y-1"><span class="text-[10px] text-slate-500">Ay</span><select id="startMonth" onchange="handleDatePartsChange()" class="w-full min-w-0 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"><option value="1">Ocak</option><option value="2">Şubat</option><option value="3">Mart</option><option value="4">Nisan</option><option value="5">Mayıs</option><option value="6">Haziran</option><option value="7">Temmuz</option><option value="8">Ağustos</option><option value="9">Eylül</option><option value="10">Ekim</option><option value="11">Kasım</option><option value="12">Aralık</option></select></label>
+                            <label class="space-y-1"><span class="text-[10px] text-slate-500">Yıl</span><input id="startYear" type="number" min="2017" max="2100" step="1" onchange="handleDatePartsChange()" class="w-full min-w-0 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"></label>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="space-y-1"><span class="text-[10px] text-slate-500">Saat · 00–23</span><select id="startHour" onchange="handleDatePartsChange()" class="w-full min-w-0 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"><option value="0">00</option><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select></label>
+                            <label class="space-y-1"><span class="text-[10px] text-slate-500">Dakika · 00–59</span><select id="startMinute" onchange="handleDatePartsChange()" class="w-full min-w-0 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg font-semibold text-xs text-slate-900 dark:text-white focus:outline-none focus:border-blue-500"><option value="0">00</option><option value="1">01</option><option value="2">02</option><option value="3">03</option><option value="4">04</option><option value="5">05</option><option value="6">06</option><option value="7">07</option><option value="8">08</option><option value="9">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select></label>
+                        </div>
+                        <p id="startDatePreview" class="text-xs font-semibold text-blue-600 dark:text-blue-400 tabular-nums" aria-live="polite"></p>
+                        <p id="startDateError" class="hidden text-[11px] text-rose-600 dark:text-rose-400" role="alert"></p>
 
                         <div class="grid grid-cols-5 gap-1.5 pt-1">
                             <button onclick="setQuickDate('now')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Şimdi</button>
@@ -680,10 +690,7 @@
             updateYearUI(getSelectedYear());
 
             const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || (Date.now() / 1000);
-            const dateObj = new Date(startTs * 1000);
-            const tzOffset = dateObj.getTimezoneOffset() * 60000;
-            const localISOTime = (new Date(dateObj - tzOffset)).toISOString().slice(0, 16);
-            document.getElementById('inputStartDate').value = localISOTime;
+            setStartDateFields(startTs * 1000);
 
             const slots = parseInt(localStorage.getItem('kuzgun_max_slots'), 10) || 2;
             updateSlotsUI(slots);
@@ -725,42 +732,58 @@
             }
         }
 
-        function handleDateChange() {
-            const inputVal = document.getElementById('inputStartDate').value;
-            if (inputVal) {
-                const ts = new Date(inputVal).getTime() / 1000;
-                localStorage.setItem('kuzgun_portfolio_start_date', ts.toString());
-                showToast('Başlangıç tarihi güncellendi');
+        function turkeyDateParts(timestamp) {
+            const fields = new Intl.DateTimeFormat('en-GB', {timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(timestamp));
+            return Object.fromEntries(fields.filter(part => part.type !== 'literal').map(part => [part.type, Number(part.value)]));
+        }
+
+        function setStartDateFields(timestamp) {
+            const parts = turkeyDateParts(timestamp);
+            for (const [id, name] of [['startDay','day'],['startMonth','month'],['startYear','year'],['startHour','hour'],['startMinute','minute']]) document.getElementById(id).value = parts[name];
+            const pad = n => String(n).padStart(2,'0');
+            document.getElementById('inputStartDate').value = `${parts.year}-${pad(parts.month)}-${pad(parts.day)}T${pad(parts.hour)}:${pad(parts.minute)}`;
+            document.getElementById('startDatePreview').textContent = `${pad(parts.day)}.${pad(parts.month)}.${parts.year} ${pad(parts.hour)}:${pad(parts.minute)} · Türkiye saati`;
+            document.getElementById('startDateError').classList.add('hidden');
+        }
+
+        function handleDatePartsChange() {
+            const day = Number(document.getElementById('startDay').value);
+            const month = Number(document.getElementById('startMonth').value);
+            const year = Number(document.getElementById('startYear').value);
+            const hour = Number(document.getElementById('startHour').value);
+            const minute = Number(document.getElementById('startMinute').value);
+            const check = new Date(Date.UTC(year, month - 1, day));
+            const valid = [day,month,year,hour,minute].every(Number.isInteger) && year >= 2017 && year <= 2100
+                && month >= 1 && month <= 12 && day >= 1 && day <= 31 && hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59
+                && check.getUTCFullYear() === year && check.getUTCMonth() === month - 1 && check.getUTCDate() === day;
+            if (!valid) {
+                const error = document.getElementById('startDateError');
+                error.textContent = 'Geçerli bir gün, ay ve yıl seç. Tarih kaydedilmedi.';
+                error.classList.remove('hidden');
+                return false;
             }
+            // Türkiye 2017 ve sonrasında yıl boyunca UTC+03:00 kullanır.
+            const timestamp = Date.UTC(year, month - 1, day, hour - 3, minute);
+            localStorage.setItem('kuzgun_portfolio_start_date', String(timestamp / 1000));
+            setStartDateFields(timestamp);
+            showToast('Başlangıç tarihi güncellendi');
+            return true;
         }
 
         function setQuickDate(type) {
-            const now = new Date();
-            let targetDate = new Date();
-
+            const now = Date.now();
+            const today = turkeyDateParts(now);
+            let timestamp;
             switch(type) {
-                case 'now':
-                    targetDate = now;
-                    break;
-                case 'today':
-                    targetDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-                    break;
-                case '24h':
-                    targetDate = new Date(now.getTime() - (86400 * 1000));
-                    break;
-                case '3d':
-                    targetDate = new Date(now.getTime() - (3 * 86400 * 1000));
-                    break;
-                case 'year_start':
-                    targetDate = new Date(parseInt(getSelectedYear(), 10), 0, 1, 0, 0, 0);
-                    break;
+                case 'now': timestamp = now; break;
+                case 'today': timestamp = Date.UTC(today.year, today.month - 1, today.day, -3); break;
+                case '24h': timestamp = now - 86400000; break;
+                case '3d': timestamp = now - 3 * 86400000; break;
+                case 'year_start': timestamp = Date.UTC(Number(getSelectedYear()), 0, 1, -3); break;
+                default: return;
             }
-
-            const tzOffset = targetDate.getTimezoneOffset() * 60000;
-            const localISOTime = (new Date(targetDate - tzOffset)).toISOString().slice(0, 16);
-            document.getElementById('inputStartDate').value = localISOTime;
-
-            localStorage.setItem('kuzgun_portfolio_start_date', (targetDate.getTime() / 1000).toString());
+            setStartDateFields(timestamp);
+            localStorage.setItem('kuzgun_portfolio_start_date', String(timestamp / 1000));
             showToast('Tarih ayarlandı');
         }
 
