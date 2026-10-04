@@ -1393,7 +1393,6 @@ function nextHistoryPage() {
     }
 }
 
-let monthlyLimitPage = 0;
 let monthlyLimitFocus = null;
 
 function getMonthlyLimitRows() {
@@ -1415,7 +1414,12 @@ function getMonthlyLimitRows() {
         const locked = isCoinMonthlyLocked(coin);
         const remainingPnl = locked ? 0 : Math.max(0, cap - progress);
         const remaining = locked ? 0 : cap > 0 && target > 0 ? Math.max(0, Math.ceil((remainingPnl - 0.001) / target)) : null;
-        return {coin,live,past,count:records.length,remaining,remainingPnl,cap,locked,active:coin.isActive !== false};
+        const netGainUsd = (KZ_STATE.executedGlobalTrades || []).filter(matches)
+            .reduce((sum, trade) => sum + Number(trade.netGainUSD || 0), 0);
+        const base = Number(KZ_STATE.portfolioBaseUsd || 0);
+        const portfolioContribution = base > 0 ? netGainUsd / base * 100 : null;
+        return {coin,live,past,count:records.length,remaining,remainingPnl,cap,locked,
+            netGainUsd,portfolioContribution,active:coin.isActive !== false};
     });
 }
 
@@ -1445,7 +1449,6 @@ function openMonthlyLimitModal() {
     const modal = document.getElementById('monthlyLimitModal');
     if (!modal) return;
     monthlyLimitFocus = document.activeElement;
-    monthlyLimitPage = 0;
     renderMonthlyLimitModal();
     modal.classList.remove('hidden');
     modal.classList.add('flex');
@@ -1460,34 +1463,29 @@ function closeMonthlyLimitModal() {
     monthlyLimitFocus?.focus();
 }
 
-function changeMonthlyLimitPage(delta) {
-    monthlyLimitPage += delta;
-    renderMonthlyLimitModal();
-}
-
 function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
     const totals = monthlyLimitTotals(rows);
     const month = new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',month:'long',year:'numeric'});
     document.getElementById('monthlyLimitTitle').textContent = `${month} · İşlem limitleri`;
     document.getElementById('monthlyLimitTotals').textContent = `Aktif coinler: ${totals.count} gerçekleşen · ≈ ${totals.remaining} kalan${totals.unknown ? ' · '+totals.unknown+' coin için hedef tanımsız' : ''}`;
-    const pageSize = Math.max(2, Math.min(9, Math.floor((window.innerHeight * .9 - 260) / 48)));
-    const pages = Math.max(1, Math.ceil(rows.length / pageSize));
-    monthlyLimitPage = Math.max(0, Math.min(monthlyLimitPage, pages - 1));
     const container = document.getElementById('monthlyLimitRows');
     // Build with textContent to keep coin names out of HTML interpolation.
     container.replaceChildren();
-    const visible = rows.slice(monthlyLimitPage * pageSize, (monthlyLimitPage + 1) * pageSize);
+    const visible = rows;
     visible.forEach(row => {
         const tr = document.createElement('tr');
-        tr.className = 'border-b border-slate-100 dark:border-slate-800 '+(row.active ? '' : 'opacity-50');
+        tr.className = 'border-b border-slate-100 dark:border-slate-800 '+(row.locked ? 'text-rose-600 dark:text-rose-400 ' : '')+(row.active ? '' : 'opacity-50');
         const cells = [String(row.coin.displaySymbol || row.coin.symbol).replace('USDT',''),
             `${row.count} (${row.live} / ${row.past})`,
             row.remaining === null ? '—' : `≈ ${row.remaining}`,
             `%${row.remainingPnl.toFixed(2)} / %${row.cap.toFixed(1)}`,
+            row.portfolioContribution === null ? '—' : `${row.portfolioContribution >= 0 ? '+' : '-'}%${Math.abs(row.portfolioContribution).toFixed(2)}`,
             !row.active ? 'Pasif' : row.locked ? 'Kilitli' : 'Aktif'];
         cells.forEach((value, index) => {
             const td = document.createElement('td');
-            td.className = 'py-2.5 px-1 text-[11px] tabular-nums '+(index === 0 ? 'font-bold' : 'text-right');
+            td.className = 'py-1.5 px-1 text-[10px] tabular-nums '+(index === 0 ? 'font-bold' : 'text-right');
+            if (index === 4 && !row.locked && row.portfolioContribution !== null) td.className += row.portfolioContribution >= 0 ? ' text-emerald-600 dark:text-emerald-400 font-semibold' : ' text-rose-600 dark:text-rose-400 font-semibold';
+            if (index === 4) td.title = `Bu ay komisyon sonrası portföy katkısı: ${row.netGainUsd.toFixed(2)} USDT. Başlangıç sermayesine göre yüzde.`;
             td.textContent = value;
             tr.append(td);
         });
@@ -1495,11 +1493,9 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
     });
     if (!visible.length) {
         const tr = document.createElement('tr'), td = document.createElement('td');
-        td.colSpan = 5;td.className = 'py-8 text-center text-xs text-slate-400';td.textContent = 'Henüz coin eklenmedi.';tr.append(td);container.append(tr);
+        td.colSpan = 6;td.className = 'py-8 text-center text-xs text-slate-400';td.textContent = 'Henüz coin eklenmedi.';tr.append(td);container.append(tr);
     }
-    document.getElementById('monthlyLimitPage').textContent = `${monthlyLimitPage + 1} / ${pages}`;
-    document.getElementById('monthlyLimitPrev').disabled = monthlyLimitPage === 0;
-    document.getElementById('monthlyLimitNext').disabled = monthlyLimitPage === pages - 1;
+
 }
 
 function coinCardStatus(coin) {
