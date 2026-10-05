@@ -49,61 +49,6 @@ const PortfolioEngine = {
             .sort((a, b) => b.exitTime - a.exitTime);
     },
 
-    // Aylık limit yalnız slota kabul edilen kapanışlardan dolar.
-    // Bütün coinler tek zaman çizelgesinde işlenir; kâr girişte değil çıkışta yazılır.
-    filterTradesByMonthlySlotLimit(rawTrades, maxSlots, coins, activePositions = [], slotConstraint = true) {
-        const capacity = Math.max(1, Number(maxSlots) || 1);
-        const isReal = t => t.source === 'manual' || t.source === 'automatic';
-        const sameCoin = (a, b) => a.coinId && a.coinId === b.coinId || a.symbol && a.symbol === b.symbol;
-        const realTrades = rawTrades.filter(isReal);
-        const openEvents = activePositions.filter(p => Number(p.entryTime) > 0)
-            .map(p => ({...p, exitTime: Infinity, source: 'automatic', isOpenSlotEvent: true}));
-        // Gerçek kayıtla örtüşen aynı coin simülasyonunu ikinci kez kazanca ekleme.
-        const candidates = rawTrades.filter(t => isReal(t) || ![...realTrades, ...openEvents].some(r =>
-            sameCoin(t, r) && Number(t.entryTime) < Number(r.exitTime)
-                && Number(r.entryTime) < Number(t.exitTime)));
-        const events = [...candidates, ...openEvents].sort((a,b) => Number(a.entryTime)-Number(b.entryTime)
-            || Number(isReal(b))-Number(isReal(a)) || String(a.id).localeCompare(String(b.id)));
-        const monthlyStats = {}, occupied = [], accepted = [], considered = [];
-        const monthKey = time => new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit'
-        }).formatToParts(new Date(time)).reduce((o,p) => (o[p.type]=p.value,o), {});
-        const getMonth = time => {const p=monthKey(time); return `${p.year}-${p.month}`;};
-        const coinKey = t => coins.find(c => sameCoin(c,t))?.id || t.coinId || t.symbol;
-        const getStats = (t, month) => {
-            const key=coinKey(t);
-            monthlyStats[key] ||= {};
-            return monthlyStats[key][month] ||= {trades:0, pnl:0, isLocked:false};
-        };
-        const capFor = t => Number(coins.find(c => sameCoin(c,t))?.monthlyCap || 0);
-        const closeUntil = time => {
-            occupied.sort((a,b) => Number(a.exitTime)-Number(b.exitTime));
-            while (occupied.length && Number(occupied[0].exitTime) <= time) {
-                const closed=occupied.shift();
-                if (closed.isOpenSlotEvent) continue;
-                const stats=getStats(closed,getMonth(Number(closed.exitTime)));
-                stats.trades++;
-                stats.pnl += Number(closed.pnlPercent || 0);
-                if (stats.pnl + 0.001 >= capFor(closed)) stats.isLocked=true;
-            }
-        };
-        for (const trade of events) {
-            const entry=Number(trade.entryTime);
-            if (!Number.isFinite(entry)) continue;
-            closeUntil(entry);
-            const stats=getStats(trade,getMonth(entry));
-            // Gerçek kayıtlar ayar değişince silinmez; yeni simülasyon girişleri kilide uyar.
-            if (!isReal(trade) && stats.isLocked) continue;
-            if (!trade.isOpenSlotEvent) considered.push(trade);
-            if (!isReal(trade) && (occupied.some(p => sameCoin(p,trade))
-                || slotConstraint && occupied.length >= capacity)) continue;
-            occupied.push(trade);
-            if (!trade.isOpenSlotEvent) accepted.push(trade);
-        }
-        closeUntil(Date.now());
-        return {trades:accepted.sort((a,b) => b.exitTime-a.exitTime), consideredTrades:considered, monthlyStats};
-    },
-
     // 2. BİLEŞİK BAKİYE & KOMİSYON MOTORU
     calculateCompoundedBalance({
         baseBalance = 1000.0,
