@@ -692,7 +692,7 @@ function calculateRSIHistory(prices, period = 14) {
 
 function calculateRSI(closes, period = 14) {
     const history = calculateRSIHistory(closes, period);
-    return history[history.length - 1] || 50.0;
+    return history[history.length - 1] ?? 50.0;
 }
 
 function isCoinMonthlyLocked(coin) {
@@ -713,6 +713,72 @@ function isCoinMonthlyLocked(coin) {
 }
 
 // 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
+function confirmedCandleRsi(coin, candleTime) {
+    const interval = getIntervalMilliseconds(coin.interval);
+    const candles = (coin.rawCandles || []).filter(c => c.time <= candleTime && c.time + interval <= Date.now());
+    const values = calculateRSIHistory(candles.map(c => c.close), coin.rsiLength);
+    return {previous: values.at(-2), current: values.at(-1)};
+}
+
+function applyConfirmedCandle(coin, candle) {
+    if (!coin.candleHistoryReady || coin.isActive === false) return;
+    const interval = getIntervalMilliseconds(coin.interval);
+    const closedAt = candle.time + interval;
+    if (closedAt > Date.now()) return;
+    if (!coin.confirmedSyncBusy && Number.isFinite(coin.lastConfirmedCandleTime)
+        && candle.time > coin.lastConfirmedCandleTime + interval) {
+        syncConfirmedCandles(coin);
+        return;
+    }
+    if (candle.time <= (coin.lastConfirmedCandleTime ?? -Infinity)
+        && coin.rawCandles?.some(c => c.time === candle.time && c.closed === true)) return;
+    const map = new Map((coin.rawCandles || []).map(c => [c.time, c]));
+    map.set(candle.time, {...candle, closed: true});
+    coin.rawCandles = [...map.values()].sort((a,b) => a.time-b.time);
+    coin.candles = coin.rawCandles.map(c => c.close);
+    const isNew = candle.time > (coin.lastConfirmedCandleTime ?? -Infinity);
+    if (isNew) {
+        coin.lastConfirmedCandleTime = candle.time;
+        const rsi = confirmedCandleRsi(coin, candle.time);
+        // Eski mumlar veri düzeltmesi içindir; geriye dönük canlı alım üretme.
+        const timely = Date.now() - closedAt <= 60000;
+        const confirmed = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
+        if (timely && confirmed && rsi.previous != null && rsi.current != null
+            && rsi.previous <= coin.buyRsi && rsi.current > coin.buyRsi) {
+            requestBuySignalDecision(coin, Number(coin.price) || candle.close, rsi.current, closedAt, 'Mum Teyitli');
+        }
+    }
+    const currentStart = Math.floor(Date.now() / interval) * interval;
+    if (coin.rawCandles.at(-1).time < currentStart) {
+        const price = Number(coin.price) || candle.close;
+        coin.rawCandles.push({time: currentStart, open:price,high:price,low:price,close:price,
+            closed:false,monthKey:getTurkeyMonthKey(currentStart)});
+        coin.candles.push(price);
+    }
+    CandleCache.set(`kuzgun_candles_v2_${coin.symbol}_${coin.interval}_${KZ_STATE.selectedYear}`, coin.rawCandles);
+    runCardBacktest(coin);
+    updateCardTablesOnly(coin);
+    recalculateFullPortfolio();
+}
+
+async function syncConfirmedCandles(coin) {
+    if (!coin.candleHistoryReady || coin.confirmedSyncBusy || Date.now() - (coin.confirmedSyncAttempt || 0) < 5000) return;
+    coin.confirmedSyncBusy = true;
+    coin.confirmedSyncAttempt = Date.now();
+    try {
+        const interval = getIntervalMilliseconds(coin.interval);
+        const currentStart = Math.floor(Date.now()/interval)*interval;
+        const start = Math.max(Number(coin.lastConfirmedCandleTime || currentStart-interval), currentStart-interval*1000);
+        const batch = await fetchKlinePage(coin.symbol,coin.interval,start,Date.now());
+        for (const k of batch) {
+            if (Number(k[0])+interval > Date.now()) continue;
+            applyConfirmedCandle(coin,{time:Number(k[0]),open:Number(k[1]),high:Number(k[2]),low:Number(k[3]),
+                close:Number(k[4]),closed:true,monthKey:getTurkeyMonthKey(Number(k[0]))});
+        }
+    } catch (error) { console.warn(`Kesin mum alınamadı [${coin.symbol}]:`, error.message); }
+    finally { coin.confirmedSyncBusy = false; }
+}
+
 function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
     if (coin.isActive === false) return;
     if (checkLiveProfitTarget(coin, livePrice)) return;
@@ -720,55 +786,17 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
 
     const intervalMs = getIntervalMilliseconds(coin.interval);
     const nowMs = Date.now();
+    if (coin.candleHistoryReady && coin.lastConfirmedCandleTime < Math.floor(nowMs / intervalMs) * intervalMs - intervalMs) syncConfirmedCandles(coin);
     let lastCandle = coin.rawCandles[coin.rawCandles.length - 1];
     let isRolloverOccurred = false;
 
-    // 1️⃣ MUM DEVİR DÖNGÜSÜ (CANDLE ROLLOVER)
-    while (nowMs >= (lastCandle.time + intervalMs)) {
-        isRolloverOccurred = true;
-        const nextStartTime = lastCandle.time + intervalMs;
-
-        // Kapanan mumu son fiyatla mühürle
-        lastCandle.close = livePrice;
-        if (livePrice > lastCandle.high) lastCandle.high = livePrice;
-        if (livePrice < lastCandle.low) lastCandle.low = livePrice;
-        coin.rawCandles[coin.rawCandles.length - 1] = lastCandle;
-        coin.candles[coin.candles.length - 1] = lastCandle.close;
-
-        // 🎯 MUM KAPANIŞINDA KESİNLEŞMİŞ CROSSOVER TEYİDİ (TradingView Uyumu)
-        const isCandleCloseEnabled = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
-        if (isCandleCloseEnabled) {
-            const recentCandles = coin.rawCandles.slice(-150);
-            const rsiHistory = calculateRSIHistory(recentCandles.map(c => c.close), coin.rsiLength);
-            const validRsis = rsiHistory.filter(r => r !== null);
-
-            if (validRsis.length >= 2) {
-                const closedRsi = validRsis[validRsis.length - 1];
-                const prevClosedRsi = validRsis[validRsis.length - 2];
-
-                // Kesinleşmiş kapanış crossover kuralı
-                const isConfirmedCrossover = prevClosedRsi <= coin.buyRsi && closedRsi > coin.buyRsi;
-                const isAlreadyInPos = (KZ_STATE.activePositions || []).some(p => p.coinId === coin.id || p.symbol === coin.symbol);
-                const isCapReached = isCoinMonthlyLocked(coin);
-
-                if (isConfirmedCrossover && !isAlreadyInPos && !isCapReached) {
-                    requestBuySignalDecision(coin, livePrice, closedRsi, nextStartTime, 'Mum Teyitli');
-                }
-            }
-        }
-
-        // Sıradaki yeni açık mumu başlat
-        const newCandle = {
-            time: nextStartTime,
-            open: livePrice,
-            high: livePrice,
-            low: livePrice,
-            close: livePrice,
-            monthKey: getTurkeyMonthKey(nextStartTime)
-        };
-        coin.rawCandles.push(newCandle);
-        coin.candles.push(livePrice);
-        lastCandle = newCandle;
+    // Kapanan mumu yeni fiyatla değiştirme; Binance'in kesin kapanışını al.
+    if (nowMs >= lastCandle.time + intervalMs) {
+        syncConfirmedCandles(coin);
+        updateCardPriceOnly(coin);
+        updateActivePositionsLive();
+        updateLivePortfolioQuick();
+        return;
     }
 
     // 2️⃣ ŞU ANKİ AKTİF MUMUN DEĞERLERİNİ CANLI GÜNCELLE
@@ -825,7 +853,7 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
 
     // Mum devri gerçekleştiyse önbelleği ve tabloları arka planda mühürle
     if (isRolloverOccurred) {
-        const cacheKey = `kuzgun_candles_${coin.symbol}_${coin.interval}_${KZ_STATE.selectedYear}`;
+        const cacheKey = `kuzgun_candles_v2_${coin.symbol}_${coin.interval}_${KZ_STATE.selectedYear}`;
         CandleCache.set(cacheKey, coin.rawCandles);
         runCardBacktest(coin);
         updateCardTablesOnly(coin);
@@ -860,14 +888,15 @@ function runCardBacktest(coin) {
         return;
     }
 
-    const closes = coin.rawCandles.map(c => c.close);
+    const historyCandles = coin.rawCandles.filter(c => c.time + intervalMs <= now.getTime());
+    const closes = historyCandles.map(c => c.close);
     const rsiVals = calculateRSIHistory(closes, coin.rsiLength);
     let inPos = false, entryP = 0, entryT = 0;
     const trades = [];
     let totalHoldSeconds = 0;
 
-    for (let i = coin.rsiLength + 1; i < coin.rawCandles.length; i++) {
-        const c = coin.rawCandles[i];
+    for (let i = coin.rsiLength + 1; i < historyCandles.length; i++) {
+        const c = historyCandles[i];
         const rsi = rsiVals[i];
         const prevRsi = rsiVals[i - 1];
         if (rsi === null || prevRsi === null) continue;
@@ -892,7 +921,7 @@ function runCardBacktest(coin) {
             if (prevRsi <= coin.buyRsi && rsi > coin.buyRsi) {
                 inPos = true;
                 entryP = c.close;
-                entryT = c.time;
+                entryT = c.time + intervalMs;
             }
         } else if (inPos) {
             const targetP = entryP * (1.0 + coin.profitTarget / 100.0);
@@ -935,7 +964,7 @@ function runCardBacktest(coin) {
                     entryTime: entryT,
                     exitTime: exitTime,
                     entryPrice: entryP,
-                    exitPrice: c.close,
+                    exitPrice: reason.startsWith('Kâr (') ? targetP : c.close,
                     pnl: pnl,
                     pnlPercent: pnl,
                     monthKey: mKey,
@@ -2741,7 +2770,7 @@ async function fetchLiveTickerFallback() {
 // Önbellek Destekli Mum Çekici
 async function fetchInitialCandles(coin) {
     const year = parseInt(KZ_STATE.selectedYear, 10) || 2026;
-    const cacheKey = `kuzgun_candles_${coin.symbol}_${coin.interval}_${year}`;
+    const cacheKey = `kuzgun_candles_v2_${coin.symbol}_${coin.interval}_${year}`;
     const startTime = new Date(Date.UTC(year, 0, 1, 0, 0, 0)).getTime();
     const endTime = year === new Date().getFullYear() 
         ? Date.now() 
@@ -2766,10 +2795,7 @@ async function fetchInitialCandles(coin) {
     let currentStart = startTime;
     if (cached.length > 0) {
         const lastCachedTime = cached[cached.length - 1].time;
-        if (lastCachedTime >= (endTime - 60000)) {
-            return;
-        }
-        currentStart = lastCachedTime + 1;
+        currentStart = Math.max(startTime, lastCachedTime - getIntervalMilliseconds(coin.interval));
     }
 
     const endpoints = [
@@ -2811,7 +2837,7 @@ async function fetchInitialCandles(coin) {
         }
 
         if (newCandles.length > 0) {
-            const merged = cached.concat(newCandles);
+            const merged = newCandles.concat(cached);
             const seen = new Set();
             const uniqueCandles = merged.filter(c => {
                 if (seen.has(c.time)) return false;
@@ -2819,7 +2845,11 @@ async function fetchInitialCandles(coin) {
                 return true;
             });
 
+            uniqueCandles.sort((a,b) => a.time-b.time);
             coin.rawCandles = uniqueCandles;
+            const closed = uniqueCandles.filter(c => c.time + getIntervalMilliseconds(coin.interval) <= Date.now());
+            coin.lastConfirmedCandleTime = closed.at(-1)?.time ?? -Infinity;
+            coin.candleHistoryReady = true;
             coin.candles = uniqueCandles.map(c => c.close);
             coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
             coin.prevRsi = coin.rsi;
@@ -2856,6 +2886,7 @@ function initBinanceWebSocket() {
         if (c.symbol && c.isActive !== false) {
             streamSet.add(`${c.symbol.toLowerCase()}@miniTicker`);
             streamSet.add(`${c.symbol.toLowerCase()}@aggTrade`);
+            streamSet.add(`${c.symbol.toLowerCase()}@kline_${c.interval}`);
         }
     });
 
@@ -2882,6 +2913,14 @@ function initBinanceWebSocket() {
                 const d = msg.data;
                 const sym = d.s;
                 const tradeCoin = KZ_STATE.coins.find(c => c.symbol === sym);
+                if (d.e === 'kline') {
+                    const k = d.k;
+                    if (tradeCoin && k?.x === true && k.i === tradeCoin.interval) {
+                        applyConfirmedCandle(tradeCoin,{time:Number(k.t),open:Number(k.o),high:Number(k.h),low:Number(k.l),
+                            close:Number(k.c),closed:true,monthKey:getTurkeyMonthKey(Number(k.t))});
+                    }
+                    return;
+                }
                 if (d.e === 'aggTrade') {
                     const price = Number(d.p), time = Number(d.T);
                     if (tradeCoin && tradeCoin.isActive !== false && price > 0 && Number.isFinite(time)) {
@@ -2984,7 +3023,7 @@ async function fetchAllCandlesForYear(symbol, interval, year, onProgress = null)
         ? Date.now() 
         : new Date(Date.UTC(year, 11, 31, 23, 59, 59)).getTime();
 
-    const cacheKey = `kuzgun_candles_${symbol}_${interval}_${year}`;
+    const cacheKey = `kuzgun_candles_v2_${symbol}_${interval}_${year}`;
     const cached = (await CandleCache.get(cacheKey) || [])
         .filter(c => c.time >= startTime && c.time <= endTime)
         .sort((a, b) => a.time - b.time);
