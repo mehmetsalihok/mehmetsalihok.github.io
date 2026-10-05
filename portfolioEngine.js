@@ -1,7 +1,7 @@
 // KUZGUN PRO — HIGH PERFORMANCE PORTFOLIO & TIMEFRAME ENGINE
 const PortfolioEngine = {
     // 1. ⚡️ ALTIN STANDART SLOT ÇAKIŞMA KALKANI (0.1 Milisaniyede Tamamlanır)
-    filterTradesBySlotCapacity(rawTrades, maxSlots, activePositions = []) {
+    filterTradesBySlotCapacity(rawTrades, maxSlots, activePositions = [], monthlyLimits = null) {
         if (!maxSlots || maxSlots <= 0 || !rawTrades || rawTrades.length === 0) return rawTrades;
 
         // Aynı anda başlayan gerçek işlemler, simüle işlemlerden önce değerlendirilir.
@@ -16,12 +16,34 @@ const PortfolioEngine = {
         const occupied = [];
 
         const acceptedTrades = [];
+        const closedEvents = [];
+        const monthlyPnl = new Map(), monthlyLocked = new Set();
+        const monthKey = trade => trade.exitMonth || trade.monthKey ||
+            new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit'}).format(new Date(trade.exitTime));
+        const limitKey = trade => `${trade.coinId || trade.symbol}_${monthKey(trade)}`;
+        const consumeClosed = time => {
+            if (!monthlyLimits) return;
+            for (const event of closedEvents) {
+                if (event.done || event.exit > time) continue;
+                event.done = true;
+                if (!event.accepted.active) continue;
+                const key = limitKey(event.trade);
+                const pnl = (monthlyPnl.get(key) || 0) + Number(event.trade.pnlPercent ?? event.trade.pnl ?? 0);
+                monthlyPnl.set(key,pnl);
+                const cap = Number(monthlyLimits?.[event.trade.coinId || event.trade.symbol] || 0);
+                if (cap > 0 && pnl + 0.001 >= cap) monthlyLocked.add(key);
+            }
+        };
 
         for (let i = 0; i < sorted.length; i++) {
             const trade = sorted[i];
             const entry = trade.entryTime;
             const exit = Math.max(trade.exitTime, trade.entryTime + 60000);
             const isReal = trade.source === 'manual' || trade.source === 'automatic';
+            consumeClosed(entry);
+            // Gerçek kayıtları koru; geçmiş adayları giriş ayının slot kârı kilidine göre ele.
+            const entryMonth = monthlyLimits && !isReal ? new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Istanbul',year:'numeric',month:'2-digit'}).format(new Date(entry)) : null;
+            if (!isReal && monthlyLimits && monthlyLocked.has(`${trade.coinId || trade.symbol}_${entryMonth}`)) continue;
 
             for (let s = occupied.length - 1; s >= 0; s--) {
                 if (occupied[s].exit <= entry) occupied.splice(s, 1);
@@ -41,6 +63,7 @@ const PortfolioEngine = {
                 const accepted = { trade, active: true };
                 if (!trade.isOpenSlotEvent) acceptedTrades.push(accepted);
                 occupied.push({ exit, isReal, accepted });
+                if (monthlyLimits && !trade.isOpenSlotEvent) closedEvents.push({exit,trade,accepted,done:false});
             }
         }
 
@@ -59,10 +82,11 @@ const PortfolioEngine = {
         isSlotConstraintEnabled = true,
         isFeeDeductionEnabled = true,
         startDateTimestamp = 0,
-        selectedYear = '2026'
+        selectedYear = '2026',
+        monthlyLimits = null
     }) {
-        const processedTrades = isSlotConstraintEnabled 
-            ? this.filterTradesBySlotCapacity(trades, maxSlots, activePositions)
+        const processedTrades = isSlotConstraintEnabled || monthlyLimits
+            ? this.filterTradesBySlotCapacity(trades, isSlotConstraintEnabled ? maxSlots : trades.length + activePositions.length + 1, activePositions, monthlyLimits)
             : [...trades].sort((a, b) => a.exitTime - b.exitTime);
 
         // Slota kabul edilen işlemlerin ID kümesi

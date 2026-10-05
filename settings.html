@@ -281,7 +281,7 @@
                         <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
                             <div class="space-y-0.5">
                                 <span class="font-bold text-xs text-slate-900 dark:text-white block">Slot bağımsız aylık coin limiti</span>
-                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Slotta veya slot dışında kapanan her sinyal bir kez sayılır. Coinin toplam kârı aylık limite ulaşınca yeni alımlar durur. Zararlar toplamdan düşer; limit dolmadıysa işlemler devam eder. Kapalıyken aylık kâr kilidi uygulanmaz. Açık pozisyonların çıkışı devam eder.</p>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Slotta veya slot dışında kapanan her sinyal bir kez sayılır. Coinin toplam kârı aylık limite ulaşınca yeni alımlar durur. Zararlar toplamdan düşer; limit dolmadıysa işlemler devam eder. Kapalıyken yalnızca slota giren işlemlerin toplam kârı aylık limiti doldurur; slot dışı sonuçlar limiti etkilemez. Her iki yöntem geçmiş aylara da uygulanır. Açık pozisyonların çıkışı devam eder.</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
                                 <input type="checkbox" id="toggleMonthlyCoinLimit" onchange="handleToggle('monthlyCoinLimit')" class="sr-only peer">

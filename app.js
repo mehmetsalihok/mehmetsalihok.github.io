@@ -740,6 +740,30 @@ function monthlyCoinLimitEnabled() {
     return localStorage.getItem('kuzgun_monthly_coin_limit_enabled') !== 'false';
 }
 
+let slotMonthlySelectionCache = null;
+function getSlotMonthlySelection() {
+    if (slotMonthlySelectionCache) return slotMonthlySelectionCache;
+    const candidates = [], caps = {};
+    for (const coin of KZ_STATE.coins || []) {
+        if (coin.isActive === false) continue;
+        caps[coin.id] = Number(coin.monthlyCap || 0);
+        const realKeys = new Set([...(KZ_STATE.closedTrades || []),...(KZ_STATE.pendingClosedTrades || [])]
+            .filter(t => t.coinId === coin.id || t.symbol === coin.symbol).map(t => coinSignalKey(coin,t)));
+        for (const m of coin.rawSimMonthlyStats || []) for (const t of m.tradesList || []) {
+            if (!realKeys.has(coinSignalKey(coin,t))) candidates.push({...t,coinId:coin.id,symbol:coin.symbol,
+                pnlPercent:Number(t.pnlPercent ?? t.pnl ?? 0),monthKey:m.monthKey});
+        }
+    }
+    for (const t of KZ_STATE.closedTrades || []) candidates.push({...t,monthKey:t.exitMonth || getTurkeyMonthKey(t.exitTime),
+        source:t.source || (t.isManual ? 'manual' : 'automatic')});
+    const filterSlots = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
+    const selected = typeof PortfolioEngine !== 'undefined'
+        ? PortfolioEngine.filterTradesBySlotCapacity(candidates,filterSlots ? KZ_STATE.maxSlots : candidates.length + 1,KZ_STATE.activePositions || [],caps)
+        : candidates.filter(t => t.source === 'automatic' || t.source === 'manual');
+    slotMonthlySelectionCache = new Set(selected.map(t => t.id));
+    return slotMonthlySelectionCache;
+}
+
 // Tek sinyal, slot sonucundan bağımsız tek limit kaydıdır.
 function coinSignalKey(coin, trade) {
     if (trade.isManual) return `manual_${trade.id}`;
@@ -766,13 +790,16 @@ function getCoinLimitLedger(coin, month) {
     const trades = [], excluded = [];
     let pnl = 0, locked = false;
     const enabled = monthlyCoinLimitEnabled(), cap = Number(coin.monthlyCap || 0);
+    const slotIds = enabled ? null : getSlotMonthlySelection();
+    let counted = 0;
     for (const t of all) {
         if (locked) { excluded.push(t); continue; }
-        trades.push(t);
-        pnl += Number(t.pnlPercent || 0);
-        if (enabled && cap > 0 && pnl + 0.001 >= cap) locked = true;
+        const limitCounted = enabled || t.limitOrigin === 'live' || (t.limitOrigin === 'history' && slotIds.has(t.id));
+        trades.push({...t,limitCounted});
+        if (limitCounted) { counted++; pnl += Number(t.pnlPercent || 0); }
+        if (cap > 0 && pnl + 0.001 >= cap) locked = true;
     }
-    return {trades,excluded,count:trades.length,pnl,locked,enabled};
+    return {trades,excluded,count:counted,totalCount:trades.length,pnl,locked,enabled};
 }
 
 function refreshCoinLimitStats(coin) {
@@ -789,7 +816,6 @@ function refreshCoinLimitStats(coin) {
 }
 
 function isCoinMonthlyLocked(coin) {
-    if (!monthlyCoinLimitEnabled()) return false;
     return getCoinLimitLedger(coin,getTurkeyMonthKey()).locked;
 }
 
@@ -1073,6 +1099,7 @@ function runCardBacktest(coin) {
         coin.avgHoldDurationStr = '--';
     }
 
+    slotMonthlySelectionCache = null;
     coin.rawSimMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
     refreshCoinLimitStats(coin);
     coin.simLastTrades = trades.slice(-10).reverse();
@@ -1135,13 +1162,13 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
         .sort((a,b) => b.exitTime-a.exitTime);
     const slotCount = rows.filter(t => t.isReal || KZ_STATE.acceptedTradeIds?.has(t.id)).length;
     if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent =
-        `${ledger.count} toplam işlem · ${slotCount} slot · ${ledger.count-slotCount} slot dışı`;
+        `${ledger.totalCount} toplam işlem · ${ledger.count} limite dahil · ${ledger.enabled ? 'Tüm sinyaller' : 'Yalnızca slot sonuçları'}`;
     if (modalActiveMonthPnl) {
         modalActiveMonthPnl.textContent = `${ledger.pnl >= 0 ? '+' : ''}${ledger.pnl.toFixed(2)}%`;
-        modalActiveMonthPnl.title = 'Coinin tüm kapanan sinyallerinin toplam brüt getirisi; slot dışı sonuçlar dahil, her sinyal bir kez.';
+        modalActiveMonthPnl.title = ledger.enabled ? 'Slot içi ve dışı tüm sinyallerin toplam brüt getirisi.' : 'Yalnızca slota giren işlemlerin toplam brüt getirisi.';
     }
     if (modalActiveMonthLockBadge) {
-        modalActiveMonthLockBadge.textContent = !ledger.enabled ? 'Aylık limit kapalı' : ledger.locked ? 'Aylık kâr limitine ulaşıldı' : `Aylık kâr limiti: %${coin.monthlyCap.toFixed(1)}`;
+        modalActiveMonthLockBadge.textContent = ledger.locked ? 'Aylık kâr limitine ulaşıldı' : `Aylık kâr limiti: %${coin.monthlyCap.toFixed(1)}`;
         modalActiveMonthLockBadge.title = ledger.excluded.some(t => t.limitOrigin !== 'history')
             ? 'Önceki kuralla limit sonrası kaydedilmiş canlı/bekleme sonuçları işlem geçmişinde korunur.' : 'Kilit işlem adedine değil tüm sinyallerin toplam kârına göre hesaplanır.';
     }
@@ -1578,7 +1605,7 @@ function getMonthlyLimitRows() {
         const target = Number(coin.profitTarget || 0);
         const locked = isCoinMonthlyLocked(coin);
         const remainingPnl = locked ? 0 : Math.max(0, cap - progress);
-        const remaining = !monthlyCoinLimitEnabled() ? null : locked ? 0 : cap > 0 && target > 0 ? Math.max(0, Math.ceil((remainingPnl - 0.001) / target)) : null;
+        const remaining = locked ? 0 : cap > 0 && target > 0 ? Math.max(0, Math.ceil((remainingPnl - 0.001) / target)) : null;
         const executed = (KZ_STATE.executedGlobalTrades || []).filter(matches);
         const isLive = trade => liveIds.has(trade.id) || trade.source === 'automatic' || trade.source === 'manual';
         const liveGainUsd = executed.filter(isLive).reduce((sum, trade) => sum + Number(trade.netGainUSD || 0), 0);
@@ -1729,7 +1756,7 @@ function coinCardMonthSummary(coin) {
         </div>
         <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><span><strong class="text-emerald-600 dark:text-emerald-400">${livePending} Canlı</strong><span class="mx-1.5">·</span><strong class="text-amber-600 dark:text-amber-400">${simPending} Geçmişte</strong></span></div>
         <div class="space-y-1" title="Kilit, mevcut aylık strateji ve işlem sonuçlarıyla belirlenir. Slot dışı sonuçlar dahil, her sinyal yalnızca bir kez sayılır.">
-            <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Toplam ${limitLedger.count} işlem · Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${!monthlyCoinLimitEnabled() ? 'Limit kapalı' : isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
+            <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Toplam ${limitLedger.count} işlem · Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
             <div class="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-indigo-500" style="width:${progress}%"></div></div>
         </div>`;
 }
@@ -3548,6 +3575,7 @@ function changeMaxSlots(newSlots) {
 }
 
 function recalculateFullPortfolio() {
+    slotMonthlySelectionCache = null;
     const isSlotConstraint = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
     const isFeeDeduction = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
     const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
@@ -3578,10 +3606,12 @@ function recalculateFullPortfolio() {
         if (coin.isActive === false) return;
         if (coin.rawSimMonthlyStats) refreshCoinLimitStats(coin);
         if (coin.simMonthlyStats) {
-            coin.simMonthlyStats.forEach(m => {
+            (monthlyCoinLimitEnabled() ? coin.simMonthlyStats : coin.rawSimMonthlyStats || coin.simMonthlyStats).forEach(m => {
                 if (m.tradesList) {
                     m.tradesList.forEach(t => {
                         if (t.limitOrigin && t.limitOrigin !== 'history') return;
+                        if (!monthlyCoinLimitEnabled() && [...(KZ_STATE.closedTrades || []),...(KZ_STATE.pendingClosedTrades || [])]
+                            .some(record => (record.coinId === coin.id || record.symbol === coin.symbol) && coinSignalKey(coin,record) === coinSignalKey(coin,t))) return;
                         allRawTrades.push({
                             id: t.id,
                             coinId: coin.id,
@@ -3610,11 +3640,12 @@ function recalculateFullPortfolio() {
             isSlotConstraintEnabled: isSlotConstraint,
             isFeeDeductionEnabled: isFeeDeduction,
             startDateTimestamp: startTs,
-            selectedYear: KZ_STATE.selectedYear
+            selectedYear: KZ_STATE.selectedYear,
+            monthlyLimits: monthlyCoinLimitEnabled() ? null : Object.fromEntries(KZ_STATE.coins.map(c => [c.id, Number(c.monthlyCap || 0)]))
         };
 
-        const slotAccepted = isSlotConstraint
-            ? PortfolioEngine.filterTradesBySlotCapacity(allRawTrades, KZ_STATE.maxSlots, KZ_STATE.activePositions)
+        const slotAccepted = isSlotConstraint || engineArgs.monthlyLimits
+            ? PortfolioEngine.filterTradesBySlotCapacity(allRawTrades, isSlotConstraint ? KZ_STATE.maxSlots : allRawTrades.length + 1, KZ_STATE.activePositions, engineArgs.monthlyLimits)
             : allRawTrades;
         KZ_STATE.simulatedPendingClosedTrades = buildPendingHistorySimulation(allRawTrades, slotAccepted, startTs, isSlotConstraint);
         let engineResult = PortfolioEngine.calculateCompoundedBalance(engineArgs);
@@ -3858,6 +3889,7 @@ window.updateClosedTradeEditPreview = updateClosedTradeEditPreview;
 window.saveClosedTradeEdit = saveClosedTradeEdit;
 
 function syncMainAppFromStorage(event) {
+    slotMonthlySelectionCache = null;
     const key = event && event.key;
     if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_base_usd', 'kuzgun_theme', 'kuzgun_monthly_coin_limit_enabled', 'kuzgun_pending_closed_trades'].includes(key)) return;
 
