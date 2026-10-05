@@ -736,7 +736,31 @@ function calculateRSI(closes, period = 14) {
     return history[history.length - 1] ?? 50.0;
 }
 
+function isMonthlySlotLimitEnabled() {
+    return localStorage.getItem('kuzgun_monthly_slot_limit_enabled') === 'true';
+}
+
+function monthlyCoinProgress(coin, month = getTurkeyMonthKey()) {
+    if (isMonthlySlotLimitEnabled()) {
+        const stats = KZ_STATE.monthlySlotStats?.[coin.id]?.[month];
+        if (stats) return Number(stats.pnl || 0);
+        return (KZ_STATE.closedTrades || []).filter(t => (t.coinId === coin.id || t.symbol === coin.symbol)
+            && (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === month)
+            .reduce((sum,t) => sum + Number(t.pnlPercent || 0), 0);
+    }
+    const raw = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
+    const recorded = (KZ_STATE.closedTrades || []).filter(t => (t.coinId === coin.id || t.symbol === coin.symbol)
+        && (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === month)
+        .reduce((sum,t) => sum + Number(t.pnlPercent || 0), 0);
+    return Math.max(Number(raw?.pnl || 0), recorded, Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
+}
+
 function isCoinMonthlyLocked(coin) {
+    if (isMonthlySlotLimitEnabled()) {
+        const month = getTurkeyMonthKey();
+        return KZ_STATE.monthlySlotStats?.[coin.id]?.[month]?.isLocked === true
+            || monthlyCoinProgress(coin, month) + 0.001 >= Number(coin.monthlyCap);
+    }
     const currentMonthStr = getTurkeyMonthKey();
     const simulatedMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === currentMonthStr);
     if (simulatedMonth && (simulatedMonth.isLocked || (simulatedMonth.pnl + 0.001) >= coin.monthlyCap)) {
@@ -924,6 +948,7 @@ function runCardBacktest(coin) {
 
     if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 5)) {
         coin.simMonthlyStats = Object.values(monthlyMap).reverse();
+        coin.rawSimulationMonths = coin.simMonthlyStats;
         coin.simLastTrades = [];
         coin.avgHoldDurationStr = '--';
         return;
@@ -956,7 +981,7 @@ function runCardBacktest(coin) {
             };
         }
 
-        const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap;
+        const isCapReached = !isMonthlySlotLimitEnabled() && (monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap;
 
         if (!inPos && !isCapReached) {
             if (prevRsi <= coin.buyRsi && rsi > coin.buyRsi) {
@@ -1032,6 +1057,7 @@ function runCardBacktest(coin) {
     }
 
     coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+    coin.rawSimulationMonths = coin.simMonthlyStats;
     coin.simLastTrades = trades.slice(-10).reverse();
 }
 
@@ -1098,7 +1124,7 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
     const excludedCount = trades.length - acceptedPastCount;
     if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent =
         `${realTrades.length} canlı · ${acceptedPastCount} geçmiş slot · ${excludedCount} slota alınmadı · ${rows.length} satır`;
-    if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Bağımsız coin simülasyonunun aylık kârı; aşağıdaki canlı ve geçmiş slot sonuçlarının toplamı değildir.';
+    if (modalActiveMonthPnl) modalActiveMonthPnl.title = isMonthlySlotLimitEnabled() ? 'Aylık limit: yalnız slota girip kapanan canlı ve geçmiş işlemlerin brüt kârı. Slota alınmayanlar hariç.' : 'Bağımsız coin simülasyonunun aylık kârı; aşağıdaki canlı ve geçmiş slot sonuçlarının toplamı değildir.';
     if (modalActiveMonthLockBadge) modalActiveMonthLockBadge.title = 'Kilit işlem adedine değil aylık kâr yüzdesine göre hesaplanır.';
     const compact = window.innerWidth < 640;
     const availableHeight = Math.min(window.innerHeight * .92, window.innerHeight - 24);
@@ -1174,7 +1200,7 @@ function generateMonthlyTableHtml(coin) {
                             <div class="flex items-center space-x-2">
                                 <span class="font-bold text-slate-800 dark:text-slate-200 w-16 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">${m.name}</span>
                                 <span class="text-[10px] tabular-nums text-slate-500">
-                                    ${m.trades} <strong class="text-blue-600 font-bold">(${rMonth.trades})</strong> İşlem
+                                    ${m.trades} ${isMonthlySlotLimitEnabled() ? '' : `<strong class="text-blue-600 font-bold">(${rMonth.trades})</strong>`} İşlem
                                 </span>
                                 ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
                             </div>
@@ -1184,7 +1210,7 @@ function generateMonthlyTableHtml(coin) {
                                     ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
                                 </span>
                                 <span class="font-bold tabular-nums text-[11px] text-blue-600 dark:text-blue-400">
-                                    (${rMonth.pnl >= 0 ? '+' : ''}${rMonth.pnl.toFixed(1)}%)
+                                    ${isMonthlySlotLimitEnabled() ? '' : `(${rMonth.pnl >= 0 ? '+' : ''}${rMonth.pnl.toFixed(1)}%)`}
                                 </span>
                                 <span class="text-[10px] text-slate-400 group-hover:text-blue-600 transition">→</span>
                             </div>
@@ -1194,11 +1220,11 @@ function generateMonthlyTableHtml(coin) {
             <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
                 <div class="flex items-center space-x-1">
                     <span class="text-slate-700 dark:text-slate-300">Toplam:</span>
-                    <span class="tabular-nums text-slate-900 dark:text-white">${totalTrades} <strong class="text-blue-600">(${realStats.totalTrades})</strong> İşlem</span>
+                    <span class="tabular-nums text-slate-900 dark:text-white">${totalTrades} ${isMonthlySlotLimitEnabled() ? '' : `<strong class="text-blue-600">(${realStats.totalTrades})</strong>`} İşlem</span>
                 </div>
                 <div class="flex items-center space-x-1.5">
                     <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
-                    <span class="tabular-nums text-blue-600 dark:text-blue-400">(${realStats.totalPnl >= 0 ? '+' : ''}${realStats.totalPnl.toFixed(2)}%)</span>
+                    <span class="tabular-nums text-blue-600 dark:text-blue-400">${isMonthlySlotLimitEnabled() ? '' : `(${realStats.totalPnl >= 0 ? '+' : ''}${realStats.totalPnl.toFixed(2)}%)`}</span>
                 </div>
             </div>
         </div>
@@ -1527,8 +1553,7 @@ function getMonthlyLimitRows() {
         const rawMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
         const livePnl = (KZ_STATE.closedTrades || []).filter(matches).reduce((sum, t) => sum + Number(t.pnlPercent || 0), 0);
         // Coin kartı ve kilit motoruyla aynı aylık ilerleme; bekleme kârları hariç.
-        const progress = Math.max(Number(rawMonth?.pnl || 0), livePnl,
-            Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
+        const progress = monthlyCoinProgress(coin, month);
         const cap = Number(coin.monthlyCap || 0);
         const target = Number(coin.profitTarget || 0);
         const locked = isCoinMonthlyLocked(coin);
@@ -1664,7 +1689,7 @@ function coinCardMonthSummary(coin) {
     const slotPnl = sum(slot), simPnl = sum(simulation);
     const rawMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
     // Kilit motorunun kullandığı aylık sonuçları esas alır.
-    const lockPnl = Math.max(Number(rawMonth?.pnl || 0), slotPnl, Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
+    const lockPnl = monthlyCoinProgress(coin, month);
     const cap = Number(coin.monthlyCap || 0);
     const progress = cap > 0 ? Math.min(100, Math.max(0, lockPnl / cap * 100)) : 0;
     const pnlHtml = value => `<span class="font-bold tabular-nums ${value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${value >= 0 ? '+' : ''}${value.toFixed(2)}%</span>`;
@@ -1683,7 +1708,7 @@ function coinCardMonthSummary(coin) {
         </div>
         <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><span><strong class="text-emerald-600 dark:text-emerald-400">${livePending} Canlı</strong><span class="mx-1.5">·</span><strong class="text-amber-600 dark:text-amber-400">${simPending} Geçmişte</strong></span></div>
         <div class="space-y-1" title="Kilit, mevcut aylık strateji ve işlem sonuçlarıyla belirlenir. Bekleme sonuçları dahil değildir.">
-            <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
+            <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>${isMonthlySlotLimitEnabled() ? 'Slot aylık limiti' : 'Aylık limit'} <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
             <div class="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-indigo-500" style="width:${progress}%"></div></div>
         </div>`;
 }
@@ -3359,6 +3384,8 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
     KZ_STATE.activePositions.splice(idx, 1);
     savePositions();
     saveClosedTrades();
+    // Yeni kapanışın aylık kârını, sıradaki bekleyen pozisyonu açmadan önce işle.
+    if (isMonthlySlotLimitEnabled()) recalculateFullPortfolio();
 
     // Önce hedefini tamamlamış bekleyen sinyalleri ayıkla.
     for (const pendingCoin of KZ_STATE.coins) updatePendingSignalLive(pendingCoin, pendingCoin.price);
@@ -3525,8 +3552,9 @@ function recalculateFullPortfolio() {
 
     KZ_STATE.coins.forEach(coin => {
         if (coin.isActive === false) return;
-        if (coin.simMonthlyStats) {
-            coin.simMonthlyStats.forEach(m => {
+        const simulationMonths = coin.rawSimulationMonths || coin.simMonthlyStats;
+        if (simulationMonths) {
+            simulationMonths.forEach(m => {
                 if (m.tradesList) {
                     m.tradesList.forEach(t => {
                         allRawTrades.push({
@@ -3560,10 +3588,37 @@ function recalculateFullPortfolio() {
             selectedYear: KZ_STATE.selectedYear
         };
 
-        const slotAccepted = isSlotConstraint
-            ? PortfolioEngine.filterTradesBySlotCapacity(allRawTrades, KZ_STATE.maxSlots, KZ_STATE.activePositions)
-            : allRawTrades;
-        KZ_STATE.simulatedPendingClosedTrades = buildPendingHistorySimulation(allRawTrades, slotAccepted, startTs, isSlotConstraint);
+        let slotAccepted;
+        if (isMonthlySlotLimitEnabled()) {
+            const selection = PortfolioEngine.filterTradesByMonthlySlotLimit(allRawTrades, KZ_STATE.maxSlots,
+                KZ_STATE.coins, KZ_STATE.activePositions, isSlotConstraint);
+            slotAccepted = selection.trades;
+            KZ_STATE.monthlySlotStats = selection.monthlyStats;
+            engineArgs.trades = slotAccepted;
+            // Kapasite ve aylık limit aynı zaman çizelgesinde zaten uygulandı.
+            engineArgs.isSlotConstraintEnabled = false;
+            const consideredIds = new Set(selection.consideredTrades.filter(t => !t.source).map(t => t.id));
+            const acceptedIds = new Set(slotAccepted.map(t => t.id));
+            KZ_STATE.coins.forEach(coin => {
+                coin.simMonthlyStats = (coin.rawSimulationMonths || coin.simMonthlyStats || []).map(m => {
+                    const stats = selection.monthlyStats[coin.id]?.[m.monthKey] || {trades:0,pnl:0,isLocked:false};
+                    return {...m, ...stats, tradesList:(m.tradesList || []).filter(t => consideredIds.has(t.id))};
+                });
+                coin.simLastTrades = coin.simMonthlyStats.flatMap(m => m.tradesList)
+                    .filter(t => acceptedIds.has(t.id)).sort((a,b) => b.exitTime-a.exitTime).slice(0,10);
+            });
+        } else {
+            KZ_STATE.monthlySlotStats = {};
+            KZ_STATE.coins.forEach(coin => {if (coin.rawSimulationMonths) coin.simMonthlyStats = coin.rawSimulationMonths;});
+            slotAccepted = isSlotConstraint
+                ? PortfolioEngine.filterTradesBySlotCapacity(allRawTrades, KZ_STATE.maxSlots, KZ_STATE.activePositions)
+                : allRawTrades;
+        }
+        const rawTradesById = new Map(allRawTrades.map(t => [t.id, t]));
+        const historyCandidates = isMonthlySlotLimitEnabled()
+            ? KZ_STATE.coins.flatMap(c => (c.simMonthlyStats || []).flatMap(m => m.tradesList || [])).map(t =>
+                rawTradesById.get(t.id)).filter(Boolean) : allRawTrades;
+        KZ_STATE.simulatedPendingClosedTrades = buildPendingHistorySimulation(historyCandidates, slotAccepted, startTs, isSlotConstraint);
         let engineResult = PortfolioEngine.calculateCompoundedBalance(engineArgs);
 
         // Eski sürümde açık pozisyon bütçesi başlangıç parasından ayrılıyordu.
@@ -3608,7 +3663,11 @@ function recalculateFullPortfolio() {
         renderHistoryTrades();
         updateMonthlyLimitSummary();
 
-        KZ_STATE.coins.forEach(coin => updateCardTablesOnly(coin));
+        KZ_STATE.coins.forEach(coin => {updateCardTablesOnly(coin); updateCoinCardStatus(coin);});
+        if (KZ_STATE.activeMonthModal.coinId && monthTradesModal && !monthTradesModal.classList.contains('hidden')) {
+            const coin = KZ_STATE.coins.find(c => c.id === KZ_STATE.activeMonthModal.coinId);
+            if (coin) renderModalTabsAndContent(coin, KZ_STATE.activeMonthModal.monthKey);
+        }
     }
 }
 
@@ -3806,7 +3865,7 @@ window.saveClosedTradeEdit = saveClosedTradeEdit;
 
 function syncMainAppFromStorage(event) {
     const key = event && event.key;
-    if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_base_usd', 'kuzgun_theme'].includes(key)) return;
+    if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_base_usd', 'kuzgun_theme', 'kuzgun_monthly_slot_limit_enabled', 'kuzgun_max_slots', 'kuzgun_slot_constraint_enabled', 'kuzgun_fee_deduction_enabled'].includes(key)) return;
 
     if (!key || key === 'kuzgun_closed_trades' || key === 'kuzgun_base_usd') {
         const storedBalance = Number(localStorage.getItem('kuzgun_base_usd'));
@@ -3830,6 +3889,11 @@ function syncMainAppFromStorage(event) {
         KZ_STATE.coins.forEach(c => renderSingleCard(c));
     }
 
+    if (!key || ['kuzgun_monthly_slot_limit_enabled','kuzgun_max_slots','kuzgun_slot_constraint_enabled','kuzgun_fee_deduction_enabled'].includes(key)) {
+        KZ_STATE.maxSlots = Math.max(1, parseInt(localStorage.getItem('kuzgun_max_slots'), 10) || 2);
+        KZ_STATE.coins.forEach(runCardBacktest);
+        recalculateFullPortfolio();
+    }
     if (!key || key === 'kuzgun_closed_trades' || key === 'kuzgun_base_usd') {
         try { KZ_STATE.closedTrades = JSON.parse(localStorage.getItem('kuzgun_closed_trades')) || []; } catch (e) {}
         renderHistoryTrades();

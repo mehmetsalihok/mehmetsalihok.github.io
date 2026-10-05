@@ -291,6 +291,17 @@
 
                         <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             <div class="space-y-0.5">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Aylık Limit: Yalnız Slota Giren İşlemler</span>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken slota girmeyen ve beklemede kapanan işlemler aylık kâr limitine sayılmaz. Coin, slota girip kapanan işlemlerinin toplam brüt kârı aylık limite ulaşana kadar yeni sinyalleri değerlendirir. Tüm geçmiş aylar yeniden hesaplanır. Kapalıyken slot bağımsız coin limiti uygulanır.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input type="checkbox" id="toggleMonthlySlotLimit" aria-label="Aylık limitte yalnız slota giren işlemleri say" onchange="handleToggle('monthlySlotLimit')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
+                            <div class="space-y-0.5">
                                 <span class="font-bold text-xs text-slate-900 dark:text-white block">Borsa Komisyon Kesintisi (BNB İndirimli %0.075 + %0.075)</span>
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken alım ve satımda BNB indirimli Binance Spot komisyonu (%0.075 Alış + %0.075 Satış, Toplam %0.15) düşülerek net reel getiri hesaplanır.</p>
                             </div>
@@ -696,6 +707,7 @@
             updateSlotsUI(slots);
 
             document.getElementById('toggleSlotConstraint').checked = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
+            document.getElementById('toggleMonthlySlotLimit').checked = localStorage.getItem('kuzgun_monthly_slot_limit_enabled') === 'true';
             document.getElementById('toggleFeeDeduction').checked = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
             document.getElementById('toggleCandleClose').checked = localStorage.getItem('kuzgun_candle_close_confirmation_enabled') !== 'false';
             document.getElementById('toggleBuyNotification').checked = localStorage.getItem('kuzgun_buy_notification_enabled') !== 'false';
@@ -807,6 +819,7 @@
         function handleToggle(key) {
             const map = {
                 slotConstraint: { id: 'toggleSlotConstraint', storage: 'kuzgun_slot_constraint_enabled', name: 'Slot Çakışma Filtresi' },
+                monthlySlotLimit: { id: 'toggleMonthlySlotLimit', storage: 'kuzgun_monthly_slot_limit_enabled', name: 'Aylık Slot Kâr Limiti' },
                 feeDeduction: { id: 'toggleFeeDeduction', storage: 'kuzgun_fee_deduction_enabled', name: 'Komisyon Kesintisi' },
                 candleClose: { id: 'toggleCandleClose', storage: 'kuzgun_candle_close_confirmation_enabled', name: 'Mum Kapanış Teyidi' },
                 buyNotification: { id: 'toggleBuyNotification', storage: 'kuzgun_buy_notification_enabled', name: 'Alım Bildirimleri' },
@@ -1007,7 +1020,7 @@
         const KUZGUN_BACKUP_VERSION = 2;
         const KUZGUN_BACKUP_EXCLUDED_KEYS = new Set(['kuzgun_telegram_chat_id', 'kuzgun_telegram_bot_token', 'kuzgun_bot_token', 'kuzgun_pending_telegram_token', 'kuzgun_pending_telegram_chat_id', 'kuzgun_pending_telegram_enabled', 'kuzgun_system_telegram_token', 'kuzgun_system_telegram_chat_id', 'kuzgun_system_telegram_enabled', 'kuzgun_sell_telegram_token', 'kuzgun_sell_telegram_chat_id', 'kuzgun_sell_telegram_enabled']);
         const KUZGUN_BACKUP_CATEGORIES = ['coins', 'portfolio', 'positions', 'history', 'preferences'];
-        const KUZGUN_PORTFOLIO_KEYS = new Set(['kuzgun_base_usd', 'kuzgun_user_balance', 'kuzgun_portfolio_start_date', 'kuzgun_max_slots', 'kuzgun_selected_year', 'kuzgun_slot_constraint_enabled', 'kuzgun_fee_deduction_enabled']);
+        const KUZGUN_PORTFOLIO_KEYS = new Set(['kuzgun_base_usd', 'kuzgun_user_balance', 'kuzgun_portfolio_start_date', 'kuzgun_max_slots', 'kuzgun_selected_year', 'kuzgun_slot_constraint_enabled', 'kuzgun_monthly_slot_limit_enabled', 'kuzgun_fee_deduction_enabled']);
         const KUZGUN_POSITION_KEYS = new Set(['kuzgun_active_pos', 'kuzgun_pending_signals']);
         const KUZGUN_HISTORY_KEYS = new Set(['kuzgun_closed_trades', 'kuzgun_pending_closed_trades', 'kuzgun_signal_code_counter', 'kuzgun_historical_signal_codes', 'kuzgun_historical_code_counter']);
 
