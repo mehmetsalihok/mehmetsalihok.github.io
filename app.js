@@ -375,6 +375,44 @@ const modalTradesListContainer = document.getElementById('modalTradesListContain
 const fmtUsd = (val) => '$' + Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtTry = (val) => '₺' + Number(val || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+function nextSignalCode() {
+    let last = Number(localStorage.getItem('kuzgun_signal_code_counter') || 0);
+    for (const key of ['kuzgun_active_pos','kuzgun_pending_signals','kuzgun_closed_trades','kuzgun_pending_closed_trades']) {
+        try { for (const record of JSON.parse(localStorage.getItem(key) || '[]')) {
+            if (/^\d+$/.test(String(record.signalCode || ''))) last = Math.max(last, Number(record.signalCode));
+        }} catch (_) {}
+    }
+    last = Math.max(0, Math.floor(last)) + 1;
+    localStorage.setItem('kuzgun_signal_code_counter', String(last));
+    return String(last).padStart(4,'0');
+}
+
+function historicalSignalCode(trade) {
+    const key = `${trade.coinId || trade.symbol}_${trade.entryTime}_${trade.exitTime}`;
+    let codes;
+    try { codes = JSON.parse(localStorage.getItem('kuzgun_historical_signal_codes') || '{}'); } catch (_) { codes = {}; }
+    if (!codes[key]) {
+        const next = Math.max(0, Number(localStorage.getItem('kuzgun_historical_code_counter') || 0),
+            ...Object.values(codes).map(code => Number(String(code).replace('G-','')) || 0)) + 1;
+        codes[key] = 'G-' + String(next).padStart(4,'0');
+        localStorage.setItem('kuzgun_historical_code_counter',String(next));
+        localStorage.setItem('kuzgun_historical_signal_codes',JSON.stringify(codes));
+    }
+    return codes[key];
+}
+
+function tradeCodeBadge(trade) {
+    const code = trade.signalCode || historicalSignalCode(trade);
+    return `<span class="text-[9px] font-semibold tabular-nums text-slate-500 dark:text-slate-400">#${code}</span>`;
+}
+
+function migrateSignalCodes() {
+    const groups = [KZ_STATE.closedTrades,KZ_STATE.pendingClosedTrades,KZ_STATE.activePositions,KZ_STATE.pendingSignals];
+    const records = groups.flatMap(group => group || []).sort((a,b) => Number(a.entryTime || a.time || 0)-Number(b.entryTime || b.time || 0));
+    for (const record of records) if (!record.signalCode) record.signalCode = nextSignalCode();
+    savePositions(); savePending(); saveClosedTrades(); savePendingClosedTrades();
+}
+
 function formatCryptoPrice(price) {
     const value = Number(price);
     if (!Number.isFinite(value) || value <= 0) return "--.--";
@@ -417,7 +455,7 @@ function checkLiveProfitTarget(coin, price, tradeTime = Date.now()) {
         pos.livePnlPercent = pnl;
         pos.livePnlUsd = pos.allocatedUsd * pnl / 100;
         if (!(Number(pos.profitTarget) > 0) || !(Number(pos.targetPrice) > 0) || price < pos.targetPrice) continue;
-        const message = buildSellTelegramMessage(coin, pnl, true, tradeTime);
+        const message = buildSellTelegramMessage(coin, pnl, true, tradeTime, pos.signalCode);
         closePosition(pos.id, `Kâr Hedefi (%${pos.profitTarget.toFixed(1)})`);
         playChime(true);
         sendTelegramAlert(message, {channel: 'sell'});
@@ -472,6 +510,7 @@ function addBuySignalToPending(signal, reason = 'manual') {
     if (alreadyPending) return false;
     KZ_STATE.pendingSignals.push({
         id: 'pend_' + Date.now(),
+        signalCode: signal.signalCode || nextSignalCode(),
         coinId: signal.coinId,
         symbol: signal.symbol,
         displaySymbol: signal.displaySymbol,
@@ -509,12 +548,12 @@ function tryOpenBuySignalPosition(signal, useCurrentPrice = false) {
     const entryPrice = useCurrentPrice ? Number(coin.price) : Number(signal.triggerPrice);
     if (!Number.isFinite(entryPrice) || entryPrice <= 0) return 'stale';
     if (useCurrentPrice && (!coin.lastLivePriceAt || Date.now() - coin.lastLivePriceAt > 60000)) return 'stale';
-    return openPosition(coin, entryPrice, useCurrentPrice ? Date.now() : signal.time) ? 'opened' : 'blocked';
+    return openPosition(coin, entryPrice, useCurrentPrice ? Date.now() : signal.time, signal.signalCode, signal.time) ? 'opened' : 'blocked';
 }
 
 function buildBuySignalTelegramMessage(signal, isTest = false) {
     const targetExitPrice = signal.triggerPrice * (1 + signal.profitTarget / 100);
-    return `${isTest ? 'Test · ' : ''}Alım sinyali · ${telegramSymbol(signal)}\n\nSinyal fiyatı: ${formatCryptoPrice(signal.triggerPrice)} USDT\nHedef satış: ${formatCryptoPrice(targetExitPrice)} USDT\nHedef kâr: %${signal.profitTarget.toFixed(2)}\nSinyal zamanı: ${telegramDate(signal.time)}\nRSI: ${signal.triggerRsi.toFixed(1)}\nZaman dilimi: ${signal.interval}\nSinyal türü: ${signal.mode}\nKarar penceresi: ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}${isTest ? '\n\nBu bir test mesajıdır; pozisyon açılmadı.' : ''}`;
+    return `${isTest ? 'Test · ' : ''}Alım sinyali · ${telegramSymbol(signal)}\n\nİşlem kodu: ${signal.signalCode || 'TEST'}\nSinyal fiyatı: ${formatCryptoPrice(signal.triggerPrice)} USDT\nHedef satış: ${formatCryptoPrice(targetExitPrice)} USDT\nHedef kâr: %${signal.profitTarget.toFixed(2)}\nSinyal zamanı: ${telegramDate(signal.time)}\nRSI: ${signal.triggerRsi.toFixed(1)}\nZaman dilimi: ${signal.interval}\nSinyal türü: ${signal.mode}\nKarar penceresi: ${localStorage.getItem('kuzgun_buy_signal_window_enabled') === 'false' ? 'Kapalı' : '30 saniye'}${isTest ? '\n\nBu bir test mesajıdır; pozisyon açılmadı.' : ''}`;
 }
 
 function buildPendingTelegramMessage(signal, reason) {
@@ -523,11 +562,12 @@ function buildPendingTelegramMessage(signal, reason) {
         : reason === 'stale' ? 'Güncel fiyat alınamadığı için pozisyon açılmadı. Coin bekleme listesine eklendi.'
         : reason === 'timeout' ? 'Karar süresi doldu; varsayılan seçimle coin bekleme listesine eklendi. Pozisyon açılmadı.'
         : 'Tercihin üzerine pozisyon açılmadı; coin bekleme listesine eklendi.';
-    return `Beklemeye alındı · ${telegramSymbol(signal)}\n\nSinyal fiyatı: ${formatCryptoPrice(signal.triggerPrice)} USDT\nHedef satış: ${formatCryptoPrice(signal.triggerPrice * (1 + Number(signal.profitTarget || 0) / 100))} USDT\nHedef kâr: %${Number(signal.profitTarget || 0).toFixed(2)}\nSinyal zamanı: ${telegramDate(signal.time)}\n\n${explanation}`;
+    return `Beklemeye alındı · ${telegramSymbol(signal)}\n\nİşlem kodu: ${signal.signalCode || 'TEST'}\nSinyal fiyatı: ${formatCryptoPrice(signal.triggerPrice)} USDT\nHedef satış: ${formatCryptoPrice(signal.triggerPrice * (1 + Number(signal.profitTarget || 0) / 100))} USDT\nHedef kâr: %${Number(signal.profitTarget || 0).toFixed(2)}\nSinyal zamanı: ${telegramDate(signal.time)}\n\n${explanation}`;
 }
 
-function buildSellTelegramMessage(coin, pnl, isTarget, timestamp = Date.now()) {
-    return `${isTarget ? 'Hedef kâr alındı' : 'RSI satım sinyali'} · ${telegramSymbol(coin)}\n\nÇıkış fiyatı: ${formatCryptoPrice(coin.price)} USDT\nGetiri: ${pnl >= 0 ? '+' : '-'}%${Math.abs(pnl).toFixed(2)}\nÇıkış zamanı: ${telegramDate(timestamp)}`;
+function buildSellTelegramMessage(coin, pnl, isTarget, timestamp = Date.now(), signalCode = null) {
+    const code = signalCode || KZ_STATE.activePositions.find(p => p.coinId === coin.id || p.symbol === coin.symbol)?.signalCode || '—';
+    return `${isTarget ? 'Hedef kâr alındı' : 'RSI satım sinyali'} · ${telegramSymbol(coin)}\n\nİşlem kodu: ${code}\nÇıkış fiyatı: ${formatCryptoPrice(coin.price)} USDT\nGetiri: ${pnl >= 0 ? '+' : '-'}%${Math.abs(pnl).toFixed(2)}\nÇıkış zamanı: ${telegramDate(timestamp)}`;
 }
 
 function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli', options = {}) {
@@ -540,6 +580,7 @@ function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = D
 
     const signal = {
         id: signalId,
+        signalCode: options.isTest ? 'TEST' : nextSignalCode(),
         coinId: coin.id,
         symbol: coin.symbol,
         displaySymbol: coin.displaySymbol,
@@ -695,21 +736,61 @@ function calculateRSI(closes, period = 14) {
     return history[history.length - 1] ?? 50.0;
 }
 
+function monthlyCoinLimitEnabled() {
+    return localStorage.getItem('kuzgun_monthly_coin_limit_enabled') !== 'false';
+}
+
+// Tek sinyal, slot sonucundan bağımsız tek limit kaydıdır.
+function coinSignalKey(coin, trade) {
+    if (trade.isManual) return `manual_${trade.id}`;
+    const time = Number(trade.signalTime || trade.entryTime || trade.time);
+    return `${coin.id}_${Math.floor(time / getIntervalMilliseconds(coin.interval))}`;
+}
+
+function getCoinLimitLedger(coin, month) {
+    const original = (coin.rawSimMonthlyStats || coin.simMonthlyStats || []).find(m => m.monthKey === month);
+    const records = new Map();
+    for (const t of original?.tradesList || []) records.set(coinSignalKey(coin,t),
+        {...t,symbol:coin.symbol,pnlPercent:Number(t.pnlPercent ?? t.pnl ?? 0),limitOrigin:'history',rawTradeId:t.id});
+    const matches = t => (t.coinId === coin.id || t.symbol === coin.symbol)
+        && (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === month;
+    // Bekleme sonucu portföye değil, coin limitine yazılır. Canlı sonuç aynı sinyali değiştirir.
+    for (const [list,origin] of [[KZ_STATE.pendingClosedTrades || [],'pending'],[KZ_STATE.closedTrades || [],'live']]) {
+        for (const t of list.filter(matches)) {
+            const key = coinSignalKey(coin,t), previous = records.get(key);
+            records.set(key,{...previous,...t,pnl:Number(t.pnlPercent || 0),pnlPercent:Number(t.pnlPercent || 0),
+                limitOrigin:origin,rawTradeId:previous?.rawTradeId});
+        }
+    }
+    const all = [...records.values()].sort((a,b) => a.exitTime-b.exitTime || a.entryTime-b.entryTime);
+    const trades = [], excluded = [];
+    let pnl = 0, locked = false;
+    const enabled = monthlyCoinLimitEnabled(), cap = Number(coin.monthlyCap || 0);
+    for (const t of all) {
+        if (locked) { excluded.push(t); continue; }
+        trades.push(t);
+        pnl += Number(t.pnlPercent || 0);
+        if (enabled && cap > 0 && pnl + 0.001 >= cap) locked = true;
+    }
+    return {trades,excluded,count:trades.length,pnl,locked,enabled};
+}
+
+function refreshCoinLimitStats(coin) {
+    const names = new Map((coin.rawSimMonthlyStats || []).map(m => [m.monthKey,m.name]));
+    const months = new Set(names.keys());
+    for (const t of [...(KZ_STATE.closedTrades || []),...(KZ_STATE.pendingClosedTrades || [])]) {
+        if (t.coinId === coin.id || t.symbol === coin.symbol) months.add(t.exitMonth || getTurkeyMonthKey(t.exitTime));
+    }
+    coin.simMonthlyStats = [...months].sort().reverse().map(month => {
+        const result = getCoinLimitLedger(coin,month);
+        return {monthKey:month,name:names.get(month) || month,trades:result.count,pnl:result.pnl,
+            isLocked:result.locked,tradesList:result.trades.slice().reverse(),excluded:result.excluded};
+    });
+}
+
 function isCoinMonthlyLocked(coin) {
-    const currentMonthStr = getTurkeyMonthKey();
-    const simulatedMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === currentMonthStr);
-    if (simulatedMonth && (simulatedMonth.isLocked || (simulatedMonth.pnl + 0.001) >= coin.monthlyCap)) {
-        return true;
-    }
-
-    const realMonth = KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[currentMonthStr];
-    if (realMonth && (realMonth.pnl + 0.001) >= coin.monthlyCap) {
-        return true;
-    }
-
-    const currentMonthTrades = (KZ_STATE.closedTrades || []).filter(t => (t.coinId === coin.id || t.symbol === coin.symbol) && t.exitMonth === currentMonthStr);
-    const totalMonthPnl = currentMonthTrades.reduce((sum, t) => sum + t.pnlPercent, 0);
-    return (totalMonthPnl + 0.001) >= coin.monthlyCap;
+    if (!monthlyCoinLimitEnabled()) return false;
+    return getCoinLimitLedger(coin,getTurkeyMonthKey()).locked;
 }
 
 // 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
@@ -736,6 +817,7 @@ function applyConfirmedCandle(coin, candle) {
     map.set(candle.time, {...candle, closed: true});
     coin.rawCandles = [...map.values()].sort((a,b) => a.time-b.time);
     coin.candles = coin.rawCandles.map(c => c.close);
+    runCardBacktest(coin);
     const isNew = candle.time > (coin.lastConfirmedCandleTime ?? -Infinity);
     if (isNew) {
         coin.lastConfirmedCandleTime = candle.time;
@@ -814,6 +896,7 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
 
     coin.prevRsi = coin.rsi;
     coin.rsi = calculateRSI(coin.candles, coin.rsiLength);
+    updatePendingSignalLive(coin, livePrice, true);
 
     // 3️⃣ CANLI POZİSYON ÇIKIŞ KONTROLÜ (Kâr Hedefi ve RSI Sat Anlık Çalışır)
     const activePos = (KZ_STATE.activePositions || []).find(p => p.coinId === coin.id || p.symbol === coin.symbol);
@@ -825,14 +908,14 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
         if (coin.price >= activePos.targetPrice) {
             closePosition(activePos.id, `Kâr Hedefi (%${activePos.profitTarget.toFixed(1)})`);
             playChime(true);
-            sendTelegramAlert(buildSellTelegramMessage(coin, pnl, true), {channel: 'sell'});
+            sendTelegramAlert(buildSellTelegramMessage(coin, pnl, true, Date.now(), activePos.signalCode), {channel: 'sell'});
             return;
         }
 
         if (coin.rsi >= coin.sellRsi) {
             closePosition(activePos.id, `RSI Sat (${coin.rsi.toFixed(1)})`);
             playChime(pnl >= 0);
-            sendTelegramAlert(buildSellTelegramMessage(coin, pnl, false), {channel: 'sell'});
+            sendTelegramAlert(buildSellTelegramMessage(coin, pnl, false, Date.now(), activePos.signalCode), {channel: 'sell'});
             return;
         }
     } else {
@@ -915,7 +998,7 @@ function runCardBacktest(coin) {
             };
         }
 
-        const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap;
+        const isCapReached = false; // Aylık kilit ortak sinyal defterinde uygulanır.
 
         if (!inPos && !isCapReached) {
             if (prevRsi <= coin.buyRsi && rsi > coin.buyRsi) {
@@ -990,7 +1073,8 @@ function runCardBacktest(coin) {
         coin.avgHoldDurationStr = '--';
     }
 
-    coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+    coin.rawSimMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
+    refreshCoinLimitStats(coin);
     coin.simLastTrades = trades.slice(-10).reverse();
 }
 
@@ -1046,14 +1130,21 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
         }
     }
 
-    const trades = currentMonthData.tradesList || [];
-    const realTrades = KZ_STATE.closedTrades.filter(t =>
-        (t.coinId === coin.id || t.symbol === coin.symbol) &&
-        (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === selectedMonthKey
-    ).sort((a, b) => b.exitTime - a.exitTime);
-    const rows = [...realTrades.map(t => ({...t, isReal: true})), ...trades.map(t => ({...t, isReal: false}))]
-        .sort((a, b) => b.exitTime - a.exitTime || Number(b.isReal) - Number(a.isReal));
-    if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent = `${trades.length} simülasyon · ${realTrades.length} kayıtlı işlem`;
+    const ledger = getCoinLimitLedger(coin, selectedMonthKey);
+    const rows = ledger.trades.map(t => ({...t,isReal:t.limitOrigin === 'live',isPending:t.limitOrigin === 'pending'}))
+        .sort((a,b) => b.exitTime-a.exitTime);
+    const slotCount = rows.filter(t => t.isReal || KZ_STATE.acceptedTradeIds?.has(t.id)).length;
+    if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent =
+        `${ledger.count} toplam işlem · ${slotCount} slot · ${ledger.count-slotCount} slot dışı`;
+    if (modalActiveMonthPnl) {
+        modalActiveMonthPnl.textContent = `${ledger.pnl >= 0 ? '+' : ''}${ledger.pnl.toFixed(2)}%`;
+        modalActiveMonthPnl.title = 'Coinin tüm kapanan sinyallerinin toplam brüt getirisi; slot dışı sonuçlar dahil, her sinyal bir kez.';
+    }
+    if (modalActiveMonthLockBadge) {
+        modalActiveMonthLockBadge.textContent = !ledger.enabled ? 'Aylık limit kapalı' : ledger.locked ? 'Aylık kâr limitine ulaşıldı' : `Aylık kâr limiti: %${coin.monthlyCap.toFixed(1)}`;
+        modalActiveMonthLockBadge.title = ledger.excluded.some(t => t.limitOrigin !== 'history')
+            ? 'Önceki kuralla limit sonrası kaydedilmiş canlı/bekleme sonuçları işlem geçmişinde korunur.' : 'Kilit işlem adedine değil tüm sinyallerin toplam kârına göre hesaplanır.';
+    }
     const compact = window.innerWidth < 640;
     const availableHeight = Math.min(window.innerHeight * .92, window.innerHeight - 24);
     const pageSize = Math.max(1, Math.floor((availableHeight - (compact ? 285 : 235)) / (compact ? 44 : 34)));
@@ -1068,13 +1159,13 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
             : `<table class="month-trades-table w-full table-fixed text-left"><thead><tr>
                 <th style="width:28%">İşlem / Durum</th><th style="width:26%">Giriş</th><th style="width:26%">Çıkış</th><th style="width:20%" class="text-right">Sonuç</th>
             </tr></thead><tbody>${visible.map(t => {
-                const pnl = Number(t.isReal ? t.pnlPercent : t.pnl);
+                const pnl = Number(t.pnlPercent ?? t.pnl);
                 const accepted = KZ_STATE.acceptedTradeIds?.has(t.id);
-                const status = t.isReal ? '● Kayıtlı' : accepted ? '✓ Slot sim.' : '◷ Slota alınmadı';
+                const status = t.isReal ? '● Canlı slot' : t.isPending ? '◷ Canlı bekleme' : accepted ? '✓ Geçmiş slot' : '◷ Slot dışı';
                 const statusColor = t.isReal || accepted ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400';
                 const duration = t.duration || (() => { const mins = Math.max(0, Math.round((t.exitTime - t.entryTime)/60000)); return mins >= 60 ? `${Math.floor(mins/60)}sa ${mins%60}dk` : `${mins}dk`; })();
                 return `<tr>
-                    <td><div class="month-trade-reason font-semibold text-slate-800 dark:text-slate-200" title="${t.reason}">${t.reason}</div><div class="month-trade-meta ${statusColor}">${status}${t.isReal ? ` <button onclick="openClosedTradeEditor('${t.id}')" class="text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek satışı düzenle">✎</button>` : ''}</div></td>
+                    <td><div class="month-trade-reason font-semibold text-slate-800 dark:text-slate-200" title="${t.reason}">${t.reason} ${tradeCodeBadge(t)}</div><div class="month-trade-meta ${statusColor}">${status}${t.isReal ? ` <button onclick="openClosedTradeEditor('${t.id}')" class="text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek satışı düzenle">✎</button>` : ''}</div></td>
                     <td><div class="month-trade-date text-slate-600 dark:text-slate-300">${dateText(t.entryTime)}</div><div class="month-trade-price text-slate-400">${formatCryptoPrice(t.entryPrice)}</div></td>
                     <td><div class="month-trade-date text-slate-600 dark:text-slate-300">${dateText(t.exitTime)}</div><div class="month-trade-price text-slate-400">${formatCryptoPrice(t.exitPrice)}</div></td>
                     <td class="text-right"><div class="font-bold tabular-nums ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%</div><div class="month-trade-meta text-slate-400">${duration}</div></td>
@@ -1326,7 +1417,7 @@ function renderHistoryTrades() {
                 <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                         <span class="w-2 h-2 rounded-full ${timeColor.dotClass} shrink-0 shadow-sm"></span>
-                        <span class="font-black text-[11px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600 text-slate-800 dark:text-slate-100 whitespace-nowrap">${t.symbol.replace('USDT', '')}</span>
+                        <span class="font-black text-[11px] px-1.5 py-0.5 rounded bg-white dark:bg-slate-700 border border-slate-200/80 dark:border-slate-600 text-slate-800 dark:text-slate-100 whitespace-nowrap">${t.symbol.replace('USDT', '')}</span> ${tradeCodeBadge(t)}
                         ${t.isManual ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800 whitespace-nowrap" title="Manuel oluşturulan işlem">✍ MANUEL</span>' : ''}
                         ${t.editedAt ? '<span class="text-[9px] px-1 py-0.5 rounded bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 whitespace-nowrap" title="Gerçek satış kaydı düzeltildi">DÜZ.</span>' : ''}
                         ${historyOriginBadge(t)}
@@ -1481,13 +1572,13 @@ function getMonthlyLimitRows() {
         const rawMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
         const livePnl = (KZ_STATE.closedTrades || []).filter(matches).reduce((sum, t) => sum + Number(t.pnlPercent || 0), 0);
         // Coin kartı ve kilit motoruyla aynı aylık ilerleme; bekleme kârları hariç.
-        const progress = Math.max(Number(rawMonth?.pnl || 0), livePnl,
-            Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
+        const limitLedger = getCoinLimitLedger(coin, month);
+        const progress = limitLedger.pnl;
         const cap = Number(coin.monthlyCap || 0);
         const target = Number(coin.profitTarget || 0);
         const locked = isCoinMonthlyLocked(coin);
         const remainingPnl = locked ? 0 : Math.max(0, cap - progress);
-        const remaining = locked ? 0 : cap > 0 && target > 0 ? Math.max(0, Math.ceil((remainingPnl - 0.001) / target)) : null;
+        const remaining = !monthlyCoinLimitEnabled() ? null : locked ? 0 : cap > 0 && target > 0 ? Math.max(0, Math.ceil((remainingPnl - 0.001) / target)) : null;
         const executed = (KZ_STATE.executedGlobalTrades || []).filter(matches);
         const isLive = trade => liveIds.has(trade.id) || trade.source === 'automatic' || trade.source === 'manual';
         const liveGainUsd = executed.filter(isLive).reduce((sum, trade) => sum + Number(trade.netGainUSD || 0), 0);
@@ -1495,7 +1586,7 @@ function getMonthlyLimitRows() {
         const netGainUsd = liveGainUsd + pastGainUsd;
         const base = Number(KZ_STATE.portfolioBaseUsd || 0);
         const portfolioContribution = base > 0 ? netGainUsd / base * 100 : null;
-        return {coin,live,past,count:records.length,remaining,remainingPnl,cap,locked,
+        return {coin,live,past,count:limitLedger.count,remaining,remainingPnl,cap,locked,
             netGainUsd,liveGainUsd,pastGainUsd,portfolioContribution,active:coin.isActive !== false};
     });
 }
@@ -1618,7 +1709,8 @@ function coinCardMonthSummary(coin) {
     const slotPnl = sum(slot), simPnl = sum(simulation);
     const rawMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
     // Kilit motorunun kullandığı aylık sonuçları esas alır.
-    const lockPnl = Math.max(Number(rawMonth?.pnl || 0), slotPnl, Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
+    const limitLedger = getCoinLimitLedger(coin, month);
+    const lockPnl = limitLedger.pnl;
     const cap = Number(coin.monthlyCap || 0);
     const progress = cap > 0 ? Math.min(100, Math.max(0, lockPnl / cap * 100)) : 0;
     const pnlHtml = value => `<span class="font-bold tabular-nums ${value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${value >= 0 ? '+' : ''}${value.toFixed(2)}%</span>`;
@@ -1636,8 +1728,8 @@ function coinCardMonthSummary(coin) {
             </div>
         </div>
         <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><span><strong class="text-emerald-600 dark:text-emerald-400">${livePending} Canlı</strong><span class="mx-1.5">·</span><strong class="text-amber-600 dark:text-amber-400">${simPending} Geçmişte</strong></span></div>
-        <div class="space-y-1" title="Kilit, mevcut aylık strateji ve işlem sonuçlarıyla belirlenir. Bekleme sonuçları dahil değildir.">
-            <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
+        <div class="space-y-1" title="Kilit, mevcut aylık strateji ve işlem sonuçlarıyla belirlenir. Slot dışı sonuçlar dahil, her sinyal yalnızca bir kez sayılır.">
+            <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Toplam ${limitLedger.count} işlem · Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${!monthlyCoinLimitEnabled() ? 'Limit kapalı' : isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
             <div class="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-indigo-500" style="width:${progress}%"></div></div>
         </div>`;
 }
@@ -2148,7 +2240,7 @@ function renderActivePositionsList() {
         return `
             <div id="active-pos-card-${pos.id}" data-state="${state}" class="position-card border-2 rounded-xl p-3 space-y-2.5 shadow-sm">
                 <div class="flex flex-wrap items-center justify-between gap-1.5">
-                    <span class="font-extrabold text-sm text-slate-900 dark:text-white">${pos.displaySymbol}${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
+                    <span class="font-extrabold text-sm text-slate-900 dark:text-white">${pos.displaySymbol} ${tradeCodeBadge(pos)}${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
                     <span id="active-pos-state-${pos.id}" class="position-state-badge text-[10px] font-black px-2 py-0.5 rounded-md">${stateLabel}</span>
                 </div>
                 <div class="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 border-b border-slate-200/70 dark:border-slate-700/70 pb-2">
@@ -2303,6 +2395,7 @@ function submitManualPosition(event) {
 
     KZ_STATE.activePositions.push({
         id: `pos_manual_${Date.now()}`,
+        signalCode: nextSignalCode(),
         coinId: coin.id,
         symbol: coin.symbol,
         displaySymbol: coin.displaySymbol,
@@ -2341,7 +2434,7 @@ function savePendingClosedTrades() {
     localStorage.setItem('kuzgun_pending_closed_trades', JSON.stringify(KZ_STATE.pendingClosedTrades));
 }
 
-function updatePendingSignalLive(coin, price) {
+function updatePendingSignalLive(coin, price, checkRsi = false) {
     if (!coin || !Number.isFinite(Number(price)) || Number(price) <= 0) return;
     let changed = false;
     for (const item of KZ_STATE.pendingSignals.slice()) {
@@ -2349,20 +2442,23 @@ function updatePendingSignalLive(coin, price) {
         ensurePendingTarget(item, coin);
         item.livePrice = Number(price);
         changed = true;
-        if (!(Number(item.profitTarget) > 0) || Number(price) < item.targetPrice) continue;
+        const targetReached = Number(item.profitTarget) > 0 && Number(price) >= item.targetPrice;
+        const rsiExit = checkRsi && Number.isFinite(coin.rsi) && coin.rsi >= coin.sellRsi;
+        if (!targetReached && !rsiExit) continue;
         KZ_STATE.pendingSignals = KZ_STATE.pendingSignals.filter(p => p.id !== item.id);
         KZ_STATE.pendingClosedTrades.unshift({
-            id: 'pending_closed_' + item.id, coinId: item.coinId, symbol: item.symbol,
+            id: 'pending_closed_' + item.id, signalCode: item.signalCode, signalTime: item.time, coinId: item.coinId, symbol: item.symbol,
             displaySymbol: item.displaySymbol, entryPrice: Number(item.triggerPrice),
             exitPrice: Number(price), targetPrice: item.targetPrice, profitTarget: item.profitTarget,
             pnlPercent: (Number(price) / Number(item.triggerPrice) - 1) * 100,
             entryTime: item.time, exitTime: Date.now(), source: 'pending',
-            reason: 'Beklemede kâr hedefi'
+            reason: targetReached ? 'Beklemede kâr hedefi' : `Beklemede RSI sat (${coin.rsi.toFixed(1)})`
         });
         KZ_STATE.simulatedPendingClosedTrades = (KZ_STATE.simulatedPendingClosedTrades || []).filter(t =>
             !((t.coinId === item.coinId || t.symbol === item.symbol) && Math.abs(t.entryTime - item.time) <= getIntervalMilliseconds(coin.interval)));
         savePendingClosedTrades();
         savePending();
+        recalculateFullPortfolio();
         renderHistoryTrades();
     }
     if (changed) renderPendingSignalsList();
@@ -2387,7 +2483,7 @@ function renderPendingSignalsList() {
         return `
         <div class="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 rounded-lg p-2.5 space-y-2">
             <div class="flex items-center justify-between gap-2">
-                <span class="font-bold text-xs text-slate-900 dark:text-white">${item.displaySymbol || item.symbol}</span>
+                <span class="font-bold text-xs text-slate-900 dark:text-white">${item.displaySymbol || item.symbol} ${tradeCodeBadge(item)}</span>
                 <span class="font-bold text-xs tabular-nums ${color}">${hasPrice ? (pnl >= 0 ? '+' : '') + pnl.toFixed(2) + '%' : 'Fiyat bekleniyor'}</span>
                 <button onclick="dismissPending('${item.id}')" class="text-slate-400 hover:text-rose-600 text-xs font-semibold cursor-pointer" title="Listeden kaldır">✕</button>
             </div>
@@ -2429,7 +2525,7 @@ function forceEnterFromPending(pendingId) {
     if (coin) updatePendingSignalLive(coin, coin.price);
     if (!KZ_STATE.pendingSignals.some(p => p.id === pendingId)) return;
     if (coin && !isCoinMonthlyLocked(coin)) {
-        if (openPosition(coin)) {
+        if (openPosition(coin, null, null, pending.signalCode, pending.time)) {
             renderPendingSignalsList();
         }
     }
@@ -3233,7 +3329,7 @@ async function fetchMarketRate() {
     } catch (e) {}
 }
 
-function openPosition(coin, customPrice = null, customTime = null) {
+function openPosition(coin, customPrice = null, customTime = null, signalCode = null, signalTime = null) {
     if (!coin || coin.isActive === false || isCoinMonthlyLocked(coin)) return false;
     const alreadyOpen = KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol);
     if (alreadyOpen) return false;
@@ -3246,6 +3342,8 @@ function openPosition(coin, customPrice = null, customTime = null) {
 
     KZ_STATE.activePositions.push({
         id: 'pos_' + Date.now(),
+        signalCode: signalCode || nextSignalCode(),
+        signalTime: signalTime || posTime,
         coinId: coin.id,
         symbol: coin.symbol,
         displaySymbol: coin.displaySymbol,
@@ -3284,6 +3382,8 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
     const now = new Date();
     KZ_STATE.closedTrades.unshift({
         id: 'trade_' + Date.now(),
+        signalCode: pos.signalCode || nextSignalCode(),
+        signalTime: pos.signalTime || pos.entryTime,
         coinId: pos.coinId,
         symbol: pos.symbol,
         displaySymbol: pos.displaySymbol,
@@ -3318,7 +3418,7 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
         savePending();
         const coin = KZ_STATE.coins.find(c => c.id === next.coinId || c.symbol === next.symbol);
         if (coin && !isCoinMonthlyLocked(coin)) {
-            openPosition(coin, coin.price || next.triggerPrice);
+            openPosition(coin, coin.price || next.triggerPrice, null, next.signalCode, next.time);
         }
     }
 
@@ -3396,6 +3496,7 @@ function loadStorage() {
     if (savedClosedTrades) {
         try { KZ_STATE.closedTrades = JSON.parse(savedClosedTrades); } catch(e) {}
     }
+    migrateSignalCodes();
 }
 
 function saveCoins() {
@@ -3457,6 +3558,7 @@ function recalculateFullPortfolio() {
         // Coin sonradan kapatılsa da gerçekleşmiş işlem geçmişte kalır.
         allRawTrades.push({
             id: t.id,
+            signalCode: t.signalCode,
             coinId: t.coinId,
             symbol: t.symbol,
             entryTime: t.entryTime || (t.exitTime - 3600000),
@@ -3474,10 +3576,12 @@ function recalculateFullPortfolio() {
 
     KZ_STATE.coins.forEach(coin => {
         if (coin.isActive === false) return;
+        if (coin.rawSimMonthlyStats) refreshCoinLimitStats(coin);
         if (coin.simMonthlyStats) {
             coin.simMonthlyStats.forEach(m => {
                 if (m.tradesList) {
                     m.tradesList.forEach(t => {
+                        if (t.limitOrigin && t.limitOrigin !== 'history') return;
                         allRawTrades.push({
                             id: t.id,
                             coinId: coin.id,
@@ -3755,8 +3859,16 @@ window.saveClosedTradeEdit = saveClosedTradeEdit;
 
 function syncMainAppFromStorage(event) {
     const key = event && event.key;
-    if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_base_usd', 'kuzgun_theme'].includes(key)) return;
+    if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_base_usd', 'kuzgun_theme', 'kuzgun_monthly_coin_limit_enabled', 'kuzgun_pending_closed_trades'].includes(key)) return;
 
+    if (key === 'kuzgun_monthly_coin_limit_enabled' || key === 'kuzgun_pending_closed_trades') {
+        if (key === 'kuzgun_pending_closed_trades') {
+            try { KZ_STATE.pendingClosedTrades = JSON.parse(localStorage.getItem(key) || '[]'); } catch (_) {}
+        }
+        recalculateFullPortfolio();
+        KZ_STATE.coins.forEach(c => renderSingleCard(c));
+        return;
+    }
     if (!key || key === 'kuzgun_closed_trades' || key === 'kuzgun_base_usd') {
         const storedBalance = Number(localStorage.getItem('kuzgun_base_usd'));
         if (Number.isFinite(storedBalance) && storedBalance > 0) KZ_STATE.portfolioBaseUsd = storedBalance;

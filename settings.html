@@ -278,6 +278,17 @@
                     </div>
 
                     <div class="space-y-4 pt-1">
+                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80">
+                            <div class="space-y-0.5">
+                                <span class="font-bold text-xs text-slate-900 dark:text-white block">Slot bağımsız aylık coin limiti</span>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400">Slotta veya slot dışında kapanan her sinyal bir kez sayılır. Coinin toplam kârı aylık limite ulaşınca yeni alımlar durur. Zararlar toplamdan düşer; limit dolmadıysa işlemler devam eder. Kapalıyken aylık kâr kilidi uygulanmaz. Açık pozisyonların çıkışı devam eder.</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                                <input type="checkbox" id="toggleMonthlyCoinLimit" onchange="handleToggle('monthlyCoinLimit')" class="sr-only peer">
+                                <div class="w-10 h-5 bg-slate-200 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
                         <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition">
                             <div class="space-y-0.5">
                                 <span class="font-bold text-xs text-slate-900 dark:text-white block">Gerçekçi Slot Çakışma Filtresi</span>
@@ -649,7 +660,8 @@
             const badgeYear = document.getElementById('badgeYear');
             if (badgeYear) badgeYear.textContent = currentYear;
 
-            document.getElementById('badgeSlotConstraint').textContent = document.getElementById('toggleSlotConstraint').checked ? 'Aktif' : 'Pasif';
+            document.getElementById('badgeSlotConstraint').textContent = document.getElementById('toggleMonthlyCoinLimit').checked = localStorage.getItem('kuzgun_monthly_coin_limit_enabled') !== 'false';
+            document.getElementById('toggleSlotConstraint').checked ? 'Aktif' : 'Pasif';
             document.getElementById('badgeSlotConstraint').className = document.getElementById('toggleSlotConstraint').checked ? 'font-bold text-emerald-600 dark:text-emerald-400' : 'font-bold text-slate-400';
 
             document.getElementById('badgeFeeDeduction').textContent = document.getElementById('toggleFeeDeduction').checked ? '%0.15 Reel' : 'Sıfır Komisyon';
@@ -806,6 +818,7 @@
 
         function handleToggle(key) {
             const map = {
+                monthlyCoinLimit: { id: 'toggleMonthlyCoinLimit', storage: 'kuzgun_monthly_coin_limit_enabled', name: 'Slot bağımsız aylık coin limiti' },
                 slotConstraint: { id: 'toggleSlotConstraint', storage: 'kuzgun_slot_constraint_enabled', name: 'Slot Çakışma Filtresi' },
                 feeDeduction: { id: 'toggleFeeDeduction', storage: 'kuzgun_fee_deduction_enabled', name: 'Komisyon Kesintisi' },
                 candleClose: { id: 'toggleCandleClose', storage: 'kuzgun_candle_close_confirmation_enabled', name: 'Mum Kapanış Teyidi' },
@@ -1007,9 +1020,9 @@
         const KUZGUN_BACKUP_VERSION = 2;
         const KUZGUN_BACKUP_EXCLUDED_KEYS = new Set(['kuzgun_telegram_chat_id', 'kuzgun_telegram_bot_token', 'kuzgun_bot_token', 'kuzgun_pending_telegram_token', 'kuzgun_pending_telegram_chat_id', 'kuzgun_pending_telegram_enabled', 'kuzgun_system_telegram_token', 'kuzgun_system_telegram_chat_id', 'kuzgun_system_telegram_enabled', 'kuzgun_sell_telegram_token', 'kuzgun_sell_telegram_chat_id', 'kuzgun_sell_telegram_enabled']);
         const KUZGUN_BACKUP_CATEGORIES = ['coins', 'portfolio', 'positions', 'history', 'preferences'];
-        const KUZGUN_PORTFOLIO_KEYS = new Set(['kuzgun_base_usd', 'kuzgun_user_balance', 'kuzgun_portfolio_start_date', 'kuzgun_max_slots', 'kuzgun_selected_year', 'kuzgun_slot_constraint_enabled', 'kuzgun_fee_deduction_enabled']);
+        const KUZGUN_PORTFOLIO_KEYS = new Set(['kuzgun_base_usd', 'kuzgun_user_balance', 'kuzgun_portfolio_start_date', 'kuzgun_max_slots', 'kuzgun_selected_year', 'kuzgun_slot_constraint_enabled', 'kuzgun_fee_deduction_enabled', 'kuzgun_monthly_coin_limit_enabled']);
         const KUZGUN_POSITION_KEYS = new Set(['kuzgun_active_pos', 'kuzgun_pending_signals']);
-        const KUZGUN_HISTORY_KEYS = new Set(['kuzgun_closed_trades', 'kuzgun_pending_closed_trades']);
+        const KUZGUN_HISTORY_KEYS = new Set(['kuzgun_closed_trades', 'kuzgun_pending_closed_trades', 'kuzgun_signal_code_counter', 'kuzgun_historical_signal_codes', 'kuzgun_historical_code_counter']);
 
         function isBackupStorageKey(key) {
             return typeof key === 'string' && key.startsWith('kuzgun_') && !KUZGUN_BACKUP_EXCLUDED_KEYS.has(key);
