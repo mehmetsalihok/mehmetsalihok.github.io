@@ -153,12 +153,24 @@ function formatTradeDuration(entryTime, exitTime) {
 // Aynı alım sinyalinin kayıtlı ve simüle kapanışını ekranda tek göster.
 // Çıkış saatleri mum teyidi nedeniyle farklı olabilir; kayıtlı kapanış önceliklidir.
 function isSameTradeSignal(first, second) {
+    const symbolOf = trade => {
+        const coin = (KZ_STATE.coins || []).find(c => c.id === trade.coinId);
+        return String(trade.symbol || coin?.symbol || trade.displaySymbol || '')
+            .toUpperCase().replace(/[^A-Z0-9]/g, '');
+    };
+    const firstSymbol = symbolOf(first), secondSymbol = symbolOf(second);
     const sameCoin = (first.coinId && second.coinId && first.coinId === second.coinId)
-        || (first.symbol && second.symbol && first.symbol === second.symbol);
+        || (firstSymbol && secondSymbol && firstSymbol === secondSymbol);
     if (!sameCoin) return false;
     if (first.id && second.id && first.id === second.id) return true;
     const firstEntry = Number(first.entryTime), secondEntry = Number(second.entryTime);
-    return firstEntry > 0 && secondEntry > 0 && firstEntry === secondEntry;
+    if (!(firstEntry > 0) || !(secondEntry > 0)) return false;
+    if (firstEntry === secondEntry) return true;
+    // Eski canlı kayıtlar Date.now() ile saniye/milisaniye taşır;
+    // simülasyon ise mum sınırını kullanır. Aynı giriş dakikasını eşleştir.
+    // Manuel girişler için bu yaklaşık eşleştirmeyi kullanma.
+    if (first.isManual || second.isManual || first.source === 'manual' || second.source === 'manual') return false;
+    return Math.floor(firstEntry / 60000) === Math.floor(secondEntry / 60000);
 }
 
 function withoutRecordedSignalCopies(simulated, recorded) {
