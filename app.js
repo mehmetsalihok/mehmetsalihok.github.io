@@ -162,8 +162,12 @@ function isSameTradeSignal(first, second) {
     const sameCoin = (first.coinId && second.coinId && first.coinId === second.coinId)
         || (firstSymbol && secondSymbol && firstSymbol === secondSymbol);
     if (!sameCoin) return false;
+    if (first.originSignalId && second.originSignalId && first.originSignalId === second.originSignalId) return true;
     if (first.id && second.id && first.id === second.id) return true;
-    const firstEntry = Number(first.entryTime), secondEntry = Number(second.entryTime);
+    if (Number(first.originSignalTime) > 0 && Number(second.originSignalTime) > 0) {
+        return Math.floor(Number(first.originSignalTime) / 60000) === Math.floor(Number(second.originSignalTime) / 60000);
+    }
+    const firstEntry = Number(first.originSignalTime || first.entryTime), secondEntry = Number(second.originSignalTime || second.entryTime);
     if (!(firstEntry > 0) || !(secondEntry > 0)) return false;
     if (firstEntry === secondEntry) return true;
     // Eski canlı kayıtlar Date.now() ile saniye/milisaniye taşır;
@@ -177,54 +181,96 @@ function withoutRecordedSignalCopies(simulated, recorded) {
     return simulated.filter(trade => !recorded.some(record => isSameTradeSignal(trade, record)));
 }
 
-function getCoinDisplayTrades(coin) {
-    const realTrades = (KZ_STATE.closedTrades || [])
-        .filter(t => t.coinId === coin.id || t.symbol === coin.symbol)
-        .map(t => ({
-            ...t,
-            pnl: Number(t.pnlPercent || 0),
-            isWin: Number(t.pnlPercent || 0) >= 0,
-            duration: formatTradeDuration(t.entryTime, t.exitTime),
-            isRealTrade: true
-        }));
-
-    const combined = [...realTrades, ...withoutRecordedSignalCopies(coin.simLastTrades || [], realTrades)]
-        .sort((a, b) => Number(b.exitTime || 0) - Number(a.exitTime || 0));
-    const seen = new Set();
-    return combined.filter(t => {
-        const key = t.id || `${t.entryTime}_${t.exitTime}_${t.entryPrice}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-    }).slice(0, 10);
+function coinMatchesTrade(coin, trade) {
+    return trade.coinId === coin.id || (trade.symbol && trade.symbol === coin.symbol);
 }
 
-// 📲 TELEGRAM BİLDİRİMİ GÖNDERİCİ
-async function sendTelegramAlert(text, options = {}) {
-    let chatId = localStorage.getItem('kuzgun_telegram_chat_id') || '1059064615';
-    let botToken = "8868427780:AAG0tAJFxew404d5MdpjVsf1UVMftBFieh0";
-    if (options.channel === 'pending' || options.channel === 'system' || options.channel === 'sell') {
-        const prefix = `kuzgun_${options.channel}_telegram`;
-        if (localStorage.getItem(`${prefix}_enabled`) !== 'true') return false;
-        botToken = (localStorage.getItem(`${prefix}_token`) || '').trim();
-        chatId = (localStorage.getItem(`${prefix}_chat_id`) || '').trim();
+// Ortak aylık defter: kayıtlı kapanışlar korunur, yalnız varsayımsal işlemler
+// aylık kilit ve gerçek pozisyonlarla çakışma kontrolünden geçirilir.
+function rebuildCoinMonthlyLedger(coin) {
+    const year = String(KZ_STATE.selectedYear);
+    const recorded = (KZ_STATE.closedTrades || []).filter(t => coinMatchesTrade(coin, t))
+        .map(t => ({...t, isReal: true, isRealTrade: true,
+            source: t.source || (t.isManual ? 'manual' : 'automatic'),
+            pnl: Number(t.pnlPercent || 0), pnlPercent: Number(t.pnlPercent || 0),
+            duration: formatTradeDuration(t.entryTime, t.exitTime),
+            monthKey: getTurkeyMonthKey(t.exitTime)}));
+    const open = (KZ_STATE.activePositions || []).filter(t => coinMatchesTrade(coin, t));
+    const waiting = (KZ_STATE.pendingClosedTrades || []).filter(t => coinMatchesTrade(coin, t));
+    const occupied = [...recorded, ...open.map(t => ({...t, exitTime: Infinity}))];
+    const raw = coin.strategyTrades || (coin.simMonthlyStats || []).flatMap(m => m.tradesList || []).filter(t => !t.isReal);
+    const simulated = raw.filter(t => !t.source && Number(t.exitTime) > 0)
+        .filter(t => ![...recorded, ...open, ...waiting].some(r => isSameTradeSignal(t, r)))
+        .filter(t => !occupied.some(r => Number(t.entryTime) < Number(r.exitTime)
+            && Number(t.exitTime) > Number(r.entryTime)))
+        .map(t => ({...t, symbol: coin.symbol, isReal: false,
+            pnl: Number(t.pnl ?? t.pnlPercent ?? 0),
+            pnlPercent: Number(t.pnl ?? t.pnlPercent ?? 0),
+            monthKey: getTurkeyMonthKey(t.exitTime)}));
+    const months = new Map();
+    const names = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const month = key => {
+        if (!months.has(key)) months.set(key, {monthKey:key,name:names[Number(key.slice(5))-1],
+            trades:0,pnl:0,isLocked:false,tradesList:[],afterLimitCount:0});
+        return months.get(key);
+    };
+    // Aylar boş olsa bile karttaki mevcut yıl tablosunda yerini korur.
+    const currentKey = getTurkeyMonthKey();
+    const maxMonth = currentKey.startsWith(year + '-') ? Number(currentKey.slice(5)) : 12;
+    for (let i=1; i<=maxMonth; i++) month(`${year}-${String(i).padStart(2,'0')}`);
+    const events=[];
+    const seen = new Set();
+    for (const trade of [...recorded, ...simulated]) {
+        if (!trade.monthKey.startsWith(year + '-')) continue;
+        const key = trade.id || `${trade.coinId}_${trade.entryTime}_${trade.exitTime}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (!(Number(trade.entryTime)>0) || !(Number(trade.exitTime)>=Number(trade.entryTime))) continue;
+        // entry=exit olan eski kayıtlar da kaybolmaz.
+        events.push({time:Number(trade.entryTime),type:1,trade});
+        events.push({time:Number(trade.exitTime),type:0,trade});
     }
-    if (!chatId || !botToken) return false;
+    events.sort((a,b) => a.time-b.time ||
+        (a.trade===b.trade ? b.type-a.type : a.type-b.type) || Number(b.trade.isReal)-Number(a.trade.isReal));
+    const admitted=new Set();
+    const cap=Number(coin.monthlyCap || 0);
+    for (const event of events) {
+        const trade=event.trade;
+        if (event.type===1) {
+            const entryMonth=month(getTurkeyMonthKey(trade.entryTime));
+            const locked=cap>0 && entryMonth.pnl+0.001>=cap;
+            if (locked && !trade.isReal) continue;
+            trade.afterMonthlyLimit=Boolean(locked && trade.isReal);
+            admitted.add(trade);
+        } else if (admitted.has(trade)) {
+            const result=month(trade.monthKey);
+            result.tradesList.push(trade);
+            result.trades++;
+            result.pnl+=trade.pnl;
+            if (trade.afterMonthlyLimit) result.afterLimitCount++;
+        }
+    }
+    const summaries=[...months.values()].filter(m=>m.monthKey.startsWith(year+'-'));
+    for (const summary of summaries) {
+        summary.tradesList.sort((a,b)=>b.exitTime-a.exitTime);
+        summary.isLocked=cap>0 && summary.pnl+0.001>=cap;
+    }
+    coin.monthlyLedger=summaries.sort((a,b)=>b.monthKey.localeCompare(a.monthKey));
+    // Eski ekranların kullandığı alan da aynı kaynağı gösterir.
+    coin.simMonthlyStats=coin.monthlyLedger;
+    coin.simLastTrades=coin.monthlyLedger.flatMap(m=>m.tradesList)
+        .sort((a,b)=>b.exitTime-a.exitTime).slice(0,10);
+    return coin.monthlyLedger;
+}
 
-    try {
-        const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: chatId,
-                text: text,
-                parse_mode: 'HTML'
-            })
-        });
-        return response.ok;
-    } catch (e) {
-        return false;
-    }
+function getCoinMonthlyLedger(coin) {
+    return coin.monthlyLedger || rebuildCoinMonthlyLedger(coin);
+}
+
+function getCoinDisplayTrades(coin) {
+    return getCoinMonthlyLedger(coin).flatMap(m=>m.tradesList)
+        .sort((a,b)=>b.exitTime-a.exitTime).slice(0,10)
+        .map(t=>({...t,isWin:t.pnl>=0,duration:t.duration || formatTradeDuration(t.entryTime,t.exitTime)}));
 }
 
 function isHealthMonitorEnabled() {
@@ -538,6 +584,8 @@ function addBuySignalToPending(signal, reason = 'manual') {
     KZ_STATE.pendingSignals.push({
         id: 'pend_' + Date.now(),
         signalCode: signal.signalCode || nextSignalCode(),
+        originSignalId: signal.originSignalId || signal.id,
+        originSignalTime: Number(signal.originSignalTime || signal.time),
         coinId: signal.coinId,
         symbol: signal.symbol,
         displaySymbol: signal.displaySymbol,
@@ -575,7 +623,7 @@ function tryOpenBuySignalPosition(signal, useCurrentPrice = false) {
     const entryPrice = useCurrentPrice ? Number(coin.price) : Number(signal.triggerPrice);
     if (!Number.isFinite(entryPrice) || entryPrice <= 0) return 'stale';
     if (useCurrentPrice && (!coin.lastLivePriceAt || Date.now() - coin.lastLivePriceAt > 60000)) return 'stale';
-    return openPosition(coin, entryPrice, useCurrentPrice ? Date.now() : signal.time, signal.signalCode) ? 'opened' : 'blocked';
+    return openPosition(coin, entryPrice, useCurrentPrice ? Date.now() : signal.time, signal.signalCode, signal) ? 'opened' : 'blocked';
 }
 
 function buildBuySignalTelegramMessage(signal, isTest = false) {
@@ -599,6 +647,7 @@ function buildSellTelegramMessage(coin, pnl, isTarget, timestamp = Date.now(), s
 
 function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = Date.now(), signalMode = 'Mum Teyitli', options = {}) {
     if (!coin) return;
+    if (!options.isTest && isCoinMonthlyLocked(coin)) return;
     if (!options.isTest && KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol)) return;
     if (!options.isTest && (KZ_STATE.pendingSignals || []).some(s => s.coinId === coin.id || s.symbol === coin.symbol)) return;
     const signalId = `${coin.id || coin.symbol}_${signalTime}`;
@@ -608,6 +657,8 @@ function requestBuySignalDecision(coin, triggerPrice, triggerRsi, signalTime = D
     const signal = {
         id: signalId,
         signalCode: options.isTest ? 'TEST' : nextSignalCode(),
+        originSignalId: signalId,
+        originSignalTime: Number(signalTime),
         coinId: coin.id,
         symbol: coin.symbol,
         displaySymbol: coin.displaySymbol,
@@ -764,23 +815,10 @@ function calculateRSI(closes, period = 14) {
 }
 
 function isCoinMonthlyLocked(coin) {
-    const currentMonthStr = getTurkeyMonthKey();
-    const simulatedMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === currentMonthStr);
-    if (simulatedMonth && (simulatedMonth.isLocked || (simulatedMonth.pnl + 0.001) >= coin.monthlyCap)) {
-        return true;
-    }
-
-    const realMonth = KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[currentMonthStr];
-    if (realMonth && (realMonth.pnl + 0.001) >= coin.monthlyCap) {
-        return true;
-    }
-
-    const currentMonthTrades = (KZ_STATE.closedTrades || []).filter(t => (t.coinId === coin.id || t.symbol === coin.symbol) && t.exitMonth === currentMonthStr);
-    const totalMonthPnl = currentMonthTrades.reduce((sum, t) => sum + t.pnlPercent, 0);
-    return (totalMonthPnl + 0.001) >= coin.monthlyCap;
+    const result=getCoinMonthlyLedger(coin).find(m=>m.monthKey===getTurkeyMonthKey());
+    return Boolean(result?.isLocked);
 }
 
-// 🎯 CANLI FİYAT, MUM DEVRİ (ROLLOVER) VE MUM KAPANIŞ TEYİDİ MOTORU
 function confirmedCandleRsi(coin, candleTime) {
     const interval = getIntervalMilliseconds(coin.interval);
     const candles = (coin.rawCandles || []).filter(c => c.time <= candleTime && c.time + interval <= Date.now());
@@ -937,6 +975,7 @@ function runCardBacktest(coin) {
     const maxMonthIdx = (targetYear === now.getFullYear()) ? now.getMonth() : 11;
 
     const monthlyMap = {};
+    coin.strategyTrades = [];
     for (let m = 0; m <= maxMonthIdx; m++) {
         const mKey = `${targetYear}-${String(m + 1).padStart(2, '0')}`;
         monthlyMap[mKey] = { 
@@ -953,6 +992,7 @@ function runCardBacktest(coin) {
         coin.simMonthlyStats = Object.values(monthlyMap).reverse();
         coin.simLastTrades = [];
         coin.avgHoldDurationStr = '--';
+        rebuildCoinMonthlyLedger(coin);
         return;
     }
 
@@ -983,7 +1023,7 @@ function runCardBacktest(coin) {
             };
         }
 
-        const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap;
+        const isCapReached = false; // Aylık limit ortak defterde uygulanır.
 
         if (!inPos && !isCapReached) {
             if (prevRsi <= coin.buyRsi && rsi > coin.buyRsi) {
@@ -1029,6 +1069,9 @@ function runCardBacktest(coin) {
                 const tradeItem = {
                     id: `sim_${coin.id}_${entryT}_${exitTime}`,
                     coinId: coin.id,
+                    symbol: coin.symbol,
+                    originSignalId: `${coin.id || coin.symbol}_${entryT}`,
+                    originSignalTime: entryT,
                     entryTime: entryT,
                     exitTime: exitTime,
                     entryPrice: entryP,
@@ -1059,7 +1102,8 @@ function runCardBacktest(coin) {
     }
 
     coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-    coin.simLastTrades = trades.slice(-10).reverse();
+    coin.strategyTrades = trades;
+    rebuildCoinMonthlyLedger(coin);
 }
 
 function openMonthTradesModal(coinId, monthKey) {
@@ -1114,20 +1158,14 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
         }
     }
 
-    const trades = currentMonthData.tradesList || [];
-    const realTrades = KZ_STATE.closedTrades.filter(t =>
-        (t.coinId === coin.id || t.symbol === coin.symbol) &&
-        (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === selectedMonthKey
-    ).sort((a, b) => b.exitTime - a.exitTime);
-    const uniqueSimTrades = withoutRecordedSignalCopies(trades, realTrades);
-    const rows = [...realTrades.map(t => ({...t, isReal: true})), ...uniqueSimTrades.map(t => ({...t, isReal: false}))]
-        .sort((a, b) => b.exitTime - a.exitTime || Number(b.isReal) - Number(a.isReal));
-    const acceptedPastCount = uniqueSimTrades.filter(t => KZ_STATE.acceptedTradeIds?.has(t.id)).length;
-    const excludedCount = uniqueSimTrades.length - acceptedPastCount;
+    const rows = currentMonthData.tradesList || [];
+    const closedCount = rows.filter(t=>t.isReal || KZ_STATE.acceptedTradeIds?.has(t.id)).length;
+    const excludedCount = rows.length - closedCount;
+    const afterLimitCount = currentMonthData.afterLimitCount || 0;
     if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent =
-        `${realTrades.length + acceptedPastCount} kapanan işlem · ${excludedCount} slota alınmadı · ${rows.length} satır`;
-    if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Bağımsız coin stratejisinin aylık simülasyon kârı; portföye geçen işlemlerin toplamı değildir.';
-    if (modalActiveMonthLockBadge) modalActiveMonthLockBadge.title = 'Kilit işlem adedine değil aylık kâr yüzdesine göre hesaplanır.';
+        `${rows.length} işlem · ${closedCount} slotta kapanan · ${excludedCount} slota alınmadı${afterLimitCount ? ` · ${afterLimitCount} limit sonrası kayıt` : ''}`;
+    if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Bu listedeki tekilleştirilmiş işlemlerin brüt kâr toplamı. Slota girmeyen sonuçlar aylık coin limitine dahildir; portföye aktarılmaz. Beklemede kapanan kayıtlar ayrı tutulur.';
+    if (modalActiveMonthLockBadge) modalActiveMonthLockBadge.title = 'Ortak aylık işlem listesinin brüt kârı üzerinden hesaplanır. Önceden kaydedilmiş limit sonrası işlemler silinmez.';
     const compact = window.innerWidth < 640;
     const availableHeight = Math.min(window.innerHeight * .92, window.innerHeight - 24);
     const pageSize = Math.max(1, Math.floor((availableHeight - (compact ? 285 : 235)) / (compact ? 44 : 34)));
@@ -1144,11 +1182,11 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
             </tr></thead><tbody>${visible.map(t => {
                 const pnl = Number(t.isReal ? t.pnlPercent : t.pnl);
                 const accepted = KZ_STATE.acceptedTradeIds?.has(t.id);
-                const status = t.isReal || accepted ? '✓ Kapanan işlem' : '◷ Slota alınmadı';
-                const statusColor = t.isReal || accepted ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400';
+                const status = t.afterMonthlyLimit ? '⚠ Limit sonrası kayıt' : t.isReal || accepted ? '✓ Kapanan işlem' : '◷ Slota alınmadı';
+                const statusColor = t.afterMonthlyLimit ? 'text-rose-600 dark:text-rose-400' : t.isReal || accepted ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400';
                 const duration = t.duration || (() => { const mins = Math.max(0, Math.round((t.exitTime - t.entryTime)/60000)); return mins >= 60 ? `${Math.floor(mins/60)}sa ${mins%60}dk` : `${mins}dk`; })();
                 return `<tr>
-                    <td><div class="month-trade-reason font-semibold text-slate-800 dark:text-slate-200" title="${t.reason}">${t.reason} ${tradeCodeBadge(t)}</div><div class="month-trade-meta ${statusColor}">${status}${t.isReal ? ` <button onclick="openClosedTradeEditor('${t.id}')" class="text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek satışı düzenle">✎</button>` : ''}</div></td>
+                    <td><div class="month-trade-reason font-semibold text-slate-800 dark:text-slate-200" title="${t.reason}">${t.reason} ${tradeCodeBadge(t)}</div><div class="month-trade-meta ${statusColor}" title="${t.afterMonthlyLimit ? 'Mevcut strateji ve aylık limite göre limit sonrası. Eski kapanış kaydı korunur.' : ''}">${status}${t.isReal ? ` <button onclick="openClosedTradeEditor('${t.id}')" class="text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek satışı düzenle">✎</button>` : ''}</div></td>
                     <td><div class="month-trade-date text-slate-600 dark:text-slate-300">${dateText(t.entryTime)}</div><div class="month-trade-price text-slate-400">${formatCryptoPrice(t.entryPrice)}</div></td>
                     <td><div class="month-trade-date text-slate-600 dark:text-slate-300">${dateText(t.exitTime)}</div><div class="month-trade-price text-slate-400">${formatCryptoPrice(t.exitPrice)}</div></td>
                     <td class="text-right"><div class="font-bold tabular-nums ${pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}%</div><div class="month-trade-meta text-slate-400">${duration}</div></td>
@@ -1202,7 +1240,7 @@ function generateMonthlyTableHtml(coin) {
                             <div class="flex items-center space-x-2">
                                 <span class="font-bold text-slate-800 dark:text-slate-200 w-16 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">${m.name}</span>
                                 <span class="text-[10px] tabular-nums text-slate-500">
-                                    ${m.trades} <strong class="text-blue-600 font-bold">(${rMonth.trades})</strong> İşlem
+                                    ${m.trades} İşlem
                                 </span>
                                 ${m.isLocked ? `<span class="text-[9px] px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-semibold border border-indigo-100 dark:border-indigo-900">Kilitlendi</span>` : ''}
                             </div>
@@ -1210,9 +1248,6 @@ function generateMonthlyTableHtml(coin) {
                             <div class="flex items-center space-x-2">
                                 <span class="font-bold tabular-nums text-xs ${m.pnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
                                     ${m.pnl > 0 ? '+' : ''}${m.pnl.toFixed(1)}%
-                                </span>
-                                <span class="font-bold tabular-nums text-[11px] text-blue-600 dark:text-blue-400">
-                                    (${rMonth.pnl >= 0 ? '+' : ''}${rMonth.pnl.toFixed(1)}%)
                                 </span>
                                 <span class="text-[10px] text-slate-400 group-hover:text-blue-600 transition">→</span>
                             </div>
@@ -1222,11 +1257,11 @@ function generateMonthlyTableHtml(coin) {
             <div class="pt-2 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between px-2 text-xs font-bold">
                 <div class="flex items-center space-x-1">
                     <span class="text-slate-700 dark:text-slate-300">Toplam:</span>
-                    <span class="tabular-nums text-slate-900 dark:text-white">${totalTrades} <strong class="text-blue-600">(${realStats.totalTrades})</strong> İşlem</span>
+                    <span class="tabular-nums text-slate-900 dark:text-white">${totalTrades} İşlem</span>
                 </div>
                 <div class="flex items-center space-x-1.5">
                     <span class="tabular-nums ${totalPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}%</span>
-                    <span class="tabular-nums text-blue-600 dark:text-blue-400">(${realStats.totalPnl >= 0 ? '+' : ''}${realStats.totalPnl.toFixed(2)}%)</span>
+
                 </div>
             </div>
         </div>
@@ -1257,8 +1292,10 @@ function buildPendingHistorySimulation(rawTrades, acceptedTrades, startTimestamp
         const coinKey = coin.id || coin.symbol;
         if (t.entryTime < (waitingUntil.get(coinKey) || 0)) continue;
         // Canlı kaydı bulunan aynı sinyali ikinci kez simülasyon olarak gösterme.
-        const sameSignal = record => (record.coinId === t.coinId || record.symbol === t.symbol)
-            && Math.abs(Number(record.entryTime ?? record.time) - t.entryTime) <= intervalMs;
+        const sameSignal = record => isSameTradeSignal(t, {
+            ...record, originSignalTime: record.originSignalTime || record.time,
+            entryTime: record.entryTime || record.time
+        });
         if ((KZ_STATE.pendingClosedTrades || []).some(sameSignal)
             || (KZ_STATE.pendingSignals || []).some(sameSignal)
             || (KZ_STATE.closedTrades || []).some(sameSignal)
@@ -1321,13 +1358,13 @@ function getTransactionHistoryTrades() {
         const effectivePnl = result?.effectivePnl ?? (grossPnl - (feeEnabled ? (2 + grossPnl / 100) * 0.075 : 0));
         records.set(key(trade), {...trade, effectivePnl,
             feeUSD: result?.feeUSD, netGainUSD: result?.netGainUSD,
-            historyOrigin: 'live'});
+            historyOrigin: 'live', afterMonthlyLimit: result?.afterMonthlyLimit ?? KZ_STATE.coins.flatMap(c=>(c.monthlyLedger || []).flatMap(m=>m.tradesList)).find(t=>t.id===trade.id)?.afterMonthlyLimit});
     });
     return [...records.values()].sort((a, b) => b.exitTime - a.exitTime);
 }
 
 function historyOriginBadge(trade) {
-    return '';
+    return trade.afterMonthlyLimit ? '<span class="text-[9px] text-rose-600 dark:text-rose-400">Limit sonrası kayıt</span>' : '';
 }
 
 function setHistoryTab(tab) {
@@ -1549,11 +1586,8 @@ function getMonthlyLimitRows() {
         const records = transactions.filter(matches);
         const live = records.filter(t => t.historyOrigin === 'live').length;
         const past = records.length - live;
-        const rawMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
-        const livePnl = (KZ_STATE.closedTrades || []).filter(matches).reduce((sum, t) => sum + Number(t.pnlPercent || 0), 0);
-        // Coin kartı ve kilit motoruyla aynı aylık ilerleme; bekleme kârları hariç.
-        const progress = Math.max(Number(rawMonth?.pnl || 0), livePnl,
-            Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
+        const rawMonth = getCoinMonthlyLedger(coin).find(m=>m.monthKey===month);
+        const progress = Number(rawMonth?.pnl || 0);
         const cap = Number(coin.monthlyCap || 0);
         const target = Number(coin.profitTarget || 0);
         const locked = isCoinMonthlyLocked(coin);
@@ -1566,7 +1600,7 @@ function getMonthlyLimitRows() {
         const netGainUsd = liveGainUsd + pastGainUsd;
         const base = Number(KZ_STATE.portfolioBaseUsd || 0);
         const portfolioContribution = base > 0 ? netGainUsd / base * 100 : null;
-        return {coin,live,past,count:records.length,remaining,remainingPnl,cap,locked,
+        return {coin,live,past,count:rawMonth?.trades || 0,remaining,remainingPnl,cap,locked,
             netGainUsd,liveGainUsd,pastGainUsd,portfolioContribution,active:coin.isActive !== false};
     });
 }
@@ -1623,7 +1657,7 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
     const pastCount = active.reduce((sum,row) => sum + row.past,0);
     const liveGain = active.reduce((sum,row) => sum + row.liveGainUsd,0);
     const pastGain = active.reduce((sum,row) => sum + row.pastGainUsd,0);
-    for (const [kind,count,gain] of [['All',liveCount+pastCount,liveGain+pastGain]]) {
+    for (const [kind,count,gain] of [['All',totals.count,liveGain+pastGain]]) {
         const label = document.getElementById('monthlyLimit'+kind+'Total');
         label.textContent = `${count} işlem · ${contributionText(gain)}`;
         const amount = document.getElementById('monthlyLimit'+kind+'Gain');
@@ -1677,33 +1711,21 @@ function updateCoinCardStatus(coin) {
 }
 
 function coinCardMonthSummary(coin) {
-    const month = getTurkeyMonthKey();
-    const matches = t => (t.coinId === coin.id || t.symbol === coin.symbol)
-        && (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === month;
-    const slot = (KZ_STATE.closedTrades || []).filter(matches);
-    const simulation = withoutRecordedSignalCopies((KZ_STATE.executedGlobalTrades || []).filter(t => !t.source && matches(t)), slot);
-    const livePending = (KZ_STATE.pendingClosedTrades || []).filter(matches).length;
-    const simPending = (KZ_STATE.simulatedPendingClosedTrades || []).filter(matches).length;
-    const sum = list => list.reduce((total, t) => total + Number(t.pnlPercent || 0), 0);
-    const slotPnl = sum(slot), simPnl = sum(simulation);
-    const rawMonth = (coin.simMonthlyStats || []).find(m => m.monthKey === month);
-    // Kilit motorunun kullandığı aylık sonuçları esas alır.
-    const lockPnl = Math.max(Number(rawMonth?.pnl || 0), slotPnl, Number(KZ_STATE.coinRealStats?.[coin.id]?.monthly?.[month]?.pnl || 0));
-    const cap = Number(coin.monthlyCap || 0);
-    const progress = cap > 0 ? Math.min(100, Math.max(0, lockPnl / cap * 100)) : 0;
-    const pnlHtml = value => `<span class="font-bold tabular-nums ${value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${value >= 0 ? '+' : ''}${value.toFixed(2)}%</span>`;
-    const monthLabel = new Date().toLocaleDateString('tr-TR', {timeZone: 'Europe/Istanbul', month: 'long'});
-    return `
-        <div class="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400"><span class="font-semibold uppercase tracking-wider">BU AY · ${monthLabel}</span><span>Hedef kâr <strong class="text-blue-600 dark:text-blue-400">%${Number(coin.profitTarget).toFixed(1)}</strong></span></div>
-        <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-2" title="Kayıtlı kapanışlar ve portföy filtresinden geçen geçmiş hesaplamalar birlikte gösterilir.">
-            <div class="text-[9px] text-slate-500 dark:text-slate-400">Kapanan işlemler</div>
-            <div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${slot.length + simulation.length} işlem</strong>${pnlHtml(slotPnl + simPnl)}</div>
+    const month=getTurkeyMonthKey();
+    const summary=getCoinMonthlyLedger(coin).find(m=>m.monthKey===month);
+    const count=summary?.trades || 0, pnl=Number(summary?.pnl || 0);
+    const matches=t=>coinMatchesTrade(coin,t) && getTurkeyMonthKey(t.exitTime)===month;
+    const pending=[...(KZ_STATE.pendingClosedTrades || []),...(KZ_STATE.simulatedPendingClosedTrades || [])].filter(matches).length;
+    const cap=Number(coin.monthlyCap || 0);
+    const progress=cap>0 ? Math.min(100,Math.max(0,pnl/cap*100)) : 0;
+    const monthLabel=new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',month:'long'});
+    return `<div class="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400"><span class="font-semibold uppercase tracking-wider">BU AY · ${monthLabel}</span><span>Hedef kâr <strong class="text-blue-600 dark:text-blue-400">%${Number(coin.profitTarget).toFixed(1)}</strong></span></div>
+        <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-2" title="Aylık coin limitine dahil tekilleştirilmiş işlemler; slota alınmayanlar dahil.">
+            <div class="text-[9px] text-slate-500 dark:text-slate-400">Aylık işlemler</div><div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${count} işlem</strong><span class="font-bold tabular-nums ${pnl>=0?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span></div>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><strong class="text-amber-600 dark:text-amber-400">${livePending + simPending} işlem</strong></div>
-        <div class="space-y-1" title="Kilit, mevcut aylık strateji ve işlem sonuçlarıyla belirlenir. Bekleme sonuçları dahil değildir.">
-            <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
-            <div class="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-indigo-500" style="width:${progress}%"></div></div>
-        </div>`;
+        <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><strong class="text-amber-600 dark:text-amber-400">${pending} işlem</strong></div>
+        ${summary?.afterLimitCount ? `<div class="text-[9px] text-rose-600 dark:text-rose-400">${summary.afterLimitCount} kapanış, mevcut ayara göre limit sonrası kayıt.</div>`:''}
+        <div class="space-y-1"><div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${summary?.isLocked?'🔒 Kilitli':'Kalan %'+Math.max(0,cap-pnl).toFixed(2)}</span></div><div class="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-indigo-500" style="width:${progress}%"></div></div></div>`;
 }
 
 function updateCoinCardOverview(coin) {
@@ -2417,7 +2439,8 @@ function updatePendingSignalLive(coin, price) {
         if (!(Number(item.profitTarget) > 0) || Number(price) < item.targetPrice) continue;
         KZ_STATE.pendingSignals = KZ_STATE.pendingSignals.filter(p => p.id !== item.id);
         KZ_STATE.pendingClosedTrades.unshift({
-            id: 'pending_closed_' + item.id, signalCode: item.signalCode, coinId: item.coinId, symbol: item.symbol,
+            id: 'pending_closed_' + item.id, signalCode: item.signalCode,
+            originSignalId: item.originSignalId || null, originSignalTime: Number(item.originSignalTime || item.time), coinId: item.coinId, symbol: item.symbol,
             displaySymbol: item.displaySymbol, entryPrice: Number(item.triggerPrice),
             exitPrice: Number(price), targetPrice: item.targetPrice, profitTarget: item.profitTarget,
             pnlPercent: (Number(price) / Number(item.triggerPrice) - 1) * 100,
@@ -2494,7 +2517,7 @@ function forceEnterFromPending(pendingId) {
     if (coin) updatePendingSignalLive(coin, coin.price);
     if (!KZ_STATE.pendingSignals.some(p => p.id === pendingId)) return;
     if (coin && !isCoinMonthlyLocked(coin)) {
-        if (openPosition(coin, null, null, pending.signalCode)) {
+        if (openPosition(coin, null, null, pending.signalCode, pending)) {
             renderPendingSignalsList();
         }
     }
@@ -3298,7 +3321,7 @@ async function fetchMarketRate() {
     } catch (e) {}
 }
 
-function openPosition(coin, customPrice = null, customTime = null, signalCode = null) {
+function openPosition(coin, customPrice = null, customTime = null, signalCode = null, originSignal = null) {
     if (!coin || coin.isActive === false || isCoinMonthlyLocked(coin)) return false;
     const alreadyOpen = KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol);
     if (alreadyOpen) return false;
@@ -3312,6 +3335,8 @@ function openPosition(coin, customPrice = null, customTime = null, signalCode = 
     KZ_STATE.activePositions.push({
         id: 'pos_' + Date.now(),
         signalCode: signalCode || nextSignalCode(),
+        originSignalId: originSignal?.originSignalId || originSignal?.id || null,
+        originSignalTime: Number(originSignal?.originSignalTime || originSignal?.time) || null,
         coinId: coin.id,
         symbol: coin.symbol,
         displaySymbol: coin.displaySymbol,
@@ -3351,6 +3376,8 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
     KZ_STATE.closedTrades.unshift({
         id: 'trade_' + Date.now(),
         signalCode: pos.signalCode || nextSignalCode(),
+        originSignalId: pos.originSignalId || null,
+        originSignalTime: Number(pos.originSignalTime) || null,
         coinId: pos.coinId,
         symbol: pos.symbol,
         displaySymbol: pos.displaySymbol,
@@ -3377,6 +3404,8 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
     KZ_STATE.activePositions.splice(idx, 1);
     savePositions();
     saveClosedTrades();
+    const closedCoin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
+    if (closedCoin) rebuildCoinMonthlyLedger(closedCoin);
 
     // Önce hedefini tamamlamış bekleyen sinyalleri ayıkla.
     for (const pendingCoin of KZ_STATE.coins) updatePendingSignalLive(pendingCoin, pendingCoin.price);
@@ -3385,7 +3414,7 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
         savePending();
         const coin = KZ_STATE.coins.find(c => c.id === next.coinId || c.symbol === next.symbol);
         if (coin && !isCoinMonthlyLocked(coin)) {
-            openPosition(coin, coin.price || next.triggerPrice, null, next.signalCode);
+            openPosition(coin, coin.price || next.triggerPrice, null, next.signalCode, next);
         }
     }
 
@@ -3519,51 +3548,27 @@ function recalculateFullPortfolio() {
     const isFeeDeduction = localStorage.getItem('kuzgun_fee_deduction_enabled') !== 'false';
     const startTs = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
 
+    KZ_STATE.coins.forEach(coin=>rebuildCoinMonthlyLedger(coin));
     const allRawTrades = [];
-
-    (KZ_STATE.closedTrades || []).forEach(t => {
-        // Coin sonradan kapatılsa da gerçekleşmiş işlem geçmişte kalır.
-        allRawTrades.push({
-            id: t.id,
-            signalCode: t.signalCode,
-            coinId: t.coinId,
-            symbol: t.symbol,
-            entryTime: t.entryTime || (t.exitTime - 3600000),
-            exitTime: t.exitTime || Date.now(),
-            entryPrice: t.entryPrice,
-            exitPrice: t.exitPrice,
-            pnlPercent: t.pnlPercent,
-            monthKey: t.exitMonth || getTurkeyMonthKey(t.exitTime),
-            reason: t.reason,
-            editedAt: t.editedAt,
-            isManual: t.isManual === true,
-            source: t.source || (t.isManual ? 'manual' : 'automatic')
-        });
-    });
-
-    KZ_STATE.coins.forEach(coin => {
-        if (coin.isActive === false) return;
-        if (coin.simMonthlyStats) {
-            coin.simMonthlyStats.forEach(m => {
-                if (m.tradesList) {
-                    m.tradesList.forEach(t => {
-                        allRawTrades.push({
-                            id: t.id,
-                            coinId: coin.id,
-                            symbol: coin.symbol,
-                            entryTime: t.entryTime,
-                            exitTime: t.exitTime,
-                            entryPrice: t.entryPrice,
-                            exitPrice: t.exitPrice,
-                            pnlPercent: t.pnl,
-                            monthKey: m.monthKey,
-                            reason: t.reason
-                        });
-                    });
-                }
-            });
+    const seen = new Set();
+    const add = trade => {
+        if (seen.has(trade.id)) return;
+        seen.add(trade.id);
+        allRawTrades.push({...trade,pnlPercent:Number(trade.pnlPercent ?? trade.pnl ?? 0)});
+    };
+    for (const coin of KZ_STATE.coins) {
+        for (const month of getCoinMonthlyLedger(coin)) {
+            for (const trade of month.tradesList) {
+                if (trade.isReal || coin.isActive !== false) add(trade);
+            }
         }
-    });
+    }
+    for (const trade of KZ_STATE.closedTrades || []) {
+        if (seen.has(trade.id) || !getTurkeyMonthKey(trade.exitTime).startsWith(String(KZ_STATE.selectedYear) + '-')) continue;
+        // Silinmiş coinlerin de seçili yıla ait kayıtları korunur.
+        add({...trade,source:trade.source || (trade.isManual ? 'manual' : 'automatic'),
+            monthKey:trade.exitMonth || getTurkeyMonthKey(trade.exitTime)});
+    }
 
     if (typeof PortfolioEngine !== 'undefined') {
         const engineArgs = {
@@ -3627,6 +3632,10 @@ function recalculateFullPortfolio() {
         updateMonthlyLimitSummary();
 
         KZ_STATE.coins.forEach(coin => updateCardTablesOnly(coin));
+        if (monthTradesModal && !monthTradesModal.classList.contains('hidden') && KZ_STATE.activeMonthModal.coinId) {
+            const selectedCoin = KZ_STATE.coins.find(c=>c.id===KZ_STATE.activeMonthModal.coinId);
+            if (selectedCoin) renderModalTabsAndContent(selectedCoin, KZ_STATE.activeMonthModal.monthKey);
+        }
     }
 }
 
