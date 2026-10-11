@@ -88,50 +88,6 @@
         .league-action:focus-visible, .league-card button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
         @media (prefers-reduced-motion: reduce) { .league-card, .league-action { transition: none !important; } }
     </style>
-
-    <style id="kuzgun-brand-theme">
-        /* Ortak renk düzeni: gündüz butonları ve gece arka planı. */
-        :root { --kuzgun-brand: #022338; --kuzgun-brand-hover: #073047; }
-        html:not(.dark) button {
-            background-color: var(--kuzgun-brand) !important;
-            color: #ffffff !important;
-            border-color: var(--kuzgun-brand) !important;
-        }
-        html:not(.dark) button [class*="text-"] { color: inherit !important; }
-        html:not(.dark) button:hover:not(:disabled) {
-            background-color: var(--kuzgun-brand-hover) !important;
-        }
-        html:not(.dark) button:focus-visible {
-            outline: 2px solid var(--kuzgun-brand);
-            outline-offset: 3px;
-        }
-        /* Seçili filtre ve sekmeler aynı palet içinde belirgin kalır. */
-        html:not(.dark) button:is(.bg-blue-600, .bg-white, [aria-selected="true"]) {
-            box-shadow: inset 0 -3px 0 rgba(255,255,255,.65) !important;
-        }
-        html.dark:not(.oled), html.dark:not(.oled) body {
-            background-color: var(--kuzgun-brand) !important;
-        }
-        html.dark:not(.oled) [class*="dark:bg-slate-950"] {
-            background-color: var(--kuzgun-brand) !important;
-        }
-        html.dark:not(.oled) :is([class*="dark:bg-slate-900"], .league-stat) {
-            background-color: #072d43 !important;
-        }
-        html.dark:not(.oled) [class*="dark:bg-slate-800"] {
-            background-color: #10394e !important;
-        }
-        html.dark:not(.oled) [class*="dark:bg-slate-700"] {
-            background-color: #1a455a !important;
-        }
-        html.dark:not(.oled) [class*="dark:border-slate-800"],
-        html.dark:not(.oled) [class*="dark:border-slate-700"] {
-            border-color: #245066 !important;
-        }
-        html.dark:not(.oled) ::-webkit-scrollbar-track { background: var(--kuzgun-brand); }
-        html.dark:not(.oled) ::-webkit-scrollbar-thumb { background: #245066; }
-        html.dark:not(.oled) ::-webkit-scrollbar-thumb:hover { background: #37667e; }
-    </style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
