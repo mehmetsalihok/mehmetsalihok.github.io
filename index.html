@@ -386,7 +386,7 @@
                         <button role="tab" data-history-tab="transactions" onclick="setHistoryTab('transactions')" class="px-2 py-1 rounded-lg font-semibold">İşlemler</button>
                         <button role="tab" data-history-tab="pending" onclick="setHistoryTab('pending')" class="px-2 py-1 rounded-lg font-semibold">Beklemede kapananlar</button>
                     </div>
-                    <p id="pendingHistoryNote" class="hidden text-[9px] leading-relaxed text-slate-500 dark:text-slate-400">Canlı: site çalışırken kaydedilen kapanış. Geçmişte: mevcut strateji ve slot sayısıyla geçmiş mumlardan hesaplanan tahmin. Slot boşalmadan hedefe ulaşanlar gösterilir. Saatler mum kapanışına göredir; portföye dahil değildir.</p>
+                    <p id="pendingHistoryNote" class="hidden text-[9px] leading-relaxed text-slate-500 dark:text-slate-400">Site çalışırken kaydedilen ve geçmiş mumlardan hesaplanan bekleme kapanışları birlikte gösterilir. Slot boşalmadan hedefe ulaşanlar listelenir; geçmiş hesaplamalarda saatler mum kapanışına göredir. Portföye dahil değildir.</p>
                     <!-- Swift Tarzı Sayfa Gösterge Noktaları & Sayfalama Kontrolleri -->
                     <div id="historyPaginationControls" class="flex items-center justify-between px-1 text-[11px]">
                         <button onclick="prevHistoryPage()" id="btnPrevHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">‹</button>
@@ -702,16 +702,14 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=8"></script>
-    <script src="app.js?v=60"></script>
+    <script src="app.js?v=61"></script>
     <div id="monthlyLimitModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3" onclick="if(event.target===this) closeMonthlyLimitModal()">
         <section role="dialog" aria-modal="true" aria-labelledby="monthlyLimitTitle" aria-describedby="monthlyLimitExplanation" class="w-full max-w-4xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-2xl p-4 space-y-3">
             <div class="flex items-center justify-between gap-2"><h2 id="monthlyLimitTitle" class="text-sm font-bold">İşlem limitleri</h2><button id="monthlyLimitClose" type="button" onclick="closeMonthlyLimitModal()" aria-label="Pencereyi kapat" class="px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">✕</button></div>
             <p id="monthlyLimitTotals" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></p>
-            <p id="monthlyLimitExplanation" class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Gerçekleşen: Canlı ve Geçmişte işlem kayıtları. Beklemede kapananlar hariç. Kalan işlem, aylık kalan kâr / işlem başına hedef kâr hesabıyla tahmin edilir; zarar ve RSI çıkışlarıyla değişebilir. Toplama yalnızca aktif coinler dahildir. Portföy katkısı, bu ayki komisyon sonrası kârın başlangıç sermayesine oranıdır; açık pozisyon ve bekleme kârları hariçtir.</p>
-            <table class="w-full table-fixed"><thead class="text-[9px] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><tr><th class="w-[12%] pb-2 text-left">Coin</th><th class="w-[15%] pb-2 text-right">Canlı<br>İşlem / Katkı</th><th class="w-[15%] pb-2 text-right">Geçmişte<br>İşlem / Katkı</th><th class="w-[12%] pb-2 text-right">Kalan işlem</th><th class="w-[20%] pb-2 text-right">Kalan kâr / Limit</th><th class="w-[15%] pb-2 text-right">Toplam katkı</th><th class="w-[11%] pb-2 text-right">Durum</th></tr></thead><tbody id="monthlyLimitRows"></tbody></table>
-            <div class="grid grid-cols-3 gap-2 border-t border-slate-200 dark:border-slate-700 pt-3">
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 p-2 space-y-1"><p class="text-[10px] text-slate-500">Canlı toplam</p><p id="monthlyLimitLiveTotal" class="text-[11px] font-bold tabular-nums"></p><p id="monthlyLimitLiveGain"></p></div>
-                <div class="rounded-xl bg-slate-50 dark:bg-slate-800 p-2 space-y-1"><p class="text-[10px] text-slate-500">Geçmişte toplam</p><p id="monthlyLimitPastTotal" class="text-[11px] font-bold tabular-nums"></p><p id="monthlyLimitPastGain"></p></div>
+            <p id="monthlyLimitExplanation" class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Gerçekleşen: kayıtlı kapanışlar ve portföye kabul edilen geçmiş hesaplamalar birlikte gösterilir. Beklemede kapananlar hariç. Kalan işlem, aylık kalan kâr / işlem başına hedef kâr hesabıyla tahmin edilir; zarar ve RSI çıkışlarıyla değişebilir. Toplama yalnızca aktif coinler dahildir. Portföy katkısı, bu ayki komisyon sonrası kârın başlangıç sermayesine oranıdır; açık pozisyon ve bekleme kârları hariçtir.</p>
+            <table class="w-full table-fixed"><thead class="text-[9px] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><tr><th class="w-[12%] pb-2 text-left">Coin</th><th class="w-[30%] pb-2 text-right">Kapanan işlemler</th><th class="w-[12%] pb-2 text-right">Kalan işlem</th><th class="w-[20%] pb-2 text-right">Kalan kâr / Limit</th><th class="w-[15%] pb-2 text-right">Toplam katkı</th><th class="w-[11%] pb-2 text-right">Durum</th></tr></thead><tbody id="monthlyLimitRows"></tbody></table>
+            <div class="grid grid-cols-1 gap-2 border-t border-slate-200 dark:border-slate-700 pt-3">
                 <div class="rounded-xl bg-blue-50 dark:bg-blue-950/30 p-2 space-y-1"><p class="text-[10px] text-blue-600 dark:text-blue-400">Genel toplam</p><p id="monthlyLimitAllTotal" class="text-[11px] font-bold tabular-nums"></p><p id="monthlyLimitAllGain"></p></div>
             </div>
         </section>

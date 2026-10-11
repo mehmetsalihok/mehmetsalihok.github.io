@@ -150,6 +150,21 @@ function formatTradeDuration(entryTime, exitTime) {
     return hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`;
 }
 
+// Aynı alım sinyalinin kayıtlı ve simüle kapanışını ekranda tek göster.
+// Çıkış saatleri mum teyidi nedeniyle farklı olabilir; kayıtlı kapanış önceliklidir.
+function isSameTradeSignal(first, second) {
+    const sameCoin = (first.coinId && second.coinId && first.coinId === second.coinId)
+        || (first.symbol && second.symbol && first.symbol === second.symbol);
+    if (!sameCoin) return false;
+    if (first.id && second.id && first.id === second.id) return true;
+    const firstEntry = Number(first.entryTime), secondEntry = Number(second.entryTime);
+    return firstEntry > 0 && secondEntry > 0 && firstEntry === secondEntry;
+}
+
+function withoutRecordedSignalCopies(simulated, recorded) {
+    return simulated.filter(trade => !recorded.some(record => isSameTradeSignal(trade, record)));
+}
+
 function getCoinDisplayTrades(coin) {
     const realTrades = (KZ_STATE.closedTrades || [])
         .filter(t => t.coinId === coin.id || t.symbol === coin.symbol)
@@ -161,7 +176,7 @@ function getCoinDisplayTrades(coin) {
             isRealTrade: true
         }));
 
-    const combined = [...realTrades, ...(coin.simLastTrades || [])]
+    const combined = [...realTrades, ...withoutRecordedSignalCopies(coin.simLastTrades || [], realTrades)]
         .sort((a, b) => Number(b.exitTime || 0) - Number(a.exitTime || 0));
     const seen = new Set();
     return combined.filter(t => {
@@ -1092,13 +1107,14 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
         (t.coinId === coin.id || t.symbol === coin.symbol) &&
         (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === selectedMonthKey
     ).sort((a, b) => b.exitTime - a.exitTime);
-    const rows = [...realTrades.map(t => ({...t, isReal: true})), ...trades.map(t => ({...t, isReal: false}))]
+    const uniqueSimTrades = withoutRecordedSignalCopies(trades, realTrades);
+    const rows = [...realTrades.map(t => ({...t, isReal: true})), ...uniqueSimTrades.map(t => ({...t, isReal: false}))]
         .sort((a, b) => b.exitTime - a.exitTime || Number(b.isReal) - Number(a.isReal));
-    const acceptedPastCount = trades.filter(t => KZ_STATE.acceptedTradeIds?.has(t.id)).length;
-    const excludedCount = trades.length - acceptedPastCount;
+    const acceptedPastCount = uniqueSimTrades.filter(t => KZ_STATE.acceptedTradeIds?.has(t.id)).length;
+    const excludedCount = uniqueSimTrades.length - acceptedPastCount;
     if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent =
-        `${realTrades.length} canlı · ${acceptedPastCount} geçmiş slot · ${excludedCount} slota alınmadı · ${rows.length} satır`;
-    if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Bağımsız coin simülasyonunun aylık kârı; aşağıdaki canlı ve geçmiş slot sonuçlarının toplamı değildir.';
+        `${realTrades.length + acceptedPastCount} kapanan işlem · ${excludedCount} slota alınmadı · ${rows.length} satır`;
+    if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Bağımsız coin stratejisinin aylık simülasyon kârı; portföye geçen işlemlerin toplamı değildir.';
     if (modalActiveMonthLockBadge) modalActiveMonthLockBadge.title = 'Kilit işlem adedine değil aylık kâr yüzdesine göre hesaplanır.';
     const compact = window.innerWidth < 640;
     const availableHeight = Math.min(window.innerHeight * .92, window.innerHeight - 24);
@@ -1116,7 +1132,7 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
             </tr></thead><tbody>${visible.map(t => {
                 const pnl = Number(t.isReal ? t.pnlPercent : t.pnl);
                 const accepted = KZ_STATE.acceptedTradeIds?.has(t.id);
-                const status = t.isReal ? '● Kayıtlı' : accepted ? '✓ Slot sim.' : '◷ Slota alınmadı';
+                const status = t.isReal || accepted ? '✓ Kapanan işlem' : '◷ Slota alınmadı';
                 const statusColor = t.isReal || accepted ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400';
                 const duration = t.duration || (() => { const mins = Math.max(0, Math.round((t.exitTime - t.entryTime)/60000)); return mins >= 60 ? `${Math.floor(mins/60)}sa ${mins%60}dk` : `${mins}dk`; })();
                 return `<tr>
@@ -1281,7 +1297,7 @@ function getPendingHistoryTrades() {
 function getTransactionHistoryTrades() {
     const records = new Map();
     const key = trade => trade.id || `${trade.coinId || trade.symbol}_${trade.entryTime}_${trade.exitTime}`;
-    (KZ_STATE.executedGlobalTrades || []).filter(trade => !trade.source).forEach(trade =>
+    withoutRecordedSignalCopies((KZ_STATE.executedGlobalTrades || []).filter(trade => !trade.source), KZ_STATE.closedTrades || []).forEach(trade =>
         records.set(key(trade), {...trade, historyOrigin: 'past'}));
     // Canlı kaydın ham oranı yerine portföy motorunun komisyon sonrası oranını göster.
     const calculated = new Map((KZ_STATE.executedGlobalTrades || []).map(trade => [key(trade), trade]));
@@ -1299,10 +1315,7 @@ function getTransactionHistoryTrades() {
 }
 
 function historyOriginBadge(trade) {
-    const live = trade.historyOrigin === 'live' || trade.source === 'pending';
-    return live
-        ? '<span class="text-[9px] px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400" title="Site çalışırken kaydedildi">Canlı</span>'
-        : '<span class="text-[9px] px-1.5 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400" title="Geçmiş mumlardan hesaplandı; gerçek işlem kaydı değildir">Geçmişte</span>';
+    return '';
 }
 
 function setHistoryTab(tab) {
@@ -1598,7 +1611,7 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
     const pastCount = active.reduce((sum,row) => sum + row.past,0);
     const liveGain = active.reduce((sum,row) => sum + row.liveGainUsd,0);
     const pastGain = active.reduce((sum,row) => sum + row.pastGainUsd,0);
-    for (const [kind,count,gain] of [['Live',liveCount,liveGain],['Past',pastCount,pastGain],['All',liveCount+pastCount,liveGain+pastGain]]) {
+    for (const [kind,count,gain] of [['All',liveCount+pastCount,liveGain+pastGain]]) {
         const label = document.getElementById('monthlyLimit'+kind+'Total');
         label.textContent = `${count} işlem · ${contributionText(gain)}`;
         const amount = document.getElementById('monthlyLimit'+kind+'Gain');
@@ -1613,8 +1626,7 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
         const tr = document.createElement('tr');
         tr.className = 'border-b border-slate-100 dark:border-slate-800 '+(row.locked ? 'text-rose-600 dark:text-rose-400 ' : '')+(row.active ? '' : 'opacity-50');
         const cells = [String(row.coin.displaySymbol || row.coin.symbol).replace('USDT',''),
-            `${row.live} · ${contributionText(row.liveGainUsd)}`,
-            `${row.past} · ${contributionText(row.pastGainUsd)}`,
+            `${row.count}`,
             row.remaining === null ? '—' : `≈ ${row.remaining}`,
             `%${row.remainingPnl.toFixed(2)} / %${row.cap.toFixed(1)}`,
             row.portfolioContribution === null ? '—' : `${row.portfolioContribution >= 0 ? '+' : '-'}%${Math.abs(row.portfolioContribution).toFixed(2)}`,
@@ -1622,8 +1634,8 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
         cells.forEach((value, index) => {
             const td = document.createElement('td');
             td.className = 'py-1.5 px-1 text-[10px] tabular-nums '+(index === 0 ? 'font-bold' : 'text-right');
-            if (index === 5 && !row.locked && row.portfolioContribution !== null) td.className += row.portfolioContribution >= 0 ? ' text-emerald-600 dark:text-emerald-400 font-semibold' : ' text-rose-600 dark:text-rose-400 font-semibold';
-            if (index === 5) td.title = `Bu ay komisyon sonrası portföy katkısı: ${row.netGainUsd.toFixed(2)} USDT. Başlangıç sermayesine göre yüzde.`;
+            if (index === 4 && !row.locked && row.portfolioContribution !== null) td.className += row.portfolioContribution >= 0 ? ' text-emerald-600 dark:text-emerald-400 font-semibold' : ' text-rose-600 dark:text-rose-400 font-semibold';
+            if (index === 4) td.title = `Bu ay komisyon sonrası portföy katkısı: ${row.netGainUsd.toFixed(2)} USDT. Başlangıç sermayesine göre yüzde.`;
             td.textContent = value;
             tr.append(td);
         });
@@ -1657,7 +1669,7 @@ function coinCardMonthSummary(coin) {
     const matches = t => (t.coinId === coin.id || t.symbol === coin.symbol)
         && (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === month;
     const slot = (KZ_STATE.closedTrades || []).filter(matches);
-    const simulation = (KZ_STATE.executedGlobalTrades || []).filter(t => !t.source && matches(t));
+    const simulation = withoutRecordedSignalCopies((KZ_STATE.executedGlobalTrades || []).filter(t => !t.source && matches(t)), slot);
     const livePending = (KZ_STATE.pendingClosedTrades || []).filter(matches).length;
     const simPending = (KZ_STATE.simulatedPendingClosedTrades || []).filter(matches).length;
     const sum = list => list.reduce((total, t) => total + Number(t.pnlPercent || 0), 0);
@@ -1671,17 +1683,11 @@ function coinCardMonthSummary(coin) {
     const monthLabel = new Date().toLocaleDateString('tr-TR', {timeZone: 'Europe/Istanbul', month: 'long'});
     return `
         <div class="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400"><span class="font-semibold uppercase tracking-wider">BU AY · ${monthLabel}</span><span>Hedef kâr <strong class="text-blue-600 dark:text-blue-400">%${Number(coin.profitTarget).toFixed(1)}</strong></span></div>
-        <div class="grid grid-cols-2 gap-2">
-            <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-2">
-                <div class="text-[9px] text-slate-500 dark:text-slate-400">Slotta kapanan</div>
-                <div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${slot.length} işlem</strong>${pnlHtml(slotPnl)}</div>
-            </div>
-            <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-2" title="Portföy filtresinden geçen geçmiş simülasyonlar">
-                <div class="text-[9px] text-slate-500 dark:text-slate-400">Geçmişte</div>
-                <div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${simulation.length} işlem</strong>${pnlHtml(simPnl)}</div>
-            </div>
+        <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-2" title="Kayıtlı kapanışlar ve portföy filtresinden geçen geçmiş hesaplamalar birlikte gösterilir.">
+            <div class="text-[9px] text-slate-500 dark:text-slate-400">Kapanan işlemler</div>
+            <div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${slot.length + simulation.length} işlem</strong>${pnlHtml(slotPnl + simPnl)}</div>
         </div>
-        <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><span><strong class="text-emerald-600 dark:text-emerald-400">${livePending} Canlı</strong><span class="mx-1.5">·</span><strong class="text-amber-600 dark:text-amber-400">${simPending} Geçmişte</strong></span></div>
+        <div class="flex flex-wrap items-center justify-between gap-1 text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><strong class="text-amber-600 dark:text-amber-400">${livePending + simPending} işlem</strong></div>
         <div class="space-y-1" title="Kilit, mevcut aylık strateji ve işlem sonuçlarıyla belirlenir. Bekleme sonuçları dahil değildir.">
             <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Aylık limit <strong class="text-indigo-600 dark:text-indigo-400">%${cap.toFixed(1)}</strong></span><span>${isCoinMonthlyLocked(coin) ? '🔒 Kilitli' : 'Kalan %' + Math.max(0, cap - lockPnl).toFixed(2)}</span></div>
             <div class="h-1 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden"><div class="h-full rounded-full bg-indigo-500" style="width:${progress}%"></div></div>
@@ -2451,7 +2457,7 @@ function renderPendingSignalsList() {
 }
 
 function clearHistory() {
-    const message = KZ_STATE.historyTab === 'pending' ? 'Canlı bekleme geçmişi sıfırlansın mı? Geçmiş simülasyonu mum verilerinden yeniden hesaplanır.' : 'Canlı işlem kayıtları sıfırlansın mı? Geçmişte hesaplanan işlemler strateji verilerinden yeniden oluşturulur.';
+    const message = KZ_STATE.historyTab === 'pending' ? 'Kayıtlı bekleme geçmişi sıfırlansın mı? Geçmiş hesaplamalar mum verilerinden yeniden oluşturulur.' : 'Kayıtlı işlem geçmişi sıfırlansın mı? Geçmiş hesaplamalar strateji verilerinden yeniden oluşturulur.';
     if (confirm(message)) {
         if (KZ_STATE.historyTab === 'pending') {
             KZ_STATE.pendingClosedTrades = [];
