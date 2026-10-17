@@ -43,7 +43,7 @@
         .dark ::-webkit-scrollbar-thumb { background: #334155; }
         .dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
 
-        /* 🌑 SAF OLED SİYAH MOTORU */
+        /*  SAF OLED SİYAH MOTORU */
         html.oled, 
         html.oled body {
             background-color: #000000 !important;
@@ -77,10 +77,60 @@
         html.oled ::-webkit-scrollbar-thumb { background: #262626 !important; }
         html.oled ::-webkit-scrollbar-thumb:hover { background: #333333 !important; }
     </style>
+<style>
+/* Unified settings workspace */
+:root{--page:#f3f5f8;--surface:#fff;--line:#e3e7ed;--ink:#172335;--muted:#657388;--accent:#255edb;--field:#f8fafc}
+html.dark{--page:#0d1420;--surface:#131e2e;--line:#293548;--ink:#ecf1f8;--muted:#9ba9bc;--accent:#82a9ff;--field:#172437}
+html.oled{--page:#000;--surface:#000;--line:#252525;--field:#0a0a0a}
+body{background:var(--page)!important;color:var(--ink);line-height:1.6}
+header{background:var(--surface)!important;border-color:var(--line)!important;position:relative!important}
+header>div{max-width:1220px!important;height:auto!important;min-height:64px;padding:12px 24px;flex-wrap:wrap;overflow:visible!important}
+.settings-main{width:100%;max-width:1200px;margin:40px auto 0;padding:0 24px 28px}
+.settings-shell{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px #0c1d3810}
+.settings-heading{padding:32px 36px 26px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--muted);margin-bottom:8px}
+.settings-heading h1{font-size:28px;font-weight:700;letter-spacing:-.04em;line-height:1.25;margin-bottom:8px}
+.settings-heading p:not(.eyebrow){font-size:13px;color:var(--muted)}
+.save-note{font-size:11px;color:var(--muted);white-space:nowrap}
+.settings-tabs{display:flex;gap:26px;padding:0 36px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:thin}
+.settings-tabs button{white-space:nowrap;padding:15px 0;border-bottom:2px solid transparent;font-size:12px;font-weight:600;color:var(--muted)}
+.settings-tabs button[aria-selected=true]{color:var(--accent);border-color:var(--accent)}
+.settings-tabs button:hover{color:var(--accent)}
+.settings-content{padding:32px 36px 36px;min-height:440px}
+.settings-section{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;max-width:900px;margin:0 auto}
+.settings-section[hidden]{display:none!important}
+.settings-section>div{margin-top:24px}
+.settings-section>div:first-child{margin-top:0;padding-bottom:22px;border-bottom:1px solid var(--line)!important}
+.settings-section h2{font-size:17px!important;letter-spacing:-.02em!important;text-transform:none!important;font-weight:650!important;color:var(--ink)!important}
+.settings-section p{font-size:12px!important;line-height:1.75!important;color:var(--muted)}
+.settings-section h2+p{margin-top:5px}
+/* Rows and separators replace the former nested cards. */
+.settings-section div[class*="rounded"],.settings-section label[class*="rounded"]{border-radius:0!important;box-shadow:none!important;background:transparent!important;border-left:0!important;border-right:0!important;border-top:0!important;border-bottom-color:var(--line)!important}
+.settings-section div[class*="rounded"]{padding-left:0!important;padding-right:0!important}
+.settings-section div[class*="w-10"][class*="h-5"]{border-radius:999px!important;background:#b3bdcc!important;padding:0!important;border:0!important}
+.settings-section input.peer:checked+div{background:#2563eb!important}
+.settings-section input,.settings-section select{font-size:13px!important;accent-color:#2563eb}
+.settings-section input:not([type=checkbox]):not([type=hidden]),.settings-section select{min-height:42px;border-radius:6px!important;color:var(--ink)!important;background:var(--field)!important}
+.settings-section input:not([type=checkbox]):not([type=hidden]){padding:8px 12px!important}
+.settings-section button{min-height:36px;border-radius:6px!important;font-size:11px!important;letter-spacing:0!important;font-weight:600!important}
+.settings-section button[onclick^="stepSlots"]{width:auto!important;padding:0 12px}
+.settings-section span[class*="font-bold"],.settings-section strong{font-weight:600}
+.settings-section label[class*="border"]{border-bottom:1px solid var(--line)!important}
+.settings-section label:has(input.sr-only){min-width:40px}
+.settings-section input:focus-visible,.settings-section select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent)!important;outline-offset:3px}
+.settings-section .peer:focus-visible+div{outline:2px solid var(--accent);outline-offset:3px}
+.settings-summary{border-top:1px solid var(--line);padding:22px 36px;display:flex;gap:18px 30px;flex-wrap:wrap;background:var(--field)}
+.settings-summary>div{display:flex;flex-direction:column;gap:3px;flex:1;min-width:100px}
+.settings-summary span,.settings-summary small{color:var(--muted);font-size:10px}
+.settings-summary strong{font-size:12px;font-weight:600;color:var(--ink)}
+.settings-footnote{padding:18px 0 0;text-align:center;font-size:10px;color:var(--muted)}
+@media(max-width:700px){.settings-main{margin-top:18px;padding:0 12px 20px}.settings-heading{padding:24px 20px;display:block}.settings-heading h1{font-size:24px}.save-note{display:block;margin-top:12px}.settings-tabs{padding:0 20px;gap:22px}.settings-content{padding:24px 20px}.settings-summary{padding:20px;gap:18px}.settings-section .grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-section .flex{flex-wrap:wrap}.settings-section label.relative{margin-left:auto}.settings-section .flex:has(>label.relative){flex-wrap:nowrap}.settings-section input{min-width:0}.settings-section div:has(> #inputBalance),.settings-section div:has(> #inputTelegramChatId){flex-wrap:wrap}header>div{padding:12px 16px}header nav{display:flex!important;flex-wrap:wrap}header>div>div:first-child{flex-wrap:wrap;gap:12px}header nav{border-left:0!important;padding-left:0!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+</style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
-    <!-- 1️⃣ ORTAK ÜST KONSOL -->
+    <!-- 1 ORTAK ÜST KONSOL -->
     <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
             
@@ -99,103 +149,28 @@
 
             <div class="flex items-center space-x-4 text-xs shrink-0">
                 <a href="index.html" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition shadow-sm flex items-center space-x-1.5">
-                    <span>← Canlı Terminal</span>
+                    <span> Canlı Terminal</span>
                 </a>
 
-                <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
+                
 
-                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton -->
+                <!--  3 Aşamalı Tema Değiştirici Buton -->
                 <button onclick="cycleTheme()" class="px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0 flex items-center space-x-1.5" title="Tema: Açık / Koyu / OLED">
-                    <svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    <svg id="themeIconDark" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                    </svg>
-                    <span id="themeBadgeOled" class="hidden text-[10px] font-black px-1.5 py-0.5 rounded bg-black text-white border border-neutral-700 uppercase tracking-wider">OLED</span>
+                    
+                    
+                    <span id="themeLabel">Tema: Açık</span>
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- 2️⃣ GENİŞ EKRAN DASHBOARD YERLEŞİMİ -->
-    <main class="max-w-[1780px] w-full mx-auto px-6 py-6 flex-1">
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-
-            <!-- SOL SÜTUN -->
-            <aside class="lg:col-span-3 space-y-4">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-3.5 shadow-sm space-y-1">
-                    <div class="px-3 py-2 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">AYAR KATEGORİLERİ</div>
-                    
-                    <button onclick="scrollToSection('secCapital')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
-                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">💵</span>
-                        <span class="flex-1">Sermaye & Zaman</span>
-                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
-                    </button>
-                    
-                    <button onclick="scrollToSection('secRules')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
-                        <span class="text-indigo-600 dark:text-indigo-400 font-bold">⚙️</span>
-                        <span class="flex-1">İşlem & Slot Kuralları</span>
-                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
-                    </button>
-
-                    <button onclick="scrollToSection('secTelegram')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
-                        <span class="text-blue-600 dark:text-blue-400 font-bold">✈️</span>
-                        <span class="flex-1">Telegram Sinyal Botu</span>
-                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
-                    </button>
-
-                    <button onclick="scrollToSection('secAlerts')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
-                        <span class="text-amber-600 dark:text-amber-400 font-bold">🔔</span>
-                        <span class="flex-1">Bildirim & Sesler</span>
-                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
-                    </button>
-
-                    <button onclick="scrollToSection('secHealth')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
-                        <span class="text-emerald-600 dark:text-emerald-400 font-bold">●</span>
-                        <span class="flex-1">Sistem Sağlığı</span>
-                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
-                    </button>
-
-                    <button onclick="scrollToSection('secBackup')" class="w-full flex items-center space-x-2.5 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition text-left group">
-                        <span class="text-violet-600 dark:text-violet-400 font-bold">⇅</span>
-                        <span class="flex-1">Yedekle ve Geri Yükle</span>
-                        <span class="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
-                    </button>
-                </div>
-
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
-                    <div class="flex items-center space-x-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                        <span class="text-xs">🛡️</span>
-                        <span class="text-xs font-bold text-slate-900 dark:text-white">KUZGUN ENGINE</span>
-                    </div>
-                    <div class="space-y-2 text-xs">
-                        <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                            <span>Sürüm:</span>
-                            <span class="font-bold text-slate-900 dark:text-white font-mono text-[11px]">v1.5.0</span>
-                        </div>
-                        <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                            <span>Platform:</span>
-                            <span class="font-semibold text-emerald-600 dark:text-emerald-400">Binance Spot</span>
-                        </div>
-                        <div class="flex justify-between items-center text-slate-500 dark:text-slate-400">
-                            <span>Geliştirici:</span>
-                            <span class="font-mono text-[10px] text-slate-700 dark:text-slate-300">codemso</span>
-                        </div>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- ORTA SÜTUN -->
-            <div class="lg:col-span-6 space-y-5">
-
-                <!-- PANEL 1: SERMAYE VE ZAMAN YÖNETİMİ -->
-                <section id="secCapital" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+    <!-- 2 GENİŞ EKRAN DASHBOARD YERLEŞİMİ -->
+    <main class="settings-main"><article class="settings-shell"><div class="settings-heading"><div><p class="eyebrow">KUZGUN / YÖNETİM</p><h1>Sistem ayarları</h1><p>Portföyünüzü, işlem kurallarınızı ve bildirimlerinizi yönetin.</p></div><span class="save-note">Ayarlar ilgili alandan kaydedilir.</span></div><nav class="settings-tabs" role="tablist" aria-label="Ayar kategorileri"><button type="button" id="tab-secCapital" role="tab" aria-controls="secCapital" aria-selected="true" tabindex="0" onclick="selectSettingsTab('secCapital')">Sermaye ve zaman</button><button type="button" id="tab-secRules" role="tab" aria-controls="secRules" aria-selected="false" tabindex="-1" onclick="selectSettingsTab('secRules')">İşlem kuralları</button><button type="button" id="tab-secTelegram" role="tab" aria-controls="secTelegram" aria-selected="false" tabindex="-1" onclick="selectSettingsTab('secTelegram')">Telegram</button><button type="button" id="tab-secAlerts" role="tab" aria-controls="secAlerts" aria-selected="false" tabindex="-1" onclick="selectSettingsTab('secAlerts')">Bildirim ve ses</button><button type="button" id="tab-secHealth" role="tab" aria-controls="secHealth" aria-selected="false" tabindex="-1" onclick="selectSettingsTab('secHealth')">Sistem sağlığı</button><button type="button" id="tab-secBackup" role="tab" aria-controls="secBackup" aria-selected="false" tabindex="-1" onclick="selectSettingsTab('secBackup')">Yedekleme</button></nav><div class="settings-content"><section id="secCapital" class="settings-section" role="tabpanel" aria-labelledby="tab-secCapital">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                         <div class="flex items-center space-x-2.5">
-                            <span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">💵</span>
+                            
                             <div>
-                                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">SERMAYE VE ZAMAN YÖNETİMİ</h2>
+                                <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Sermaye ve zaman</h2>
                                 <p class="text-[11px] text-slate-400">Portföy başlangıç sermayesi ve getiri hesaplama zaman çizelgesi</p>
                             </div>
                         </div>
@@ -214,19 +189,19 @@
                                 2025 (Geçmiş Yıl)
                             </button>
                         </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 Sistem seçilen yıla ait tüm aylık mumları tarayarak kâr ve kilitlenme tablosunu oluşturur.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400"> Sistem seçilen yıla ait tüm aylık mumları tarayarak kâr ve kilitlenme tablosunu oluşturur.</p>
                     </div>
 
                     <div class="space-y-1.5 border-t border-slate-100 dark:border-slate-800 pt-3">
                         <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">BAŞLANGIÇ SERMAYESİ (USDT)</label>
                         <div class="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500 transition">
                             <span class="font-bold text-base text-slate-400 pl-2">$</span>
-                            <input type="number" id="inputBalance" step="10" placeholder="1000.00" oninput="updateLivePreview()"
+                            <input type="number" id="inputBalance" aria-label="Başlangıç sermayesi (USDT)" step="10" placeholder="1000.00" oninput="updateLivePreview()"
                                 class="w-full bg-transparent font-bold text-base text-slate-900 dark:text-white focus:outline-none tabular-nums">
                             <span class="text-xs font-bold text-slate-400 pr-2">USDT</span>
                             <button onclick="saveBalance()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs rounded-lg transition shadow-sm shrink-0">KAYDET</button>
                         </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 İşlem pozisyon büyüklükleri ve toplam bakiye artışı bu tutar üzerinden hesaplanır.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400"> İşlem pozisyon büyüklükleri ve toplam bakiye artışı bu tutar üzerinden hesaplanır.</p>
                     </div>
 
                     <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
@@ -251,16 +226,13 @@
                             <button onclick="setQuickDate('3d')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">3 Gün Önce</button>
                             <button onclick="setQuickDate('year_start')" class="py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/60 text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-blue-600 transition text-center">Yıl Başı</button>
                         </div>
-                        <p class="text-[11px] text-slate-500 dark:text-slate-400">💡 Cüzdanınız seçtiğiniz tarih ve saatteki paranızla başlatılır.</p>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400"> Cüzdanınız seçtiğiniz tarih ve saatteki paranızla başlatılır.</p>
                     </div>
-                </section>
-
-                <!-- PANEL 2: İŞLEM MOTORU & SLOT KURALLARI -->
-                <section id="secRules" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                </section><section id="secRules" class="settings-section" role="tabpanel" aria-labelledby="tab-secRules" hidden>
                     <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <span class="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">⚙️</span>
+                        
                         <div>
-                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">İŞLEM MOTORU & SLOT FİLTRELERİ</h2>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">İşlem kuralları ve kapasite</h2>
                             <p class="text-[11px] text-slate-400">Kapasite çakışması, borsa komisyonları ve TradingView teyitleri</p>
                         </div>
                     </div>
@@ -271,9 +243,9 @@
                             <span id="txtSlotCount" class="font-extrabold text-sm text-slate-900 dark:text-white">2 Pozisyon (%50 Bütçe / İşlem)</span>
                         </div>
                         <div class="flex items-center space-x-2 bg-white dark:bg-slate-700 p-1 rounded-xl border border-slate-200 dark:border-slate-600 shadow-sm">
-                            <button onclick="stepSlots(-1)" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-600 font-black text-sm text-slate-700 dark:text-slate-200 transition">-</button>
+                            <button onclick="stepSlots(-1)" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-600 font-black text-sm text-slate-700 dark:text-slate-200 transition" aria-label="Slot sayısını azalt">Azalt</button>
                             <span id="displaySlotsValue" class="w-8 text-center font-black text-sm text-slate-900 dark:text-white tabular-nums">2</span>
-                            <button onclick="stepSlots(1)" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-600 font-black text-sm text-slate-700 dark:text-slate-200 transition">+</button>
+                            <button onclick="stepSlots(1)" class="w-8 h-8 rounded-lg bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-600 font-black text-sm text-slate-700 dark:text-slate-200 transition" aria-label="Slot sayısını artır">Artır</button>
                         </div>
                     </div>
 
@@ -284,7 +256,7 @@
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken slot kapasitesini aşan çakışan işlemler geçmiş portföyden elenir, net gerçek kâr hesaplanır. Kapalıyken tüm coinlerin geçmiş kârları doğrudan toplanır.</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                                <input type="checkbox" id="toggleSlotConstraint" onchange="handleToggle('slotConstraint')" class="sr-only peer">
+                                <input type="checkbox" id="toggleSlotConstraint" aria-label="Slot çakışma filtresi" onchange="handleToggle('slotConstraint')" class="sr-only peer">
                                 <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
@@ -295,7 +267,7 @@
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken alım ve satımda BNB indirimli Binance Spot komisyonu (%0.075 Alış + %0.075 Satış, Toplam %0.15) düşülerek net reel getiri hesaplanır.</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                                <input type="checkbox" id="toggleFeeDeduction" onchange="handleToggle('feeDeduction')" class="sr-only peer">
+                                <input type="checkbox" id="toggleFeeDeduction" aria-label="Komisyon kesintisi" onchange="handleToggle('feeDeduction')" class="sr-only peer">
                                 <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
@@ -306,19 +278,16 @@
                                 <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">Açıkken alım için önceki mumun kapanış RSI değerinin alım sınırında kapatmış olması şart koşulur (TradingView ile birebir aynı). Kapalıyken anlık 1 saniyelik iğne kırılımları baz alınır.</p>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
-                                <input type="checkbox" id="toggleCandleClose" onchange="handleToggle('candleClose')" class="sr-only peer">
+                                <input type="checkbox" id="toggleCandleClose" aria-label="Mum kapanış teyidi" onchange="handleToggle('candleClose')" class="sr-only peer">
                                 <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
                     </div>
-                </section>
-
-                <!-- PANEL 3: TELEGRAM BOTU & BİLDİRİMLER -->
-                <section id="secTelegram" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                </section><section id="secTelegram" class="settings-section" role="tabpanel" aria-labelledby="tab-secTelegram" hidden>
                     <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">✈️</span>
+                        
                         <div>
-                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">TELEGRAM SİNYAL BOTU</h2>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Telegram bildirimleri</h2>
                             <p class="text-[11px] text-slate-400">Dört ayrı bot: alım, bekleme, sistem ve satım bildirimleri</p>
                         </div>
                     </div>
@@ -327,7 +296,7 @@
                         <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">TELEGRAM CHAT ID</label>
                         <div class="flex items-center space-x-2 p-2 bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-xl focus-within:border-blue-500 transition">
                             <span class="text-slate-400 font-bold text-sm pl-2">#</span>
-                            <input type="text" id="inputTelegramChatId" placeholder="Örn: 1059064615"
+                            <input type="text" id="inputTelegramChatId" aria-label="Telegram Chat ID" placeholder="Örn: 1059064615"
                                 class="w-full bg-transparent font-semibold text-xs text-slate-900 dark:text-white focus:outline-none font-mono">
                             <button onclick="saveTelegramId()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-lg transition shrink-0 shadow-sm">Kaydet</button>
                         </div>
@@ -363,12 +332,9 @@
                         <div class="flex gap-2"><button type="button" onclick="saveSellTelegramSettings()" class="px-3 py-1.5 text-xs rounded-lg bg-rose-500 text-white font-semibold">Kaydet</button><button type="button" onclick="testSellTelegram()" class="px-3 py-1.5 text-xs rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200">Satım botunu test et</button></div>
                         <p class="text-[10px] text-slate-400">BotFather’da /newbot ile bot oluştur, yeni botun sohbetinde Başlat’a bas. Token ve Chat ID yedeğe dahil edilmez.</p>
                     </div>
-                </section>
-
-                <!-- PANEL 4: SİSTEM SESLERİ VE UYARILAR -->
-                <section id="secAlerts" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                </section><section id="secAlerts" class="settings-section" role="tabpanel" aria-labelledby="tab-secAlerts" hidden>
                     <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <span class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-xs">🔔</span>
+                        
                         <div>
                             <h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">BİLDİRİM VE UYARI AYARLARI</h2>
                             <p class="text-[11px] text-slate-400">Tarayıcı içi görsel ve sesli alarm kontrolleri</p>
@@ -379,7 +345,7 @@
                         <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/70">
                             <span class="font-semibold text-xs text-slate-900 dark:text-white">Alım Sinyali Bildirimleri</span>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="toggleBuyNotification" onchange="handleToggle('buyNotification')" class="sr-only peer">
+                                <input type="checkbox" id="toggleBuyNotification" aria-label="Alım bildirimi" onchange="handleToggle('buyNotification')" class="sr-only peer">
                                 <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
@@ -387,7 +353,7 @@
                         <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/70">
                             <span class="font-semibold text-xs text-slate-900 dark:text-white">Satım / Kâr Bildirimleri</span>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="toggleSellNotification" onchange="handleToggle('sellNotification')" class="sr-only peer">
+                                <input type="checkbox" id="toggleSellNotification" aria-label="Satım bildirimi" onchange="handleToggle('sellNotification')" class="sr-only peer">
                                 <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
@@ -395,10 +361,10 @@
                         <div class="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/70">
                             <div class="flex items-center space-x-2">
                                 <span class="font-semibold text-xs text-slate-900 dark:text-white">Sistem Ses Efektleri</span>
-                                <button onclick="testChimeSound()" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline">(Sesi Sına 🔊)</button>
+                                <button onclick="testChimeSound()" class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline">(Sesi Sına )</button>
                             </div>
                             <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="toggleSound" onchange="handleToggle('sound')" class="sr-only peer">
+                                <input type="checkbox" id="toggleSound" aria-label="Sesli bildirimler" onchange="handleToggle('sound')" class="sr-only peer">
                                 <div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
                             </label>
                         </div>
@@ -407,7 +373,7 @@
                     <div class="p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/30 space-y-3">
                         <div class="flex items-start justify-between gap-3">
                             <div><span class="block text-xs font-bold text-slate-900 dark:text-white">30 saniyelik alım karar penceresi</span><p class="mt-0.5 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Açıkken sinyal ekranda görünür ve alarm çalar. Kapalıyken uygun sinyaller eski davranıştaki gibi doğrudan pozisyon açar; slot doluysa beklemeye alınır. Telegram alım bildirimi devam eder.</p></div>
-                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1"><input type="checkbox" id="toggleBuySignalWindow" onchange="saveBuySignalDecisionSettings()" class="sr-only peer"><div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div></label>
+                            <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1"><input type="checkbox" id="toggleBuySignalWindow" aria-label="Alım karar penceresi" onchange="saveBuySignalDecisionSettings()" class="sr-only peer"><div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div></label>
                         </div>
                         <label class="block space-y-1.5" for="buySignalTimeoutAction"><span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">30 saniye yanıt gelmezse</span><select id="buySignalTimeoutAction" onchange="saveBuySignalDecisionSettings()" class="w-full px-3 py-2.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"><option value="pending">Beklemeye al (önerilen)</option><option value="reject">Sinyali reddet</option><option value="accept">Güncel fiyatla otomatik pozisyon aç</option></select></label>
                         <p id="buySignalDecisionHint" class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400"></p>
@@ -416,23 +382,21 @@
                     <div class="p-3.5 rounded-xl border border-blue-200 dark:border-blue-900/70 bg-blue-50/50 dark:bg-blue-950/20 space-y-2.5">
                         <div><span class="block text-xs font-bold text-slate-900 dark:text-white">Alım Sinyali ve Alarm Testi</span><p class="mt-0.5 text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Bir coin seçerek gerçek karar penceresini ve yüklediğin <strong>alarm.mp3</strong> dosyasını güvenle test et.</p></div>
                         <div class="flex flex-wrap gap-2">
-                            <select id="alertTestCoinSelect" class="min-w-0 flex-1 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30"></select>
-                            <button type="button" onclick="startBuyAlertTest()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm transition shrink-0">Test Et 🔔</button>
-                            <button type="button" onclick="startBuyTelegramTest()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition shrink-0">Telegram’a Örnek Gönder ✉️</button>
+                            <select id="alertTestCoinSelect" aria-label="Test için coin seçimi" class="min-w-0 flex-1 px-3 py-2 rounded-lg border border-blue-200 dark:border-blue-800 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30"></select>
+                            <button type="button" onclick="startBuyAlertTest()" class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-sm transition shrink-0">Test Et </button>
+                            <button type="button" onclick="startBuyTelegramTest()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm transition shrink-0">Telegram’a Örnek Gönder </button>
                         </div>
                         <div id="alertTestStatus" class="text-[10px] text-slate-400">Alarm testi Telegram bildirimi göndermez. Telegram örneği gerçek işlem açmaz; güncel fiyatla TEST etiketli mesaj gönderir.</div>
                     </div>
-                </section>
-
-                <section id="secHealth" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                </section><section id="secHealth" class="settings-section" role="tabpanel" aria-labelledby="tab-secHealth" hidden>
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <div class="flex items-center space-x-2.5"><span class="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs">♥</span><div><h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">SİSTEM SAĞLIK KONTROLÜ</h2><p class="text-[11px] text-slate-400">VDS terminali, Binance akışı ve Telegram yaşam raporları</p></div></div>
+                        <div class="flex items-center space-x-2.5"><div><h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Sistem sağlığı</h2><p class="text-[11px] text-slate-400">VDS terminali, Binance akışı ve Telegram yaşam raporları</p></div></div>
                         <span id="healthSettingsBadge" class="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-bold">BEKLENİYOR</span>
                     </div>
 
                     <div class="space-y-3">
-                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80"><div><span class="font-bold text-xs text-slate-900 dark:text-white block">Sağlık kontrolünü etkinleştir</span><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Bağlantıyı ve fiyat akışını 15 saniyede bir denetler.</p></div><label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1"><input type="checkbox" id="toggleHealthEnabled" onchange="saveHealthSettings()" class="sr-only peer"><div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div></label></div>
-                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80"><div><span class="font-bold text-xs text-slate-900 dark:text-white block">Başlangıç bildirimi</span><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Terminal her açıldığında Telegram'a başlangıç raporu yollar.</p></div><label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1"><input type="checkbox" id="toggleHealthStartup" onchange="saveHealthSettings()" class="sr-only peer"><div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div></label></div>
+                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80"><div><span class="font-bold text-xs text-slate-900 dark:text-white block">Sağlık kontrolünü etkinleştir</span><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Bağlantıyı ve fiyat akışını 15 saniyede bir denetler.</p></div><label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1"><input type="checkbox" id="toggleHealthEnabled" aria-label="Sağlık kontrolü" onchange="saveHealthSettings()" class="sr-only peer"><div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div></label></div>
+                        <div class="flex items-start justify-between gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800/80"><div><span class="font-bold text-xs text-slate-900 dark:text-white block">Başlangıç bildirimi</span><p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Terminal her açıldığında Telegram'a başlangıç raporu yollar.</p></div><label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1"><input type="checkbox" id="toggleHealthStartup" aria-label="Başlangıç bildirimi" onchange="saveHealthSettings()" class="sr-only peer"><div class="w-10 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div></label></div>
                     </div>
 
                     <div class="grid sm:grid-cols-2 gap-3">
@@ -441,18 +405,16 @@
                     </div>
 
                     <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 text-[11px] space-y-1"><div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">Son yaşam sinyali:</span><strong id="healthLastPulse" class="text-slate-700 dark:text-slate-200 tabular-nums">Henüz yok</strong></div><div class="flex justify-between gap-3"><span class="text-slate-500 dark:text-slate-400">Son durum:</span><strong id="healthLastStatus" class="text-slate-700 dark:text-slate-200">Bilinmiyor</strong></div></div>
-                    <div class="flex items-start gap-2 p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/60 text-[10px] leading-relaxed text-amber-800 dark:text-amber-300"><span>ℹ️</span><span>Bu kontrol terminal sayfası açıkken çalışır. Tarayıcı tamamen kapanırsa arıza bildirimi gönderebilmek için sonraki aşamada VDS bekçisi kurulacaktır.</span></div>
-                </section>
-
-                <section id="secBackup" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+                    <div class="flex items-start gap-2 p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/60 text-[10px] leading-relaxed text-amber-800 dark:text-amber-300"><span>Bu kontrol terminal sayfası açıkken çalışır. Tarayıcı tamamen kapanırsa arıza bildirimi gönderebilmek için sonraki aşamada VDS bekçisi kurulacaktır.</span></div>
+                </section><section id="secBackup" class="settings-section" role="tabpanel" aria-labelledby="tab-secBackup" hidden>
                     <div class="flex items-center space-x-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                        <span class="w-7 h-7 rounded-lg bg-violet-50 dark:bg-violet-950/60 text-violet-600 dark:text-violet-400 flex items-center justify-center font-bold text-sm">⇅</span>
-                        <div><h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">YEDEKLE VE GERİ YÜKLE</h2><p class="text-[11px] text-slate-400">Tüm terminal verilerini tek dosyayla başka cihaza taşı</p></div>
+                        
+                        <div><h2 class="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">Yedekleme ve geri yükleme</h2><p class="text-[11px] text-slate-400">Tüm terminal verilerini tek dosyayla başka cihaza taşı</p></div>
                     </div>
                     <div class="space-y-2">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Yedeklenecek içerikler</span>
-                            <div class="flex items-center gap-2 text-[10px] font-semibold"><button type="button" onclick="setAllBackupCategories(true)" class="text-blue-600 dark:text-blue-400 hover:underline">Tümünü seç</button><span class="text-slate-300 dark:text-slate-700">•</span><button type="button" onclick="setAllBackupCategories(false)" class="text-slate-500 hover:underline">Temizle</button></div>
+                            <div class="flex items-center gap-2 text-[10px] font-semibold"><button type="button" onclick="setAllBackupCategories(true)" class="text-blue-600 dark:text-blue-400 hover:underline">Tümünü seç</button><span class="text-slate-300 dark:text-slate-700"> / </span><button type="button" onclick="setAllBackupCategories(false)" class="text-slate-500 hover:underline">Temizle</button></div>
                         </div>
                         <div class="grid sm:grid-cols-2 gap-2" id="backupCategoryGrid">
                             <label class="flex items-start gap-2.5 p-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer"><input type="checkbox" data-backup-category="coins" checked class="mt-0.5 accent-blue-600"><span><strong class="block text-xs text-slate-800 dark:text-slate-100">Coin ve strateji ayarları</strong><small class="block mt-0.5 text-[10px] leading-relaxed text-slate-400">Coin listesi, zaman aralığı, RSI, al-sat, hedef kâr, aylık kilit ve aktiflik.</small></span></label>
@@ -464,76 +426,20 @@
                     </div>
                     <div class="grid sm:grid-cols-2 gap-3">
                         <button type="button" onclick="downloadKuzgunBackup()" class="text-left p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/70 bg-emerald-50/60 dark:bg-emerald-950/20 hover:bg-emerald-100/70 dark:hover:bg-emerald-950/40 transition">
-                            <span class="w-9 h-9 mb-3 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm">↓</span><span class="block text-xs font-bold text-slate-900 dark:text-white">Yedeği İndir</span><span class="block mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Coinler, açık pozisyonlar, işlem geçmişi, portföy ve uygulama tercihleri.</span>
+                            <span class="block text-xs font-bold text-slate-900 dark:text-white">Yedeği İndir</span><span class="block mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Coinler, açık pozisyonlar, işlem geçmişi, portföy ve uygulama tercihleri.</span>
                         </button>
                         <button type="button" onclick="document.getElementById('backupFileInput').click()" class="text-left p-4 rounded-xl border border-blue-200 dark:border-blue-900/70 bg-blue-50/60 dark:bg-blue-950/20 hover:bg-blue-100/70 dark:hover:bg-blue-950/40 transition">
-                            <span class="w-9 h-9 mb-3 rounded-xl bg-blue-600 text-white flex items-center justify-center text-lg shadow-sm">↑</span><span class="block text-xs font-bold text-slate-900 dark:text-white">Yedekten Yükle</span><span class="block mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Bir KUZGUN JSON yedeği seç ve kayıtlı durumu geri getir.</span>
+                            <span class="block text-xs font-bold text-slate-900 dark:text-white">Yedekten Yükle</span><span class="block mt-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Bir KUZGUN JSON yedeği seç ve kayıtlı durumu geri getir.</span>
                         </button>
                         <input id="backupFileInput" type="file" accept="application/json,.json" class="hidden" onchange="restoreKuzgunBackup(event)">
                     </div>
-                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60"><span class="text-base leading-none mt-0.5">🛡️</span><div class="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400"><strong class="text-slate-700 dark:text-slate-200">Güvenli geri yükleme:</strong> Yeni dosya uygulanmadan önce mevcut verilerin otomatik güvenlik yedeği indirilir. Telegram Chat ID ve geçici mum önbelleği yedeğe eklenmez.</div></div>
+                    <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60"><div class="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400"><strong class="text-slate-700 dark:text-slate-200">Güvenli geri yükleme:</strong> Yeni dosya uygulanmadan önce mevcut verilerin otomatik güvenlik yedeği indirilir. Telegram Chat ID ve geçici mum önbelleği yedeğe eklenmez.</div></div>
                     <div id="backupStatus" class="text-[11px] font-medium text-slate-400">Henüz yedekleme işlemi yapılmadı.</div>
-                </section>
-            </div>
-
-            <!-- SAĞ SÜTUN -->
-            <aside class="lg:col-span-3 space-y-4">
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4 sticky top-20">
-                    <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
-                        <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">CANLI MOTOR ÖZETİ</span>
-                        <span class="inline-flex items-center space-x-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                            <span>SENKRON</span>
-                        </span>
-                    </div>
-
-                    <div class="space-y-3 text-xs">
-                        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">BAŞLANGIÇ SERMAYESİ</span>
-                            <div id="previewBalance" class="text-xl font-black tabular-nums text-slate-900 dark:text-white">$1,000.00</div>
-                        </div>
-
-                        <div class="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-slate-700/60 space-y-1">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase">POZİSYON BAŞI BÜTÇE</span>
-                            <div id="previewSlotBudget" class="text-base font-extrabold tabular-nums text-blue-600 dark:text-blue-400">$500.00</div>
-                            <span id="previewSlotRatio" class="text-[10px] text-slate-400 font-medium">Toplam 2 Slot (%50/İşlem)</span>
-                        </div>
-
-                        <div class="space-y-2 pt-1 border-t border-slate-100 dark:border-slate-800 text-[11px]">
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-500 dark:text-slate-400">Tarama Yılı:</span>
-                                <span id="badgeYear" class="font-bold text-blue-600 dark:text-blue-400">2026</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-500 dark:text-slate-400">Çakışma Kalkanı:</span>
-                                <span id="badgeSlotConstraint" class="font-bold text-emerald-600 dark:text-emerald-400">Aktif</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-500 dark:text-slate-400">Komisyon Kesintisi:</span>
-                                <span id="badgeFeeDeduction" class="font-bold text-emerald-600 dark:text-emerald-400">%0.15 Reel</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-500 dark:text-slate-400">Mum Teyidi:</span>
-                                <span id="badgeCandleClose" class="font-bold text-emerald-600 dark:text-emerald-400">TradingView</span>
-                            </div>
-                            <div class="flex justify-between items-center">
-                                <span class="text-slate-500 dark:text-slate-400">Telegram Bot:</span>
-                                <span id="badgeTelegram" class="font-mono font-bold text-blue-600 dark:text-blue-400">#1059064615</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <a href="index.html" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs shadow-sm transition flex items-center justify-center space-x-2">
-                        <span>Değişiklikleri Canlıda Gör →</span>
-                    </a>
-                </div>
-            </aside>
-        </div>
-    </main>
+                </section></div><footer class="settings-summary" aria-label="Portföy özeti"><div><span>Başlangıç sermayesi</span><strong id="previewBalance">$1,000.00</strong></div><div><span>Pozisyon başı bütçe</span><strong id="previewSlotBudget">$500.00</strong><small id="previewSlotRatio">Toplam 2 Slot (%50/İşlem)</small></div><div><span>Analiz yılı</span><strong id="badgeYear">2026</strong></div><div><span>Slot filtresi</span><strong id="badgeSlotConstraint">Aktif</strong></div><div><span>Komisyon</span><strong id="badgeFeeDeduction">%0.15 Reel</strong></div><div><span>Mum teyidi</span><strong id="badgeCandleClose">TradingView</strong></div><div><span>Telegram</span><strong id="badgeTelegram"></strong></div></footer></article><p class="settings-footnote">KUZGUN Pro Terminal · Binance Spot</p></main>
 
     <!-- TOAST BİLDİRİMİ -->
     <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-slate-900 dark:bg-white text-white dark:text-slate-900 px-4 py-2.5 rounded-xl shadow-xl text-xs font-bold flex items-center space-x-2">
-        <span class="text-emerald-500">✓</span>
+        
         <span id="toastMsg">Ayar kaydedildi</span>
     </div>
 
@@ -559,22 +465,7 @@
         }
 
         function updateThemeIcons(theme) {
-            const iconLight = document.getElementById('themeIconLight');
-            const iconDark = document.getElementById('themeIconDark');
-            const badgeOled = document.getElementById('themeBadgeOled');
-            if (!iconLight || !iconDark || !badgeOled) return;
-
-            iconLight.classList.add('hidden');
-            iconDark.classList.add('hidden');
-            badgeOled.classList.add('hidden');
-
-            if (theme === 'oled') {
-                badgeOled.classList.remove('hidden');
-            } else if (theme === 'dark') {
-                iconDark.classList.remove('hidden');
-            } else {
-                iconLight.classList.remove('hidden');
-            }
+            document.getElementById('themeLabel').textContent = 'Tema: ' + ({light:'Açık',dark:'Koyu',oled:'OLED'}[theme] || 'Açık');
         }
 
         function showToast(msg) {
@@ -584,10 +475,27 @@
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2200);
         }
 
-        function scrollToSection(id) {
-            const el = document.getElementById(id);
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        function selectSettingsTab(id, focus = false) {
+            document.querySelectorAll('.settings-section').forEach(section => { section.hidden = section.id !== id; });
+            document.querySelectorAll('.settings-tabs button').forEach(button => {
+                const selected = button.getAttribute('aria-controls') === id;
+                button.setAttribute('aria-selected', String(selected));
+                button.tabIndex = selected ? 0 : -1;
+                if (selected) { button.scrollIntoView({block:'nearest',inline:'nearest'}); if (focus) button.focus(); }
+            });
         }
+        function scrollToSection(id) { selectSettingsTab(id); }
+        document.addEventListener('keydown', event => {
+            if (!event.target.matches('.settings-tabs button')) return;
+            const buttons = [...document.querySelectorAll('.settings-tabs button')];
+            let index = buttons.indexOf(event.target);
+            if (event.key === 'ArrowRight') index = (index + 1) % buttons.length;
+            else if (event.key === 'ArrowLeft') index = (index + buttons.length - 1) % buttons.length;
+            else if (event.key === 'Home') index = 0;
+            else if (event.key === 'End') index = buttons.length - 1;
+            else return;
+            event.preventDefault(); selectSettingsTab(buttons[index].getAttribute('aria-controls'), true);
+        });
 
         function testChimeSound() {
             try {
