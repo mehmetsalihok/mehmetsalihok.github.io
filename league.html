@@ -91,6 +91,16 @@
 <style>
 .strategy-comparison{border-top:1px solid #e2e8f0;padding-top:12px}.dark .strategy-comparison{border-color:#334155}.comparison-heading{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:10px;color:#64748b;margin-bottom:8px}.comparison-heading>span:first-child{font-weight:700}.strategy-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.strategy-option{text-align:left;display:flex;flex-direction:column;gap:3px;border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:transparent}.dark .strategy-option{border-color:#334155}.strategy-option strong{font-size:11px}.strategy-option span{font-size:12px;font-weight:700}.strategy-option small{font-size:10px;color:#64748b}.dark .strategy-option small,.dark .comparison-heading{color:#94a3b8}.strategy-option[aria-pressed=true]{border-color:#2563eb;background:#eff6ff}.dark .strategy-option[aria-pressed=true]{border-color:#60a5fa;background:#172b47}.strategy-comparison>p{margin-top:8px;font-size:10px;color:#64748b}.dark .strategy-comparison>p{color:#94a3b8}.strategy-option:focus-visible,#intervalSelector button:focus-visible{outline:2px solid #3b82f6;outline-offset:3px}main aside button:disabled{cursor:wait;opacity:.55}
 </style>
+<style>
+.league-month-row:hover{outline:1px solid #93b4f8}.league-month-row:focus-visible{outline:2px solid #2563eb;outline-offset:2px}
+#leagueTradeDialog{padding:0;border:1px solid #dbe2ec;border-radius:14px;width:min(1060px,calc(100% - 24px));max-height:calc(100dvh - 40px);background:#fff;color:#172335;box-shadow:0 24px 90px #0004;overflow:auto;margin:auto}
+.dark #leagueTradeDialog{background:#131e2e;color:#edf2f8;border-color:#334155}html.oled #leagueTradeDialog{background:#000;border-color:#262626}
+#leagueTradeDialog::backdrop{background:#0b1528a6;backdrop-filter:blur(4px)}
+#leagueTradeDialog[open]{animation:leagueDialogIn .22s cubic-bezier(.22,1,.36,1)}#leagueTradeDialog[open]::backdrop{animation:leagueBackdropIn .2s ease}#leagueTradeDialog.is-closing{animation:leagueDialogOut .16s ease forwards}#leagueTradeDialog.is-closing::backdrop{animation:leagueBackdropOut .16s ease forwards}
+@keyframes leagueDialogIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}@keyframes leagueDialogOut{to{opacity:0;transform:translateY(10px) scale(.99)}}@keyframes leagueBackdropIn{from{opacity:0}to{opacity:1}}@keyframes leagueBackdropOut{to{opacity:0}}
+.league-dialog-panel{padding:24px}.league-dialog-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.league-dialog-eyebrow{font-size:10px;color:#64748b;font-weight:700;letter-spacing:.12em}.league-dialog-heading h2{font-size:20px;font-weight:700;margin:6px 0}.league-dialog-heading p:last-child{font-size:12px;color:#64748b}.league-dialog-close,.league-trade-pagination button{font-size:12px;padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px}.dark .league-dialog-close,.dark .league-trade-pagination button{border-color:#334155}.league-trade-summary{display:flex;flex-wrap:wrap;gap:10px 24px;padding:16px 0;margin-top:12px;border-top:1px solid #e2e8f0;font-size:12px}.dark .league-trade-summary{border-color:#334155}.league-trade-note{font-size:10px;line-height:1.7;color:#64748b;margin-bottom:14px}.dark .league-trade-note,.dark .league-dialog-heading p,.dark .league-price-secondary{color:#94a3b8}.league-trade-scroll{overflow:auto;max-height:50dvh;border:1px solid #e2e8f0;border-radius:8px}.dark .league-trade-scroll{border-color:#334155}.league-trade-table{width:100%;font-size:11px;text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums}.league-trade-table th{position:sticky;top:0;background:#f8fafc;color:#64748b;font-size:10px;font-weight:600;z-index:1}.dark .league-trade-table th{background:#1e293b;color:#94a3b8}.league-trade-table th,.league-trade-table td{padding:10px 12px;border-bottom:1px solid #e2e8f0}.dark .league-trade-table th,.dark .league-trade-table td{border-color:#293548}.league-price-secondary{color:#64748b}.league-trade-pagination{display:flex;justify-content:space-between;gap:12px;align-items:center;padding-top:16px;font-size:11px;color:#64748b}.league-trade-pagination>div{display:flex;gap:6px}.league-trade-pagination button:disabled{opacity:.4;cursor:default}#leagueTradeDialog button:focus-visible{outline:2px solid #3b82f6;outline-offset:3px}
+@media(max-width:640px){.league-dialog-panel{padding:16px}.league-dialog-heading h2{font-size:18px}.league-trade-pagination{flex-wrap:wrap}.league-trade-summary{gap:8px 16px}.league-trade-scroll{max-height:45dvh}}@media(prefers-reduced-motion:reduce){#leagueTradeDialog[open],#leagueTradeDialog[open]::backdrop,#leagueTradeDialog.is-closing,#leagueTradeDialog.is-closing::backdrop{animation:none!important}}
+</style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
@@ -430,7 +440,7 @@
             return `<div class="strategy-comparison" aria-label="Zaman dilimi ve RSI karşılaştırması"><div class="comparison-heading"><span>Strateji seçimi</span><span>Mevcut lig puanına göre en iyi: ${item.bestOption.interval} / RSI ${item.bestOption.rsi}</span></div><div class="strategy-options">${Object.entries(item.variants).map(([interval,variant]) => [6,7].map(rsi => {
                 const strategy = variant['rsi'+rsi];
                 const selected = item.interval === interval && item.activeTab === rsi;
-                return `<button type="button" class="strategy-option" aria-pressed="${selected}" onclick="selectResultStrategy('${item.symbol}','${interval}',${rsi})"><strong>${interval} / RSI ${rsi}</strong><span class="${strategy.netPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${strategy.netPnl>=0?'+':''}${strategy.netPnl.toFixed(1)}% getiri</span><small>Kazanma ${strategy.winRate} · ${strategy.totalTrades} işlem</small><small>Puan ${strategyScore(strategy)}</small></button>`;
+                return `<button type="button" class="strategy-option" aria-pressed="${selected}" onclick="selectResultStrategy('${item.symbol}','${interval}',${rsi})"><strong>${interval} / RSI ${rsi}</strong><span class="${strategy.netPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${strategy.netPnl>=0?'+':''}${strategy.netPnl.toFixed(1)}% getiri</span><small>Kazanma ${strategy.winRate} · ${strategy.totalTrades} işlem · ${strategy.winCount} win / ${strategy.lossCount} lose</small><small>Puan ${strategyScore(strategy)}</small></button>`;
             }).join('')).join('')}</div><p>Seçili: ${item.interval} / RSI ${item.activeTab}. Ekle düğmesi bu stratejiyi aktarır.</p></div>`;
         }
 
@@ -585,6 +595,9 @@
                         tradeLogs.push({
                             entryTime: entryT,
                             exitTime: c.time,
+                            entryPrice: entryP,
+                            exitPrice: c.high >= targetP ? targetP : c.close,
+                            reason: c.high >= targetP ? 'Kâr hedefi' : 'RSI satışı',
                             pnl: pnl,
                             monthKey: mKey
                         });
@@ -657,6 +670,9 @@
                 winRateDouble: winRateVal,
                 avgDurationFormatted: avgDurationStr,
                 totalTrades,
+                winCount,
+                lossCount: totalTrades - winCount,
+                tradeLogs,
                 netPnl: totPnl,
                 monthlyBreakdowns: monthlyRecords,
                 avgDaysToLock: avgDays,
@@ -901,6 +917,7 @@
                                 <div>
                                     <span class="block text-[8px] font-bold text-slate-400 uppercase">İŞLEM</span>
                                     <span class="font-extrabold text-xs text-slate-800 dark:text-slate-200 tabular-nums">${active.totalTrades}</span>
+                                    <span class="block mt-1 text-[10px]"><span class="text-emerald-600 dark:text-emerald-400">${active.winCount} win</span> / <span class="text-rose-600 dark:text-rose-400">${active.lossCount} lose</span></span>
                                 </div>
                                 <div>
                                     <span class="block text-[8px] font-bold text-slate-400 uppercase">NET KÂR</span>
@@ -937,15 +954,16 @@
 
                                     <div class="space-y-1 max-h-48 overflow-y-auto pr-1">
                                         ${active.monthlyBreakdowns.map(m => `
-                                            <div class="flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-[11px]">
+                                            <button type="button" onclick="openLeagueMonthTrades('${res.symbol}','${res.interval}',${res.activeTab},'${m.monthKey}')" aria-haspopup="dialog" class="league-month-row w-full text-left flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 text-[11px]">
                                                 <span class="font-semibold text-slate-800 dark:text-slate-200 w-16">${m.monthName}</span>
                                                 <span class="text-slate-500 dark:text-slate-400">
                                                     ${m.isLocked ? `${m.firstTradeDay}. Gün → ${m.lockDay}. Gün <strong class="text-blue-600">(${m.daysToLock} gün)</strong>` : `${m.firstTradeDay}. Gün → Kilitlenemedi`}
                                                 </span>
+                                                <span class="text-[10px] text-slate-500 dark:text-slate-400">${active.tradeLogs.filter(t => t.monthKey === m.monthKey).length} işlem · ${active.tradeLogs.filter(t => t.monthKey === m.monthKey && t.pnl >= 0).length} win / ${active.tradeLogs.filter(t => t.monthKey === m.monthKey && t.pnl < 0).length} lose</span>
                                                 <span class="font-bold tabular-nums ${m.totalMonthPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">
                                                     ${m.totalMonthPnl >= 0 ? '+' : ''}${m.totalMonthPnl.toFixed(1)}%
                                                 </span>
-                                            </div>`).join('')}
+                                            </button>`).join('')}
                                     </div>
                                 </div>
                             ` : ''}
@@ -1037,6 +1055,63 @@
             showToast(`${item.displaySymbol} (${item.interval} / RSI ${active.rsiLength}) Terminal'e Eklendi!`);
         }
 
+
+        let leagueTradeView = null;
+        let leagueTradeCloseTimer = null;
+        function openLeagueMonthTrades(symbol, interval, rsi, monthKey) {
+            const item = LEAGUE_STATE.results.find(result => result.symbol === symbol);
+            const strategy = item?.variants[interval]?.['rsi'+rsi];
+            if (!strategy) return;
+            const month = strategy.monthlyBreakdowns.find(row => row.monthKey === monthKey);
+            if (!month) return;
+            const trades = strategy.tradeLogs.filter(trade => trade.monthKey === monthKey).slice().sort((a,b) => b.exitTime-a.exitTime);
+            leagueTradeView = {trades,page:0,pageSize:20};
+            document.getElementById('leagueTradeTitle').textContent = `${item.displaySymbol} · ${month.monthName} ${monthKey.slice(0,4)}`;
+            document.getElementById('leagueTradeSubtitle').textContent = `${interval} / RSI ${rsi} · AL ≤${strategy.buyRsi} / SAT ≥${strategy.sellRsi}`;
+            const wins = trades.filter(trade => trade.pnl >= 0).length;
+            const pnl = trades.reduce((sum,trade) => sum+trade.pnl,0);
+            document.getElementById('leagueTradeSummary').innerHTML = `<span><strong>${trades.length}</strong> işlem</span><span class="text-emerald-600 dark:text-emerald-400"><strong>${wins}</strong> win</span><span class="text-rose-600 dark:text-rose-400"><strong>${trades.length-wins}</strong> lose</span><span>Brüt getiri <strong>${pnl>=0?'+':''}${pnl.toFixed(2)}%</strong></span>`;
+            renderLeagueTradePage();
+            const dialog = document.getElementById('leagueTradeDialog');
+            clearTimeout(leagueTradeCloseTimer);
+            dialog.classList.remove('is-closing');
+            if (!dialog.open) dialog.showModal();
+        }
+        function renderLeagueTradePage() {
+            if (!leagueTradeView) return;
+            const {trades,page,pageSize} = leagueTradeView;
+            const formatDate = time => new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(time));
+            const formatPrice = price => Number(price).toLocaleString('en-US',{maximumSignificantDigits:10});
+            document.getElementById('leagueTradeRows').innerHTML = trades.slice(page*pageSize,(page+1)*pageSize).map((trade,index) => {
+                const minutes = Math.max(0,Math.floor((trade.exitTime-trade.entryTime)/60000));
+                return `<tr><td>${page*pageSize+index+1}</td><td>${formatDate(trade.entryTime)}</td><td>${formatDate(trade.exitTime)}</td><td>${formatPrice(trade.entryPrice)}<br><span class="league-price-secondary">${formatPrice(trade.exitPrice)}</span></td><td>${Math.floor(minutes/60)}sa ${minutes%60}dk</td><td>${trade.reason}</td><td class="${trade.pnl>=0?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}">${trade.pnl>=0?'+':''}${trade.pnl.toFixed(2)}%</td><td class="${trade.pnl>=0?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}">${trade.pnl>=0?'WIN':'LOSE'}</td></tr>`;
+            }).join('') || '<tr><td colspan="8">Bu ay için kapanmış işlem yok.</td></tr>';
+            const totalPages = Math.max(1,Math.ceil(trades.length/pageSize));
+            document.getElementById('leagueTradePageLabel').textContent = `Sayfa ${page+1} / ${totalPages} · ${trades.length} işlem`;
+            document.getElementById('leagueTradePrev').disabled = page===0;
+            document.getElementById('leagueTradeNext').disabled = page+1>=totalPages;
+            document.querySelector('.league-trade-scroll').scrollTop = 0;
+        }
+        function changeLeagueTradePage(step) {
+            if (!leagueTradeView) return;
+            leagueTradeView.page = Math.max(0, Math.min(Math.max(0,Math.ceil(leagueTradeView.trades.length/leagueTradeView.pageSize)-1),leagueTradeView.page+step));
+            renderLeagueTradePage();
+        }
+        function closeLeagueMonthTrades() {
+            const dialog = document.getElementById('leagueTradeDialog');
+            if (!dialog.open || dialog.classList.contains('is-closing')) return;
+            dialog.classList.add('is-closing');
+            leagueTradeCloseTimer = setTimeout(() => {dialog.close();dialog.classList.remove('is-closing');},window.matchMedia('(prefers-reduced-motion: reduce)').matches?0:160);
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const dialog = document.getElementById('leagueTradeDialog');
+            dialog.addEventListener('cancel', event => {event.preventDefault();closeLeagueMonthTrades();});
+            dialog.addEventListener('click',event => {
+                const rect = dialog.getBoundingClientRect();
+                if (event.target===dialog && (event.clientX<rect.left || event.clientX>rect.right || event.clientY<rect.top || event.clientY>rect.bottom)) closeLeagueMonthTrades();
+            });
+        });
+
         document.addEventListener('DOMContentLoaded', () => {
             renderPool();
             updateIntervalSelection();
@@ -1044,5 +1119,16 @@
             updateThemeIcons(currentTheme);
         });
     </script>
+
+    <dialog id="leagueTradeDialog" aria-labelledby="leagueTradeTitle" aria-describedby="leagueTradeNote">
+        <div class="league-dialog-panel">
+            <div class="league-dialog-heading"><div><p class="league-dialog-eyebrow">AYLIK İŞLEM DÖKÜMÜ</p><h2 id="leagueTradeTitle"></h2><p id="leagueTradeSubtitle"></p></div><button type="button" onclick="closeLeagueMonthTrades()" class="league-dialog-close" autofocus>Kapat</button></div>
+            <div id="leagueTradeSummary" class="league-trade-summary"></div>
+            <p id="leagueTradeNote" class="league-trade-note">Simülasyon kayıtlarıdır. Zamanlar, motorun kullandığı mum açılış zamanlarıdır ve Türkiye saatiyle gösterilir. Komisyon düşülmemiştir. Mevcut motor, sıfır getirili işlemleri win sayar.</p>
+            <div class="league-trade-scroll"><table class="league-trade-table"><thead><tr><th>No</th><th>Alım zamanı</th><th>Satım zamanı</th><th>Giriş / çıkış (USDT)</th><th>Süre</th><th>Çıkış nedeni</th><th>Getiri</th><th>Sonuç</th></tr></thead><tbody id="leagueTradeRows"></tbody></table></div>
+            <div class="league-trade-pagination"><span id="leagueTradePageLabel" aria-live="polite"></span><div><button id="leagueTradePrev" type="button" onclick="changeLeagueTradePage(-1)">Önceki</button><button id="leagueTradeNext" type="button" onclick="changeLeagueTradePage(1)">Sonraki</button></div></div>
+        </div>
+    </dialog>
+
 </body>
 </html>
