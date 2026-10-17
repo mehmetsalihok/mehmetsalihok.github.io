@@ -337,7 +337,7 @@ function rebuildCoinMonthlyLedger(coin) {
     const events=[];
     const seen = new Set();
     for (const trade of [...recorded, ...simulated]) {
-        if (!trade.monthKey.startsWith(year + '-')) continue;
+        if (Number.isFinite(SNAP.trainingStart)?(trade.entryTime<SNAP.trainingStart||trade.exitTime>SNAP.asOf):!trade.monthKey.startsWith(year + '-')) continue;
         const key = trade.id || `${trade.coinId}_${trade.entryTime}_${trade.exitTime}`;
         if (seen.has(key)) continue;
         seen.add(key);
@@ -366,7 +366,7 @@ function rebuildCoinMonthlyLedger(coin) {
             if (trade.afterMonthlyLimit) result.afterLimitCount++;
         }
     }
-    const summaries=[...months.values()].filter(m=>m.monthKey.startsWith(year+'-'));
+    const summaries=[...months.values()].filter(m=>Number.isFinite(SNAP.trainingStart)?monthKeys().includes(m.monthKey):m.monthKey.startsWith(year+'-'));
     for (const summary of summaries) {
         summary.tradesList.sort((a,b)=>b.exitTime-a.exitTime);
         summary.isLocked=cap>0 && summary.pnl+0.001>=cap;
@@ -427,11 +427,11 @@ function assembleTrades(groups,selection) {
         // Match recalculateFullPortfolio(): months and trades are newest first.
         const recorded=SNAP.closedTrades.filter(trade=>coinMatchesTrade(groups[i].coin,trade)).map(trade=>({...trade,isReal:true,isRealTrade:true,
             source:trade.source||(trade.isManual?'manual':'automatic'),pnl:Number(trade.pnlPercent||0),pnlPercent:Number(trade.pnlPercent||0),monthKey:getTurkeyMonthKey(trade.exitTime)}));
-        const merged=[...recorded,...candidate.trades].filter(trade=>trade.monthKey.startsWith(SNAP.year+'-')).sort((a,b)=>b.exitTime-a.exitTime);
+        const merged=[...recorded,...candidate.trades].filter(trade=>Number.isFinite(SNAP.trainingStart)?trade.entryTime>=SNAP.trainingStart&&trade.exitTime<=SNAP.asOf:trade.monthKey.startsWith(SNAP.year+'-')).sort((a,b)=>b.exitTime-a.exitTime);
         merged.forEach(add);
     }
     for(const trade of SNAP.closedTrades) {
-        if(seen.has(trade.id)||!getTurkeyMonthKey(trade.exitTime).startsWith(SNAP.year+'-'))continue;
+        if(seen.has(trade.id)||(Number.isFinite(SNAP.trainingStart)?trade.entryTime<SNAP.trainingStart||trade.exitTime>SNAP.asOf:!getTurkeyMonthKey(trade.exitTime).startsWith(SNAP.year+'-')))continue;
         add({...trade,source:trade.source||(trade.isManual?'manual':'automatic'),monthKey:trade.exitMonth||getTurkeyMonthKey(trade.exitTime)});
     }
     return list;
@@ -495,6 +495,12 @@ function verifyReference(snapshot) {
     return {groups,baseline};
 }
 function monthKeys() {
+    if(Number.isFinite(SNAP.trainingStart)){
+        const keys=[],first=getTurkeyMonthKey(SNAP.trainingStart),last=getTurkeyMonthKey(SNAP.asOf-1);
+        let [year,month]=first.split('-').map(Number);
+        while(`${year}-${String(month).padStart(2,'0')}`<=last){keys.push(`${year}-${String(month).padStart(2,'0')}`);if(++month>12){month=1;year++}}
+        return keys;
+    }
     const year=Number(SNAP.year),asOfKey=getTurkeyMonthKey(SNAP.asOf);
     const max=asOfKey.startsWith(SNAP.year+'-')?Number(asOfKey.slice(5)):12;
     return Array.from({length:max},(_,i)=>SNAP.year+'-'+String(i+1).padStart(2,'0'));
@@ -521,7 +527,7 @@ function guard(summary,baseline,groups,config) {
     return [...new Set(issues)];
 }
 async function fetchYear(symbol,interval) {
-    const start=Date.UTC(Number(SNAP.year),0,1),end=Math.min(SNAP.asOf,Date.UTC(Number(SNAP.year)+1,0,1));
+    const start=SNAP.historyStart??Date.UTC(Number(SNAP.year),0,1),end=SNAP.historyEnd??Math.min(SNAP.asOf,Date.UTC(Number(SNAP.year)+1,0,1));
     const endpoints=['https://data-api.binance.vision/api/v3/klines','https://api.binance.com/api/v3/klines'];
     let cursor=start;const candles=[];
     while(cursor<end){
@@ -554,7 +560,7 @@ function qualifying(candidate,group,config){return candidate.count>=config.minTr
 function rawRate(candidate){return candidate.winRate}
 function matchingLeagueRecords(snapshot,coin,records) {
     return records.filter(row=>row&&row.symbol===coin.symbol&&String(row.year)===snapshot.year&&
-        Number(row.startTime)===Date.UTC(Number(snapshot.year),0,1)&&Number.isFinite(row.endTime)&&row.endTime<=snapshot.asOf&&row.endTime>row.startTime&&
+        Number(row.startTime)===(snapshot.trainingStart??Date.UTC(Number(snapshot.year),0,1))&&Number.isFinite(row.endTime)&&row.endTime<=snapshot.asOf&&row.endTime>row.startTime&&
         Math.abs(Number(row.profitTarget)-Number(coin.profitTarget))<1e-8&&Math.abs(Number(row.monthlyCap)-Number(coin.monthlyCap))<1e-8&&
         ['15m','30m'].includes(row.interval)&&[6,7].includes(row.rsiLength)&&Number.isFinite(row.buyRsi)&&row.buyRsi>=8&&row.buyRsi<=50&&
         Number.isFinite(row.sellRsi)&&row.sellRsi>=55&&row.sellRsi<=98&&row.buyRsi<row.sellRsi);
