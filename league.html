@@ -88,6 +88,9 @@
         .league-action:focus-visible, .league-card button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
         @media (prefers-reduced-motion: reduce) { .league-card, .league-action { transition: none !important; } }
     </style>
+<style>
+.strategy-comparison{border-top:1px solid #e2e8f0;padding-top:12px}.dark .strategy-comparison{border-color:#334155}.comparison-heading{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:10px;color:#64748b;margin-bottom:8px}.comparison-heading>span:first-child{font-weight:700}.strategy-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.strategy-option{text-align:left;display:flex;flex-direction:column;gap:3px;border:1px solid #e2e8f0;border-radius:8px;padding:10px;background:transparent}.dark .strategy-option{border-color:#334155}.strategy-option strong{font-size:11px}.strategy-option span{font-size:12px;font-weight:700}.strategy-option small{font-size:10px;color:#64748b}.dark .strategy-option small,.dark .comparison-heading{color:#94a3b8}.strategy-option[aria-pressed=true]{border-color:#2563eb;background:#eff6ff}.dark .strategy-option[aria-pressed=true]{border-color:#60a5fa;background:#172b47}.strategy-comparison>p{margin-top:8px;font-size:10px;color:#64748b}.dark .strategy-comparison>p{color:#94a3b8}.strategy-option:focus-visible,#intervalSelector button:focus-visible{outline:2px solid #3b82f6;outline-offset:3px}main aside button:disabled{cursor:wait;opacity:.55}
+</style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
@@ -171,7 +174,7 @@
 
             <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">
                 <div>
-                    <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">ZAMAN DİLİMİ</label>
+                    <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">ZAMAN DİLİMLERİ</label>
                     <div class="grid grid-cols-5 gap-1.5 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl" id="intervalSelector">
                         <button onclick="setIntervalChoice('5m')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="5m">5m</button>
                         <button onclick="setIntervalChoice('15m')" class="py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm" data-tf="15m">15m</button>
@@ -179,6 +182,7 @@
                         <button onclick="setIntervalChoice('1h')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="1h">1h</button>
                         <button onclick="setIntervalChoice('4h')" class="py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400" data-tf="4h">4h</button>
                     </div>
+                    <p class="mt-2 text-[11px] text-slate-500 dark:text-slate-400">Birden fazla dilim seçebilirsin; örneğin 15m ve 30m. Her dilim için RSI 6 ve 7 ayrı hesaplanır.</p>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -226,7 +230,7 @@
             <div class="grid grid-cols-2 xl:grid-cols-4 gap-3" id="leagueSummary">
                 <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Karşılaştırılan</div><div id="summaryAnalyzed" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">coin</div></div>
                 <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">En yüksek getiri</div><div id="summaryProfit" class="mt-1 text-xl font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">—</div><div id="summaryProfitCoin" class="text-[10px] text-slate-400">analiz bekleniyor</div></div>
-                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Toplam simülasyon</div><div id="summaryTrades" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">iki RSI stratejisi</div></div>
+                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Toplam simülasyon</div><div id="summaryTrades" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">tüm dilimler ve iki RSI stratejisi</div></div>
                 <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Lider</div><div id="summaryLeader" class="mt-1 text-xl font-extrabold text-blue-600 dark:text-blue-400">—</div><div class="text-[10px] text-slate-400">lig puanına göre</div></div>
             </div>
             <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 sm:p-5 league-panel">
@@ -234,10 +238,10 @@
                     <div><div class="text-[10px] uppercase tracking-wider font-bold text-blue-600 dark:text-blue-400">SONUÇLAR</div><h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Lig sıralaması <span id="resultCount" class="text-xs font-semibold text-slate-400"></span></h3></div>
                     <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
                         <label class="sr-only" for="resultSearch">Sonuçlarda coin ara</label><input id="resultSearch" type="search" placeholder="Coin ara..." oninput="renderLeagueResults()" class="w-full sm:w-44 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white">
-                        <label class="sr-only" for="resultSort">Sonuç sıralaması</label><select id="resultSort" onchange="renderLeagueResults()" class="w-full sm:w-48 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"><option value="score">Lig puanı</option><option value="profit">Net getiri</option><option value="trades">İşlem sayısı</option><option value="winrate">Kazanma oranı</option><option value="name">Coin adı</option></select>
+                        <label class="sr-only" for="resultSort">Sonuç sıralaması</label><select id="resultSort" onchange="renderLeagueResults()" class="w-full sm:w-48 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"><option value="score">Lig puanı (en iyi seçenek)</option><option value="profit">Net getiri</option><option value="trades">İşlem sayısı</option><option value="winrate">Kazanma oranı</option><option value="name">Coin adı</option></select>
                     </div>
                 </div>
-                <p class="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Sonuçlar geçmiş mum verileriyle hesaplanan simülasyonlardır. Terminale eklemeden önce RSI ve hedef ayarlarını kontrol et.</p>
+                <p class="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Lig puanı, coinin en yüksek puanlı seçeneğine göre hesaplanır. Getiri, işlem sayısı ve kazanma sıralaması kartta seçili stratejiye göre değişir. Sonuçlar geçmiş mum verileriyle hesaplanan simülasyonlardır. Terminale eklemeden önce RSI ve hedef ayarlarını kontrol et.</p>
             </div>
             <div id="resultsContainer" class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start" aria-live="polite"><div class="2xl:col-span-2 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50 p-10 text-center"><div class="text-3xl mb-3">◈</div><h4 class="font-bold text-slate-800 dark:text-slate-100">Analiz için hazır</h4><p class="mt-1 text-xs text-slate-500">Sol panelden coinleri ve zaman dilimini seç, ardından karşılaştırmayı başlat.</p></div></div>
         </section>
@@ -253,7 +257,7 @@
         const LEAGUE_STATE = {
             coinPool: ["SYN", "ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH"],
             suggestedCoins: ["INJ", "TIA", "APT", "RENDER", "OP", "ARB", "PEPE", "SHIB", "FET", "RUNE", "SEI", "DOT", "ADA", "BNB"],
-            selectedInterval: "15m",
+            selectedIntervals: ["15m"],
             profitTarget: 0.6,
             capMultiplier: 6,
             isAnalyzing: false,
@@ -387,15 +391,47 @@
             renderPool();
         }
 
-        function setIntervalChoice(tf) {
-            LEAGUE_STATE.selectedInterval = tf;
+        const INTERVAL_OPTIONS = ['5m','15m','30m','1h','4h'];
+        function updateIntervalSelection() {
             document.querySelectorAll('#intervalSelector button').forEach(btn => {
-                if (btn.dataset.tf === tf) {
-                    btn.className = "py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm";
-                } else {
-                    btn.className = "py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400";
-                }
+                const selected = LEAGUE_STATE.selectedIntervals.includes(btn.dataset.tf);
+                btn.setAttribute('aria-pressed', String(selected));
+                btn.className = selected ? 'py-1 rounded-lg text-xs font-bold bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-sm' : 'py-1 rounded-lg text-xs font-bold text-slate-600 dark:text-slate-400';
             });
+        }
+        function setIntervalChoice(tf) {
+            if (LEAGUE_STATE.isAnalyzing || !INTERVAL_OPTIONS.includes(tf)) return;
+            const selected = LEAGUE_STATE.selectedIntervals;
+            if (selected.includes(tf)) {
+                if (selected.length === 1) { showToast('En az bir zaman dilimi seçili kalmalı'); return; }
+                LEAGUE_STATE.selectedIntervals = selected.filter(value => value !== tf);
+            } else LEAGUE_STATE.selectedIntervals = INTERVAL_OPTIONS.filter(value => selected.includes(value) || value === tf);
+            updateIntervalSelection();
+        }
+        function strategyScore(strategy) {
+            return Math.floor(strategy.winRateDouble * 0.5 + Math.min(strategy.netPnl, 50.0) * 0.3);
+        }
+        function refreshResultScore(item) {
+            const options = Object.entries(item.variants).flatMap(([interval, variant]) => [6,7].map(rsi => ({interval,rsi,score:strategyScore(variant['rsi'+rsi])})));
+            options.sort((a,b) => b.score-a.score);
+            item.score = options[0].score;
+            item.bestOption = options[0];
+        }
+        function selectResultStrategy(symbol, interval, rsi) {
+            const item = LEAGUE_STATE.results.find(result => result.symbol === symbol);
+            if (!item || !item.variants[interval] || ![6,7].includes(rsi)) return;
+            item.interval = interval;
+            item.rsi6 = item.variants[interval].rsi6;
+            item.rsi7 = item.variants[interval].rsi7;
+            item.activeTab = rsi;
+            renderLeagueResults();
+        }
+        function renderStrategyChoices(item) {
+            return `<div class="strategy-comparison" aria-label="Zaman dilimi ve RSI karşılaştırması"><div class="comparison-heading"><span>Strateji seçimi</span><span>Mevcut lig puanına göre en iyi: ${item.bestOption.interval} / RSI ${item.bestOption.rsi}</span></div><div class="strategy-options">${Object.entries(item.variants).map(([interval,variant]) => [6,7].map(rsi => {
+                const strategy = variant['rsi'+rsi];
+                const selected = item.interval === interval && item.activeTab === rsi;
+                return `<button type="button" class="strategy-option" aria-pressed="${selected}" onclick="selectResultStrategy('${item.symbol}','${interval}',${rsi})"><strong>${interval} / RSI ${rsi}</strong><span class="${strategy.netPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${strategy.netPnl>=0?'+':''}${strategy.netPnl.toFixed(1)}% getiri</span><small>Kazanma ${strategy.winRate} · ${strategy.totalTrades} işlem</small><small>Puan ${strategyScore(strategy)}</small></button>`;
+            }).join('')).join('')}</div><p>Seçili: ${item.interval} / RSI ${item.activeTab}. Ekle düğmesi bu stratejiyi aktarır.</p></div>`;
         }
 
         function stepProfit(delta) {
@@ -720,91 +756,85 @@
         }
 
         async function runLeagueBenchmark() {
-            if (LEAGUE_STATE.isAnalyzing || LEAGUE_STATE.coinPool.length === 0) return;
+            if (LEAGUE_STATE.isAnalyzing || !LEAGUE_STATE.coinPool.length) return;
+            const pool = [...LEAGUE_STATE.coinPool];
+            const intervals = [...LEAGUE_STATE.selectedIntervals];
+            const profitTarget = LEAGUE_STATE.profitTarget;
+            const targetCap = getMonthlyCap();
+            const total = pool.length * intervals.length;
+            const failed = [];
+            let completed = 0;
             LEAGUE_STATE.isAnalyzing = true;
-
+            LEAGUE_STATE.results = [];
+            LEAGUE_STATE.candleCache = {};
             const btn = document.getElementById('btnRunLeague');
             const pBox = document.getElementById('progressBox');
             const pBar = document.getElementById('progressBar');
             const pStatus = document.getElementById('progressStatusText');
             const pPct = document.getElementById('progressPctText');
-            const resultsBox = document.getElementById('resultsContainer');
-
-            btn.disabled = true;
+            const controls = [...document.querySelectorAll('main aside button, main aside input')];
+            const previousDisabled = controls.map(control => control.disabled);
+            controls.forEach(control => control.disabled = true);
             btn.classList.add('opacity-50');
             pBox.classList.remove('hidden');
-            resultsBox.innerHTML = '<div class="2xl:col-span-2 p-10 text-center rounded-2xl border border-blue-200 dark:border-blue-900 bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-300 text-sm font-semibold">Mum verileri yükleniyor ve stratejiler karşılaştırılıyor…</div>';
-            LEAGUE_STATE.results = [];
-            LEAGUE_STATE.candleCache = {};
-            const failedCoins = [];
-
-            const total = LEAGUE_STATE.coinPool.length;
-            const targetCap = getMonthlyCap();
-
-            for (let i = 0; i < total; i++) {
-                const coin = LEAGUE_STATE.coinPool[i];
-                const fullSymbol = coin + "USDT";
-                pStatus.textContent = `Taranıyor: ${coin} (RSI 6 & 7)...`;
-                pBar.style.width = `${Math.round((i / total) * 100)}%`;
-                pPct.textContent = `${Math.round((i / total) * 100)}%`;
-                await new Promise(resolve => setTimeout(resolve, 0));
-
-                try {
-                    const candles = await fetchAllCandlesSince2026(fullSymbol, LEAGUE_STATE.selectedInterval);
-                    if (candles && candles.length > 30) {
-                        LEAGUE_STATE.candleCache[fullSymbol] = candles;
-
-                        pStatus.textContent = `Hesaplanıyor: ${coin} (RSI 6 & 7)...`;
-                        const {rsi6: m6, rsi7: m7} = await evaluateCoinInWorker(candles, LEAGUE_STATE.profitTarget, targetCap);
-
-                        const bestScore = Math.max(
-                            Math.floor(m6.winRateDouble * 0.5 + Math.min(m6.netPnl, 50.0) * 0.3),
-                            Math.floor(m7.winRateDouble * 0.5 + Math.min(m7.netPnl, 50.0) * 0.3)
-                        );
-
-                        LEAGUE_STATE.results.push({
-                            symbol: fullSymbol,
-                            displaySymbol: coin,
-                            score: bestScore,
-                            profitTarget: LEAGUE_STATE.profitTarget,
-                            monthlyCap: targetCap,
-                            activeTab: 6,
-                            isExpanded: false,
-                            rsi6: m6,
-                            rsi7: m7
-                        });
-                    } else failedCoins.push(coin);
-                } catch (e) {
-                    console.warn(`Hata [${coin}]:`, e.message);
-                    failedCoins.push(coin);
+            pBar.style.width = '0%'; pPct.textContent = '0%';
+            document.getElementById('resultsContainer').innerHTML = '<div class="p-8 text-sm text-slate-500">Seçilen zaman dilimleri ayrı ayrı karşılaştırılıyor…</div>';
+            try {
+                for (const coin of pool) {
+                    const symbol = coin + 'USDT';
+                    const variants = {};
+                    for (const interval of intervals) {
+                        pStatus.textContent = `Taranıyor: ${coin} / ${interval} (${completed+1}/${total})`;
+                        await new Promise(resolve => setTimeout(resolve, 0));
+                        try {
+                            const candles = await fetchAllCandlesSince2026(symbol, interval);
+                            if (!candles || candles.length <= 30) throw new Error('Yetersiz mum verisi');
+                            LEAGUE_STATE.candleCache[symbol + '_' + interval] = candles;
+                            pStatus.textContent = `Hesaplanıyor: ${coin} / ${interval} (RSI 6 & 7)`;
+                            variants[interval] = await evaluateCoinInWorker(candles, profitTarget, targetCap);
+                        } catch (error) {
+                            failed.push(`${coin} / ${interval}`);
+                            console.warn(`Hata [${symbol}/${interval}]:`,error.message);
+                        }
+                        completed++;
+                        const progress = Math.round(completed/total*100);
+                        pBar.style.width = progress+'%'; pPct.textContent = progress+'%';
+                    }
+                    if (Object.keys(variants).length) {
+                        const item = {symbol,displaySymbol:coin,profitTarget,monthlyCap:targetCap,variants,isExpanded:false};
+                        refreshResultScore(item);
+                        item.interval = item.bestOption.interval;
+                        item.activeTab = item.bestOption.rsi;
+                        item.rsi6 = variants[item.interval].rsi6;
+                        item.rsi7 = variants[item.interval].rsi7;
+                        item.failedIntervals = intervals.filter(interval => !variants[interval]);
+                        LEAGUE_STATE.results.push(item);
+                    }
                 }
+                LEAGUE_STATE.results.sort((a,b) => b.score-a.score);
+                LEAGUE_STATE.results.forEach((item,index) => item.rank=index+1);
+                renderLeagueResults();
+                pStatus.textContent = failed.length ? `Tamamlandı; ${failed.length} coin/zaman dilimi alınamadı` : 'Analiz tamamlandı!';
+                if (failed.length) showToast('Veri alınamadı: '+failed.join(', '));
+            } catch (error) {
+                console.error(error); pStatus.textContent = 'Analiz tamamlanamadı; yeniden deneyebilirsin';
+                showToast('Analiz tamamlanamadı');
+            } finally {
+                LEAGUE_STATE.isAnalyzing = false;
+                controls.forEach((control,index) => control.disabled = previousDisabled[index]);
+                btn.classList.remove('opacity-50');
             }
-
-            pBar.style.width = `100%`;
-            pPct.textContent = `100%`;
-            pStatus.textContent = failedCoins.length ? `Analiz tamamlandı • ${failedCoins.length} coin okunamadı` : 'Analiz tamamlandı!';
-
-            LEAGUE_STATE.results.sort((a, b) => b.score - a.score);
-            LEAGUE_STATE.results.forEach((res, idx) => res.rank = idx + 1);
-
-            renderLeagueResults();
-            if (failedCoins.length) showToast(`Veri alınamayan coinler: ${failedCoins.join(', ')}`);
-
-            LEAGUE_STATE.isAnalyzing = false;
-            btn.disabled = false;
-            btn.classList.remove('opacity-50');
-            setTimeout(() => pBox.classList.add('hidden'), 1200);
         }
 
         function renderLeagueResults() {
             const container = document.getElementById('resultsContainer');
             const all = LEAGUE_STATE.results;
             document.getElementById('summaryAnalyzed').textContent = all.length || '—';
-            document.getElementById('summaryLeader').textContent = all[0]?.displaySymbol || '—';
-            const best = all.flatMap(r => [{ coin: r.displaySymbol, value: r.rsi6.netPnl }, { coin: r.displaySymbol, value: r.rsi7.netPnl }]).sort((a,b) => b.value - a.value)[0];
+            document.getElementById('summaryLeader').textContent = all[0] ? `${all[0].displaySymbol} / ${all[0].bestOption.interval}` : '—';
+            const best = all.flatMap(r => Object.entries(r.variants).flatMap(([interval,v]) => [6,7].map(rsi => ({coin: r.displaySymbol + ' / ' + interval + ' / RSI ' + rsi, value:v['rsi'+rsi].netPnl})))).sort((a,b) => b.value - a.value)[0];
             document.getElementById('summaryProfit').textContent = best ? `${best.value >= 0 ? '+' : ''}${best.value.toFixed(1)}%` : '—';
             document.getElementById('summaryProfitCoin').textContent = best ? best.coin : 'analiz bekleniyor';
-            document.getElementById('summaryTrades').textContent = all.length ? all.reduce((sum,r) => sum + r.rsi6.totalTrades + r.rsi7.totalTrades, 0).toLocaleString('tr-TR') : '—';
+            document.getElementById('summaryTrades').textContent = all.length ? all.reduce((sum,r) => sum + Object.values(r.variants).reduce((count,v) => count + v.rsi6.totalTrades + v.rsi7.totalTrades,0), 0).toLocaleString('tr-TR') : '—';
             const search = document.getElementById('resultSearch').value.trim().toUpperCase();
             const sort = document.getElementById('resultSort').value;
             const visible = all.filter(r => r.displaySymbol.includes(search));
@@ -831,7 +861,7 @@
                                         <h3 class="font-extrabold text-base text-slate-900 dark:text-white">${res.displaySymbol}</h3>
                                         <span class="text-[10px] text-slate-400 font-medium">/USDT</span>
                                     </div>
-                                    <p class="text-[10px] text-slate-500 font-medium">Hedef %${res.profitTarget.toFixed(1)} • Kilit %${res.monthlyCap.toFixed(1)}</p>
+                                    <p class="text-[10px] text-slate-500 font-medium">${res.interval} · Hedef %${res.profitTarget.toFixed(1)} • Kilit %${res.monthlyCap.toFixed(1)}</p>
                                 </div>
                             </div>
 
@@ -842,11 +872,13 @@
                                 </div>
 
                                 <button onclick="addStrategyToTerminal('${res.symbol}')" class="px-3 py-1.5 rounded-lg bg-slate-900 dark:bg-white hover:bg-slate-800 dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs transition flex items-center space-x-1">
-                                    <span>+ Ekle</span>
+                                    <span>${res.interval} / RSI ${res.activeTab} Ekle</span>
                                 </button>
                             </div>
                         </div>
 
+                        ${renderStrategyChoices(res)}
+                        ${res.failedIntervals.length ? `<p class="text-xs text-rose-600 dark:text-rose-400">Veri alınamadı: ${res.failedIntervals.join(', ')}. Bu dilimler karşılaştırmaya dahil edilmedi.</p>` : ''}
                         <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 space-y-2">
                             <div class="flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
                                 <div class="flex flex-wrap items-center gap-1.5">
@@ -941,7 +973,7 @@
 
         function adjustLiveRsi(symbol, deltaBuy, deltaSell) {
             const item = LEAGUE_STATE.results.find(r => r.symbol === symbol);
-            const candles = LEAGUE_STATE.candleCache[symbol];
+            const candles = LEAGUE_STATE.candleCache[symbol + '_' + item?.interval];
             if (!item || !candles) return;
 
             const active = item.activeTab === 6 ? item.rsi6 : item.rsi7;
@@ -950,6 +982,10 @@
 
             const updated = simulateSingleConfig(candles, active.rsiLength, newBuy, newSell, item.profitTarget, item.monthlyCap);
             if (item.activeTab === 6) item.rsi6 = updated; else item.rsi7 = updated;
+            item.variants[item.interval]['rsi'+item.activeTab] = updated;
+            refreshResultScore(item);
+            LEAGUE_STATE.results.sort((a,b) => b.score-a.score);
+            LEAGUE_STATE.results.forEach((res,index) => res.rank=index+1);
 
             renderLeagueResults();
         }
@@ -968,7 +1004,7 @@
                 id: 'c_' + Date.now(),
                 symbol: item.symbol,
                 displaySymbol: item.displaySymbol,
-                interval: LEAGUE_STATE.selectedInterval,
+                interval: item.interval,
                 rsiLength: active.rsiLength,
                 buyRsi: active.buyRsi,
                 sellRsi: active.sellRsi,
@@ -998,11 +1034,12 @@
             }
 
             localStorage.setItem('kuzgun_web_coins', JSON.stringify(currentCoins));
-            showToast(`${item.displaySymbol} (RSI ${active.rsiLength}) Terminal'e Eklendi!`);
+            showToast(`${item.displaySymbol} (${item.interval} / RSI ${active.rsiLength}) Terminal'e Eklendi!`);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             renderPool();
+            updateIntervalSelection();
             const currentTheme = localStorage.getItem('kuzgun_theme') || (document.documentElement.classList.contains('dark') ? (document.documentElement.classList.contains('oled') ? 'oled' : 'dark') : 'light');
             updateThemeIcons(currentTheme);
         });
