@@ -33,13 +33,37 @@ function matchingLeagueRecords(snapshot,coin,records) {
         Math.abs(Number(row.profitTarget)-Number(coin.profitTarget))<1e-8&&Math.abs(Number(row.monthlyCap)-Number(coin.monthlyCap))<1e-8&&
         ['15m','30m'].includes(row.interval)&&[6,7].includes(row.rsiLength)&&Number.isFinite(row.buyRsi)&&row.buyRsi>=8&&row.buyRsi<=50&&
         Number.isFinite(row.sellRsi)&&row.sellRsi>=55&&row.sellRsi<=98&&row.buyRsi<row.sellRsi);
-}function eligibleLeagueRecords() {
+}function eligibleLeagueRecords(allYears=false) {
     let saved;try{saved=JSON.parse(localStorage.getItem('kuzgun_league_candidates_v1')||'null')}catch(_){saved=null}
     if(saved?.schema!=='kuzgun-league-candidates-v1'||!Array.isArray(saved.records))return [];
-    return snapshot.coins.flatMap(coin=>matchingLeagueRecords(snapshot,coin,saved.records));
+    return allYears?saved.records:snapshot.coins.flatMap(coin=>matchingLeagueRecords(snapshot,coin,saved.records));
+}
+function analysisRangeConfig(){
+    if($('analysisPeriod').value!=='range')return null;
+    if(![$('analysisStart'),$('analysisEnd')].every(input=>input.reportValidity()))throw new Error('Başlangıç ve bitiş aylarını seç.');
+    const first=$('analysisStart').value,last=$('analysisEnd').value;
+    if(!first||!last||first>last)throw new Error('Geçerli bir tarih aralığı seç.');
+    if(last>new Date(snapshot.asOf+10800000).toISOString().slice(0,7))throw new Error('Bitiş ayı referans tarihinden sonra olamaz.');
+    return {rangeStart:first,rangeEnd:last};
+}
+function updateAnalysisPeriod(){
+    const custom=$('analysisPeriod').value==='range';
+    $('analysisStartField').hidden=!custom;$('analysisEndField').hidden=!custom;
+    $('analysisStart').required=custom;$('analysisEnd').required=custom;
+    if(snapshot){
+        const last=new Date(snapshot.asOf+10800000).toISOString().slice(0,7);
+        $('analysisStart').max=last;$('analysisEnd').max=last;
+        if(!$('analysisStart').value)$('analysisStart').value=(Number(snapshot.year)-1)+'-01';
+        if(!$('analysisEnd').value)$('analysisEnd').value=last;
+    }
+    $('analysisPeriodHint').textContent=custom?'Mevcut ayarlar ve tek bir öneri seçilen dönemde simüle edilir. Başlangıç sermayesi terminalden alınır; gerçek işlemler ve bugünkü açık pozisyonlar içeri aktarılmaz. Sonuç kapanmış işlemlere dayanır; her ay ayrı ayar seçilmez.':'Terminalde seçili yılın mevcut hesap ve gerçek işlem kayıtlarıyla karşılaştırma yapılır.';
+    updateLeagueStatus();
 }
 function updateLeagueStatus() {
     if(!snapshot)return;
+    if($('analysisPeriod').value==='range'){
+        $('leagueRecordStatus').textContent=$('leagueOnly').checked?'Lig modu: seçili döneme ait, bitiş tarihinden sonra üretilmemiş kayıtlı AL/SAT çiftleri denenir. Eşikler değiştirilmez; eksik kayıt varsa arama durur.':'Serbest arama: seçili dönem için RSI, zaman dilimi ve AL/SAT eşikleri birlikte denenir.';return;
+    }
     try {
         const records=eligibleLeagueRecords(),missing=snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,records).length);
         $('leagueRecordStatus').textContent=$('leagueOnly').checked?
@@ -101,30 +125,34 @@ async function initialize(){
         $('coinCount').textContent=snapshot.coins.length+' coin';
         $('referenceStatus').textContent='Analiz başlarken terminal hesabıyla eşleşme kontrol edilecek.';
         $('startSearch').disabled=false;
-        updateLeagueStatus();
+        updateAnalysisPeriod();
     }catch(reason){snapshot=null;$('startSearch').disabled=true;error(reason.message)}
 }
 function start(){
     if(window.kuzgunWalkForwardRunning){error('Önce ileri dönem testini durdur veya tamamlanmasını bekle.');return}
     if(worker)return;error('');
     const min=$('minTrades');if(!min.reportValidity())return;
-    let leagueRecords=[];
+    let leagueRecords=[],range=null;
     try{
         assertCurrentReference();
+        range=analysisRangeConfig();
         if($('leagueOnly').checked){
-            leagueRecords=eligibleLeagueRecords();
-            const missing=snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,leagueRecords).length);
+            leagueRecords=eligibleLeagueRecords(!!range);
+            const missing=range?[]:snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,leagueRecords).length);
             if(missing.length)throw new Error('Lig kaydı eksik veya uyumsuz: '+missing.map(coin=>coin.displaySymbol||coin.symbol).join(', ')+'. Aynı yıl, hedef kâr ve aylık kilitle 15m/30m lig taraması yap; ardından terminalden yeni referans al.');
         }
-        worker=new Worker('combination-worker.js?v=23-history');
+        worker=new Worker(range?'combination-range.js?v=1':'combination-worker.js?v=23-history');
     }catch(reason){error(reason.message);return}
-    const config={minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
+    const config={...range,minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
     result=null;$('applyStatus').textContent='';$('resultSection').hidden=true;$('progressBox').hidden=false;$('progressTitle').textContent='Terminal referansı doğrulanıyor';$('progressDetail').textContent='Aynı bakiye ve aynı slota kabul edilen işlem listesi bekleniyor.';setRunning(true);
     worker.onmessage=({data})=>{
         if(data.type==='progress'){$('progressTitle').textContent=data.message;$('progressDetail').textContent=data.detail}
         if(data.type==='reference'){
             $('referenceStatus').textContent='Terminal referansı doğrulandı: bakiye ve kabul edilen işlemler eşleşiyor.';
             $('referenceBalance').textContent=money(data.baseline.balance);
+        }
+        if(data.type==='range-reference'){
+            $('referenceStatus').textContent='Terminal referansı doğrulandı. Sonuçlar seçili tarih aralığının ayrı simülasyonudur.';
         }
         if(data.type==='error'){stop();$('progressTitle').textContent='Analiz tamamlanamadı';error(data.message)}
         if(data.type==='result'){stop();result=data;renderResult();$('progressTitle').textContent='Karşılaştırma tamamlandı';$('progressDetail').textContent=data.tested+' portföy denemesi yapıldı.'}
@@ -142,7 +170,7 @@ function period(summary){
 }
 function metrics(summary){
     const view=period(summary),capital=100*view.net/result.base;
-    return `<div class="metric"><span>${selectedMonth==='all'?'Toplam portföy bakiyesi':'Ay sonu gerçekleşmiş bakiye'}</span><strong>${money(view.balance)}</strong><small>Net kazanç: <b class="${view.net<0?'negative':'positive'}">${view.net>=0?'+':''}${money(view.net)}</b> · Sermayeye ${pct(capital)}</small>${selectedMonth==='all'?`<small>Gerçekleşmiş bakiye ${money(view.realized)} · Sabit açık pozisyon getirisi ${money(view.unrealized)}</small>`:''}</div><div class="metric"><span>Kazanma oranı</span><strong>%${view.winRate.toFixed(2)}</strong><small>${view.wins} win / ${view.losses} lose · ${view.trades} işlem</small></div><div class="metric"><span>Brüt / net işlem getirisi</span><strong>${pct(view.gross)}</strong><small>Net ${pct(view.netPercent)}</small></div><div class="metric"><span>Komisyon</span><strong>${money(view.fees)}</strong><small>Analizdeki tercih uygulandı</small></div>`;
+    return `<div class="metric"><span>${selectedMonth==='all'?(result.analysisRange?'Dönem sonu gerçekleşmiş bakiye':'Toplam portföy bakiyesi'):'Ay sonu gerçekleşmiş bakiye'}</span><strong>${money(view.balance)}</strong><small>Net kazanç: <b class="${view.net<0?'negative':'positive'}">${view.net>=0?'+':''}${money(view.net)}</b> · Sermayeye ${pct(capital)}</small>${selectedMonth==='all'?`<small>${result.analysisRange?'Kapanmış işlemler; dönem sonu açık pozisyon değeri dahil değil.':`Gerçekleşmiş bakiye ${money(view.realized)} · Sabit açık pozisyon getirisi ${money(view.unrealized)}`}</small>`:''}</div><div class="metric"><span>Kazanma oranı</span><strong>%${view.winRate.toFixed(2)}</strong><small>${view.wins} win / ${view.losses} lose · ${view.trades} işlem</small></div><div class="metric"><span>Brüt / net işlem getirisi</span><strong>${pct(view.gross)}</strong><small>Net ${pct(view.netPercent)}</small></div><div class="metric"><span>Komisyon</span><strong>${money(view.fees)}</strong><small>Analizdeki tercih uygulandı</small></div>`;
 }
 function monthTitle(key){return new Intl.DateTimeFormat('tr-TR',{year:'numeric',month:'long',timeZone:'Europe/Istanbul'}).format(new Date(key+'-15T12:00:00Z'))}
 function showMonth(key){
@@ -150,7 +178,7 @@ function showMonth(key){
     document.querySelectorAll('[data-month]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.month===key)));
     const next=result.recommendation||result.baseline;
     $('currentMetrics').innerHTML=metrics(result.baseline);$('suggestedMetrics').innerHTML=metrics(next);
-    $('viewLabel').textContent=key==='all'?result.year+' · Yılbaşından terminal referans anına kadar':monthTitle(key)+' · Kapanmış işlemler';
+    $('viewLabel').textContent=key==='all'?(result.analysisRange?result.analysisRange.startMonth+' — '+result.analysisRange.endMonth+' · Seçilen dönemin kapanmış işlem simülasyonu':result.year+' · Yılbaşından terminal referans anına kadar'):monthTitle(key)+' · Kapanmış işlemler';
     const delta=period(next).net-period(result.baseline).net;
     $('deltaLabel').textContent=key==='all'?'Toplam gerçekleşmiş net kazanç farkı':'Bu ayın net kazanç farkı';
     $('gainDelta').textContent=(delta>=0?'+':'')+money(delta);$('gainDelta').className=delta<0?'negative':'positive';
@@ -158,6 +186,8 @@ function showMonth(key){
 }
 function renderResult(){
     $('resultSection').hidden=false;
+    $('analysisCoverage').hidden=!result.analysisRange;
+    if(result.analysisRange){const gaps=(result.coverage||[]).filter(row=>row.missing>0);$('analysisCoverage').textContent='Dönem simülasyonu: terminaldeki gerçek bakiye değildir. '+(gaps.length?gaps.map(row=>row.symbol+' / '+row.interval+': veri başlangıcı '+new Date(row.first).toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})+', '+row.missing+' eksik mum.').join(' '):'Seçilen aralıkta tüm coin ve zaman dilimlerinin mumları mevcut.')}
     const recommended=result.recommendation,comparison=recommended||result.baseline;
     $('suggestionLabel').textContent=recommended?'BULUNAN DAHA İYİ KOMBİNASYON':'MEVCUT DÜZEN KORUNDU';
     $('resultStatus').textContent=recommended?'Toplam kazanç ve seçilen aylık denge koşulları sağlandı.':'Taranan adaylar içinde daha iyi ve koşullara uygun bir kombinasyon bulunamadı.';
@@ -181,6 +211,7 @@ $('startSearch').addEventListener('click',start);
 $('stopSearch').addEventListener('click',()=>{stop();$('progressTitle').textContent='Analiz durduruldu';$('progressDetail').textContent='Terminal ayarları değiştirilmedi.'});
 $('resultSection').addEventListener('click',event=>{const apply=event.target.closest('[data-apply-index]');if(apply){applyCoinRecommendation(Number(apply.dataset.applyIndex));return}const button=event.target.closest('[data-month]');if(button&&result)showMonth(button.dataset.month)});
 $('leagueOnly').addEventListener('change',updateLeagueStatus);
+for(const id of ['analysisPeriod','analysisStart','analysisEnd'])$(id).addEventListener('change',updateAnalysisPeriod);
 $('downloadResult').addEventListener('click',()=>{
     if(!result)return;
     const payload={type:'kuzgun-combination-v2-review',applied:false,createdAt:new Date().toISOString(),result};
