@@ -3976,3 +3976,76 @@ if (document.readyState === 'loading') {
 } else {
     startEngine();
 }
+
+// Kombinasyon v2: terminal hesabının salt okunur, zaman damgalı referansı.
+async function saveCombinationTerminalReference() {
+    if (typeof PortfolioEngine === 'undefined') throw new Error('Portföy motoru hazır değil');
+    const notReady=KZ_STATE.coins.filter(coin=>coin.isActive!==false&&!coin.candleHistoryReady);
+    if(notReady.length)throw new Error('Mum verileri henüz tamamlanmadı: '+notReady.map(coin=>coin.displaySymbol||coin.symbol).join(', '));
+    KZ_STATE.coins.forEach(coin=>rebuildCoinMonthlyLedger(coin));
+    const allRawTrades = [];
+    const seen = new Set();
+    const add = trade => {
+        if (seen.has(trade.id)) return;
+        seen.add(trade.id);
+        allRawTrades.push({...trade,pnlPercent:Number(trade.pnlPercent ?? trade.pnl ?? 0)});
+    };
+    for (const coin of KZ_STATE.coins) {
+        for (const month of getCoinMonthlyLedger(coin)) {
+            for (const trade of month.tradesList) {
+                if (trade.isReal || coin.isActive !== false) add(trade);
+            }
+        }
+    }
+    for (const trade of KZ_STATE.closedTrades || []) {
+        if (seen.has(trade.id) || !getTurkeyMonthKey(trade.exitTime).startsWith(String(KZ_STATE.selectedYear) + '-')) continue;
+        // Silinmiş coinlerin de seçili yıla ait kayıtları korunur.
+        add({...trade,source:trade.source || (trade.isManual ? 'manual' : 'automatic'),
+            monthKey:trade.exitMonth || getTurkeyMonthKey(trade.exitTime)});
+    }
+
+
+    const asOf = Date.now();
+    const year = String(KZ_STATE.selectedYear);
+    const startDateTimestamp = parseFloat(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
+    const coins = KZ_STATE.coins.map(coin => ({
+        id:coin.id,symbol:coin.symbol,displaySymbol:coin.displaySymbol,interval:coin.interval,
+        rsiLength:coin.rsiLength,buyRsi:coin.buyRsi,sellRsi:coin.sellRsi,
+        profitTarget:coin.profitTarget,monthlyCap:coin.monthlyCap,isActive:coin.isActive,
+        price:coin.price,rawCandles:(coin.rawCandles||[]).filter(c=>c.time+getIntervalMilliseconds(coin.interval)<=asOf)
+    }));
+    const referenceArgs = {
+        baseBalance:KZ_STATE.portfolioBaseUsd,maxSlots:KZ_STATE.maxSlots,trades:allRawTrades,
+        activePositions:KZ_STATE.activePositions,coins:coins.filter(coin=>coin.isActive!==false).map(coin=>({id:coin.id,symbol:coin.symbol,price:coin.price})),
+        isSlotConstraintEnabled:localStorage.getItem('kuzgun_slot_constraint_enabled')!=='false',
+        isFeeDeductionEnabled:localStorage.getItem('kuzgun_fee_deduction_enabled')!=='false',
+        startDateTimestamp,selectedYear:year
+    };
+    const result = PortfolioEngine.calculateCompoundedBalance(referenceArgs);
+    const snapshot = JSON.parse(JSON.stringify({schema:'kuzgun-combination-v2',asOf,year,
+        coins,referenceArgs,closedTrades:KZ_STATE.closedTrades||[],pendingClosedTrades:KZ_STATE.pendingClosedTrades||[],
+        expected:{realizedBalance:result.realizedBalance,compoundedBalance:result.compoundedBalance,
+            unrealizedPnlUSD:result.unrealizedPnlUSD,totalFeesUSD:result.totalFeesUSD,
+            acceptedIds:[...result.acceptedTradeIds].sort(),executedCount:result.executedTrades.length}}));
+    const db = await CandleCache.init();
+    if(!db)throw new Error('Terminal referansı kaydedilemedi');
+    await new Promise((resolve,reject)=>{
+        const tx=db.transaction('candles','readwrite');
+        tx.objectStore('candles').put({key:'kuzgun_combination_terminal_v2',data:snapshot});
+        tx.oncomplete=resolve;tx.onerror=()=>reject(new Error('Referans kaydı tamamlanamadı'));
+        tx.onabort=()=>reject(new Error('Referans kaydı iptal edildi'));
+    });
+    return snapshot;
+}
+let combinationReferenceSaving=false;
+document.addEventListener('click',async event=>{
+    const link=event.target.closest('a[href="combination.html"]');
+    if(!link || event.button!==0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey)return;
+    event.preventDefault();
+    if(combinationReferenceSaving)return;
+    combinationReferenceSaving=true;
+    const originalText=link.textContent;link.textContent='Referans hazırlanıyor…';
+    try {await saveCombinationTerminalReference();window.location.href=link.href;}
+    catch(error){alert(error.message+' Terminali yenileyip yeniden deneyebilirsin.');}
+    finally {combinationReferenceSaving=false;link.textContent=originalText;}
+});

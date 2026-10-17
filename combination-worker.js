@@ -1,4 +1,9 @@
 "use strict";
+let SNAP=null;
+let KZ_STATE={coins:[],closedTrades:[],activePositions:[],pendingClosedTrades:[],selectedYear:'2026'};
+function getTurkeyMonthKey(timestamp=SNAP?.asOf||Date.now()) {return new Date(Number(timestamp)+10800000).toISOString().slice(0,7)}
+function formatTradeDuration(entryTime,exitTime) {const minutes=Math.max(0,Math.floor((exitTime-entryTime)/60000));return Math.floor(minutes/60)+'sa '+minutes%60+'dk'}
+const TF={'5m':300000,'15m':900000,'30m':1800000,'1h':3600000,'4h':14400000};
 // KUZGUN PRO — HIGH PERFORMANCE PORTFOLIO & TIMEFRAME ENGINE
 const PortfolioEngine = {
     // 1. ⚡️ ALTIN STANDART SLOT ÇAKIŞMA KALKANI (0.1 Milisaniyede Tamamlanır)
@@ -240,465 +245,434 @@ const PortfolioEngine = {
     }
 };
 
-const monthNames = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
-        function getTurkeyDateComponents(timestampMs) {
-            // Supported analysis dates are 2017+; Istanbul stays at UTC+03:00.
-            const iso = new Date(Number(timestampMs) + 10800000).toISOString();
-            return {monthKey: iso.slice(0,7), day: Number(iso.slice(8,10))};
+function calculateRSIHistory(prices, period = 14) {
+    const rsiValues = new Array(prices.length).fill(null);
+    if (prices.length <= period) return rsiValues;
+
+    let gains = 0, losses = 0;
+    for (let i = 1; i <= period; i++) {
+        const diff = prices[i] - prices[i - 1];
+        if (diff >= 0) gains += diff; else losses += Math.abs(diff);
+    }
+
+    let avgGain = gains / period;
+    let avgLoss = losses / period;
+    rsiValues[period] = avgLoss === 0 ? 100.0 : 100.0 - (100.0 / (1.0 + avgGain / avgLoss));
+
+    for (let i = period + 1; i < prices.length; i++) {
+        const diff = prices[i] - prices[i - 1];
+        const gain = diff >= 0 ? diff : 0;
+        const loss = diff < 0 ? Math.abs(diff) : 0;
+
+        avgGain = (avgGain * (period - 1) + gain) / period;
+        avgLoss = (avgLoss * (period - 1) + loss) / period;
+
+        if (avgLoss === 0) {
+            rsiValues[i] = 100.0;
+        } else {
+            const rs = avgGain / avgLoss;
+            rsiValues[i] = 100.0 - (100.0 / (1.0 + rs));
         }
-        function calculateRSIHistory(prices, period = 14) {
-            const rsiValues = new Array(prices.length).fill(null);
-            if (prices.length <= period) return rsiValues;
-
-            let gains = 0, losses = 0;
-            for (let i = 1; i <= period; i++) {
-                const diff = prices[i] - prices[i - 1];
-                if (diff >= 0) gains += diff; else losses += Math.abs(diff);
-            }
-
-            let avgGain = gains / period;
-            let avgLoss = losses / period;
-            rsiValues[period] = avgLoss === 0 ? 100.0 : 100.0 - (100.0 / (1.0 + avgGain / avgLoss));
-
-            for (let i = period + 1; i < prices.length; i++) {
-                const diff = prices[i] - prices[i - 1];
-                const gain = diff >= 0 ? diff : 0;
-                const loss = diff < 0 ? Math.abs(diff) : 0;
-
-                avgGain = (avgGain * (period - 1) + gain) / period;
-                avgLoss = (avgLoss * (period - 1) + loss) / period;
-
-                if (avgLoss === 0) {
-                    rsiValues[i] = 100.0;
-                } else {
-                    const rs = avgGain / avgLoss;
-                    rsiValues[i] = 100.0 - (100.0 / (1.0 + rs));
-                }
-            }
-            return rsiValues;
+    }
+    return rsiValues;
+}
+function isSameTradeSignal(first, second) {
+    const symbolOf = trade => {
+        const coin = (KZ_STATE.coins || []).find(c => c.id === trade.coinId);
+        return String(trade.symbol || coin?.symbol || trade.displaySymbol || '')
+            .toUpperCase().replace(/[^A-Z0-9]/g, '');
+    };
+    const firstSymbol = symbolOf(first), secondSymbol = symbolOf(second);
+    const sameCoin = (first.coinId && second.coinId && first.coinId === second.coinId)
+        || (firstSymbol && secondSymbol && firstSymbol === secondSymbol);
+    if (!sameCoin) return false;
+    if (first.originSignalId && second.originSignalId && first.originSignalId === second.originSignalId) return true;
+    if (first.id && second.id && first.id === second.id) return true;
+    if (Number(first.originSignalTime) > 0 && Number(second.originSignalTime) > 0) {
+        return Math.floor(Number(first.originSignalTime) / 60000) === Math.floor(Number(second.originSignalTime) / 60000);
+    }
+    const firstEntry = Number(first.originSignalTime || first.entryTime), secondEntry = Number(second.originSignalTime || second.entryTime);
+    if (!(firstEntry > 0) || !(secondEntry > 0)) return false;
+    if (firstEntry === secondEntry) return true;
+    // Eski canlı kayıtlar Date.now() ile saniye/milisaniye taşır;
+    // simülasyon ise mum sınırını kullanır. Aynı giriş dakikasını eşleştir.
+    // Manuel girişler için bu yaklaşık eşleştirmeyi kullanma.
+    if (first.isManual || second.isManual || first.source === 'manual' || second.source === 'manual') return false;
+    return Math.floor(firstEntry / 60000) === Math.floor(secondEntry / 60000);
+}
+function coinMatchesTrade(coin, trade) {
+    return trade.coinId === coin.id || (trade.symbol && trade.symbol === coin.symbol);
+}
+function rebuildCoinMonthlyLedger(coin) {
+    const year = String(KZ_STATE.selectedYear);
+    const recorded = (KZ_STATE.closedTrades || []).filter(t => coinMatchesTrade(coin, t))
+        .map(t => ({...t, isReal: true, isRealTrade: true,
+            source: t.source || (t.isManual ? 'manual' : 'automatic'),
+            pnl: Number(t.pnlPercent || 0), pnlPercent: Number(t.pnlPercent || 0),
+            duration: formatTradeDuration(t.entryTime, t.exitTime),
+            monthKey: getTurkeyMonthKey(t.exitTime)}));
+    const open = (KZ_STATE.activePositions || []).filter(t => coinMatchesTrade(coin, t));
+    const waiting = (KZ_STATE.pendingClosedTrades || []).filter(t => coinMatchesTrade(coin, t));
+    const occupied = [...recorded, ...open.map(t => ({...t, exitTime: Infinity}))];
+    const raw = coin.strategyTrades || (coin.simMonthlyStats || []).flatMap(m => m.tradesList || []).filter(t => !t.isReal);
+    const simulated = raw.filter(t => !t.source && Number(t.exitTime) > 0)
+        .filter(t => ![...recorded, ...open, ...waiting].some(r => isSameTradeSignal(t, r)))
+        .filter(t => !occupied.some(r => Number(t.entryTime) < Number(r.exitTime)
+            && Number(t.exitTime) > Number(r.entryTime)))
+        .map(t => ({...t, symbol: coin.symbol, isReal: false,
+            pnl: Number(t.pnl ?? t.pnlPercent ?? 0),
+            pnlPercent: Number(t.pnl ?? t.pnlPercent ?? 0),
+            monthKey: getTurkeyMonthKey(t.exitTime)}));
+    const months = new Map();
+    const names = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+    const month = key => {
+        if (!months.has(key)) months.set(key, {monthKey:key,name:names[Number(key.slice(5))-1],
+            trades:0,pnl:0,isLocked:false,tradesList:[],afterLimitCount:0});
+        return months.get(key);
+    };
+    // Aylar boş olsa bile karttaki mevcut yıl tablosunda yerini korur.
+    const currentKey = getTurkeyMonthKey();
+    const maxMonth = currentKey.startsWith(year + '-') ? Number(currentKey.slice(5)) : 12;
+    for (let i=1; i<=maxMonth; i++) month(`${year}-${String(i).padStart(2,'0')}`);
+    const events=[];
+    const seen = new Set();
+    for (const trade of [...recorded, ...simulated]) {
+        if (!trade.monthKey.startsWith(year + '-')) continue;
+        const key = trade.id || `${trade.coinId}_${trade.entryTime}_${trade.exitTime}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (!(Number(trade.entryTime)>0) || !(Number(trade.exitTime)>=Number(trade.entryTime))) continue;
+        // entry=exit olan eski kayıtlar da kaybolmaz.
+        events.push({time:Number(trade.entryTime),type:1,trade});
+        events.push({time:Number(trade.exitTime),type:0,trade});
+    }
+    events.sort((a,b) => a.time-b.time ||
+        (a.trade===b.trade ? b.type-a.type : a.type-b.type) || Number(b.trade.isReal)-Number(a.trade.isReal));
+    const admitted=new Set();
+    const cap=Number(coin.monthlyCap || 0);
+    for (const event of events) {
+        const trade=event.trade;
+        if (event.type===1) {
+            const entryMonth=month(getTurkeyMonthKey(trade.entryTime));
+            const locked=cap>0 && entryMonth.pnl+0.001>=cap;
+            if (locked && !trade.isReal) continue;
+            trade.afterMonthlyLimit=Boolean(locked && trade.isReal);
+            admitted.add(trade);
+        } else if (admitted.has(trade)) {
+            const result=month(trade.monthKey);
+            result.tradesList.push(trade);
+            result.trades++;
+            result.pnl+=trade.pnl;
+            if (trade.afterMonthlyLimit) result.afterLimitCount++;
         }
-        function simulateSingleConfig(candles, rsiLength, buyRsi, sellRsi, profitTarget, monthlyCap) {
-            const closePrices = candles.map(c => c.close);
-            const rsiVals = calculateRSIHistory(closePrices, rsiLength);
-            
-            let inPos = false, entryP = 0, entryT = 0;
-            let totPnl = 0, winCount = 0, totalTrades = 0;
-            let totalHoldSeconds = 0;
-            let monthlyMap = {};
-            const tradeLogs = [];
-
-            for (let i = rsiLength + 1; i < candles.length; i++) {
-                const c = candles[i];
-                const rsi = rsiVals[i];
-                const prevRsi = rsiVals[i - 1];
-                if (rsi === null || prevRsi === null) continue;
-
-                const mKey = c.monthKey;
-                if (!monthlyMap[mKey]) monthlyMap[mKey] = { pnl: 0, isLocked: false };
-                const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= monthlyCap;
-
-                if (!inPos && !isCapReached) {
-                    if (prevRsi <= buyRsi && rsi > buyRsi) {
-                        inPos = true;
-                        entryP = c.close;
-                        entryT = c.time;
-                    }
-                } else if (inPos) {
-                    const targetP = entryP * (1.0 + profitTarget / 100.0);
-                    let exited = false, pnl = 0;
-
-                    if (c.high >= targetP) {
-                        exited = true;
-                        pnl = profitTarget;
-                    } else if (rsi >= sellRsi) {
-                        exited = true;
-                        pnl = ((c.close - entryP) / entryP) * 100.0;
-                    }
-
-                    if (exited) {
-                        inPos = false;
-                        totalTrades++;
-                        if (pnl >= 0) winCount++;
-                        totPnl += pnl;
-
-                        monthlyMap[mKey].pnl += pnl;
-                        if ((monthlyMap[mKey].pnl + 0.001) >= monthlyCap) {
-                            monthlyMap[mKey].isLocked = true;
-                        }
-
-                        const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
-                        totalHoldSeconds += diffSec;
-
-                        tradeLogs.push({
-                            entryTime: entryT,
-                            exitTime: c.time,
-                            entryPrice: entryP,
-                            exitPrice: c.high >= targetP ? targetP : c.close,
-                            reason: c.high >= targetP ? 'Kâr hedefi' : 'RSI satışı',
-                            pnl: pnl,
-                            monthKey: mKey
-                        });
-                    }
-                }
+    }
+    const summaries=[...months.values()].filter(m=>m.monthKey.startsWith(year+'-'));
+    for (const summary of summaries) {
+        summary.tradesList.sort((a,b)=>b.exitTime-a.exitTime);
+        summary.isLocked=cap>0 && summary.pnl+0.001>=cap;
+    }
+    coin.monthlyLedger=summaries.sort((a,b)=>b.monthKey.localeCompare(a.monthKey));
+    // Eski ekranların kullandığı alan da aynı kaynağı gösterir.
+    coin.simMonthlyStats=coin.monthlyLedger;
+    coin.simLastTrades=coin.monthlyLedger.flatMap(m=>m.tradesList)
+        .sort((a,b)=>b.exitTime-a.exitTime).slice(0,10);
+    return coin.monthlyLedger;
+}
+function progress(message,detail=''){self.postMessage({type:'progress',message,detail})}
+function simulateTerminalTrades(coin,candles,settings,rsiValues=null) {
+    const ms=TF[settings.interval];
+    const closed=candles.filter(c=>c.time+ms<=SNAP.asOf);
+    const rsi=rsiValues||calculateRSIHistory(closed.map(c=>c.close),settings.rsiLength);
+    let inPos=false,entryP=0,entryT=0;const trades=[];
+    for(let i=settings.rsiLength+1;i<closed.length;i++){
+        const candle=closed[i],current=rsi[i],previous=rsi[i-1];
+        if(current===null||previous===null)continue;
+        if(!inPos){if(previous<=settings.buyRsi&&current>settings.buyRsi){inPos=true;entryP=candle.close;entryT=candle.time+ms}}
+        else {
+            const target=entryP*(1+coin.profitTarget/100);
+            let exited=false,pnl=0,reason='';
+            if(candle.high>=target){exited=true;pnl=coin.profitTarget;reason=`Kâr (%${coin.profitTarget.toFixed(1)})`}
+            else if(current>=settings.sellRsi){exited=true;pnl=(candle.close-entryP)/entryP*100;reason=`RSI Sat (${current.toFixed(0)})`}
+            if(exited){
+                inPos=false;const exitTime=candle.time+ms;
+                trades.push({id:`sim_${coin.id}_${entryT}_${exitTime}`,coinId:coin.id,symbol:coin.symbol,
+                    originSignalId:`${coin.id||coin.symbol}_${entryT}`,originSignalTime:entryT,
+                    entryTime:entryT,exitTime,entryPrice:entryP,exitPrice:reason.startsWith('Kâr (')?target:candle.close,
+                    pnl,pnlPercent:pnl,monthKey:candle.monthKey,reason,isWin:pnl>=0});
             }
-
-            const winRateVal = totalTrades > 0 ? (winCount / totalTrades) * 100.0 : 0.0;
-            const avgSec = totalTrades > 0 ? Math.floor(totalHoldSeconds / totalTrades) : 0;
-            const avgHours = avgSec / 3600.0;
-            const avgDurationStr = avgHours < 1.0 ? `${Math.max(15, Math.floor(avgHours * 60))}dk` : `${avgHours.toFixed(1)}sa`;
-
-            const groupedByMonth = {};
-            tradeLogs.forEach(t => {
-                if (!groupedByMonth[t.monthKey]) groupedByMonth[t.monthKey] = [];
-                groupedByMonth[t.monthKey].push(t);
-            });
-
-            const sortedMonthKeys = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a));
-            const monthlyRecords = [];
-            let totalLockDaysSum = 0;
-            let lockedMonthCount = 0;
-
-            for (const mKey of sortedMonthKeys) {
-                const monthTrades = groupedByMonth[mKey].sort((a, b) => a.entryTime - b.entryTime);
-                if (monthTrades.length === 0) continue;
-
-                const firstTrade = monthTrades[0];
-                const firstDay = getTurkeyDateComponents(firstTrade.entryTime).day;
-
-                let runningPnl = 0.0;
-                let lockDay = null;
-                let daysToLock = null;
-                let isLocked = false;
-
-                for (const t of monthTrades) {
-                    runningPnl += t.pnl;
-                    if ((runningPnl + 0.001) >= monthlyCap && !isLocked) {
-                        isLocked = true;
-                        const lDay = getTurkeyDateComponents(t.exitTime).day;
-                        lockDay = lDay;
-                        daysToLock = Math.max(1, lDay - firstDay + 1);
-                        totalLockDaysSum += daysToLock;
-                        lockedMonthCount++;
-                    }
-                }
-
-                const mIdx = parseInt(mKey.split('-')[1], 10) - 1;
-                const mTitle = monthNames[Math.max(0, Math.min(11, mIdx))];
-
-                monthlyRecords.push({
-                    monthKey: mKey,
-                    monthName: mTitle,
-                    firstTradeDay: firstDay,
-                    lockDay: lockDay,
-                    daysToLock: daysToLock,
-                    totalMonthPnl: runningPnl,
-                    isLocked: isLocked
-                });
-            }
-
-            const avgDays = lockedMonthCount > 0 ? (totalLockDaysSum / lockedMonthCount).toFixed(1) : null;
-            const ratioStr = `${lockedMonthCount}/${Math.max(1, monthlyRecords.length)} Ay`;
-
-            return {
-                rsiLength,
-                buyRsi,
-                sellRsi,
-                winRate: `${winRateVal.toFixed(0)}%`,
-                winRateDouble: winRateVal,
-                avgDurationFormatted: avgDurationStr,
-                totalTrades,
-                winCount,
-                lossCount: totalTrades - winCount,
-                tradeLogs,
-                openPosition: inPos ? {entryTime: entryT, entryPrice: entryP} : null,
-                netPnl: totPnl,
-                monthlyBreakdowns: monthlyRecords,
-                avgDaysToLock: avgDays,
-                lockedMonthsRatio: ratioStr
-            };
         }
-        function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap) {
-            const closePrices = candles.map(c => c.close);
-            const rsiVals = calculateRSIHistory(closePrices, rsiLength);
-            let bestCandidate = null;
-
-            for (let buy = 10; buy <= 35; buy += 1) {
-                for (let sell = 65; sell <= 92; sell += 1) {
-                    let inPos = false, entryP = 0, totPnl = 0, winCount = 0, totalTrades = 0;
-                    let monthlyStats = {};
-
-                    for (let i = rsiLength + 1; i < candles.length; i++) {
-                        const c = candles[i];
-                        const rsi = rsiVals[i];
-                        const prevRsi = rsiVals[i - 1];
-                        if (rsi === null || prevRsi === null) continue;
-
-                        const mKey = c.monthKey;
-                        if (!monthlyStats[mKey]) monthlyStats[mKey] = { pnl: 0 };
-                        const isCapReached = (monthlyStats[mKey].pnl + 0.001) >= monthlyCap;
-
-                        if (!inPos && !isCapReached) {
-                            if (prevRsi <= buy && rsi > buy) {
-                                inPos = true;
-                                entryP = c.close;
-                            }
-                        } else if (inPos) {
-                            const targetP = entryP * (1.0 + profitTarget / 100.0);
-                            let exited = false, pnl = 0;
-
-                            if (c.high >= targetP) {
-                                exited = true;
-                                pnl = profitTarget;
-                            } else if (rsi >= sell) {
-                                exited = true;
-                                pnl = ((c.close - entryP) / entryP) * 100.0;
-                            }
-
-                            if (exited) {
-                                inPos = false;
-                                totalTrades++;
-                                if (pnl >= 0) winCount++;
-                                totPnl += pnl;
-                                monthlyStats[mKey].pnl += pnl;
-                            }
-                        }
-                    }
-
-                    if (totalTrades >= 1) {
-                        const winRate = (winCount / totalTrades) * 100.0;
-                        const score = totPnl * Math.pow(winRate / 100.0, 1.5);
-                        if (!bestCandidate || score > bestCandidate.score) {
-                            bestCandidate = { buyRsi: buy, sellRsi: sell, score };
-                        }
-                    }
-                }
-            }
-
-            const chosenBuy = bestCandidate ? bestCandidate.buyRsi : 25;
-            const chosenSell = bestCandidate ? bestCandidate.sellRsi : 75;
-            return simulateSingleConfig(candles, rsiLength, chosenBuy, chosenSell, profitTarget, monthlyCap);
-        }
-
-const TF_MS = {'5m':300000,'15m':900000,'30m':1800000,'1h':3600000,'4h':14400000};
-function report(message, detail='') { self.postMessage({type:'progress',message,detail}); }
-async function fetchCandles(symbol, interval, start, end) {
+    }
+    return trades;
+}
+function ledgerCandidate(coin,candles,settings,rsiValues=null) {
+    if(settings.off)return {settings:{off:true},trades:[],count:0,winRate:0,standalone:0,signature:''};
+    const virtual={...coin,...settings,rawCandles:undefined,strategyTrades:simulateTerminalTrades(coin,candles,settings,rsiValues)};
+    const ledger=rebuildCoinMonthlyLedger(virtual);
+    // Real records are immutable and enter the portfolio once, outside the candidate pool.
+    const trades=ledger.flatMap(month=>month.tradesList).filter(trade=>!trade.isReal);
+    const start=SNAP.referenceArgs.startDateTimestamp>0?SNAP.referenceArgs.startDateTimestamp*1000:Date.UTC(Number(SNAP.year)||2026,0,1);
+    const measured=trades.filter(trade=>trade.exitTime>=start);
+    const wins=measured.filter(trade=>trade.pnlPercent>=0).length;
+    return {settings:{interval:settings.interval,rsiLength:settings.rsiLength,buyRsi:settings.buyRsi,sellRsi:settings.sellRsi},trades,
+        count:measured.length,winRate:measured.length?wins/measured.length*100:0,
+        standalone:measured.reduce((sum,trade)=>sum+trade.pnlPercent,0),
+        averageHold:measured.length?measured.reduce((sum,trade)=>sum+trade.exitTime-trade.entryTime,0)/measured.length:Infinity,
+        signature:measured.slice(0,16).map(trade=>trade.entryTime+'_'+trade.exitTime).join(',')};
+}
+function assembleTrades(groups,selection) {
+    const list=[],seen=new Set();
+    const add=trade=>{if(!seen.has(trade.id)){seen.add(trade.id);list.push({...trade,pnlPercent:Number(trade.pnlPercent??trade.pnl??0)})}};
+    for(let i=0;i<groups.length;i++) {
+        const candidate=groups[i].options[selection[i]];
+        // Match recalculateFullPortfolio(): months and trades are newest first.
+        const recorded=SNAP.closedTrades.filter(trade=>coinMatchesTrade(groups[i].coin,trade)).map(trade=>({...trade,isReal:true,isRealTrade:true,
+            source:trade.source||(trade.isManual?'manual':'automatic'),pnl:Number(trade.pnlPercent||0),pnlPercent:Number(trade.pnlPercent||0),monthKey:getTurkeyMonthKey(trade.exitTime)}));
+        const merged=[...recorded,...candidate.trades].filter(trade=>trade.monthKey.startsWith(SNAP.year+'-')).sort((a,b)=>b.exitTime-a.exitTime);
+        merged.forEach(add);
+    }
+    for(const trade of SNAP.closedTrades) {
+        if(seen.has(trade.id)||!getTurkeyMonthKey(trade.exitTime).startsWith(SNAP.year+'-'))continue;
+        add({...trade,source:trade.source||(trade.isManual?'manual':'automatic'),monthKey:trade.exitMonth||getTurkeyMonthKey(trade.exitTime)});
+    }
+    return list;
+}
+function evaluate(groups,selection,detailed=false) {
+    const raw=assembleTrades(groups,selection);
+    const args=SNAP.referenceArgs;
+    const accepted=args.isSlotConstraintEnabled?PortfolioEngine.filterTradesBySlotCapacity(raw,args.maxSlots,args.activePositions):raw;
+    const effectiveStart=args.startDateTimestamp>0?args.startDateTimestamp:Date.UTC(Number(args.selectedYear)||2026,0,1)/1000;
+    const valid=accepted.filter(trade=>trade.exitTime/1000>=effectiveStart).sort((a,b)=>a.exitTime-b.exitTime);
+    const monthStats={};
+    const coins={};for(const group of groups)coins[group.coin.id]={trades:0,wins:0,net:0};
+    let balance=args.baseBalance,fees=0,wins=0;
+    for(const trade of valid) {
+        const budget=balance/Math.max(1,args.maxSlots),pct=trade.pnlPercent;
+        const buyFee=args.isFeeDeductionEnabled?budget*.00075:0;
+        const value=budget*(1+pct/100),sellFee=args.isFeeDeductionEnabled?value*.00075:0;
+        const fee=buyFee+sellFee,net=budget*(pct/100)-fee;
+        balance+=net;fees+=fee;if(pct>=0)wins++;
+        const key=getTurkeyMonthKey(trade.exitTime);
+        const row=monthStats[key]||(monthStats[key]={net:0,fees:0,gross:0,netPercent:0,trades:0,wins:0});
+        row.net+=net;row.fees+=fee;row.gross+=pct;row.netPercent+=budget>0?net/budget*100:pct;row.trades++;if(pct>=0)row.wins++;
+        if(coins[trade.coinId]){coins[trade.coinId].trades++;coins[trade.coinId].net+=net;if(pct>=0)coins[trade.coinId].wins++}
+    }
+    const admitted=new Set(accepted.map(trade=>trade.id));
+    let skipped=0,skippedPnl=0;
+    for(const trade of raw)if(!admitted.has(trade.id)&&trade.exitTime/1000>=effectiveStart){skipped++;skippedPnl+=trade.pnlPercent}
+    for(const row of Object.values(coins))row.winRate=row.trades?row.wins/row.trades*100:0;
+    // Existing open positions and their marks are fixed in both historical alternatives.
+    let unrealized=0;
+    for(const position of args.activePositions){
+        const coin=args.coins.find(c=>c.id===position.coinId||c.symbol===position.symbol);
+        const price=coin&&coin.price>0?coin.price:position.entryPrice;
+        const amount=Number(position.allocatedUsd)>0?Number(position.allocatedUsd):balance/Math.max(1,args.maxSlots);
+        unrealized+=amount*(price-position.entryPrice)/position.entryPrice;
+    }
+    const summary={selection:[...selection],realized:balance,balance:balance+unrealized,unrealized,fees,trades:valid.length,wins,losses:valid.length-wins,
+        winRate:valid.length?wins/valid.length*100:0,months:monthStats,coins,skipped,skippedPnl};
+    if(detailed)summary.acceptedIds=accepted.map(trade=>trade.id).sort();
+    return summary;
+}
+function referenceGroups(snapshot) {
+    SNAP=snapshot;
+    KZ_STATE={coins:snapshot.coins,closedTrades:snapshot.closedTrades,activePositions:snapshot.referenceArgs.activePositions,pendingClosedTrades:snapshot.pendingClosedTrades,selectedYear:snapshot.year};
+    return snapshot.coins.map(coin=>{
+        if(!TF[coin.interval])throw new Error(coin.symbol+': zaman dilimi desteklenmiyor');
+        const settings={interval:coin.interval,rsiLength:coin.rsiLength,buyRsi:coin.buyRsi,sellRsi:coin.sellRsi};
+        const candidate=coin.isActive===false?ledgerCandidate(coin,[],{off:true}):ledgerCandidate(coin,coin.rawCandles||[],settings);
+        return {coin,original:settings,options:[candidate],currentIndex:0};
+    });
+}
+function verifyReference(snapshot) {
+    const groups=referenceGroups(snapshot);
+    const baseline=evaluate(groups,groups.map(()=>0),true);
+    const reference=PortfolioEngine.calculateCompoundedBalance(snapshot.referenceArgs);
+    const expected=snapshot.expected;
+    const expectedIds=[...reference.acceptedTradeIds].sort();
+    const sourceMatches=Math.abs(reference.realizedBalance-expected.realizedBalance)<.005&&Math.abs(reference.compoundedBalance-expected.compoundedBalance)<.005;
+    const generatedMatches=Math.abs(baseline.realized-reference.realizedBalance)<.005&&Math.abs(baseline.balance-reference.compoundedBalance)<.005&&JSON.stringify(baseline.acceptedIds)===JSON.stringify(expectedIds);
+    if(!sourceMatches||!generatedMatches)throw new Error(`Terminal referansı eşleşmedi. Terminal: ${expected.compoundedBalance.toFixed(2)} USDT / yeniden hesap: ${baseline.balance.toFixed(2)} USDT. Terminali yenileyip Kombinasyon bağlantısından tekrar aç. Eşleşmeden öneri üretilmedi.`);
+    return {groups,baseline};
+}
+function monthKeys() {
+    const year=Number(SNAP.year),asOfKey=getTurkeyMonthKey(SNAP.asOf);
+    const max=asOfKey.startsWith(SNAP.year+'-')?Number(asOfKey.slice(5)):12;
+    return Array.from({length:max},(_,i)=>SNAP.year+'-'+String(i+1).padStart(2,'0'));
+}
+function guard(summary,baseline,groups,config) {
+    const issues=[];
+    if(!Number.isFinite(summary.balance)||summary.realized<=baseline.realized+.005||summary.balance<=baseline.balance+.005)issues.push('Toplam net kazanç artmadı');
+    if(summary.winRate+1e-9<baseline.winRate)issues.push('Portföy kazanma oranı azaldı');
+    for(let i=0;i<groups.length;i++) {
+        const candidate=groups[i].options[summary.selection[i]],before=baseline.coins[groups[i].coin.id],after=summary.coins[groups[i].coin.id];
+        if(candidate.settings.off)continue;
+        if(summary.selection[i]!==0&&(candidate.count<config.minTrades||after.trades<config.minTrades))issues.push('Alternatif işlem örneği yetersiz');
+        if(after.trades&&after.winRate+1e-9<before.winRate)issues.push('Coin başarı oranı azaldı');
+    }
+    const months=monthKeys();
+    const previous=months.map(key=>baseline.months[key]?.net||0),next=months.map(key=>summary.months[key]?.net||0);
+    if(config.monthlyMode==='strict') {
+        if(next.some((value,i)=>value+.005<previous[i]))issues.push('En az bir ayın net kazancı geriledi');
+    } else {
+        if(next.filter(value=>value<-.005).length>previous.filter(value=>value<-.005).length)issues.push('Zararlı ay sayısı arttı');
+        if(Math.min(...next)<Math.min(...previous)-.005)issues.push('En kötü ay geriledi');
+        if(next.filter((value,i)=>value>previous[i]+.005).length<next.filter((value,i)=>value<previous[i]-.005).length)issues.push('Gerileyen ay sayısı iyileşen ay sayısından fazla');
+    }
+    return [...new Set(issues)];
+}
+async function fetchYear(symbol,interval) {
+    const start=Date.UTC(Number(SNAP.year),0,1),end=Math.min(SNAP.asOf,Date.UTC(Number(SNAP.year)+1,0,1));
     const endpoints=['https://data-api.binance.vision/api/v3/klines','https://api.binance.com/api/v3/klines'];
-    let cursor=start, records=[];
-    while(cursor<end) {
-        let batch=null,lastError='Bağlantı kurulamadı';
-        for(const endpoint of endpoints) {
-            const controller=new AbortController();
-            const timer=setTimeout(()=>controller.abort(),15000);
+    let cursor=start;const candles=[];
+    while(cursor<end){
+        let batch=null;
+        for(const endpoint of endpoints){
+            const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
             try {
                 const params=new URLSearchParams({symbol,interval,startTime:String(cursor),endTime:String(end-1),limit:'1000'});
                 const response=await fetch(endpoint+'?'+params,{signal:controller.signal});
-                if(!response.ok) throw new Error('HTTP '+response.status);
-                const data=await response.json();
-                if(!Array.isArray(data)) throw new Error('Geçersiz veri');
-                batch=data;break;
-            } catch(error) {lastError=error.message} finally {clearTimeout(timer)}
+                if(!response.ok)throw new Error('HTTP '+response.status);
+                const value=await response.json();if(!Array.isArray(value))throw new Error('Geçersiz veri');batch=value;break;
+            }catch(error){}finally{clearTimeout(timer)}
         }
-        if(!batch) throw new Error(symbol+'/'+interval+': '+lastError);
-        if(!batch.length) break;
-        let next=Number(batch.at(-1)[0])+TF_MS[interval];
-        if(next<=cursor) throw new Error('Mum verisi ilerlemiyor');
-        for(const row of batch) {
-            const time=Number(row[0]);
-            if(time+TF_MS[interval]>end) continue;
-            const open=Number(row[1]),high=Number(row[2]),low=Number(row[3]),close=Number(row[4]);
-            if(![time,open,high,low,close].every(Number.isFinite)||close<=0) throw new Error('Geçersiz fiyat');
-            records.push({time,open,high,low,close,monthKey:getTurkeyDateComponents(time).monthKey});
+        if(!batch)throw new Error(symbol+' / '+interval+': veri indirilemedi');
+        if(!batch.length)break;
+        const next=Number(batch.at(-1)[0])+1;if(next<=cursor)throw new Error('Veri ilerlemiyor');
+        for(const row of batch){const time=Number(row[0]);if(time+TF[interval]>end)continue;
+            const candle={time,open:Number(row[1]),high:Number(row[2]),low:Number(row[3]),close:Number(row[4]),monthKey:getTurkeyMonthKey(time)};
+            if(![candle.open,candle.high,candle.low,candle.close].every(value=>Number.isFinite(value)&&value>0))throw new Error('Geçersiz mum fiyatı');candles.push(candle);
         }
-        cursor=next;
-        report('Mum verileri alınıyor',`${symbol} / ${interval} · ${records.length.toLocaleString('tr-TR')} mum`);
-        if(batch.length<1000) break;
+        cursor=next;progress(symbol+' / '+interval,`${candles.length.toLocaleString('tr-TR')} mum alındı`);
+        if(batch.length<1000)break;
     }
-    return [...new Map(records.map(c=>[c.time,c])).values()].sort((a,b)=>a.time-b.time);
+    return candles;
 }
-function makeCandidate(coin, strategy, interval, config, key, current=false) {
-    const ms=TF_MS[interval];
-    const trades=strategy.tradeLogs.map((trade,index)=>({...trade,
-        id:`${coin.symbol}_${key}_${index}`,coinId:coin.id,symbol:coin.symbol,
-        entryTime:trade.entryTime+ms,exitTime:trade.exitTime+ms,pnlPercent:trade.pnl,
-        monthKey:getTurkeyDateComponents(trade.exitTime+ms).monthKey
-    })).filter(trade=>trade.entryTime>=config.start && trade.exitTime<=config.end);
-    const wins=trades.filter(trade=>trade.pnlPercent>=0).length;
-    const openTime=strategy.openPosition?strategy.openPosition.entryTime+ms:0;
-    const openSlots=openTime>=config.start && openTime<config.end ? [{id:coin.symbol+'_'+key+'_open',coinId:coin.id,symbol:coin.symbol,entryTime:openTime,exitTime:Infinity,isOpenSimSlot:true}] : [];
-    return {key,current,interval,rsiLength:strategy.rsiLength,buyRsi:strategy.buyRsi,sellRsi:strategy.sellRsi,
-        profitTarget:coin.profitTarget,monthlyCap:coin.monthlyCap,
-        totalTrades:trades.length,wins,losses:trades.length-wins,
-        winRate:trades.length?wins/trades.length*100:0,trades,openSlots};
-}
-function evaluateCombination(groups, selection, config, detailed=true) {
-    const raw=groups.flatMap((group,index)=>group.options[selection[index]].trades);
-    const openSlots=groups.flatMap((group,index)=>group.options[selection[index]].openSlots||[]);
-    const accepted=PortfolioEngine.filterTradesBySlotCapacity([...raw,...openSlots],config.slots,[]).filter(trade=>!trade.isOpenSimSlot);
-    let outcome;
-    if(detailed) {
-        outcome=PortfolioEngine.calculateCompoundedBalance({baseBalance:config.base,maxSlots:config.slots,
-            trades:accepted,isSlotConstraintEnabled:false,isFeeDeductionEnabled:config.fees,startDateTimestamp:config.start/1000,activePositions:[],coins:[]});
-    } else {
-        // Identical compounded-balance arithmetic without copying each trade into a report.
-        let balance=config.base;
-        for(const trade of [...accepted].sort((a,b)=>a.exitTime-b.exitTime)) {
-            const slotBudget=balance/Math.max(1,config.slots);
-            const buyFee=config.fees?slotBudget*0.00075:0;
-            const exitValue=slotBudget*(1+trade.pnlPercent/100);
-            const sellFee=config.fees?exitValue*0.00075:0;
-            const totalFee=buyFee+sellFee;
-            balance+=slotBudget*(trade.pnlPercent/100)-totalFee;
-        }
-        outcome={realizedBalance:balance};
-    }
-    const wins=accepted.filter(trade=>trade.pnlPercent>=0).length;
-    const winRate=accepted.length?wins/accepted.length*100:0;
-    const byCoin={};
-    for(const group of groups) byCoin[group.coin.id]={trades:0,wins:0,losses:0,winRate:0,gain:0};
-    for(const trade of accepted) {
-        const stats=byCoin[trade.coinId];stats.trades++;
-        if(trade.pnlPercent>=0)stats.wins++;else stats.losses++;
-    }
-    for(const stats of Object.values(byCoin))stats.winRate=stats.trades?stats.wins/stats.trades*100:0;
-    if(detailed)for(const trade of outcome.executedTrades)byCoin[trade.coinId].gain+=trade.netGainUSD;
-    let valid=accepted.length>=config.minTrades && winRate+1e-9>=config.minWin;
-    for(let i=0;i<groups.length;i++) {
-        const candidate=groups[i].options[selection[i]];
-        if(candidate.off) continue;
-        const stats=byCoin[groups[i].coin.id];
-        if(candidate.totalTrades<config.minTrades || candidate.winRate+1e-9<groups[i].requiredWin ||
-            stats.trades<config.minTrades || stats.winRate+1e-9<groups[i].requiredWin) valid=false;
-    }
-    if(!detailed)return {valid,balance:outcome.realizedBalance,selection:[...selection]};
-    const monthlyMap=new Map();
-    const dailyMap=new Map();
-    const dayRow=key=>{if(!dailyMap.has(key))dailyMap.set(key,{day:key,trades:0,wins:0,losses:0,grossPnl:0,netTradePnl:0,netGain:0,fees:0,signals:0,skipped:0});return dailyMap.get(key)};
-    for(const trade of raw)dayRow(new Date(trade.exitTime+10800000).toISOString().slice(0,10)).signals++;
-
-    for(const trade of outcome.executedTrades) {
-        const key=getTurkeyDateComponents(trade.exitTime).monthKey;
-        if(!monthlyMap.has(key))monthlyMap.set(key,{monthKey:key,trades:0,grossPnl:0,netTradePnl:0,grossGain:0,netGain:0,fees:0});
-        const day=dayRow(new Date(trade.exitTime+10800000).toISOString().slice(0,10));
-        day.trades++;if(trade.pnlPercent>=0)day.wins++;else day.losses++;
-        day.grossPnl+=trade.pnlPercent;day.netTradePnl+=trade.effectivePnl;day.netGain+=trade.netGainUSD;day.fees+=trade.feeUSD;
-        const month=monthlyMap.get(key);
-        month.trades++;month.grossPnl+=trade.pnlPercent;month.netTradePnl+=trade.effectivePnl;
-        month.grossGain+=trade.netGainUSD+trade.feeUSD;month.netGain+=trade.netGainUSD;month.fees+=trade.feeUSD;
-    }
-    let monthlyBalance=config.base;
-    const monthly=[...monthlyMap.values()].sort((a,b)=>a.monthKey.localeCompare(b.monthKey)).map(month=>{
-        const startBalance=monthlyBalance;monthlyBalance+=month.netGain;
-        return {...month,startBalance,endBalance:monthlyBalance,capitalPnl:month.netGain/config.base*100};
-    });
-    const daily=[...dailyMap.values()].sort((a,b)=>a.day.localeCompare(b.day)).map(day=>({...day,skipped:day.signals-day.trades}));
-    return {daily,monthly,grossPnl:monthly.reduce((sum,month)=>sum+month.grossPnl,0),netTradePnl:monthly.reduce((sum,month)=>sum+month.netTradePnl,0),valid,balance:outcome.realizedBalance,gain:outcome.realizedBalance-config.base,fees:outcome.totalFeesUSD,
-        trades:accepted.length,wins,losses:accepted.length-wins,winRate,skipped:raw.length-accepted.length,signals:raw.length,byCoin,
-        selection:[...selection]};
-}
-function searchCombinations(groups, config, progress=()=>{}) {
-    const baselineSelection=groups.map(group=>group.baselineIndex);
-    const baseline=evaluateCombination(groups,baselineSelection,config);
-    const eligible=groups.map(group=>group.options.map((option,index)=>({option,index})).filter(({option})=>option.off ||
-        option.totalTrades>=config.minTrades && option.winRate+1e-9>=group.requiredWin).map(({index})=>index));
-    let combinations=1;
-    for(const options of eligible) combinations=Math.min(Number.MAX_SAFE_INTEGER,combinations*options.length);
-    const budget=Math.min(2000,Math.max(100,Number(config.searchBudget)||750));
-    const exhaustive=combinations+1<=budget;
-    const cache=new Map();let best=baseline.valid?baseline:null;
-    let tested=0;
-    function better(a,b) {return a && a.valid && (!b || !b.valid || a.balance>b.balance+1e-8 ||
-        Math.abs(a.balance-b.balance)<1e-8 && a.selection.filter((v,i)=>v!==baselineSelection[i]).length<b.selection.filter((v,i)=>v!==baselineSelection[i]).length)}
-    function score(selection) {
+function candidateKey(candidate){const s=candidate.settings;return s.off?'off':[s.interval,s.rsiLength,s.buyRsi,s.sellRsi].join('_')}
+function addOption(group,candidate){const key=candidateKey(candidate);const found=group.options.findIndex(option=>candidateKey(option)===key);if(found!==-1)return found;group.options.push(candidate);return group.options.length-1}
+function overlap(a,b){const values=new Set(a.trades.map(trade=>trade.entryTime));const hits=b.trades.filter(trade=>values.has(trade.entryTime)).length;return hits/Math.max(1,Math.min(a.trades.length,b.trades.length))}
+function qualifying(candidate,group,config){return candidate.count>=config.minTrades&&candidate.winRate+1e-9>=group.referenceWin}
+function rawRate(candidate){return candidate.winRate}
+let SESSION=null;
+async function optimize(snapshot,config) {
+    SESSION=null;
+    const {groups,baseline}=verifyReference(snapshot);
+    self.postMessage({type:'reference',baseline,asOf:snapshot.asOf});
+    if(!snapshot.referenceArgs.isSlotConstraintEnabled)throw new Error('Terminalde slot çakışma filtresi kapalı. Slot uyumunu analiz etmek için bu filtreyi açıp referansı yeniden al.');
+    const budget=Math.max(200,Math.min(2500,Number(config.budget)||1000));
+    let tested=0;const cache=new Map();let best=baseline;
+    function evaluateTrial(selection){
         const key=selection.join(',');if(cache.has(key))return cache.get(key);
-        if(tested>=budget) return null;
-        const value=evaluateCombination(groups,selection,config,false);cache.set(key,value);tested++;
-        if(better(value,best)) best=value;
-        if(tested%25===0)progress(tested,combinations,exhaustive);
-        return value;
+        if(tested>=budget)return null;
+        const value=evaluate(groups,selection);tested++;
+        value.issues=guard(value,baseline,groups,config);
+        const improvement=value.realized-baseline.realized;
+        const monthDeficit=monthKeys().reduce((sum,key)=>sum+Math.max(0,(baseline.months[key]?.net||0)-(value.months[key]?.net||0)),0);
+        value.searchScore=improvement-monthDeficit*(config.monthlyMode==='strict'?3:1.5)-Math.max(0,baseline.winRate-value.winRate)*snapshot.referenceArgs.baseBalance*.02;
+        const compact={selection:value.selection,balance:value.balance,realized:value.realized,searchScore:value.searchScore,issues:value.issues};
+        cache.set(key,compact);
+        if(!value.issues.length&&value.realized>best.realized+.005)best=value;
+        if(tested%20===0)progress('Ortak slotlar karşılaştırılıyor',`${tested}/${budget} portföy denemesi · bulunan net artış ${(best.realized-baseline.realized).toFixed(2)} USDT`);
+        return compact;
     }
-    score(baselineSelection);
-    if(exhaustive) {
-        const selection=[];
-        function walk(i){if(i===groups.length){score(selection);return}for(const option of eligible[i]){selection[i]=option;walk(i+1)}}
-        walk(0);
-    } else {
-        // Deterministic multi-start coordinate search, followed by pair changes.
-        const off=groups.map(group=>group.options.findIndex(option=>option.off));
-        const localBest=eligible.map((indices,i)=>indices.filter(index=>!groups[i].options[index].off).sort((a,b)=>
-            groups[i].options[b].trades.reduce((n,t)=>n+t.pnlPercent,0)-groups[i].options[a].trades.reduce((n,t)=>n+t.pnlPercent,0))[0]??off[i]);
-        const starts=[baselineSelection,localBest,off,...eligible.map((_,i)=>off.map((v,j)=>i===j?localBest[j]:v))];
-        for(const start of starts) {
-            let selection=[...start], current=score(selection);
-            for(let pass=0;pass<4 && tested<Math.floor(budget*.8);pass++) {
-                let changed=false;
-                for(let i=0;i<groups.length;i++) {
-                    let chosen=selection[i],winner=current;
-                    for(const option of eligible[i]) {
-                        const trial=[...selection];trial[i]=option;const candidate=score(trial);
-                        if(better(candidate,winner)){winner=candidate;chosen=option}
-                    }
-                    if(chosen!==selection[i]){selection[i]=chosen;current=winner;changed=true}
+    // Baseline is always retained, even if no alternative passes all guardrails.
+    const zero=groups.map(()=>0);
+    evaluateTrial(zero);
+    const baselineTrades=groups.map(group=>group.options[0]);
+    for(let i=0;i<groups.length;i++) {
+        const group=groups[i],coin=group.coin;
+        group.referenceWin=rawRate(baselineTrades[i]);
+        if(config.allowDisable)addOption(group,ledgerCandidate(coin,[],{off:true}));
+        group.histories={};
+        for(const interval of [...new Set([coin.interval,'15m','30m'])]){
+            if(interval===coin.interval && (coin.rawCandles||[]).length)group.histories[interval]=coin.rawCandles;
+            else {
+                try{group.histories[interval]=await fetchYear(coin.symbol,interval)}catch(error){
+                    throw new Error(error.message+' Eksik alternatifle öneri üretilmedi.');
                 }
-                if(!changed)break;
             }
         }
-        const anchor=best?.selection||localBest;
-        for(let i=0;i<groups.length && tested<budget;i++)for(let j=i+1;j<groups.length && tested<budget;j++)
-            for(const a of eligible[i])for(const b of eligible[j]){const trial=[...anchor];trial[i]=a;trial[j]=b;score(trial)}
+        for(const interval of ['15m','30m'])for(const rsiLength of [6,7]) {
+            progress(`${coin.displaySymbol||coin.symbol} / ${interval} / RSI ${rsiLength}`,'AL/SAT eşikleri ve farklı sinyal zamanları hazırlanıyor');
+            const candles=group.histories[interval].filter(c=>c.time+TF[interval]<=SNAP.asOf);
+            const rsiValues=calculateRSIHistory(candles.map(c=>c.close),rsiLength);
+            const buys=[...new Set([10,15,18,20,24,25,30,35,coin.buyRsi])].filter(value=>value>=8&&value<=50);
+            const sells=[...new Set([65,75,80,85,90,95,coin.sellRsi])].filter(value=>value>=55&&value<=98);
+            // Bound retained candidates: high return, fast release and distinct entry timing.
+            const profitPool=[],fastPool=[],timingPool=[];
+            const retain=(pool,candidate,sort)=>{pool.push(candidate);pool.sort(sort);if(pool.length>5)pool.length=5};
+            for(const buyRsi of buys)for(const sellRsi of sells){
+                const candidate=ledgerCandidate(coin,candles,{interval,rsiLength,buyRsi,sellRsi},rsiValues);
+                if(!qualifying(candidate,group,config))continue;
+                candidate.overlapWithCurrent=overlap(group.options[0],candidate);
+                retain(profitPool,candidate,(a,b)=>b.standalone-a.standalone);
+                if(candidate.standalone>0)retain(fastPool,candidate,(a,b)=>a.averageHold-b.averageHold||b.standalone-a.standalone);
+                retain(timingPool,candidate,(a,b)=>a.overlapWithCurrent-b.overlapWithCurrent||b.standalone-a.standalone);
+            }
+            const preferred=[...profitPool.slice(0,2),...fastPool.slice(0,2),...timingPool.slice(0,2)];
+            const seen=new Set();
+            for(const candidate of preferred){const key=candidateKey(candidate);if(!seen.has(key)){seen.add(key);addOption(group,candidate)}}
+        }
+        // The next stage tests retained alternatives against all other coins, not in isolation.
+        progress(`${i+1}/${groups.length} coin hazır`,`${group.options.length-1} farklı ayar adayı korundu`);
     }
-    best=best?evaluateCombination(groups,best.selection,config,true):null;
+    // Every coin receives single-change probes before the deeper joint search.
+    const singles=[];
+    const maxOptions=Math.max(...groups.map(group=>group.options.length));
+    for(let option=1;option<maxOptions&&tested<budget*.45;option++)for(let i=0;i<groups.length&&tested<budget*.45;i++){
+        if(!groups[i].options[option])continue;
+        const selection=[...zero];selection[i]=option;const trial=evaluateTrial(selection);if(trial)singles.push(trial);
+    }
+    singles.sort((a,b)=>b.searchScore-a.searchScore);
+    // Beam search keeps several timing combinations; pair changes can escape one-coin local optima.
+    let beam=[{selection:zero,searchScore:0},...singles.slice(0,3)];
+    const local=groups.map(group=>group.options.map((option,index)=>({option,index})).sort((a,b)=>b.option.standalone-a.option.standalone)[0].index);
+    const localScore=evaluateTrial(local);if(localScore)beam.push(localScore);
+    for(let pass=0;pass<3&&tested<budget*.75;pass++) {
+        let changed=false;
+        for(let i=0;i<groups.length&&tested<budget*.75;i++) {
+            const proposals=[...beam];
+            for(const parent of beam)for(let option=0;option<groups[i].options.length;option++){
+                const selection=[...parent.selection];selection[i]=option;const trial=evaluateTrial(selection);if(trial)proposals.push(trial);
+            }
+            proposals.sort((a,b)=>b.searchScore-a.searchScore);
+            const unique=new Map();for(const proposal of proposals){const key=proposal.selection.join(',');if(!unique.has(key))unique.set(key,proposal)}
+            const next=[...unique.values()].slice(0,4);
+            if(next[0]?.selection.join(',')!==beam[0]?.selection.join(','))changed=true;
+            beam=next;
+        }
+        if(!changed)break;
+    }
+    const anchor=[...best.selection];
+    const changes=[];
+    for(let i=0;i<groups.length&&tested<budget*.9;i++)for(let option=0;option<groups[i].options.length;option++){
+        if(option===anchor[i])continue;const selection=[...anchor];selection[i]=option;
+        const trial=evaluateTrial(selection);if(trial)changes.push({i,option,score:trial.searchScore});
+    }
+    changes.sort((a,b)=>b.score-a.score);
+    for(let a=0;a<Math.min(14,changes.length)&&tested<budget*.9;a++)for(let b=a+1;b<Math.min(14,changes.length)&&tested<budget*.9;b++){
+        if(changes[a].i===changes[b].i)continue;const selection=[...anchor];selection[changes[a].i]=changes[a].option;selection[changes[b].i]=changes[b].option;evaluateTrial(selection);
+    }
+    // Refine AL/SAT levels around the jointly chosen portfolio, with real slot feedback.
+    for(let i=0;i<groups.length&&tested<budget;i++) {
+        const group=groups[i],selected=group.options[best.selection[i]],setting=selected.settings;
+        if(setting.off)continue;
+        const candles=group.histories[setting.interval].filter(c=>c.time+TF[setting.interval]<=SNAP.asOf);
+        const rsi=calculateRSIHistory(candles.map(c=>c.close),setting.rsiLength);
+        for(const [db,ds] of [[-2,0],[-1,0],[1,0],[2,0],[0,-2],[0,-1],[0,1],[0,2],[-1,1],[1,-1]]){
+            const buyRsi=setting.buyRsi+db,sellRsi=setting.sellRsi+ds;
+            if(buyRsi<8||buyRsi>50||sellRsi<55||sellRsi>98)continue;
+            const candidate=ledgerCandidate(group.coin,candles,{...setting,buyRsi,sellRsi},rsi);
+            if(!qualifying(candidate,group,config))continue;
+            const index=addOption(group,candidate),selection=[...best.selection];selection[i]=index;evaluateTrial(selection);
+        }
+    }
     cache.clear();
-    return {baseline,best,tested,combinations,exhaustive,searchBudget:budget};
+    const improved=best.realized>baseline.realized+.005&&guard(best,baseline,groups,config).length===0;
+    const recommendation=improved?evaluate(groups,best.selection,true):null;
+    for(const group of groups)delete group.histories;
+    // Session is released after reporting; only compact review data goes to the main page.
+    const summary=groups.map(group=>({coin:{...group.coin,rawCandles:undefined},options:group.options.map(candidate=>({settings:candidate.settings,count:candidate.count,winRate:candidate.winRate}))}));
+    self.postMessage({type:'result',baseline,recommendation,groups:summary,tested,budget,config,year:SNAP.year,asOf:SNAP.asOf,
+        base:SNAP.referenceArgs.baseBalance,slots:SNAP.referenceArgs.maxSlots,months:monthKeys(),referenceVerified:true});
 }
-let combinationSession=null;
-async function analyze(config) {
-    combinationSession=null;
-    const groups=[],warnings=[];
-    for(let i=0;i<config.coins.length;i++) {
-        const coin=config.coins[i];
-        report(`Coin ${i+1}/${config.coins.length}: ${coin.symbol}`,'Mevcut ayar ve dört alternatif hazırlanıyor');
-        const needed=[...new Set([coin.interval,'15m','30m'])];
-        const data={};
-        const warmStart=Math.max(Date.UTC(2017,0,1),config.start-Math.max(...needed.map(tf=>TF_MS[tf]))*250);
-        for(const interval of needed) {
-            try {data[interval]=await fetchCandles(coin.symbol,interval,warmStart,config.end)}
-            catch(error) {
-                if(coin.isActive!==false && interval===coin.interval) throw new Error('Mevcut düzen hesaplanamadı: '+error.message);
-                warnings.push(error.message);
-            }
-        }
-        if(coin.isActive!==false && (!data[coin.interval]||data[coin.interval].length<coin.rsiLength+5))throw new Error(coin.symbol+': mevcut strateji için yeterli veri yok');
-        const options=[{key:'off',off:true,trades:[],totalTrades:0,winRate:0}];
-        let current=null;
-        if(data[coin.interval]?.length>coin.rsiLength+5) {
-            current=makeCandidate(coin,simulateSingleConfig(data[coin.interval],coin.rsiLength,coin.buyRsi,coin.sellRsi,coin.profitTarget,coin.monthlyCap),coin.interval,config,'current',true);
-            options.push(current);
-        }
-        const requiredWin=Math.max(config.minWin,config.preserve && current?current.winRate:0);
-        for(const interval of ['15m','30m'])for(const rsi of [6,7]) {
-            if(!data[interval] || data[interval].length<rsi+5)continue;
-            report(`${coin.symbol} / ${interval} / RSI ${rsi}`,'Lig optimizasyonu çalışıyor');
-            const strategy=evaluateBestRsi(data[interval],rsi,coin.profitTarget,coin.monthlyCap);
-            options.push(makeCandidate(coin,strategy,interval,config,interval+'_'+rsi));
-        }
-        for(const interval of Object.keys(data))delete data[interval];
-        groups.push({coin,options,requiredWin,baselineIndex:coin.isActive===false?0:options.findIndex(option=>option.current)});
-    }
-    report('Kombinasyonlar karşılaştırılıyor','Slot kapasitesi, komisyon ve başarı koşulları uygulanıyor');
-    const result=searchCombinations(groups,config,(tested,total,exact)=>report(`${tested} kombinasyon denendi`,exact?`Tam tarama: ${total} kombinasyon`:'Çok başlangıçlı sınırlı arama'));
-    // Remove candle/trade arrays before sending the small review result to the UI.
-    const summaries=groups.map(group=>({...group,options:group.options.map(({trades,openSlots,...option})=>option)}));
-    combinationSession={groups,config};
-    self.postMessage({type:'result',...result,groups:summaries,warnings,config:{...config,coins:undefined}});
-}
-self.onmessage=async({data})=>{
-    try {
-        if(data.type==='scenario') {
-            if(!combinationSession)throw new Error('Önce bir analiz çalıştır');
-            const {groups,config}=combinationSession;
-            if(!Array.isArray(data.selection)||data.selection.length!==groups.length||data.selection.some((option,i)=>!Number.isInteger(option)||!groups[i].options[option]))throw new Error('Senaryo seçimi geçersiz');
-            const scenario=evaluateCombination(groups,data.selection,config,true);
-            self.postMessage({type:'scenario',requestId:data.requestId,scenario});
-        } else await analyze(data);
-    } catch(error){self.postMessage({type:data.type==='scenario'?'scenarioError':'error',requestId:data.requestId,message:error.message||'Analiz tamamlanamadı'})}
-};
+self.onmessage=async({data})=>{try{await optimize(data.snapshot,data.config)}catch(error){self.postMessage({type:'error',message:error.message||'Analiz tamamlanamadı'})}};
