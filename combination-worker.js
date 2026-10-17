@@ -242,12 +242,9 @@ const PortfolioEngine = {
 
 const monthNames = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
         function getTurkeyDateComponents(timestampMs) {
-            const d = new Date(timestampMs);
-            const str = d.toLocaleDateString('en-CA', { timeZone: 'Europe/Istanbul' });
-            return {
-                monthKey: str.slice(0, 7),
-                day: parseInt(str.slice(8, 10), 10)
-            };
+            // Supported analysis dates are 2017+; Istanbul stays at UTC+03:00.
+            const iso = new Date(Number(timestampMs) + 10800000).toISOString();
+            return {monthKey: iso.slice(0,7), day: Number(iso.slice(8,10))};
         }
         function calculateRSIHistory(prices, period = 14) {
             const rsiValues = new Array(prices.length).fill(null);
@@ -533,21 +530,37 @@ function makeCandidate(coin, strategy, interval, config, key, current=false) {
         totalTrades:trades.length,wins,losses:trades.length-wins,
         winRate:trades.length?wins/trades.length*100:0,trades,openSlots};
 }
-function evaluateCombination(groups, selection, config) {
+function evaluateCombination(groups, selection, config, detailed=true) {
     const raw=groups.flatMap((group,index)=>group.options[selection[index]].trades);
     const openSlots=groups.flatMap((group,index)=>group.options[selection[index]].openSlots||[]);
     const accepted=PortfolioEngine.filterTradesBySlotCapacity([...raw,...openSlots],config.slots,[]).filter(trade=>!trade.isOpenSimSlot);
-    const outcome=PortfolioEngine.calculateCompoundedBalance({baseBalance:config.base,maxSlots:config.slots,
-        trades:accepted,isSlotConstraintEnabled:false,isFeeDeductionEnabled:config.fees,startDateTimestamp:config.start/1000,activePositions:[],coins:[]});
+    let outcome;
+    if(detailed) {
+        outcome=PortfolioEngine.calculateCompoundedBalance({baseBalance:config.base,maxSlots:config.slots,
+            trades:accepted,isSlotConstraintEnabled:false,isFeeDeductionEnabled:config.fees,startDateTimestamp:config.start/1000,activePositions:[],coins:[]});
+    } else {
+        // Identical compounded-balance arithmetic without copying each trade into a report.
+        let balance=config.base;
+        for(const trade of [...accepted].sort((a,b)=>a.exitTime-b.exitTime)) {
+            const slotBudget=balance/Math.max(1,config.slots);
+            const buyFee=config.fees?slotBudget*0.00075:0;
+            const exitValue=slotBudget*(1+trade.pnlPercent/100);
+            const sellFee=config.fees?exitValue*0.00075:0;
+            const totalFee=buyFee+sellFee;
+            balance+=slotBudget*(trade.pnlPercent/100)-totalFee;
+        }
+        outcome={realizedBalance:balance};
+    }
     const wins=accepted.filter(trade=>trade.pnlPercent>=0).length;
     const winRate=accepted.length?wins/accepted.length*100:0;
     const byCoin={};
-    for(const group of groups) {
-        const trades=accepted.filter(trade=>trade.coinId===group.coin.id);
-        const coinWins=trades.filter(trade=>trade.pnlPercent>=0).length;
-        byCoin[group.coin.id]={trades:trades.length,wins:coinWins,losses:trades.length-coinWins,winRate:trades.length?coinWins/trades.length*100:0,
-            gain:outcome.executedTrades.filter(trade=>trade.coinId===group.coin.id).reduce((sum,trade)=>sum+trade.netGainUSD,0)};
+    for(const group of groups) byCoin[group.coin.id]={trades:0,wins:0,losses:0,winRate:0,gain:0};
+    for(const trade of accepted) {
+        const stats=byCoin[trade.coinId];stats.trades++;
+        if(trade.pnlPercent>=0)stats.wins++;else stats.losses++;
     }
+    for(const stats of Object.values(byCoin))stats.winRate=stats.trades?stats.wins/stats.trades*100:0;
+    if(detailed)for(const trade of outcome.executedTrades)byCoin[trade.coinId].gain+=trade.netGainUSD;
     let valid=accepted.length>=config.minTrades && winRate+1e-9>=config.minWin;
     for(let i=0;i<groups.length;i++) {
         const candidate=groups[i].options[selection[i]];
@@ -556,10 +569,18 @@ function evaluateCombination(groups, selection, config) {
         if(candidate.totalTrades<config.minTrades || candidate.winRate+1e-9<groups[i].requiredWin ||
             stats.trades<config.minTrades || stats.winRate+1e-9<groups[i].requiredWin) valid=false;
     }
+    if(!detailed)return {valid,balance:outcome.realizedBalance,selection:[...selection]};
     const monthlyMap=new Map();
+    const dailyMap=new Map();
+    const dayRow=key=>{if(!dailyMap.has(key))dailyMap.set(key,{day:key,trades:0,wins:0,losses:0,grossPnl:0,netTradePnl:0,netGain:0,fees:0,signals:0,skipped:0});return dailyMap.get(key)};
+    for(const trade of raw)dayRow(new Date(trade.exitTime+10800000).toISOString().slice(0,10)).signals++;
+
     for(const trade of outcome.executedTrades) {
         const key=getTurkeyDateComponents(trade.exitTime).monthKey;
         if(!monthlyMap.has(key))monthlyMap.set(key,{monthKey:key,trades:0,grossPnl:0,netTradePnl:0,grossGain:0,netGain:0,fees:0});
+        const day=dayRow(new Date(trade.exitTime+10800000).toISOString().slice(0,10));
+        day.trades++;if(trade.pnlPercent>=0)day.wins++;else day.losses++;
+        day.grossPnl+=trade.pnlPercent;day.netTradePnl+=trade.effectivePnl;day.netGain+=trade.netGainUSD;day.fees+=trade.feeUSD;
         const month=monthlyMap.get(key);
         month.trades++;month.grossPnl+=trade.pnlPercent;month.netTradePnl+=trade.effectivePnl;
         month.grossGain+=trade.netGainUSD+trade.feeUSD;month.netGain+=trade.netGainUSD;month.fees+=trade.feeUSD;
@@ -569,7 +590,8 @@ function evaluateCombination(groups, selection, config) {
         const startBalance=monthlyBalance;monthlyBalance+=month.netGain;
         return {...month,startBalance,endBalance:monthlyBalance,capitalPnl:month.netGain/config.base*100};
     });
-    return {monthly,grossPnl:monthly.reduce((sum,month)=>sum+month.grossPnl,0),netTradePnl:monthly.reduce((sum,month)=>sum+month.netTradePnl,0),valid,balance:outcome.realizedBalance,gain:outcome.realizedBalance-config.base,fees:outcome.totalFeesUSD,
+    const daily=[...dailyMap.values()].sort((a,b)=>a.day.localeCompare(b.day)).map(day=>({...day,skipped:day.signals-day.trades}));
+    return {daily,monthly,grossPnl:monthly.reduce((sum,month)=>sum+month.grossPnl,0),netTradePnl:monthly.reduce((sum,month)=>sum+month.netTradePnl,0),valid,balance:outcome.realizedBalance,gain:outcome.realizedBalance-config.base,fees:outcome.totalFeesUSD,
         trades:accepted.length,wins,losses:accepted.length-wins,winRate,skipped:raw.length-accepted.length,signals:raw.length,byCoin,
         selection:[...selection]};
 }
@@ -580,17 +602,18 @@ function searchCombinations(groups, config, progress=()=>{}) {
         option.totalTrades>=config.minTrades && option.winRate+1e-9>=group.requiredWin).map(({index})=>index));
     let combinations=1;
     for(const options of eligible) combinations=Math.min(Number.MAX_SAFE_INTEGER,combinations*options.length);
-    const exhaustive=combinations<=4096;
+    const budget=Math.min(2000,Math.max(100,Number(config.searchBudget)||750));
+    const exhaustive=combinations+1<=budget;
     const cache=new Map();let best=baseline.valid?baseline:null;
     let tested=0;
     function better(a,b) {return a && a.valid && (!b || !b.valid || a.balance>b.balance+1e-8 ||
         Math.abs(a.balance-b.balance)<1e-8 && a.selection.filter((v,i)=>v!==baselineSelection[i]).length<b.selection.filter((v,i)=>v!==baselineSelection[i]).length)}
     function score(selection) {
         const key=selection.join(',');if(cache.has(key))return cache.get(key);
-        if(tested>=5000) return null;
-        const value=evaluateCombination(groups,selection,config);cache.set(key,value);tested++;
+        if(tested>=budget) return null;
+        const value=evaluateCombination(groups,selection,config,false);cache.set(key,value);tested++;
         if(better(value,best)) best=value;
-        if(tested%50===0)progress(tested,combinations,exhaustive);
+        if(tested%25===0)progress(tested,combinations,exhaustive);
         return value;
     }
     score(baselineSelection);
@@ -606,7 +629,7 @@ function searchCombinations(groups, config, progress=()=>{}) {
         const starts=[baselineSelection,localBest,off,...eligible.map((_,i)=>off.map((v,j)=>i===j?localBest[j]:v))];
         for(const start of starts) {
             let selection=[...start], current=score(selection);
-            for(let pass=0;pass<4 && tested<4500;pass++) {
+            for(let pass=0;pass<4 && tested<Math.floor(budget*.8);pass++) {
                 let changed=false;
                 for(let i=0;i<groups.length;i++) {
                     let chosen=selection[i],winner=current;
@@ -620,12 +643,16 @@ function searchCombinations(groups, config, progress=()=>{}) {
             }
         }
         const anchor=best?.selection||localBest;
-        for(let i=0;i<groups.length && tested<5000;i++)for(let j=i+1;j<groups.length && tested<5000;j++)
+        for(let i=0;i<groups.length && tested<budget;i++)for(let j=i+1;j<groups.length && tested<budget;j++)
             for(const a of eligible[i])for(const b of eligible[j]){const trial=[...anchor];trial[i]=a;trial[j]=b;score(trial)}
     }
-    return {baseline,best,tested,combinations,exhaustive};
+    best=best?evaluateCombination(groups,best.selection,config,true):null;
+    cache.clear();
+    return {baseline,best,tested,combinations,exhaustive,searchBudget:budget};
 }
+let combinationSession=null;
 async function analyze(config) {
+    combinationSession=null;
     const groups=[],warnings=[];
     for(let i=0;i<config.coins.length;i++) {
         const coin=config.coins[i];
@@ -654,12 +681,24 @@ async function analyze(config) {
             const strategy=evaluateBestRsi(data[interval],rsi,coin.profitTarget,coin.monthlyCap);
             options.push(makeCandidate(coin,strategy,interval,config,interval+'_'+rsi));
         }
+        for(const interval of Object.keys(data))delete data[interval];
         groups.push({coin,options,requiredWin,baselineIndex:coin.isActive===false?0:options.findIndex(option=>option.current)});
     }
     report('Kombinasyonlar karşılaştırılıyor','Slot kapasitesi, komisyon ve başarı koşulları uygulanıyor');
     const result=searchCombinations(groups,config,(tested,total,exact)=>report(`${tested} kombinasyon denendi`,exact?`Tam tarama: ${total} kombinasyon`:'Çok başlangıçlı sınırlı arama'));
     // Remove candle/trade arrays before sending the small review result to the UI.
     const summaries=groups.map(group=>({...group,options:group.options.map(({trades,openSlots,...option})=>option)}));
+    combinationSession={groups,config};
     self.postMessage({type:'result',...result,groups:summaries,warnings,config:{...config,coins:undefined}});
 }
-self.onmessage=async({data})=>{try{await analyze(data)}catch(error){self.postMessage({type:'error',message:error.message||'Analiz tamamlanamadı'})}};
+self.onmessage=async({data})=>{
+    try {
+        if(data.type==='scenario') {
+            if(!combinationSession)throw new Error('Önce bir analiz çalıştır');
+            const {groups,config}=combinationSession;
+            if(!Array.isArray(data.selection)||data.selection.length!==groups.length||data.selection.some((option,i)=>!Number.isInteger(option)||!groups[i].options[option]))throw new Error('Senaryo seçimi geçersiz');
+            const scenario=evaluateCombination(groups,data.selection,config,true);
+            self.postMessage({type:'scenario',requestId:data.requestId,scenario});
+        } else await analyze(data);
+    } catch(error){self.postMessage({type:data.type==='scenario'?'scenarioError':'error',requestId:data.requestId,message:error.message||'Analiz tamamlanamadı'})}
+};
