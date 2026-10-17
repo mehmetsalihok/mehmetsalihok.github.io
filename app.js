@@ -3831,7 +3831,7 @@ window.closeClosedTradeEditor = closeClosedTradeEditor;
 window.updateClosedTradeEditPreview = updateClosedTradeEditPreview;
 window.saveClosedTradeEdit = saveClosedTradeEdit;
 
-function syncMainAppFromStorage(event) {
+async function syncMainAppFromStorage(event) {
     const key = event && event.key;
     if (key && !['kuzgun_web_coins', 'kuzgun_active_pos', 'kuzgun_closed_trades', 'kuzgun_base_usd', 'kuzgun_theme'].includes(key)) return;
 
@@ -3843,12 +3843,28 @@ function syncMainAppFromStorage(event) {
     if (!key || key === 'kuzgun_web_coins') {
         try {
             const saved = JSON.parse(localStorage.getItem('kuzgun_web_coins')) || [];
+            const loads=[];let reconnect=false,recalculate=false;
             saved.forEach(savedCoin => {
-                const liveCoin = KZ_STATE.coins.find(c => c.id === savedCoin.id || c.symbol === savedCoin.symbol);
-                if (liveCoin) Object.assign(liveCoin, savedCoin);
+                const liveCoin=KZ_STATE.coins.find(c=>c.id===savedCoin.id||c.symbol===savedCoin.symbol);
+                if(!liveCoin)return;
+                const intervalChanged=liveCoin.interval!==savedCoin.interval;
+                const activated=liveCoin.isActive===false&&savedCoin.isActive!==false;
+                const paramsChanged=['rsiLength','buyRsi','sellRsi','profitTarget','monthlyCap','isActive'].some(field=>liveCoin[field]!==savedCoin[field]);
+                Object.assign(liveCoin,savedCoin);
+                if(intervalChanged){
+                    liveCoin.rawCandles=[];liveCoin.candles=[];liveCoin.candleHistoryReady=false;
+                    liveCoin.lastConfirmedCandleTime=-Infinity;liveCoin.rsi=50;liveCoin.prevRsi=50;
+                    reconnect=true;
+                }
+                if((intervalChanged||activated)&&liveCoin.isActive!==false){loads.push(fetchInitialCandles(liveCoin));reconnect=true;}
+                else if(paramsChanged){runCardBacktest(liveCoin);recalculate=true;}
+                if(intervalChanged||activated)recalculate=true;
             });
-            KZ_STATE.coins.forEach(c => renderSingleCard(c));
-        } catch (e) {}
+            if(reconnect)initBinanceWebSocket();
+            if(loads.length)await Promise.all(loads);
+            KZ_STATE.coins.forEach(c=>renderSingleCard(c));
+            if(recalculate){recalculateFullPortfolio();renderActivePositionsList();renderPendingSignalsList();}
+        }catch(error){console.warn('Harici coin ayarı eşitlenemedi:',error.message);}
     }
 
     if (!key || key === 'kuzgun_active_pos') {

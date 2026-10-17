@@ -552,10 +552,22 @@ function addOption(group,candidate){const key=candidateKey(candidate);const foun
 function overlap(a,b){const values=new Set(a.trades.map(trade=>trade.entryTime));const hits=b.trades.filter(trade=>values.has(trade.entryTime)).length;return hits/Math.max(1,Math.min(a.trades.length,b.trades.length))}
 function qualifying(candidate,group,config){return candidate.count>=config.minTrades&&candidate.winRate+1e-9>=group.referenceWin}
 function rawRate(candidate){return candidate.winRate}
+function matchingLeagueRecords(snapshot,coin,records) {
+    return records.filter(row=>row&&row.symbol===coin.symbol&&String(row.year)===snapshot.year&&
+        Number(row.startTime)===Date.UTC(Number(snapshot.year),0,1)&&Number.isFinite(row.endTime)&&row.endTime<=snapshot.asOf&&row.endTime>row.startTime&&
+        Math.abs(Number(row.profitTarget)-Number(coin.profitTarget))<1e-8&&Math.abs(Number(row.monthlyCap)-Number(coin.monthlyCap))<1e-8&&
+        ['15m','30m'].includes(row.interval)&&[6,7].includes(row.rsiLength)&&Number.isFinite(row.buyRsi)&&row.buyRsi>=8&&row.buyRsi<=50&&
+        Number.isFinite(row.sellRsi)&&row.sellRsi>=55&&row.sellRsi<=98&&row.buyRsi<row.sellRsi);
+}
 let SESSION=null;
 async function optimize(snapshot,config) {
     SESSION=null;
     const {groups,baseline}=verifyReference(snapshot);
+    const records=Array.isArray(config.leagueRecords)?config.leagueRecords:[];
+    if(config.leagueOnly) {
+        const missing=groups.filter(group=>!matchingLeagueRecords(snapshot,group.coin,records).length).map(group=>group.coin.displaySymbol||group.coin.symbol);
+        if(missing.length)throw new Error('Uygun lig kaydı bulunamadı: '+missing.join(', ')+'. Aynı yıl ve hedef/aylık kilit değerleriyle 15m veya 30m lig taraması yap, sonra terminalden yeni kombinasyon referansı al.');
+    }
     self.postMessage({type:'reference',baseline,asOf:snapshot.asOf});
     if(!snapshot.referenceArgs.isSlotConstraintEnabled)throw new Error('Terminalde slot çakışma filtresi kapalı. Slot uyumunu analiz etmek için bu filtreyi açıp referansı yeniden al.');
     const budget=Math.max(200,Math.min(2500,Number(config.budget)||1000));
@@ -583,13 +595,23 @@ async function optimize(snapshot,config) {
         group.referenceWin=rawRate(baselineTrades[i]);
         if(config.allowDisable)addOption(group,ledgerCandidate(coin,[],{off:true}));
         group.histories={};
-        for(const interval of [...new Set([coin.interval,'15m','30m'])]){
+        const lockedRecords=config.leagueOnly?matchingLeagueRecords(snapshot,coin,records):[];
+        const intervals=config.leagueOnly?[...new Set([coin.interval,...lockedRecords.map(row=>row.interval)])]:[...new Set([coin.interval,'15m','30m'])];
+        for(const interval of intervals){
             if(interval===coin.interval && (coin.rawCandles||[]).length)group.histories[interval]=coin.rawCandles;
             else {
                 try{group.histories[interval]=await fetchYear(coin.symbol,interval)}catch(error){
                     throw new Error(error.message+' Eksik alternatifle öneri üretilmedi.');
                 }
             }
+        }
+        if(config.leagueOnly) {
+            for(const row of lockedRecords) {
+                const candidate=ledgerCandidate(coin,group.histories[row.interval],{interval:row.interval,rsiLength:row.rsiLength,buyRsi:row.buyRsi,sellRsi:row.sellRsi});
+                if(qualifying(candidate,group,config))addOption(group,candidate);
+            }
+            progress(`${i+1}/${groups.length} coin hazır`,`${group.options.length-1} lig adayı · AL/SAT eşikleri sabit`);
+            continue;
         }
         for(const interval of ['15m','30m'])for(const rsiLength of [6,7]) {
             progress(`${coin.displaySymbol||coin.symbol} / ${interval} / RSI ${rsiLength}`,'AL/SAT eşikleri ve farklı sinyal zamanları hazırlanıyor');
@@ -653,7 +675,7 @@ async function optimize(snapshot,config) {
         if(changes[a].i===changes[b].i)continue;const selection=[...anchor];selection[changes[a].i]=changes[a].option;selection[changes[b].i]=changes[b].option;evaluateTrial(selection);
     }
     // Refine AL/SAT levels around the jointly chosen portfolio, with real slot feedback.
-    for(let i=0;i<groups.length&&tested<budget;i++) {
+    for(let i=0;!config.leagueOnly&&i<groups.length&&tested<budget;i++) {
         const group=groups[i],selected=group.options[best.selection[i]],setting=selected.settings;
         if(setting.off)continue;
         const candles=group.histories[setting.interval].filter(c=>c.time+TF[setting.interval]<=SNAP.asOf);
@@ -672,7 +694,7 @@ async function optimize(snapshot,config) {
     for(const group of groups)delete group.histories;
     // Session is released after reporting; only compact review data goes to the main page.
     const summary=groups.map(group=>({coin:{...group.coin,rawCandles:undefined},options:group.options.map(candidate=>({settings:candidate.settings,count:candidate.count,winRate:candidate.winRate}))}));
-    self.postMessage({type:'result',baseline,recommendation,groups:summary,tested,budget,config,year:SNAP.year,asOf:SNAP.asOf,
+    self.postMessage({type:'result',baseline,recommendation,groups:summary,tested,budget,config:{...config,leagueRecords:undefined},year:SNAP.year,asOf:SNAP.asOf,
         base:SNAP.referenceArgs.baseBalance,slots:SNAP.referenceArgs.maxSlots,months:monthKeys(),referenceVerified:true});
 }
 self.onmessage=async({data})=>{try{await optimize(data.snapshot,data.config)}catch(error){self.postMessage({type:'error',message:error.message||'Analiz tamamlanamadı'})}};

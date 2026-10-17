@@ -224,6 +224,7 @@
                     <span>RSI 6 ve RSI 7'yi karşılaştır</span>
                 </button>
 
+                <p id="leagueSavedStatus" class="text-[11px] text-slate-500 dark:text-slate-400" aria-live="polite">Tamamlanan lig taramasının ayarları kombinasyon için otomatik kaydedilir.</p>
                 <div id="progressBox" class="hidden space-y-1.5">
                     <div class="flex justify-between text-[11px] font-bold">
                         <span id="progressStatusText" class="text-blue-600 dark:text-blue-400 animate-pulse">Taranıyor...</span>
@@ -495,8 +496,8 @@
         }
 
         async function fetchAllCandlesSince2026(symbol, interval) {
-            const startTime = new Date('2026-01-01T00:00:00Z').getTime();
-            const endTime = Date.now();
+            const startTime = Date.UTC(Number(LEAGUE_STATE.analysisYear || localStorage.getItem('kuzgun_selected_year') || '2026'),0,1);
+            const endTime = LEAGUE_STATE.analysisAsOf || Date.now();
             let allCandles = [];
             let currentStart = startTime;
 
@@ -771,6 +772,27 @@
             });
         }
 
+        function persistLeagueCandidates() {
+            const key='kuzgun_league_candidates_v1';
+            try {
+                let previous;try{previous=JSON.parse(localStorage.getItem(key)||'null')}catch(_){previous=null}
+                const records=Array.isArray(previous?.records)?previous.records:[];
+                const map=new Map(records.filter(row=>row&&row.key).map(row=>[row.key,row]));
+                for(const item of LEAGUE_STATE.results)for(const [interval,variant] of Object.entries(item.variants))for(const length of [6,7]) {
+                    const strategy=variant['rsi'+length];if(!strategy)continue;
+                    const record={symbol:item.symbol,year:item.analysisYear||'2026',startTime:Date.UTC(Number(item.analysisYear||2026),0,1),endTime:item.analysisAsOf,
+                        savedAt:Date.now(),profitTarget:item.profitTarget,monthlyCap:item.monthlyCap,
+                        interval,rsiLength:length,buyRsi:strategy.buyRsi,sellRsi:strategy.sellRsi,
+                        winRate:strategy.winRateDouble,totalTrades:strategy.totalTrades};
+                    record.key=[record.symbol,record.year,record.profitTarget,record.monthlyCap,interval,length].join('|');
+                    map.set(record.key,record);
+                }
+                const sorted=[...map.values()].sort((a,b)=>b.savedAt-a.savedAt).slice(0,2000);
+                localStorage.setItem(key,JSON.stringify({schema:'kuzgun-league-candidates-v1',savedAt:Date.now(),records:sorted}));
+                document.getElementById('leagueSavedStatus').textContent='Lig ayarları kombinasyon için kaydedildi. Taradığın zaman dilimleri ve hedef/kilit değerleriyle kullanılır.';
+            }catch(error){document.getElementById('leagueSavedStatus').textContent='Lig ayarları kaydedilemedi. Kombinasyonda lig modu için kayıt gerekli.';showToast('Lig adayları kaydedilemedi');}
+        }
+
         async function runLeagueBenchmark() {
             if (LEAGUE_STATE.isAnalyzing || !LEAGUE_STATE.coinPool.length) return;
             const pool = [...LEAGUE_STATE.coinPool];
@@ -781,6 +803,9 @@
             const failed = [];
             let completed = 0;
             LEAGUE_STATE.isAnalyzing = true;
+            LEAGUE_STATE.analysisYear = localStorage.getItem('kuzgun_selected_year') || '2026';
+            LEAGUE_STATE.analysisAsOf = Math.min(Date.now(),Date.UTC(Number(LEAGUE_STATE.analysisYear)+1,0,1));
+            document.getElementById('leaguePeriodLabel').textContent = LEAGUE_STATE.analysisYear+' → '+(Number(LEAGUE_STATE.analysisYear)===new Date().getFullYear()?'Bugün':'Yıl sonu');
             LEAGUE_STATE.results = [];
             LEAGUE_STATE.candleCache = {};
             const btn = document.getElementById('btnRunLeague');
@@ -817,7 +842,7 @@
                         pBar.style.width = progress+'%'; pPct.textContent = progress+'%';
                     }
                     if (Object.keys(variants).length) {
-                        const item = {symbol,displaySymbol:coin,profitTarget,monthlyCap:targetCap,variants,isExpanded:false};
+                        const item = {symbol,displaySymbol:coin,profitTarget,monthlyCap:targetCap,variants,isExpanded:false,analysisAsOf:LEAGUE_STATE.analysisAsOf,analysisYear:LEAGUE_STATE.analysisYear};
                         refreshResultScore(item);
                         item.interval = item.bestOption.interval;
                         item.activeTab = item.bestOption.rsi;
@@ -830,6 +855,7 @@
                 LEAGUE_STATE.results.sort((a,b) => b.score-a.score);
                 LEAGUE_STATE.results.forEach((item,index) => item.rank=index+1);
                 renderLeagueResults();
+                persistLeagueCandidates();
                 pStatus.textContent = failed.length ? `Tamamlandı; ${failed.length} coin/zaman dilimi alınamadı` : 'Analiz tamamlandı!';
                 if (failed.length) showToast('Veri alınamadı: '+failed.join(', '));
             } catch (error) {
@@ -1001,6 +1027,7 @@
             const updated = simulateSingleConfig(candles, active.rsiLength, newBuy, newSell, item.profitTarget, item.monthlyCap);
             if (item.activeTab === 6) item.rsi6 = updated; else item.rsi7 = updated;
             item.variants[item.interval]['rsi'+item.activeTab] = updated;
+            persistLeagueCandidates();
             refreshResultScore(item);
             LEAGUE_STATE.results.sort((a,b) => b.score-a.score);
             LEAGUE_STATE.results.forEach((res,index) => res.rank=index+1);
@@ -1115,6 +1142,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderPool();
             updateIntervalSelection();
+            const year=localStorage.getItem('kuzgun_selected_year')||'2026';
+            document.getElementById('leaguePeriodLabel').textContent=year+' → '+(Number(year)===new Date().getFullYear()?'Bugün':'Yıl sonu');
             const currentTheme = localStorage.getItem('kuzgun_theme') || (document.documentElement.classList.contains('dark') ? (document.documentElement.classList.contains('oled') ? 'oled' : 'dark') : 'light');
             updateThemeIcons(currentTheme);
         });
