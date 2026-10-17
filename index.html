@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KUZGUN Pro Terminal — Dynamic Cloud Engine</title>
+    <title>KUZGUN Pro — Canlı Terminal</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -57,7 +57,7 @@
         .dark .position-card[data-state="entry"] { --position-color: #fb923c; background: #3b220d; border-color: #c2410c; }
         .dark .position-state-badge { background: rgba(0,0,0,.3); }
 
-        /* 🌑 SAF OLED SİYAH MOTORU */
+        /*  SAF OLED SİYAH MOTORU */
         html.oled, 
         html.oled body {
             background-color: #000000 !important;
@@ -126,10 +126,75 @@
             #monthTradesModal.flex > div { animation: none; }
         }
     </style>
+<style>
+/* KUZGUN unified terminal workspace */
+:root{--terminal-page:#f3f5f8;--terminal-surface:#fff;--terminal-line:#e3e7ed;--terminal-ink:#172335;--terminal-muted:#657388;--terminal-field:#f8fafc;--terminal-accent:#255edb}
+html.dark{--terminal-page:#0d1420;--terminal-surface:#131e2e;--terminal-line:#293548;--terminal-ink:#ecf1f8;--terminal-muted:#9ba9bc;--terminal-field:#172437;--terminal-accent:#82a9ff}
+html.oled{--terminal-page:#000;--terminal-surface:#000;--terminal-line:#252525;--terminal-field:#0a0a0a}
+body{background:var(--terminal-page)!important;color:var(--terminal-ink);line-height:1.5}
+body>header{background:var(--terminal-surface)!important;border-color:var(--terminal-line)!important;position:relative!important}
+body>header>div{max-width:1540px!important;height:auto!important;min-height:68px;padding:14px 28px;flex-wrap:wrap;overflow:visible!important;gap:18px}
+body>header>div>div:last-child{flex-wrap:wrap;gap:14px;margin-left:0!important}
+body>header>div>div:last-child>*{margin-left:0!important}
+body>header [class*="w-px"]{display:none}
+body>header [class*="animate-"]{animation:none}
+body>header svg,main svg{display:none!important}
+body>header button,body>header a{font-weight:600!important}
+body>main{width:calc(100% - 48px)!important;max-width:1480px!important;margin:32px auto!important;padding:0!important;background:var(--terminal-surface);border:1px solid var(--terminal-line);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px #0c1d3810}
+.terminal-heading{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:30px 32px 26px}
+.terminal-eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--terminal-muted);margin-bottom:8px}
+.terminal-heading h1{font-size:28px;font-weight:700;letter-spacing:-.04em;line-height:1.25;margin-bottom:8px}
+.terminal-heading p:last-child{font-size:13px;color:var(--terminal-muted)}
+.terminal-settings-link{font-size:12px;font-weight:600;padding:9px 14px;border:1px solid var(--terminal-line);border-radius:6px;white-space:nowrap;color:var(--terminal-muted)}
+.terminal-settings-link:hover{border-color:var(--terminal-accent);color:var(--terminal-accent)}
+main>*{margin-top:0!important}
+#portfolioOverview{border:0!important;border-top:1px solid var(--terminal-line)!important;border-bottom:1px solid var(--terminal-line)!important;border-radius:0!important;box-shadow:none!important;padding:28px 32px!important;background:var(--terminal-field)!important}
+#dashCompoundedUsd{font-size:38px!important;letter-spacing:-.045em!important;font-weight:650!important;line-height:1.3}
+#dashTfUsdGain{font-size:26px!important;font-weight:600!important;letter-spacing:-.03em}
+#portfolioOverview>div:first-child{margin-bottom:22px}
+#timeframeButtonGroup{gap:5px;padding:5px 0 9px}
+#timeframeButtonGroup button{padding:8px 13px;border-radius:6px!important;font-size:11px!important;font-weight:600!important;box-shadow:none!important}
+#monthlyLimitSummary{background:transparent!important;border:0!important;padding:10px 0!important;border-radius:0!important}
+#portfolioOverview details{padding-top:12px}
+.terminal-workspace{display:flex!important;flex-direction:column;gap:0!important}
+.terminal-workspace>section{padding:24px 32px 30px;min-width:0}
+.terminal-workspace>section>div:first-child{padding:0 0 20px!important;background:transparent!important;border:0!important;border-radius:0!important;box-shadow:none!important;gap:14px}
+.terminal-workspace>section>div:first-child>div{flex-wrap:wrap;gap:6px}
+.terminal-workspace button{box-shadow:none!important}
+#cardsGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:18px!important}
+#cardsGrid>div{padding:20px!important;border-radius:8px!important;box-shadow:none!important;background:var(--terminal-surface)!important}
+#cardsGrid>div:hover{border-color:#9eacc0!important}
+#cardsGrid [id^="price-"]{font-size:27px!important;font-weight:600!important;letter-spacing:-.035em}
+#cardsGrid [id^="rsi-badge-"]{box-shadow:none!important;border-radius:5px!important;background:transparent!important;padding:5px 8px!important}
+#cardsGrid [id^="coin-overview-"]{padding-top:16px}
+#cardsGrid .coin-details-toggle{padding:7px 0!important;font-size:11px!important;color:var(--terminal-accent)!important}
+#cardsGrid button:has(>svg):not(:has(>span))::after{content:attr(title);font-size:10px;font-weight:500;white-space:nowrap}
+#cardsGrid button:has(>svg):not(:has(>span)){width:auto!important;height:auto!important;padding:3px 5px!important}
+#cardsGrid .coin-details input,#cardsGrid .coin-details select{min-height:32px;font-size:12px}
+.terminal-activity{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:0!important;border-top:1px solid var(--terminal-line);padding:0 12px}
+.terminal-activity>div{min-width:0;margin-top:0!important;padding:24px 20px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+.terminal-activity>div+div{border-left:1px solid var(--terminal-line)!important}
+.terminal-activity h2{font-size:13px!important;font-weight:600!important}
+.terminal-activity>div>div:first-child{min-height:40px;gap:8px;flex-wrap:wrap;border-bottom-color:var(--terminal-line)!important}
+.terminal-activity .animate-ping,.terminal-activity h2+svg{display:none}
+.terminal-activity button[onclick="openManualPositionModal()"]{width:auto!important;height:auto!important;font-size:10px!important;padding:6px 9px!important;border-radius:5px!important}
+#activePositionsList:empty::after,#pendingSignalsList:empty::after{content:'Henüz kayıt yok';display:block;padding:30px 0;color:var(--terminal-muted);font-size:12px}
+.position-card{box-shadow:none!important;border-radius:7px!important}
+#historyTradesContainer{min-height:120px!important}
+#historyPaginationControls button{font-weight:500;font-size:10px}
+body>div[role=dialog]>div,body>div[role=dialog]>form{border-radius:12px!important;box-shadow:0 20px 70px #0003!important}
+input,select{accent-color:#2563eb}
+button,a,input,select,summary{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--terminal-accent)!important;outline-offset:3px}
+@media(min-width:1800px){#cardsGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:1100px){#cardsGrid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.terminal-activity{grid-template-columns:repeat(2,minmax(0,1fr))}.terminal-activity>div:last-child{grid-column:1/-1;border-left:0!important;border-top:1px solid var(--terminal-line)!important}}
+@media(max-width:700px){body>main{width:calc(100% - 24px)!important;margin:18px auto!important}.terminal-heading{padding:24px 20px;align-items:flex-start;flex-direction:column;gap:14px}.terminal-heading h1{font-size:24px}#portfolioOverview{padding:22px 20px!important}#dashCompoundedUsd{font-size:32px!important}#dashTfUsdGain{font-size:24px!important}.terminal-workspace>section{padding:22px 16px}#cardsGrid{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}#cardsGrid>div{padding:18px!important}.terminal-activity{display:block!important;padding:0 16px}.terminal-activity>div{padding:22px 0!important}.terminal-activity>div+div{border-left:0!important;border-top:1px solid var(--terminal-line)!important}body>header>div{padding:14px 18px}body>header nav{display:flex!important;flex-wrap:wrap;border:0!important;padding-left:0!important}body>header>div>div:first-child{flex-wrap:wrap;gap:12px}body>header>div>div:first-child nav{margin-left:0!important}body>header>div>div:last-child{width:100%;justify-content:space-between;row-gap:12px}#cardsGrid button:has(>svg):not(:has(>span))::after{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
 
-    <!-- 1️⃣ ORTAK ÜST KONSOL -->
+    <!-- 1 ORTAK ÜST KONSOL -->
     <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
             
@@ -230,25 +295,22 @@
 
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
 
-                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton -->
+                <!--  3 Aşamalı Tema Değiştirici Buton -->
                 <button onclick="cycleTheme()" class="px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0 flex items-center space-x-1.5" title="Tema: Açık / Koyu / OLED">
-                    <svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    <svg id="themeIconDark" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                    </svg>
-                    <span id="themeBadgeOled" class="hidden text-[10px] font-black px-1.5 py-0.5 rounded bg-black text-white border border-neutral-700 uppercase tracking-wider">OLED</span>
+                    <span id="terminalThemeLabel">Tema: Açık</span>
+                    
+                    
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- 2️⃣ ANA ÇALIŞMA ALANI -->
+    <!-- 2 ANA ÇALIŞMA ALANI -->
     <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-5 space-y-4">
 
+        <div class="terminal-heading"><div><p class="terminal-eyebrow">KUZGUN / PİYASA TAKİBİ</p><h1>Canlı terminal</h1><p>Portföyünüz, stratejileriniz ve sinyalleriniz tek çalışma alanında.</p></div><a href="settings.html" class="terminal-settings-link">Sistem ayarları</a></div>
         <!-- BİLEŞİK PORTFÖY: ÖZET ÖNDE, AYRINTILAR İSTEĞE BAĞLI -->
-        <section class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl px-4 py-3 shadow-sm space-y-2.5 transition-colors">
+        <section id="portfolioOverview" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl px-4 py-3 shadow-sm space-y-2.5 transition-colors">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-5">
                 
                 <!-- SOL: DOLAR BAKİYESİ & CANLI TL -->
@@ -309,13 +371,13 @@
         </section>
 
         <!-- KARTLAR VE SAĞ KONSOL GRİDİ -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+        <div class="terminal-workspace grid grid-cols-1 xl:grid-cols-12 gap-5">
             
             <!-- SOL ALAN: COIN KARTLARI -->
             <section class="xl:col-span-9 space-y-3.5">
                 <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-xl shadow-sm transition-colors">
                     <div class="flex items-center space-x-2">
-                        <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 mr-1">Görünüm:</span>
+                        <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 mr-1">Coinler</span>
                         <button onclick="filterCards('all')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
                         <button onclick="filterCards('position')" id="btnFilterPos" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Pozisyondakiler</button>
                         <button onclick="filterCards('locked')" id="btnFilterLocked" class="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Kilitlenenler</button>
@@ -323,8 +385,8 @@
 
                     <div class="flex items-center space-x-2">
                         <button onclick="openAddCoinModal()" class="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-sm transition">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                            <span>Yeni Coin Ekle & Optimize Et</span>
+                            
+                            <span>Coin ekle ve optimize et</span>
                         </button>
                     </div>
                 </div>
@@ -333,7 +395,7 @@
             </section>
 
             <!-- SAĞ KONSOL: SWIFT EŞDEĞERİ YENİ SON İŞLEMLER PANELİ -->
-            <aside class="xl:col-span-3 space-y-3.5">
+            <aside class="terminal-activity xl:col-span-3 space-y-3.5" aria-label="Pozisyonlar ve işlem akışı">
                 <div id="livePositionsPanel" class="bg-white dark:bg-slate-900 border-2 border-blue-300 dark:border-blue-800 rounded-2xl p-4 shadow-lg shadow-blue-900/10 dark:shadow-blue-950/30 space-y-3 transition-colors">
                     <div class="flex items-center justify-between border-b border-blue-100 dark:border-blue-900 pb-2.5">
                         <div class="flex items-center space-x-2">
@@ -344,7 +406,7 @@
                             <h2 class="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white">Canlı Pozisyonlar</h2>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <button type="button" onclick="openManualPositionModal()" class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-lg font-medium leading-none shadow-sm transition" title="Manuel pozisyon ekle" aria-label="Manuel pozisyon ekle">+</button>
+                            <button type="button" onclick="openManualPositionModal()" class="w-7 h-7 inline-flex items-center justify-center rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-lg font-medium leading-none shadow-sm transition" title="Manuel pozisyon ekle" aria-label="Manuel pozisyon ekle">Pozisyon ekle</button>
                             <span id="activePositionsCountBadge" class="text-[11px] font-bold px-2 py-1 rounded-md bg-blue-100 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800">0 / 2 Slot</span>
                         </div>
                     </div>
@@ -365,20 +427,16 @@
                     <div id="pendingSignalsList" class="space-y-2"></div>
                 </div>
 
-                <!-- 🎯 SWIFT ACTIVEPOSITIONHEADERVIEW UYARLI: SON İŞLEMLER (50 İşlem, 5'erli Sayfalama) -->
+                <!--  SWIFT ACTIVEPOSITIONHEADERVIEW UYARLI: SON İŞLEMLER (50 İşlem, 5'erli Sayfalama) -->
                 <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3 transition-colors">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
                         <div class="flex items-center space-x-2">
-                            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
+                            
                             <h2 class="text-xs font-bold tracking-tight text-slate-800 dark:text-slate-100">Son Tamamlanan İşlemler</h2>
                         </div>
                         <div class="flex items-center space-x-1.5">
                             <span id="historyStatsTotal" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">0 İşlem</span>
-                            <button onclick="clearHistory()" class="text-slate-400 hover:text-rose-600 p-0.5 transition" title="Geçmişi Temizle">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            </button>
+                            <button onclick="clearHistory()" class="text-slate-400 hover:text-rose-600 p-0.5 transition" title="Geçmişi Temizle">Geçmişi Temizle</button>
                         </div>
                     </div>
 
@@ -389,9 +447,9 @@
                     <p id="pendingHistoryNote" class="hidden text-[9px] leading-relaxed text-slate-500 dark:text-slate-400">Site çalışırken kaydedilen ve geçmiş mumlardan hesaplanan bekleme kapanışları birlikte gösterilir. Slot boşalmadan hedefe ulaşanlar listelenir; geçmiş hesaplamalarda saatler mum kapanışına göredir. Portföye dahil değildir.</p>
                     <!-- Swift Tarzı Sayfa Gösterge Noktaları & Sayfalama Kontrolleri -->
                     <div id="historyPaginationControls" class="flex items-center justify-between px-1 text-[11px]">
-                        <button onclick="prevHistoryPage()" id="btnPrevHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">‹</button>
+                        <button onclick="prevHistoryPage()" aria-label="Önceki işlem sayfası" id="btnPrevHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">Önceki</button>
                         <div id="historyPaginationDots" class="flex items-center space-x-1.5"></div>
-                        <button onclick="nextHistoryPage()" id="btnNextHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">›</button>
+                        <button onclick="nextHistoryPage()" aria-label="Sonraki işlem sayfası" id="btnNextHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">Sonraki</button>
                     </div>
 
                     <!-- 5'li İşlem Listesi -->
@@ -429,7 +487,7 @@
                     <span id="buySignalCountdown" class="min-w-[34px] text-right font-mono text-sm font-black">30 sn</span>
                 </div>
                 <div class="flex items-center gap-3 pr-20">
-                    <span class="w-11 h-11 rounded-xl bg-white/20 border border-white/25 flex items-center justify-center text-2xl animate-pulse">🔔</span>
+                    <span class="w-11 h-11 rounded-xl bg-white/20 border border-white/25 flex items-center justify-center text-2xl animate-pulse"></span>
                     <div><div class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-100">Yeni teyitli sinyal</div><h3 class="text-lg font-black tracking-tight">ALIM SİNYALİ</h3></div>
                 </div>
             </div>
@@ -460,7 +518,7 @@
         <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800">
                 <div><h3 class="text-sm font-bold text-slate-900 dark:text-white">Manuel Canlı Pozisyon</h3><p class="text-[11px] text-slate-400 mt-0.5">Bilgisayar kapalıyken açtığın işlemi sisteme ekle</p></div>
-                <button type="button" onclick="closeManualPositionModal()" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-slate-800 transition">✕</button>
+                <button type="button" onclick="closeManualPositionModal()" class="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:text-white dark:hover:bg-slate-800 transition"></button>
             </div>
             <form id="manualPositionForm" onsubmit="submitManualPosition(event)" class="p-5 space-y-4">
                 <div><label for="manualPositionCoin" class="block text-[11px] font-semibold text-slate-600 dark:text-slate-300 mb-1.5">Coin</label><select id="manualPositionCoin" required class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/30"></select></div>
@@ -475,13 +533,13 @@
         </div>
     </div>
 
-    <!-- 3️⃣ AYLIK İŞLEMLER DETAY MODALI -->
+    <!-- 3 AYLIK İŞLEMLER DETAY MODALI -->
     <div id="monthTradesModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-5xl w-full p-3 shadow-2xl flex flex-col max-h-[92vh] transition-colors">
             
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                 <div class="flex items-center space-x-2.5">
-                    <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">📅</span>
+                    <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs"></span>
                     <div>
                         <div class="flex items-center space-x-2">
                             <h3 id="modalCoinTitle" class="font-extrabold text-sm text-slate-900 dark:text-white">ASTERUSDT</h3>
@@ -490,7 +548,7 @@
                         <p class="text-[11px] text-slate-400">Aylık coin işlemleri · brüt sonuçlar · slot durumu</p>
                     </div>
                 </div>
-                <button onclick="closeMonthTradesModal()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-semibold transition">✕</button>
+                <button onclick="closeMonthTradesModal()" class="w-7 h-7 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-semibold transition"></button>
             </div>
 
             <!-- Yatay Kaydırılabilir Ay Sekmeleri -->
@@ -523,12 +581,12 @@
         </div>
     </div>
 
-    <!-- 4️⃣ ÖZEL TARİH ARALIĞI MODALI -->
+    <!-- 4 ÖZEL TARİH ARALIĞI MODALI -->
     <div id="customRangeModal" class="fixed inset-0 z-50 bg-slate-900/50 dark:bg-black/75 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
                 <h3 class="font-bold text-sm text-slate-900 dark:text-white">Özel Tarih Aralığı</h3>
-                <button onclick="closeCustomDateRangeModal()" class="text-slate-400 text-sm font-bold">✕</button>
+                <button onclick="closeCustomDateRangeModal()" class="text-slate-400 text-sm font-bold"></button>
             </div>
             <div class="space-y-3 text-xs">
                 <div>
@@ -544,18 +602,18 @@
         </div>
     </div>
 
-    <!-- 5️⃣ SİHİRBAZ / COİN EKLEME MODALI -->
+    <!-- 5 SİHİRBAZ / COİN EKLEME MODALI -->
     <div id="addCoinModal" class="fixed inset-0 z-50 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm hidden items-center justify-center p-4">
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 transition-colors">
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div class="flex items-center space-x-2">
-                    <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">⚙️</div>
+                    <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs"></div>
                     <div>
                         <h3 class="font-bold text-sm text-slate-900 dark:text-white">Coin & Strateji Optimizatörü</h3>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400">Seçilen yılın tüm mumları taranarak en kârlı AL/SAT değerleri saptanır.</p>
                     </div>
                 </div>
-                <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-semibold">✕</button>
+                <button onclick="closeAddCoinModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-semibold"></button>
             </div>
 
             <div class="space-y-3 text-xs">
@@ -567,7 +625,7 @@
                         <datalist id="coinSuggestions"></datalist>
                     </div>
                     <div id="wizardSymbolStatus" class="mt-1 flex items-center space-x-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
-                        <span>✓ Geçerli Binance Spot paritesi</span>
+                        <span> Geçerli Binance Spot paritesi</span>
                     </div>
                 </div>
 
@@ -645,7 +703,7 @@
                     </div>
 
                     <button onclick="confirmAndAddCoinFromWizard()" id="btnConfirmAdd" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition text-xs shadow-sm flex items-center justify-center space-x-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        
                         <span>Bu Stratejiyle Karta Ekle & Canlıya Al</span>
                     </button>
                 </div>
@@ -676,22 +734,7 @@
         }
 
         function updateThemeIcons(theme) {
-            const iconLight = document.getElementById('themeIconLight');
-            const iconDark = document.getElementById('themeIconDark');
-            const badgeOled = document.getElementById('themeBadgeOled');
-            if (!iconLight || !iconDark || !badgeOled) return;
-
-            iconLight.classList.add('hidden');
-            iconDark.classList.add('hidden');
-            badgeOled.classList.add('hidden');
-
-            if (theme === 'oled') {
-                badgeOled.classList.remove('hidden');
-            } else if (theme === 'dark') {
-                iconDark.classList.remove('hidden');
-            } else {
-                iconLight.classList.remove('hidden');
-            }
+            document.getElementById('terminalThemeLabel').textContent = 'Tema: ' + ({light:'Açık',dark:'Koyu',oled:'OLED'}[theme] || 'Açık');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -702,10 +745,10 @@
 
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=8"></script>
-    <script src="app.js?v=63"></script>
+    <script src="app.js?v=63-terminal-ui-1"></script>
     <div id="monthlyLimitModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3" onclick="if(event.target===this) closeMonthlyLimitModal()">
         <section role="dialog" aria-modal="true" aria-labelledby="monthlyLimitTitle" aria-describedby="monthlyLimitExplanation" class="w-full max-w-4xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-2xl p-4 space-y-3">
-            <div class="flex items-center justify-between gap-2"><h2 id="monthlyLimitTitle" class="text-sm font-bold">İşlem limitleri</h2><button id="monthlyLimitClose" type="button" onclick="closeMonthlyLimitModal()" aria-label="Pencereyi kapat" class="px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">✕</button></div>
+            <div class="flex items-center justify-between gap-2"><h2 id="monthlyLimitTitle" class="text-sm font-bold">İşlem limitleri</h2><button id="monthlyLimitClose" type="button" onclick="closeMonthlyLimitModal()" aria-label="Pencereyi kapat" class="px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"></button></div>
             <p id="monthlyLimitTotals" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></p>
             <p id="monthlyLimitExplanation" class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Aylık işlemler: aynı sinyalin tekilleştirilmiş kapanışları; slota alınmayanlar aylık coin limitine dahildir. Kayıtlı bekleme kapanışları ayrı tutulur. Limit, ortak listedeki brüt kâr üzerinden hesaplanır. Önceden kaydedilmiş limit sonrası işlemler silinmez. Kalan işlem, aylık kalan kâr / işlem başına hedef kâr hesabıyla tahmin edilir; zarar ve RSI çıkışlarıyla değişebilir. Toplama yalnızca aktif coinler dahildir. Portföy katkısı, bu ayki komisyon sonrası kârın başlangıç sermayesine oranıdır; açık pozisyon ve bekleme kârları hariçtir.</p>
             <table class="w-full table-fixed"><thead class="text-[9px] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><tr><th class="w-[12%] pb-2 text-left">Coin</th><th class="w-[30%] pb-2 text-right">Aylık işlemler</th><th class="w-[12%] pb-2 text-right">Kalan işlem</th><th class="w-[20%] pb-2 text-right">Kalan kâr / Limit</th><th class="w-[15%] pb-2 text-right">Toplam katkı</th><th class="w-[11%] pb-2 text-right">Durum</th></tr></thead><tbody id="monthlyLimitRows"></tbody></table>
