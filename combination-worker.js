@@ -556,7 +556,20 @@ function evaluateCombination(groups, selection, config) {
         if(candidate.totalTrades<config.minTrades || candidate.winRate+1e-9<groups[i].requiredWin ||
             stats.trades<config.minTrades || stats.winRate+1e-9<groups[i].requiredWin) valid=false;
     }
-    return {valid,balance:outcome.realizedBalance,gain:outcome.realizedBalance-config.base,fees:outcome.totalFeesUSD,
+    const monthlyMap=new Map();
+    for(const trade of outcome.executedTrades) {
+        const key=getTurkeyDateComponents(trade.exitTime).monthKey;
+        if(!monthlyMap.has(key))monthlyMap.set(key,{monthKey:key,trades:0,grossPnl:0,netTradePnl:0,grossGain:0,netGain:0,fees:0});
+        const month=monthlyMap.get(key);
+        month.trades++;month.grossPnl+=trade.pnlPercent;month.netTradePnl+=trade.effectivePnl;
+        month.grossGain+=trade.netGainUSD+trade.feeUSD;month.netGain+=trade.netGainUSD;month.fees+=trade.feeUSD;
+    }
+    let monthlyBalance=config.base;
+    const monthly=[...monthlyMap.values()].sort((a,b)=>a.monthKey.localeCompare(b.monthKey)).map(month=>{
+        const startBalance=monthlyBalance;monthlyBalance+=month.netGain;
+        return {...month,startBalance,endBalance:monthlyBalance,capitalPnl:month.netGain/config.base*100};
+    });
+    return {monthly,grossPnl:monthly.reduce((sum,month)=>sum+month.grossPnl,0),netTradePnl:monthly.reduce((sum,month)=>sum+month.netTradePnl,0),valid,balance:outcome.realizedBalance,gain:outcome.realizedBalance-config.base,fees:outcome.totalFeesUSD,
         trades:accepted.length,wins,losses:accepted.length-wins,winRate,skipped:raw.length-accepted.length,signals:raw.length,byCoin,
         selection:[...selection]};
 }

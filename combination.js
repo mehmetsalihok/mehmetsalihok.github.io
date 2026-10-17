@@ -59,7 +59,7 @@ function stopWorker(){if(worker)worker.terminate();worker=null;setRunning(false)
 function runAnalysis() {
     if(worker)return;
     showError('');let config;
-    try{config=getConfig();worker=new Worker('combination-worker.js?v=1')}catch(error){showError(error.message);return}
+    try{config=getConfig();worker=new Worker('combination-worker.js?v=2')}catch(error){showError(error.message);return}
     runSnapshot=JSON.parse(JSON.stringify(config));lastResult=null;$('combinationResults').hidden=true;
     setRunning(true);$('analysisProgress').hidden=false;$('progressTitle').textContent='Analiz hazırlanıyor';$('progressDetail').textContent='Veriler indirilirken ve RSI alternatifleri hesaplanırken bu sayfayı açık tut.';
     worker.onmessage=({data})=>{
@@ -71,13 +71,35 @@ function runAnalysis() {
     worker.postMessage(config);
 }
 function metricMarkup(result,base) {
-    return `<div class="metric"><span>Hesaplanan bakiye</span><strong>${money(result.balance)}</strong><small class="${result.gain>=0?'positive':'negative'}">${result.gain>=0?'+':''}${money(result.gain)} · %${(result.gain/base*100).toFixed(2)}</small></div><div class="metric"><span>Slota alınan kazanma oranı</span><strong>%${result.winRate.toFixed(2)}</strong><small>${result.wins} win / ${result.losses} lose</small></div><div class="metric"><span>İşlem / kaçan sinyal</span><strong>${result.trades} / ${result.skipped}</strong><small>${result.signals} kapanmış aday sinyal</small></div><div class="metric"><span>Toplam komisyon</span><strong>${money(result.fees)}</strong><small>${result.valid?'Başarı ve işlem koşulları sağlandı':'Başarı veya işlem koşulları sağlanmadı'}</small></div>`;
+    return `<div class="metric"><span>Hesaplanan bakiye</span><strong>${money(result.balance)}</strong><small class="${result.gain>=0?'positive':'negative'}">${result.gain>=0?'+':''}${money(result.gain)} · %${(result.gain/base*100).toFixed(2)}</small><small>Brüt getiri %${result.grossPnl.toFixed(2)} · Net işlem %${result.netTradePnl.toFixed(2)}</small></div><div class="metric"><span>Slota alınan kazanma oranı</span><strong>%${result.winRate.toFixed(2)}</strong><small>${result.wins} win / ${result.losses} lose</small></div><div class="metric"><span>İşlem / kaçan sinyal</span><strong>${result.trades} / ${result.skipped}</strong><small>${result.signals} kapanmış aday sinyal</small></div><div class="metric"><span>Toplam komisyon</span><strong>${money(result.fees)}</strong><small>${result.valid?'Başarı ve işlem koşulları sağlandı':'Başarı veya işlem koşulları sağlanmadı'}</small></div>`;
 }
 function optionLabel(option){return option.off?'Pasif':`${option.interval} / RSI ${option.rsiLength}`}
+function renderMonthlyComparison(data) {
+    const months=[];
+    const first=dateKey(data.config.start).slice(0,7),last=dateKey(data.config.end-1).slice(0,7);
+    let [year,month]=first.split('-').map(Number);
+    for(let count=0;count<1200;count++) {
+        const key=year+'-'+String(month).padStart(2,'0');
+        if(key>last)break;
+        months.push(key);month++;if(month===13){month=1;year++}
+    }
+    const choices=[['Mevcut düzen',data.baseline]];
+    if(data.best)choices.push(['Önerilen',data.best]);
+    const balances=choices.map(()=>data.config.base);
+    const percentage=value=>`${value>=0?'+':''}${value.toFixed(2)}%`;
+    $('monthlyComparisonRows').innerHTML=months.map(key=>choices.map(([label,result],index)=>{
+        const row=result.monthly.find(month=>month.monthKey===key)||{trades:0,grossPnl:0,netTradePnl:0,netGain:0,fees:0,capitalPnl:0};
+        balances[index]+=row.netGain;
+        const title=new Intl.DateTimeFormat('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'long'}).format(new Date(key+'-15T12:00:00Z'));
+        const style=row.netGain<0?'negative':'positive';
+        return `<tr><td class="coin-name">${title}</td><td>${label}</td><td>${row.trades}</td><td class="${row.grossPnl<0?'negative':'positive'}">${percentage(row.grossPnl)}</td><td class="${row.netTradePnl<0?'negative':'positive'}">${percentage(row.netTradePnl)}</td><td>${money(row.fees)}</td><td class="${style}">${row.netGain>=0?'+':''}${money(row.netGain)}</td><td class="${style}">${percentage(row.capitalPnl)}</td><td>${money(balances[index])}</td></tr>`;
+    }).join('')).join('');
+}
 function renderResult(data) {
     $('combinationResults').hidden=false;
     $('searchDescription').textContent=data.exhaustive?`${data.combinations.toLocaleString('tr-TR')} uygun seçenek kombinasyonunun tamamı tarandı. Mevcut düzen ayrıca karşılaştırıldı.`:`Sınırlı arama: ${data.tested.toLocaleString('tr-TR')} kombinasyon denendi; tüm olasılıkların tarandığı iddia edilmez.`;
     $('baselineMetrics').innerHTML=metricMarkup(data.baseline,data.config.base);
+    renderMonthlyComparison(data);
     $('analysisWarnings').hidden=!data.warnings.length;$('analysisWarnings').textContent=data.warnings.length?'Bazı alternatifler veri alınamadığı için denenemedi:\n'+data.warnings.join('\n'):'';
     $('bestResult').hidden=!data.best;$('noFeasibleResult').hidden=!!data.best;$('downloadRecommendation').hidden=!data.best;
     if(!data.best){$('noFeasibleResult').textContent='Bu koşulları sağlayan bir kombinasyon bulunamadı. Başarı eşiğini, asgari işlem sayısını veya tarih aralığını inceleyebilirsin. Mevcut terminal ayarların değişmedi.';return}
