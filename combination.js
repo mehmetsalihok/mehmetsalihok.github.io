@@ -49,6 +49,7 @@ function updateLeagueStatus() {
 }
 function applyCoinRecommendation(index) {
     try {
+        if(window.kuzgunWalkForwardRunning)throw new Error('İleri dönem testi sürerken ayar uygulanmaz; testin tamamlanmasını bekle.');
         if(!result?.recommendation)throw new Error('Uygulanacak öneri yok');
         if(!Number.isInteger(index)||!result.groups[index])throw new Error('Coin seçimi geçersiz');
         const group=result.groups[index],candidate=group.options[result.recommendation.selection[index]].settings;
@@ -104,6 +105,7 @@ async function initialize(){
     }catch(reason){snapshot=null;$('startSearch').disabled=true;error(reason.message)}
 }
 function start(){
+    if(window.kuzgunWalkForwardRunning){error('Önce ileri dönem testini durdur veya tamamlanmasını bekle.');return}
     if(worker)return;error('');
     const min=$('minTrades');if(!min.reportValidity())return;
     let leagueRecords=[];
@@ -114,7 +116,7 @@ function start(){
             const missing=snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,leagueRecords).length);
             if(missing.length)throw new Error('Lig kaydı eksik veya uyumsuz: '+missing.map(coin=>coin.displaySymbol||coin.symbol).join(', ')+'. Aynı yıl, hedef kâr ve aylık kilitle 15m/30m lig taraması yap; ardından terminalden yeni referans al.');
         }
-        worker=new Worker('combination-worker.js?v=21-league-apply');
+        worker=new Worker('combination-worker.js?v=22-walkforward');
     }catch(reason){error(reason.message);return}
     const config={minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
     result=null;$('applyStatus').textContent='';$('resultSection').hidden=true;$('progressBox').hidden=false;$('progressTitle').textContent='Terminal referansı doğrulanıyor';$('progressDetail').textContent='Aynı bakiye ve aynı slota kabul edilen işlem listesi bekleniyor.';setRunning(true);

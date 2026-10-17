@@ -694,7 +694,9 @@ async function optimize(snapshot,config) {
     for(const group of groups)delete group.histories;
     // Session is released after reporting; only compact review data goes to the main page.
     const summary=groups.map(group=>({coin:{...group.coin,rawCandles:undefined},options:group.options.map(candidate=>({settings:candidate.settings,count:candidate.count,winRate:candidate.winRate}))}));
-    self.postMessage({type:'result',baseline,recommendation,groups:summary,tested,budget,config:{...config,leagueRecords:undefined},year:SNAP.year,asOf:SNAP.asOf,
-        base:SNAP.referenceArgs.baseBalance,slots:SNAP.referenceArgs.maxSlots,months:monthKeys(),referenceVerified:true});
+    const report={type:'result',baseline,recommendation,groups:summary,tested,budget,config:{...config,leagueRecords:undefined},year:SNAP.year,asOf:SNAP.asOf,
+        base:SNAP.referenceArgs.baseBalance,slots:SNAP.referenceArgs.maxSlots,months:monthKeys(),referenceVerified:true};
+    self.postMessage(report);
+    return report;
 }
 self.onmessage=async({data})=>{try{await optimize(data.snapshot,data.config)}catch(error){self.postMessage({type:'error',message:error.message||'Analiz tamamlanamadı'})}};
