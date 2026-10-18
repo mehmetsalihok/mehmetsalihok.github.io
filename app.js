@@ -994,6 +994,13 @@ function openMonthTradesModal(coinId, monthKey) {
     }
 }
 
+function isTradeAcceptedInPortfolio(trade) {
+    if (trade.isReal || KZ_STATE.acceptedTradeIds?.has(trade.id)) return true;
+    // A saved trade or open position can replace its simulated counterpart.
+    return (KZ_STATE.executedGlobalTrades || []).some(record => isSameTradeSignal(trade, record))
+        || (KZ_STATE.activePositions || []).some(position => isSameTradeSignal(trade, position));
+}
+
 function renderModalTabsAndContent(coin, selectedMonthKey) {
     const recordsView = KZ_STATE.activeMonthModal.view === 'records';
     const months = recordsView ? getCoinMonthlyLedger(coin).map(m => {
@@ -1035,8 +1042,9 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
 
     const rows = currentMonthData.tradesList || [];
     const wins = rows.filter(t=>Number(t.pnlPercent ?? t.pnl)>=0).length;
+    const acceptedCount = rows.filter(isTradeAcceptedInPortfolio).length;
     if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent =
-        `${recordsView?'Kaydedilmiş işlemler':'Strateji simülasyonu'} · ${rows.length} işlem · ${wins} win / ${rows.length-wins} lose`;
+        `${recordsView?'Kaydedilmiş işlemler':'Strateji simülasyonu'} · ${rows.length} işlem · ${acceptedCount} işleme alındı · ${rows.length-acceptedCount} slota alınmadı · ${wins} win / ${rows.length-wins} lose`;
     if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Brüt getiri; komisyon düşülmemiştir.';
     if (modalActiveMonthLockBadge && recordsView) modalActiveMonthLockBadge.textContent = 'Kaydedilmiş otomatik ve manuel işlemler';
     if (modalActiveMonthLockBadge) modalActiveMonthLockBadge.title = 'Simülasyon, lig ile aynı kapanmış mumları ve aylık kilit kuralını kullanır. Kaydedilmiş işlemler ayrıca gösterilir.';
@@ -1055,9 +1063,9 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
                 <th style="width:28%">İşlem / Durum</th><th style="width:26%">Giriş</th><th style="width:26%">Çıkış</th><th style="width:20%" class="text-right">Sonuç</th>
             </tr></thead><tbody>${visible.map(t => {
                 const pnl = Number(t.isReal ? t.pnlPercent : t.pnl);
-                const accepted = KZ_STATE.acceptedTradeIds?.has(t.id);
-                const status = recordsView ? '✓ Kaydedilmiş işlem' : 'Strateji simülasyonu';
-                const statusColor = 'text-blue-600 dark:text-blue-400';
+                const accepted = isTradeAcceptedInPortfolio(t);
+                const status = accepted ? 'İşleme alındı' : 'Slota alınmadı';
+                const statusColor = accepted ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400';
                 const duration = t.duration || (() => { const mins = Math.max(0, Math.round((t.exitTime - t.entryTime)/60000)); return mins >= 60 ? `${Math.floor(mins/60)}sa ${mins%60}dk` : `${mins}dk`; })();
                 return `<tr>
                     <td><div class="month-trade-reason font-semibold text-slate-800 dark:text-slate-200" title="${t.reason}">${t.reason} ${tradeCodeBadge(t)}</div><div class="month-trade-meta ${statusColor}" title="${t.afterMonthlyLimit ? 'Mevcut strateji ve aylık limite göre limit sonrası. Eski kapanış kaydı korunur.' : ''}">${status}${t.isReal ? ` <button onclick="openClosedTradeEditor('${t.id}')" class="text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek satışı düzenle">✎</button>` : ''}</div></td>
