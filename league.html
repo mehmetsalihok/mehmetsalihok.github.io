@@ -101,21 +101,22 @@
 .league-dialog-panel{padding:24px}.league-dialog-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.league-dialog-eyebrow{font-size:10px;color:#64748b;font-weight:700;letter-spacing:.12em}.league-dialog-heading h2{font-size:20px;font-weight:700;margin:6px 0}.league-dialog-heading p:last-child{font-size:12px;color:#64748b}.league-dialog-close,.league-trade-pagination button{font-size:12px;padding:7px 12px;border:1px solid #cbd5e1;border-radius:6px}.dark .league-dialog-close,.dark .league-trade-pagination button{border-color:#334155}.league-trade-summary{display:flex;flex-wrap:wrap;gap:10px 24px;padding:16px 0;margin-top:12px;border-top:1px solid #e2e8f0;font-size:12px}.dark .league-trade-summary{border-color:#334155}.league-trade-note{font-size:10px;line-height:1.7;color:#64748b;margin-bottom:14px}.dark .league-trade-note,.dark .league-dialog-heading p,.dark .league-price-secondary{color:#94a3b8}.league-trade-scroll{overflow:auto;max-height:50dvh;border:1px solid #e2e8f0;border-radius:8px}.dark .league-trade-scroll{border-color:#334155}.league-trade-table{width:100%;font-size:11px;text-align:left;white-space:nowrap;font-variant-numeric:tabular-nums}.league-trade-table th{position:sticky;top:0;background:#f8fafc;color:#64748b;font-size:10px;font-weight:600;z-index:1}.dark .league-trade-table th{background:#1e293b;color:#94a3b8}.league-trade-table th,.league-trade-table td{padding:10px 12px;border-bottom:1px solid #e2e8f0}.dark .league-trade-table th,.dark .league-trade-table td{border-color:#293548}.league-price-secondary{color:#64748b}.league-trade-pagination{display:flex;justify-content:space-between;gap:12px;align-items:center;padding-top:16px;font-size:11px;color:#64748b}.league-trade-pagination>div{display:flex;gap:6px}.league-trade-pagination button:disabled{opacity:.4;cursor:default}#leagueTradeDialog button:focus-visible{outline:2px solid #3b82f6;outline-offset:3px}
 @media(max-width:640px){.league-dialog-panel{padding:16px}.league-dialog-heading h2{font-size:18px}.league-trade-pagination{flex-wrap:wrap}.league-trade-summary{gap:8px 16px}.league-trade-scroll{max-height:45dvh}}@media(prefers-reduced-motion:reduce){#leagueTradeDialog[open],#leagueTradeDialog[open]::backdrop,#leagueTradeDialog.is-closing,#leagueTradeDialog.is-closing::backdrop{animation:none!important}}
 </style>
+<link rel="stylesheet" href="header.css?v=1">
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
     <!-- 1️⃣ ORTAK ÜST KONSOL (Lig Kıyaslama Aktif) -->
-    <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
+    <header class="kz-header border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="league-shell w-full mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
             
             <div class="flex items-center space-x-4 shrink-0">
-                <a href="index.html" class="flex items-center space-x-1.5 hover:opacity-85 transition">
+                <a href="index.html" class="kz-brand flex items-center space-x-1.5 hover:opacity-85 transition">
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">PRO</span>
                 </a>
                 <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 dark:border-slate-800 pl-4 text-xs font-medium">
                     <a href="index.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Terminal</a>
-                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm">Lig Kıyaslama</button>
+                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm" aria-current="page">Lig Kıyaslama</button><a href="combination.html">Kombinasyon</a>
                     <a href="index.html?openWizard=true" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Sihirbaz</a>
                     <a href="settings.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Ayarlar</a>
                 </nav>

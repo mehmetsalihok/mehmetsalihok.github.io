@@ -127,23 +127,24 @@ header>div{max-width:1220px!important;height:auto!important;min-height:64px;padd
 @media(max-width:700px){.settings-main{margin-top:18px;padding:0 12px 20px}.settings-heading{padding:24px 20px;display:block}.settings-heading h1{font-size:24px}.save-note{display:block;margin-top:12px}.settings-tabs{padding:0 20px;gap:22px}.settings-content{padding:24px 20px}.settings-summary{padding:20px;gap:18px}.settings-section .grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-section .flex{flex-wrap:wrap}.settings-section label.relative{margin-left:auto}.settings-section .flex:has(>label.relative){flex-wrap:nowrap}.settings-section input{min-width:0}.settings-section div:has(> #inputBalance),.settings-section div:has(> #inputTelegramChatId){flex-wrap:wrap}header>div{padding:12px 16px}header nav{display:flex!important;flex-wrap:wrap}header>div>div:first-child{flex-wrap:wrap;gap:12px}header nav{border-left:0!important;padding-left:0!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
 </style>
+<link rel="stylesheet" href="header.css?v=1">
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
     <!-- 1 ORTAK ÜST KONSOL -->
-    <header class="border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
+    <header class="kz-header border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
             
             <div class="flex items-center space-x-4 shrink-0">
-                <a href="index.html" class="flex items-center space-x-1.5 hover:opacity-85 transition">
+                <a href="index.html" class="kz-brand flex items-center space-x-1.5 hover:opacity-85 transition">
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">PRO</span>
                 </a>
                 <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 dark:border-slate-800 pl-4 text-xs font-medium">
                     <a href="index.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Terminal</a>
-                    <a href="league.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Lig Kıyaslama</a>
+                    <a href="league.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Lig Kıyaslama</a><a href="combination.html">Kombinasyon</a>
                     <a href="index.html?openWizard=true" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Sihirbaz</a>
-                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm">Ayarlar</button>
+                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm" aria-current="page">Ayarlar</button>
                 </nav>
             </div>
 

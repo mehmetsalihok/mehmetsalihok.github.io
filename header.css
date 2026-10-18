@@ -1,0 +1,56 @@
+/* Shared header dimensions: the terminal is the reference. */
+header.kz-header{
+ position:sticky!important;top:0!important;z-index:40;flex:none;
+ width:100%;height:57px;min-height:57px;max-height:57px;
+ margin:0;padding:0;box-sizing:border-box;
+ border:0;border-bottom:1px solid #e2e8f0!important;
+ background:rgba(255,255,255,.95)!important;
+ backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+ font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+ letter-spacing:-.015em;color:#0f172a;
+}
+html.dark header.kz-header{background:rgba(15,23,42,.95)!important;border-bottom-color:#1e293b!important;color:#f8fafc}
+html.oled header.kz-header{background:rgba(0,0,0,.96)!important;border-bottom-color:#252525!important}
+header.kz-header>div{
+ box-sizing:border-box;display:flex!important;align-items:center!important;justify-content:space-between!important;
+ width:100%!important;max-width:1780px!important;height:56px!important;min-height:56px!important;max-height:56px!important;
+ margin:0 auto!important;padding:0 20px!important;gap:16px!important;flex-wrap:nowrap!important;
+ overflow-x:auto!important;overflow-y:hidden!important;scrollbar-width:none;
+ -webkit-overflow-scrolling:touch;
+}
+header.kz-header>div::-webkit-scrollbar{display:none}
+header.kz-header>div>div{display:flex;align-items:center;flex-shrink:0;flex-wrap:nowrap!important;gap:16px!important}
+header.kz-header>div>div>*{margin-left:0!important;margin-right:0!important}
+header.kz-header .kz-brand{
+ display:inline-flex!important;align-items:center!important;gap:6px!important;flex-shrink:0;
+ padding:0!important;margin:0!important;min-height:0!important;line-height:1!important;
+ font-size:16px!important;font-weight:800!important;letter-spacing:-.025em!important;
+ text-decoration:none;color:inherit;
+}
+header.kz-header .kz-brand h1{margin:0!important;font-size:16px!important;font-weight:800!important;line-height:1!important;letter-spacing:-.025em!important}
+header.kz-header .kz-brand>span,header.kz-header .kz-brand>small{
+ display:inline-block;margin:0!important;padding:2px 6px!important;border:1px solid #bfdbfe!important;
+ border-radius:4px;font-size:9px!important;font-weight:700!important;line-height:14px!important;
+ letter-spacing:0!important;background:#eff6ff!important;color:#2563eb!important;
+}
+html.dark header.kz-header .kz-brand>span,html.dark header.kz-header .kz-brand>small{background:#17255480!important;border-color:#1e40af!important;color:#60a5fa!important}
+header.kz-header nav{
+ display:flex!important;align-items:center!important;flex:none!important;flex-wrap:nowrap!important;gap:4px!important;
+ margin:0!important;padding:0 0 0 16px!important;border:0!important;border-left:1px solid #e2e8f0!important;
+ overflow:visible!important;
+}
+html.dark header.kz-header nav{border-left-color:#1e293b!important}
+header.kz-header nav>a,header.kz-header nav>button{
+ box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+ height:28px!important;min-height:28px!important;margin:0!important;padding:4px 10px!important;
+ border:0!important;border-radius:6px!important;background:transparent;color:#475569;
+ font-family:inherit;font-size:12px!important;font-weight:500!important;line-height:20px!important;
+ letter-spacing:-.015em!important;white-space:nowrap;text-decoration:none;
+}
+html.dark header.kz-header nav>a,html.dark header.kz-header nav>button{color:#94a3b8}
+header.kz-header nav>a:hover,header.kz-header nav>button:hover{background:#f1f5f9;color:#0f172a}
+header.kz-header nav>[aria-current=page]{font-weight:600!important;color:#2563eb!important;background:#f1f5f9!important;box-shadow:0 1px 2px #0f172a0d}
+html.dark header.kz-header nav>a:hover,html.dark header.kz-header nav>button:hover,html.dark header.kz-header nav>[aria-current=page]{background:#1e293b!important;color:#60a5fa!important}
+html.oled header.kz-header nav>[aria-current=page]{background:#171717!important}
+header.kz-header :is(a,button,select):focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
+html{scroll-padding-top:72px}
