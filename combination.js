@@ -35,7 +35,7 @@ function matchingLeagueRecords(snapshot,coin,records) {
         Number.isFinite(row.sellRsi)&&row.sellRsi>=55&&row.sellRsi<=98&&row.buyRsi<row.sellRsi);
 }function eligibleLeagueRecords(allYears=false) {
     let saved;try{saved=JSON.parse(localStorage.getItem('kuzgun_league_candidates_v1')||'null')}catch(_){saved=null}
-    if(saved?.schema!=='kuzgun-league-candidates-v1'||!Array.isArray(saved.records))return [];
+    if(saved?.schema!=='kuzgun-league-candidates-v2'||!Array.isArray(saved.records))return [];
     return allYears?saved.records:snapshot.coins.flatMap(coin=>matchingLeagueRecords(snapshot,coin,saved.records));
 }
 function analysisRangeConfig(){
@@ -141,7 +141,7 @@ function start(){
             const missing=range?[]:snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,leagueRecords).length);
             if(missing.length)throw new Error('Lig kaydı eksik veya uyumsuz: '+missing.map(coin=>coin.displaySymbol||coin.symbol).join(', ')+'. Aynı yıl, hedef kâr ve aylık kilitle 15m/30m lig taraması yap; ardından terminalden yeni referans al.');
         }
-        worker=new Worker(range?'combination-range.js?v=1':'combination-worker.js?v=23-history');
+        worker=new Worker(range?'combination-range.js?v=2-shared-strategy':'combination-worker.js?v=24-shared-strategy');
     }catch(reason){error(reason.message);return}
     const config={...range,minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
     result=null;$('applyStatus').textContent='';$('resultSection').hidden=true;$('progressBox').hidden=false;$('progressTitle').textContent='Terminal referansı doğrulanıyor';$('progressDetail').textContent='Aynı bakiye ve aynı slota kabul edilen işlem listesi bekleniyor.';setRunning(true);

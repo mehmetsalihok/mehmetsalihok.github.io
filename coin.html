@@ -234,6 +234,7 @@
         </div>
     </main>
 
+    <script src="strategyEngine.js?v=1"></script>
     <script>
         // 🎯 TEKLİ COİN MOTORU & İNDEXEDDB ENTEGRASYONU
         let targetSymbol = new URLSearchParams(window.location.search).get('symbol') || 'ASTERUSDT';
@@ -310,86 +311,13 @@
         }
 
         function runBacktest() {
-            const currentYear = new Date().getFullYear();
-            const maxMonthIdx = new Date().getMonth();
-            const monthlyMap = {};
-            for (let m = 0; m <= maxMonthIdx; m++) {
-                const mKey = `${currentYear}-${String(m + 1).padStart(2, '0')}`;
-                monthlyMap[mKey] = { name: monthNames[m], trades: 0, pnl: 0, isLocked: false };
-            }
-
-            if (!coinConfig.rawCandles || coinConfig.rawCandles.length < (coinConfig.rsiLength + 5)) return;
-
-            const closes = coinConfig.rawCandles.map(c => c.close);
-            const rsiVals = calculateRSIHistory(closes, coinConfig.rsiLength);
-            let inPos = false, entryP = 0, entryT = 0;
-            const trades = [];
-            let totalHoldSeconds = 0;
-
-            for (let i = coinConfig.rsiLength + 1; i < coinConfig.rawCandles.length; i++) {
-                const c = coinConfig.rawCandles[i];
-                const rsi = rsiVals[i];
-                const prevRsi = rsiVals[i - 1];
-                if (rsi === null || prevRsi === null) continue;
-
-                const mKey = c.monthKey;
-                if (!monthlyMap[mKey]) monthlyMap[mKey] = { name: mKey, trades: 0, pnl: 0, isLocked: false };
-                const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= coinConfig.monthlyCap;
-
-                if (!inPos && !isCapReached) {
-                    if (prevRsi <= coinConfig.buyRsi && rsi > coinConfig.buyRsi) {
-                        inPos = true;
-                        entryP = c.close;
-                        entryT = c.time;
-                    }
-                } else if (inPos) {
-                    const targetP = entryP * (1.0 + coinConfig.profitTarget / 100.0);
-                    let exited = false, pnl = 0, reason = '';
-
-                    if (c.high >= targetP) {
-                        exited = true;
-                        pnl = coinConfig.profitTarget;
-                        reason = `Kâr (%${coinConfig.profitTarget.toFixed(1)})`;
-                    } else if (rsi >= coinConfig.sellRsi) {
-                        exited = true;
-                        pnl = ((c.close - entryP) / entryP) * 100.0;
-                        reason = `RSI Sat (${rsi.toFixed(0)})`;
-                    }
-
-                    if (exited) {
-                        inPos = false;
-                        monthlyMap[mKey].trades++;
-                        monthlyMap[mKey].pnl += pnl;
-                        if ((monthlyMap[mKey].pnl + 0.001) >= coinConfig.monthlyCap) {
-                            monthlyMap[mKey].isLocked = true;
-                        }
-
-                        const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
-                        totalHoldSeconds += diffSec;
-
-                        const hours = Math.floor(diffSec / 3600);
-                        const mins = Math.floor((diffSec % 3600) / 60);
-                        const exitD = new Date(c.time);
-
-                        trades.push({
-                            entryPrice: entryP,
-                            exitPrice: c.close,
-                            pnl: pnl,
-                            reason: reason,
-                            duration: hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`,
-                            dateStr: `${exitD.getDate()} ${monthNames[exitD.getMonth()]} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`,
-                            isWin: pnl >= 0
-                        });
-                    }
-                }
-            }
-
-            if (trades.length > 0) {
-                const avgSec = Math.floor(totalHoldSeconds / trades.length);
-                const avgH = Math.floor(avgSec / 3600);
-                const avgM = Math.floor((avgSec % 3600) / 60);
-                document.getElementById('txtHoldDuration').textContent = `Ort. Süre: ${avgH > 0 ? `${avgH}sa${avgM}dk` : `${avgM}dk`}`;
-            }
+            const year = localStorage.getItem('kuzgun_selected_year') || String(new Date().getFullYear());
+            const result = KuzgunStrategy.simulate(coinConfig.rawCandles || [],coinConfig,{asOf:Date.now(),year});
+            const monthlyMap = Object.fromEntries(result.months.map(m=>[m.monthKey,m]));
+            const trades = result.trades.map(t=>({...t,dateStr:new Date(t.exitTime).toLocaleString('tr-TR',
+                {timeZone:'Europe/Istanbul',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}));
+            const mins = Math.floor(result.averageHoldMs/60000);
+            document.getElementById('txtHoldDuration').textContent = `Ort. Süre: ${mins>=60?`${Math.floor(mins/60)}sa ${mins%60}dk`:`${mins}dk`}`;
 
             // Aylık Tablo Dökümü
             const sortedMonths = Object.entries(monthlyMap).sort((a, b) => b[0].localeCompare(a[0]));
@@ -429,9 +357,9 @@
         }
 
         async function fetchCandles() {
-            const year = new Date().getFullYear();
+            const year = Number(localStorage.getItem('kuzgun_selected_year')) || new Date().getFullYear();
             const startTime = new Date(Date.UTC(year, 0, 1)).getTime();
-            const endTime = Date.now();
+            const endTime = Math.min(Date.now(),Date.UTC(year+1,0,1));
             let all = [];
             let currentStart = startTime;
 

@@ -1,5 +1,5 @@
 'use strict';
-importScripts('combination-worker.js?v=23-history');
+importScripts('combination-worker.js?v=24-shared-strategy');
 const rangeDeliver=self.postMessage.bind(self);
 function analysisMonth(value){
     if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(value||''))throw new Error('Geçerli bir başlangıç ve bitiş ayı seç.');

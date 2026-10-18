@@ -46,7 +46,7 @@
             if(Date.UTC(endYear,endMonth,1,-3)>snapshot.asOf)throw new Error('Yalnızca referans tarihinde tamamlanmış test aylarını seçebilirsin.');
             const config={trainingStart:first,testStart:test,testEnd:last,trainingMode:get('wfTrainingMode').value,windowMonths:Number(get('wfWindowMonths').value),budget:Number(get('wfBudget').value),
                 minTrades:Number(get('wfMinTrades').value),monthlyMode:get('wfMonthly').value,leagueOnly:get('wfLeague').checked,allowDisable:get('wfAllowDisable').checked};
-            activeWorker=new Worker('combination-walkforward.js?v=2-history');
+            activeWorker=new Worker('combination-walkforward.js?v=3-shared-strategy');
             partial=[];report=null;get('wfDownload').hidden=true;get('wfResults').hidden=true;
             get('wfProgress').hidden=false;get('wfProgressTitle').textContent='İleri dönem testi hazırlanıyor';
             get('wfProgressDetail').textContent='Veri ve eğitim hesabı ayrı işçide yürütülür; sayfayı açık tutabilirsin.';running(true);

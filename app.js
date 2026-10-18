@@ -257,8 +257,8 @@ function rebuildCoinMonthlyLedger(coin) {
     }
     coin.monthlyLedger=summaries.sort((a,b)=>b.monthKey.localeCompare(a.monthKey));
     // Eski ekranların kullandığı alan da aynı kaynağı gösterir.
-    coin.simMonthlyStats=coin.monthlyLedger;
-    coin.simLastTrades=coin.monthlyLedger.flatMap(m=>m.tradesList)
+    coin.simMonthlyStats=coin.strategyMonthlyStats || coin.monthlyLedger;
+    coin.simLastTrades=(coin.strategyMonthlyStats || coin.monthlyLedger).flatMap(m=>m.tradesList)
         .sort((a,b)=>b.exitTime-a.exitTime).slice(0,10);
     return coin.monthlyLedger;
 }
@@ -268,7 +268,7 @@ function getCoinMonthlyLedger(coin) {
 }
 
 function getCoinDisplayTrades(coin) {
-    return getCoinMonthlyLedger(coin).flatMap(m=>m.tradesList)
+    return (coin.strategyMonthlyStats || []).flatMap(m=>m.tradesList)
         .sort((a,b)=>b.exitTime-a.exitTime).slice(0,10)
         .map(t=>({...t,isWin:t.pnl>=0,duration:t.duration || formatTradeDuration(t.entryTime,t.exitTime)}));
 }
@@ -967,142 +967,13 @@ function processLivePriceUpdate(coin, livePrice, liveHigh, liveLow) {
 }
 
 function runCardBacktest(coin) {
-    const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
-    const targetYear = parseInt(KZ_STATE.selectedYear, 10) || 2026;
-    const now = new Date();
-    const intervalMs = getIntervalMilliseconds(coin.interval);
-    
-    const maxMonthIdx = (targetYear === now.getFullYear()) ? now.getMonth() : 11;
-
-    const monthlyMap = {};
-    coin.strategyTrades = [];
-    for (let m = 0; m <= maxMonthIdx; m++) {
-        const mKey = `${targetYear}-${String(m + 1).padStart(2, '0')}`;
-        monthlyMap[mKey] = { 
-            monthKey: mKey, 
-            name: monthNames[m], 
-            trades: 0, 
-            pnl: 0, 
-            isLocked: false,
-            tradesList: [] 
-        };
-    }
-
-    if (!coin.rawCandles || coin.rawCandles.length < (coin.rsiLength + 5)) {
-        coin.simMonthlyStats = Object.values(monthlyMap).reverse();
-        coin.simLastTrades = [];
-        coin.avgHoldDurationStr = '--';
-        rebuildCoinMonthlyLedger(coin);
-        return;
-    }
-
-    const historyCandles = coin.rawCandles.filter(c => c.time + intervalMs <= now.getTime());
-    const closes = historyCandles.map(c => c.close);
-    const rsiVals = calculateRSIHistory(closes, coin.rsiLength);
-    let inPos = false, entryP = 0, entryT = 0;
-    const trades = [];
-    let totalHoldSeconds = 0;
-
-    for (let i = coin.rsiLength + 1; i < historyCandles.length; i++) {
-        const c = historyCandles[i];
-        const rsi = rsiVals[i];
-        const prevRsi = rsiVals[i - 1];
-        if (rsi === null || prevRsi === null) continue;
-
-        const mKey = c.monthKey;
-        if (!monthlyMap[mKey]) {
-            const mParts = mKey.split('-');
-            const mIdx = parseInt(mParts[1], 10) - 1;
-            monthlyMap[mKey] = { 
-                monthKey: mKey, 
-                name: monthNames[mIdx] || mKey, 
-                trades: 0, 
-                pnl: 0, 
-                isLocked: false,
-                tradesList: [] 
-            };
-        }
-
-        const isCapReached = false; // Aylık limit ortak defterde uygulanır.
-
-        if (!inPos && !isCapReached) {
-            if (prevRsi <= coin.buyRsi && rsi > coin.buyRsi) {
-                inPos = true;
-                entryP = c.close;
-                entryT = c.time + intervalMs;
-            }
-        } else if (inPos) {
-            const targetP = entryP * (1.0 + coin.profitTarget / 100.0);
-            let exited = false, pnl = 0, reason = '';
-
-            if (c.high >= targetP) {
-                exited = true;
-                pnl = coin.profitTarget;
-                reason = `Kâr (%${coin.profitTarget.toFixed(1)})`;
-            } else if (rsi >= coin.sellRsi) {
-                exited = true;
-                pnl = ((c.close - entryP) / entryP) * 100.0;
-                reason = `RSI Sat (${rsi.toFixed(0)})`;
-            }
-
-            if (exited) {
-                inPos = false;
-                const exitTime = c.time + intervalMs;
-                monthlyMap[mKey].trades++;
-                monthlyMap[mKey].pnl += pnl;
-                if ((monthlyMap[mKey].pnl + 0.001) >= coin.monthlyCap) {
-                    monthlyMap[mKey].isLocked = true;
-                }
-
-                const diffSec = Math.max(0, Math.floor((exitTime - entryT) / 1000));
-                totalHoldSeconds += diffSec;
-
-                const hours = Math.floor(diffSec / 3600);
-                const mins = Math.floor((diffSec % 3600) / 60);
-                
-                const entryD = new Date(entryT);
-                const exitD = new Date(exitTime);
-                
-                const entryDateFormatted = `${entryD.getDate()} ${monthNames[entryD.getMonth()]} ${entryD.getHours().toString().padStart(2, '0')}:${entryD.getMinutes().toString().padStart(2, '0')}`;
-                const exitDateFormatted = `${exitD.getDate()} ${monthNames[exitD.getMonth()]} ${exitD.getHours().toString().padStart(2, '0')}:${exitD.getMinutes().toString().padStart(2, '0')}`;
-
-                const tradeItem = {
-                    id: `sim_${coin.id}_${entryT}_${exitTime}`,
-                    coinId: coin.id,
-                    symbol: coin.symbol,
-                    originSignalId: `${coin.id || coin.symbol}_${entryT}`,
-                    originSignalTime: entryT,
-                    entryTime: entryT,
-                    exitTime: exitTime,
-                    entryPrice: entryP,
-                    exitPrice: reason.startsWith('Kâr (') ? targetP : c.close,
-                    pnl: pnl,
-                    pnlPercent: pnl,
-                    monthKey: mKey,
-                    reason: reason,
-                    duration: hours > 0 ? `${hours}sa ${mins}dk` : `${mins}dk`,
-                    entryDateStr: entryDateFormatted,
-                    exitDateStr: exitDateFormatted,
-                    isWin: pnl >= 0
-                };
-
-                trades.push(tradeItem);
-                monthlyMap[mKey].tradesList.unshift(tradeItem);
-            }
-        }
-    }
-
-    if (trades.length > 0) {
-        const avgSec = Math.floor(totalHoldSeconds / trades.length);
-        const avgH = Math.floor(avgSec / 3600);
-        const avgM = Math.floor((avgSec % 3600) / 60);
-        coin.avgHoldDurationStr = avgH > 0 ? `${avgH}sa ${avgM}dk` : `${avgM}dk`;
-    } else {
-        coin.avgHoldDurationStr = '--';
-    }
-
-    coin.simMonthlyStats = Object.values(monthlyMap).sort((a, b) => b.monthKey.localeCompare(a.monthKey));
-    coin.strategyTrades = trades;
+    const result = KuzgunStrategy.simulate(coin.rawCandles || [], coin,
+        {asOf:Date.now(),year:KZ_STATE.selectedYear});
+    coin.strategyTrades = result.trades;
+    coin.strategyMonthlyStats = result.months;
+    coin.strategyOpenPosition = result.openPosition;
+    const mins = Math.floor(result.averageHoldMs / 60000);
+    coin.avgHoldDurationStr = result.totalTrades ? (mins >= 60 ? `${Math.floor(mins/60)}sa ${mins%60}dk` : `${mins}dk`) : '--';
     rebuildCoinMonthlyLedger(coin);
 }
 
@@ -1110,7 +981,7 @@ function openMonthTradesModal(coinId, monthKey) {
     const coin = KZ_STATE.coins.find(c => c.id === coinId || c.symbol === coinId || c.displaySymbol === coinId);
     if (!coin || !coin.simMonthlyStats || coin.simMonthlyStats.length === 0) return;
 
-    KZ_STATE.activeMonthModal = { coinId: coin.id, monthKey, page: 0 };
+    KZ_STATE.activeMonthModal = { coinId: coin.id, monthKey, page: 0, view: 'strategy' };
 
     if (modalCoinTitle) modalCoinTitle.textContent = `${coin.displaySymbol}/USDT`;
     if (modalCoinBadge) modalCoinBadge.textContent = `${coin.interval} • RSI(${coin.rsiLength})`;
@@ -1124,11 +995,15 @@ function openMonthTradesModal(coinId, monthKey) {
 }
 
 function renderModalTabsAndContent(coin, selectedMonthKey) {
-    const months = coin.simMonthlyStats || [];
+    const recordsView = KZ_STATE.activeMonthModal.view === 'records';
+    const months = recordsView ? getCoinMonthlyLedger(coin).map(m => {
+        const tradesList = m.tradesList.filter(t => t.isReal);
+        return {...m,tradesList,trades:tradesList.length,pnl:tradesList.reduce((n,t)=>n+Number(t.pnlPercent),0),isLocked:false};
+    }) : (coin.strategyMonthlyStats || []);
     if (months.length === 0) return;
 
     if (modalMonthTabsContainer) {
-        modalMonthTabsContainer.innerHTML = months.map(m => {
+        modalMonthTabsContainer.innerHTML = `<div class="w-full flex gap-2 mb-2 text-xs"><button onclick="setMonthTradesView('strategy')" class="px-2 py-1 rounded ${!recordsView?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-800'}">Strateji simülasyonu</button><button onclick="setMonthTradesView('records')" class="px-2 py-1 rounded ${recordsView?'bg-blue-600 text-white':'bg-slate-100 dark:bg-slate-800'}">Kaydedilmiş işlemler</button></div>` + months.map(m => {
             const isSelected = m.monthKey === selectedMonthKey;
             return `
                 <button onclick="selectModalMonth('${m.monthKey}')" 
@@ -1159,13 +1034,12 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
     }
 
     const rows = currentMonthData.tradesList || [];
-    const closedCount = rows.filter(t=>t.isReal || KZ_STATE.acceptedTradeIds?.has(t.id)).length;
-    const excludedCount = rows.length - closedCount;
-    const afterLimitCount = currentMonthData.afterLimitCount || 0;
+    const wins = rows.filter(t=>Number(t.pnlPercent ?? t.pnl)>=0).length;
     if (modalActiveMonthTradesCount) modalActiveMonthTradesCount.textContent =
-        `${rows.length} işlem · ${closedCount} slotta kapanan · ${excludedCount} slota alınmadı${afterLimitCount ? ` · ${afterLimitCount} limit sonrası kayıt` : ''}`;
-    if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Bu listedeki tekilleştirilmiş işlemlerin brüt kâr toplamı. Slota girmeyen sonuçlar aylık coin limitine dahildir; portföye aktarılmaz. Beklemede kapanan kayıtlar ayrı tutulur.';
-    if (modalActiveMonthLockBadge) modalActiveMonthLockBadge.title = 'Ortak aylık işlem listesinin brüt kârı üzerinden hesaplanır. Önceden kaydedilmiş limit sonrası işlemler silinmez.';
+        `${recordsView?'Kaydedilmiş işlemler':'Strateji simülasyonu'} · ${rows.length} işlem · ${wins} win / ${rows.length-wins} lose`;
+    if (modalActiveMonthPnl) modalActiveMonthPnl.title = 'Brüt getiri; komisyon düşülmemiştir.';
+    if (modalActiveMonthLockBadge && recordsView) modalActiveMonthLockBadge.textContent = 'Kaydedilmiş otomatik ve manuel işlemler';
+    if (modalActiveMonthLockBadge) modalActiveMonthLockBadge.title = 'Simülasyon, lig ile aynı kapanmış mumları ve aylık kilit kuralını kullanır. Kaydedilmiş işlemler ayrıca gösterilir.';
     const compact = window.innerWidth < 640;
     const availableHeight = Math.min(window.innerHeight * .92, window.innerHeight - 24);
     const pageSize = Math.max(1, Math.floor((availableHeight - (compact ? 285 : 235)) / (compact ? 44 : 34)));
@@ -1182,8 +1056,8 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
             </tr></thead><tbody>${visible.map(t => {
                 const pnl = Number(t.isReal ? t.pnlPercent : t.pnl);
                 const accepted = KZ_STATE.acceptedTradeIds?.has(t.id);
-                const status = t.afterMonthlyLimit ? '⚠ Limit sonrası kayıt' : t.isReal || accepted ? '✓ Kapanan işlem' : '◷ Slota alınmadı';
-                const statusColor = t.afterMonthlyLimit ? 'text-rose-600 dark:text-rose-400' : t.isReal || accepted ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400';
+                const status = recordsView ? '✓ Kaydedilmiş işlem' : 'Strateji simülasyonu';
+                const statusColor = 'text-blue-600 dark:text-blue-400';
                 const duration = t.duration || (() => { const mins = Math.max(0, Math.round((t.exitTime - t.entryTime)/60000)); return mins >= 60 ? `${Math.floor(mins/60)}sa ${mins%60}dk` : `${mins}dk`; })();
                 return `<tr>
                     <td><div class="month-trade-reason font-semibold text-slate-800 dark:text-slate-200" title="${t.reason}">${t.reason} ${tradeCodeBadge(t)}</div><div class="month-trade-meta ${statusColor}" title="${t.afterMonthlyLimit ? 'Mevcut strateji ve aylık limite göre limit sonrası. Eski kapanış kaydı korunur.' : ''}">${status}${t.isReal ? ` <button onclick="openClosedTradeEditor('${t.id}')" class="text-blue-600 dark:text-blue-400 hover:underline" title="Gerçek satışı düzenle">✎</button>` : ''}</div></td>
@@ -1195,6 +1069,13 @@ function renderModalTabsAndContent(coin, selectedMonthKey) {
     }
     const pagination = document.getElementById('monthModalPagination');
     if (pagination) pagination.innerHTML = `<span class="text-[10px] text-slate-400">${rows.length ? page * pageSize + 1 : 0}–${Math.min((page + 1) * pageSize, rows.length)} / ${rows.length}</span>${totalPages > 1 ? `<button onclick="changeMonthModalPage(-1)" ${page === 0 ? 'disabled' : ''} class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 disabled:opacity-30" aria-label="Önceki sayfa">‹</button><span class="text-[10px] text-slate-500">${page+1}/${totalPages}</span><button onclick="changeMonthModalPage(1)" ${page === totalPages - 1 ? 'disabled' : ''} class="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 disabled:opacity-30" aria-label="Sonraki sayfa">›</button>` : ''}`;
+}
+
+function setMonthTradesView(view) {
+    KZ_STATE.activeMonthModal.view = view === 'records' ? 'records' : 'strategy';
+    KZ_STATE.activeMonthModal.page = 0;
+    const coin = KZ_STATE.coins.find(c=>c.id===KZ_STATE.activeMonthModal.coinId);
+    if (coin) renderModalTabsAndContent(coin,KZ_STATE.activeMonthModal.monthKey);
 }
 
 function changeMonthModalPage(step) {
@@ -1231,6 +1112,7 @@ function generateMonthlyTableHtml(coin) {
 
     return `
         <div class="space-y-1">
+            <div class="px-2 text-[9px] text-slate-500">Strateji simülasyonu · Lig ile aynı kurallar · Brüt sonuç</div>
             <div class="space-y-0.5 max-h-56 overflow-y-auto pr-1 divide-y divide-slate-100 dark:divide-slate-800">
                 ${months.map(m => {
                     const rMonth = realStats.monthly[m.monthKey] || { trades: 0, pnl: 0 };
@@ -1721,7 +1603,7 @@ function coinCardMonthSummary(coin) {
     const monthLabel=new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',month:'long'});
     return `<div class="flex items-center justify-between text-[9px] text-slate-500 dark:text-slate-400"><span class="font-semibold uppercase tracking-wider">BU AY · ${monthLabel}</span><span>Hedef kâr <strong class="text-blue-600 dark:text-blue-400">%${Number(coin.profitTarget).toFixed(1)}</strong></span></div>
         <div class="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/50 p-2" title="Aylık coin limitine dahil tekilleştirilmiş işlemler; slota alınmayanlar dahil.">
-            <div class="text-[9px] text-slate-500 dark:text-slate-400">Aylık işlemler</div><div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${count} işlem</strong><span class="font-bold tabular-nums ${pnl>=0?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span></div>
+            <div class="text-[9px] text-slate-500 dark:text-slate-400">Portföy aylık işlem defteri</div><div class="flex justify-between items-baseline mt-0.5 text-xs"><strong class="text-slate-900 dark:text-white">${count} işlem</strong><span class="font-bold tabular-nums ${pnl>=0?'text-emerald-600 dark:text-emerald-400':'text-rose-600 dark:text-rose-400'}">${pnl>=0?'+':''}${pnl.toFixed(2)}%</span></div>
         </div>
         <div class="flex justify-between text-[9px] text-slate-500 dark:text-slate-400"><span>Beklemede kapanan</span><strong class="text-amber-600 dark:text-amber-400">${pending} işlem</strong></div>
         ${summary?.afterLimitCount ? `<div class="text-[9px] text-rose-600 dark:text-rose-400">${summary.afterLimitCount} kapanış, mevcut ayara göre limit sonrası kayıt.</div>`:''}
@@ -3845,8 +3727,14 @@ async function syncMainAppFromStorage(event) {
             const saved = JSON.parse(localStorage.getItem('kuzgun_web_coins')) || [];
             const loads=[];let reconnect=false,recalculate=false;
             saved.forEach(savedCoin => {
-                const liveCoin=KZ_STATE.coins.find(c=>c.id===savedCoin.id||c.symbol===savedCoin.symbol);
-                if(!liveCoin)return;
+                let liveCoin=KZ_STATE.coins.find(c=>c.id===savedCoin.id||c.symbol===savedCoin.symbol);
+                if(!liveCoin){
+                    liveCoin={...savedCoin,rawCandles:[],candles:[],candleHistoryReady:false,lastConfirmedCandleTime:-Infinity};
+                    KZ_STATE.coins.push(liveCoin);
+                    if(liveCoin.isActive!==false)loads.push(fetchInitialCandles(liveCoin));
+                    reconnect=true;recalculate=true;
+                    return;
+                }
                 const intervalChanged=liveCoin.interval!==savedCoin.interval;
                 const activated=liveCoin.isActive===false&&savedCoin.isActive!==false;
                 const paramsChanged=['rsiLength','buyRsi','sellRsi','profitTarget','monthlyCap','isActive'].some(field=>liveCoin[field]!==savedCoin[field]);

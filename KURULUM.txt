@@ -1,0 +1,57 @@
+KUZGUN — Lig / terminal strateji hesabı düzeltmesi
+
+KURULUM
+1. GitHub deposundaki mevcut dosyaların yedeğini al.
+2. ZIP içindeki HTML ve JavaScript dosyalarını deponun kök dizinine yükle;
+   aynı adlı dosyaları değiştir. Yeni strategyEngine.js dosyasını mutlaka ekle.
+   KURULUM.txt dosyasını yayımlaman gerekmiyor. Diğer mevcut dosyaları silme.
+3. GitHub Pages güncellemesi tamamlanınca terminali ve lig sayfasını
+   Ctrl+F5 ile yenile (Mac: Cmd+Shift+R).
+4. Lig analizini yeniden çalıştır; önceki analiz sonuçlarını esas alma.
+5. DOT için aynı yıl, zaman dilimi, RSI, AL/SAT, kâr hedefi ve kilit ayarlarını
+   seç. Terminaldeki Aylık Tablo / Strateji simülasyonu ile lig dökümünü karşılaştır.
+   Yeni bir mum kapanmışsa iki tarama arasında yeni bir işlem oluşabilir.
+6. Kombinasyon kullanıyorsan terminaldeki bağlantıdan yeni referans oluştur.
+
+DÜZELTİLENLER
+- Lig, terminal, coin detay ekranı ve kombinasyon adayları ortak strateji
+  motorunu kullanır. İleri dönem testindeki lig optimizasyonu da bu motora bağlıdır.
+- Aylık limit, yeni pozisyon açılmadan önce denetlenir. Limit sonrası hayali
+  pozisyonların sonraki aydaki sinyalleri engellemesi giderildi.
+- Yalnızca kapanmış mumlar kullanılır. Girişler sinyal mumunun kapanışına;
+  kapanışlar çıkış mumunun kapanışına kaydedilir. Aylar Türkiye saatine göre belirlenir.
+- Giriş mumunun önceki yüksek fiyatı, sonradan açılan pozisyonun kârı sayılmaz.
+- Ay sonunda gerçekten açık kalan bir simülasyon pozisyonu sonraki aya taşınır.
+- Terminal Aylık Tablo ve Son İşlemler strateji simülasyonunu gösterir.
+  Aylık işlem penceresindeki Kaydedilmiş işlemler düğmesiyle otomatik/manuel
+  kapanış kayıtları ayrıca görülür. Kayıtlar silinmez veya değiştirilmez.
+- Kartın üstündeki Portföy aylık işlem defteri, kayıtlarla birleştirilen
+  portföy hesabıdır; saf strateji sonucundan farklı olabilir.
+- Ligden eklenen yeni coin, açık terminal sekmesine de alınır.
+- Eski motorun lig aday kayıtları, yeni bir analiz yapılana kadar kullanılmaz.
+
+HESAPLAMA SINIRLARI
+- Sonuçlar brüttür; strateji tablosunda komisyon/kayma düşülmez.
+- Kâr hedefi, sonraki mumun yüksek fiyatı hedefe değerse hedef fiyatında
+  gerçekleşmiş varsayılır. OHLC verisi hedefe erişilen kesin saniyeyi göstermez;
+  zaman alanında mum kapanışı kullanılır. Aynı mumda hedef ve RSI satış koşulu
+  varsa hedef önceliklidir. Bunlar idealize geçmiş test kurallarıdır.
+- Canlı akışın anlık RSI satışları, manuel müdahaleler ve slot durumu nedeniyle
+  kaydedilmiş işlemler simülasyonla aynı olmak zorunda değildir.
+- Önce bildirilen bakiye/işlem bütçesi hesaplama sorunları bu paketin kapsamı
+  dışındadır. Bu paket lig ve terminal strateji simülasyonu uyuşmazlığını düzeltir.
+
+DOĞRULAMA
+- 18 otomatik hesaplama kontrolü geçti: aylık kilit, ay geçişi, açık pozisyon
+  taşıma, zarar kaydı, açık mumun dışlanması, aynı mumda hedef kontrolü,
+  yinelenen/sırasız veriler, 15m/30m ve RSI 6/7 için lig-terminal eşitliği,
+  kayıtların ayrı korunması, kombinasyon ve optimizasyon uyumu.
+- 5 entegrasyon kontrolü geçti: terminalin yüklenmesi/aylık pencere,
+  gerçek lig worker kodu ve sonuç oluşturma/parametre düzenleme/aktarma,
+  açık terminalde yeni/mevcut coin eşitleme, coin detay sonucu oluşturma,
+  kombinasyon/aralık/ileri dönem worker yüklemeleri.
+- Entegrasyon kontrolleri Node VM ve worker_threads ortamında yapıldı.
+  Bu ortamda tarayıcı yürütücüsü bulunmadığından görsel tarayıcı kontrolü yapılmadı.
+- Kontroller üretilmiş OHLC test verileriyle yapıldı. Gerçek DOT mum geçmişi
+  indirilip yeniden doğrulanmadı. 60 kazanç / 0 kayıp sonucu garanti edilmez;
+  güncel lig taramasının ve terminalin aynı veriyle eşleşmesi esas alınır.

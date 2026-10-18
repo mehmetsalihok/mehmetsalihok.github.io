@@ -1,4 +1,5 @@
 "use strict";
+importScripts("strategyEngine.js?v=1");
 let SNAP=null;
 let KZ_STATE={coins:[],closedTrades:[],activePositions:[],pendingClosedTrades:[],selectedYear:'2026'};
 function getTurkeyMonthKey(timestamp=SNAP?.asOf||Date.now()) {return new Date(Number(timestamp)+10800000).toISOString().slice(0,7)}
@@ -380,30 +381,9 @@ function rebuildCoinMonthlyLedger(coin) {
 }
 function progress(message,detail=''){self.postMessage({type:'progress',message,detail})}
 function simulateTerminalTrades(coin,candles,settings,rsiValues=null) {
-    const ms=TF[settings.interval];
-    const closed=candles.filter(c=>c.time+ms<=SNAP.asOf);
-    const rsi=rsiValues||calculateRSIHistory(closed.map(c=>c.close),settings.rsiLength);
-    let inPos=false,entryP=0,entryT=0;const trades=[];
-    for(let i=settings.rsiLength+1;i<closed.length;i++){
-        const candle=closed[i],current=rsi[i],previous=rsi[i-1];
-        if(current===null||previous===null)continue;
-        if(!inPos){if(previous<=settings.buyRsi&&current>settings.buyRsi){inPos=true;entryP=candle.close;entryT=candle.time+ms}}
-        else {
-            const target=entryP*(1+coin.profitTarget/100);
-            let exited=false,pnl=0,reason='';
-            if(candle.high>=target){exited=true;pnl=coin.profitTarget;reason=`Kâr (%${coin.profitTarget.toFixed(1)})`}
-            else if(current>=settings.sellRsi){exited=true;pnl=(candle.close-entryP)/entryP*100;reason=`RSI Sat (${current.toFixed(0)})`}
-            if(exited){
-                inPos=false;const exitTime=candle.time+ms;
-                trades.push({id:`sim_${coin.id}_${entryT}_${exitTime}`,coinId:coin.id,symbol:coin.symbol,
-                    originSignalId:`${coin.id||coin.symbol}_${entryT}`,originSignalTime:entryT,
-                    entryTime:entryT,exitTime,entryPrice:entryP,exitPrice:reason.startsWith('Kâr (')?target:candle.close,
-                    pnl,pnlPercent:pnl,monthKey:candle.monthKey,reason,isWin:pnl>=0});
-            }
-        }
-    }
-    return trades;
+    return KuzgunStrategy.simulate(candles,{...coin,...settings},{asOf:SNAP.asOf}).trades;
 }
+
 function ledgerCandidate(coin,candles,settings,rsiValues=null) {
     if(settings.off)return {settings:{off:true},trades:[],count:0,winRate:0,standalone:0,signature:''};
     const virtual={...coin,...settings,rawCandles:undefined,strategyTrades:simulateTerminalTrades(coin,candles,settings,rsiValues)};

@@ -265,6 +265,7 @@
         <span id="toastMsg">Strateji karta eklendi!</span>
     </div>
 
+    <script src="strategyEngine.js?v=1"></script>
     <script>
         const LEAGUE_STATE = {
             coinPool: ["SYN", "ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH"],
@@ -520,7 +521,8 @@
                     } catch (e) {}
                 }
 
-                if (!batch || batch.length === 0) break;
+                if (!Array.isArray(batch)) throw new Error('Mum verisi eksik indirildi; analizi yeniden çalıştır.');
+                if (batch.length === 0) break;
 
                 const mapped = batch.map(item => {
                     const comp = getTurkeyDateComponents(item[0]);
@@ -542,220 +544,25 @@
             return allCandles;
         }
 
-        function simulateSingleConfig(candles, rsiLength, buyRsi, sellRsi, profitTarget, monthlyCap) {
-            const closePrices = candles.map(c => c.close);
-            const rsiVals = calculateRSIHistory(closePrices, rsiLength);
-            
-            let inPos = false, entryP = 0, entryT = 0;
-            let totPnl = 0, winCount = 0, totalTrades = 0;
-            let totalHoldSeconds = 0;
-            let monthlyMap = {};
-            const tradeLogs = [];
-
-            for (let i = rsiLength + 1; i < candles.length; i++) {
-                const c = candles[i];
-                const rsi = rsiVals[i];
-                const prevRsi = rsiVals[i - 1];
-                if (rsi === null || prevRsi === null) continue;
-
-                const mKey = c.monthKey;
-                if (!monthlyMap[mKey]) monthlyMap[mKey] = { pnl: 0, isLocked: false };
-                const isCapReached = (monthlyMap[mKey].pnl + 0.001) >= monthlyCap;
-
-                if (!inPos && !isCapReached) {
-                    if (prevRsi <= buyRsi && rsi > buyRsi) {
-                        inPos = true;
-                        entryP = c.close;
-                        entryT = c.time;
-                    }
-                } else if (inPos) {
-                    const targetP = entryP * (1.0 + profitTarget / 100.0);
-                    let exited = false, pnl = 0;
-
-                    if (c.high >= targetP) {
-                        exited = true;
-                        pnl = profitTarget;
-                    } else if (rsi >= sellRsi) {
-                        exited = true;
-                        pnl = ((c.close - entryP) / entryP) * 100.0;
-                    }
-
-                    if (exited) {
-                        inPos = false;
-                        totalTrades++;
-                        if (pnl >= 0) winCount++;
-                        totPnl += pnl;
-
-                        monthlyMap[mKey].pnl += pnl;
-                        if ((monthlyMap[mKey].pnl + 0.001) >= monthlyCap) {
-                            monthlyMap[mKey].isLocked = true;
-                        }
-
-                        const diffSec = Math.max(0, Math.floor((c.time - entryT) / 1000));
-                        totalHoldSeconds += diffSec;
-
-                        tradeLogs.push({
-                            entryTime: entryT,
-                            exitTime: c.time,
-                            entryPrice: entryP,
-                            exitPrice: c.high >= targetP ? targetP : c.close,
-                            reason: c.high >= targetP ? 'Kâr hedefi' : 'RSI satışı',
-                            pnl: pnl,
-                            monthKey: mKey
-                        });
-                    }
-                }
-            }
-
-            const winRateVal = totalTrades > 0 ? (winCount / totalTrades) * 100.0 : 0.0;
-            const avgSec = totalTrades > 0 ? Math.floor(totalHoldSeconds / totalTrades) : 0;
-            const avgHours = avgSec / 3600.0;
-            const avgDurationStr = avgHours < 1.0 ? `${Math.max(15, Math.floor(avgHours * 60))}dk` : `${avgHours.toFixed(1)}sa`;
-
-            const groupedByMonth = {};
-            tradeLogs.forEach(t => {
-                if (!groupedByMonth[t.monthKey]) groupedByMonth[t.monthKey] = [];
-                groupedByMonth[t.monthKey].push(t);
-            });
-
-            const sortedMonthKeys = Object.keys(groupedByMonth).sort((a, b) => b.localeCompare(a));
-            const monthlyRecords = [];
-            let totalLockDaysSum = 0;
-            let lockedMonthCount = 0;
-
-            for (const mKey of sortedMonthKeys) {
-                const monthTrades = groupedByMonth[mKey].sort((a, b) => a.entryTime - b.entryTime);
-                if (monthTrades.length === 0) continue;
-
-                const firstTrade = monthTrades[0];
-                const firstDay = getTurkeyDateComponents(firstTrade.entryTime).day;
-
-                let runningPnl = 0.0;
-                let lockDay = null;
-                let daysToLock = null;
-                let isLocked = false;
-
-                for (const t of monthTrades) {
-                    runningPnl += t.pnl;
-                    if ((runningPnl + 0.001) >= monthlyCap && !isLocked) {
-                        isLocked = true;
-                        const lDay = getTurkeyDateComponents(t.exitTime).day;
-                        lockDay = lDay;
-                        daysToLock = Math.max(1, lDay - firstDay + 1);
-                        totalLockDaysSum += daysToLock;
-                        lockedMonthCount++;
-                    }
-                }
-
-                const mIdx = parseInt(mKey.split('-')[1], 10) - 1;
-                const mTitle = monthNames[Math.max(0, Math.min(11, mIdx))];
-
-                monthlyRecords.push({
-                    monthKey: mKey,
-                    monthName: mTitle,
-                    firstTradeDay: firstDay,
-                    lockDay: lockDay,
-                    daysToLock: daysToLock,
-                    totalMonthPnl: runningPnl,
-                    isLocked: isLocked
-                });
-            }
-
-            const avgDays = lockedMonthCount > 0 ? (totalLockDaysSum / lockedMonthCount).toFixed(1) : null;
-            const ratioStr = `${lockedMonthCount}/${Math.max(1, monthlyRecords.length)} Ay`;
-
-            return {
-                rsiLength,
-                buyRsi,
-                sellRsi,
-                winRate: `${winRateVal.toFixed(0)}%`,
-                winRateDouble: winRateVal,
-                avgDurationFormatted: avgDurationStr,
-                totalTrades,
-                winCount,
-                lossCount: totalTrades - winCount,
-                tradeLogs,
-                netPnl: totPnl,
-                monthlyBreakdowns: monthlyRecords,
-                avgDaysToLock: avgDays,
-                lockedMonthsRatio: ratioStr
-            };
+        function simulateSingleConfig(candles, rsiLength, buyRsi, sellRsi, profitTarget, monthlyCap, interval, asOf) {
+            const settings = {interval,rsiLength,buyRsi,sellRsi,profitTarget,monthlyCap};
+            return KuzgunStrategy.leagueResult(KuzgunStrategy.simulate(candles,settings,{asOf}),settings);
         }
 
-        // Swift CoinLeagueView arama sınırları: Buy 10..35, Sell 65..92
-        function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap) {
-            const closePrices = candles.map(c => c.close);
-            const rsiVals = calculateRSIHistory(closePrices, rsiLength);
-            let bestCandidate = null;
-
-            for (let buy = 10; buy <= 35; buy += 1) {
-                for (let sell = 65; sell <= 92; sell += 1) {
-                    let inPos = false, entryP = 0, totPnl = 0, winCount = 0, totalTrades = 0;
-                    let monthlyStats = {};
-
-                    for (let i = rsiLength + 1; i < candles.length; i++) {
-                        const c = candles[i];
-                        const rsi = rsiVals[i];
-                        const prevRsi = rsiVals[i - 1];
-                        if (rsi === null || prevRsi === null) continue;
-
-                        const mKey = c.monthKey;
-                        if (!monthlyStats[mKey]) monthlyStats[mKey] = { pnl: 0 };
-                        const isCapReached = (monthlyStats[mKey].pnl + 0.001) >= monthlyCap;
-
-                        if (!inPos && !isCapReached) {
-                            if (prevRsi <= buy && rsi > buy) {
-                                inPos = true;
-                                entryP = c.close;
-                            }
-                        } else if (inPos) {
-                            const targetP = entryP * (1.0 + profitTarget / 100.0);
-                            let exited = false, pnl = 0;
-
-                            if (c.high >= targetP) {
-                                exited = true;
-                                pnl = profitTarget;
-                            } else if (rsi >= sell) {
-                                exited = true;
-                                pnl = ((c.close - entryP) / entryP) * 100.0;
-                            }
-
-                            if (exited) {
-                                inPos = false;
-                                totalTrades++;
-                                if (pnl >= 0) winCount++;
-                                totPnl += pnl;
-                                monthlyStats[mKey].pnl += pnl;
-                            }
-                        }
-                    }
-
-                    if (totalTrades >= 1) {
-                        const winRate = (winCount / totalTrades) * 100.0;
-                        const score = totPnl * Math.pow(winRate / 100.0, 1.5);
-                        if (!bestCandidate || score > bestCandidate.score) {
-                            bestCandidate = { buyRsi: buy, sellRsi: sell, score };
-                        }
-                    }
-                }
-            }
-
-            const chosenBuy = bestCandidate ? bestCandidate.buyRsi : 25;
-            const chosenSell = bestCandidate ? bestCandidate.sellRsi : 75;
-            return simulateSingleConfig(candles, rsiLength, chosenBuy, chosenSell, profitTarget, monthlyCap);
+        function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap, interval, asOf) {
+            return KuzgunStrategy.optimize(candles,{interval,rsiLength,profitTarget,monthlyCap},{asOf});
         }
 
-        // Uzun RSI taraması arayüzü kilitlemesin diye hesaplamayı tarayıcı işçisinde çalıştır.
-        function evaluateCoinInWorker(candles, profitTarget, monthlyCap) {
+        function evaluateCoinInWorker(candles, profitTarget, monthlyCap, interval, asOf) {
             const code = `
-                const monthNames = ${JSON.stringify(monthNames)};
+                const KuzgunStrategy = (${createKuzgunStrategy.toString()})();
                 ${getTurkeyDateComponents.toString()}
                 ${calculateRSIHistory.toString()}
                 ${simulateSingleConfig.toString()}
                 ${evaluateBestRsi.toString()}
                 self.onmessage = ({data}) => {
                     try {
-                        self.postMessage({rsi6: evaluateBestRsi(data.candles, 6, data.profitTarget, data.monthlyCap), rsi7: evaluateBestRsi(data.candles, 7, data.profitTarget, data.monthlyCap)});
+                        self.postMessage({rsi6: evaluateBestRsi(data.candles, 6, data.profitTarget, data.monthlyCap, data.interval, data.asOf), rsi7: evaluateBestRsi(data.candles, 7, data.profitTarget, data.monthlyCap, data.interval, data.asOf)});
                     } catch (error) { self.postMessage({error: error.message}); }
                 };
             `;
@@ -769,7 +576,7 @@
                     if (data.error) reject(new Error(data.error)); else resolve(data);
                 };
                 worker.onerror = e => { worker.terminate(); URL.revokeObjectURL(url); reject(new Error(e.message || 'RSI hesaplama hatası')); };
-                worker.postMessage({candles, profitTarget, monthlyCap});
+                worker.postMessage({candles, profitTarget, monthlyCap, interval, asOf});
             });
         }
 
@@ -777,7 +584,7 @@
             const key='kuzgun_league_candidates_v1';
             try {
                 let previous;try{previous=JSON.parse(localStorage.getItem(key)||'null')}catch(_){previous=null}
-                const records=Array.isArray(previous?.records)?previous.records:[];
+                const records=previous?.schema==='kuzgun-league-candidates-v2' && Array.isArray(previous.records)?previous.records:[];
                 const map=new Map(records.filter(row=>row&&row.key).map(row=>[row.key,row]));
                 for(const item of LEAGUE_STATE.results)for(const [interval,variant] of Object.entries(item.variants))for(const length of [6,7]) {
                     const strategy=variant['rsi'+length];if(!strategy)continue;
@@ -789,7 +596,7 @@
                     map.set(record.key,record);
                 }
                 const sorted=[...map.values()].sort((a,b)=>b.savedAt-a.savedAt).slice(0,2000);
-                localStorage.setItem(key,JSON.stringify({schema:'kuzgun-league-candidates-v1',savedAt:Date.now(),records:sorted}));
+                localStorage.setItem(key,JSON.stringify({schema:'kuzgun-league-candidates-v2',savedAt:Date.now(),records:sorted}));
                 document.getElementById('leagueSavedStatus').textContent='Lig ayarları kombinasyon için kaydedildi. Taradığın zaman dilimleri ve hedef/kilit değerleriyle kullanılır.';
             }catch(error){document.getElementById('leagueSavedStatus').textContent='Lig ayarları kaydedilemedi. Kombinasyonda lig modu için kayıt gerekli.';showToast('Lig adayları kaydedilemedi');}
         }
@@ -833,7 +640,7 @@
                             if (!candles || candles.length <= 30) throw new Error('Yetersiz mum verisi');
                             LEAGUE_STATE.candleCache[symbol + '_' + interval] = candles;
                             pStatus.textContent = `Hesaplanıyor: ${coin} / ${interval} (RSI 6 & 7)`;
-                            variants[interval] = await evaluateCoinInWorker(candles, profitTarget, targetCap);
+                            variants[interval] = await evaluateCoinInWorker(candles, profitTarget, targetCap, interval, LEAGUE_STATE.analysisAsOf);
                         } catch (error) {
                             failed.push(`${coin} / ${interval}`);
                             console.warn(`Hata [${symbol}/${interval}]:`,error.message);
@@ -1025,7 +832,7 @@
             const newBuy = Math.min(50, Math.max(8, active.buyRsi + deltaBuy));
             const newSell = Math.min(98, Math.max(55, active.sellRsi + deltaSell));
 
-            const updated = simulateSingleConfig(candles, active.rsiLength, newBuy, newSell, item.profitTarget, item.monthlyCap);
+            const updated = simulateSingleConfig(candles, active.rsiLength, newBuy, newSell, item.profitTarget, item.monthlyCap, item.interval, item.analysisAsOf);
             if (item.activeTab === 6) item.rsi6 = updated; else item.rsi7 = updated;
             item.variants[item.interval]['rsi'+item.activeTab] = updated;
             persistLeagueCandidates();
@@ -1154,7 +961,7 @@
         <div class="league-dialog-panel">
             <div class="league-dialog-heading"><div><p class="league-dialog-eyebrow">AYLIK İŞLEM DÖKÜMÜ</p><h2 id="leagueTradeTitle"></h2><p id="leagueTradeSubtitle"></p></div><button type="button" onclick="closeLeagueMonthTrades()" class="league-dialog-close" autofocus>Kapat</button></div>
             <div id="leagueTradeSummary" class="league-trade-summary"></div>
-            <p id="leagueTradeNote" class="league-trade-note">Simülasyon kayıtlarıdır. Zamanlar, motorun kullandığı mum açılış zamanlarıdır ve Türkiye saatiyle gösterilir. Komisyon düşülmemiştir. Mevcut motor, sıfır getirili işlemleri win sayar.</p>
+            <p id="leagueTradeNote" class="league-trade-note">Simülasyon kayıtlarıdır. Yalnızca kapanmış mumlar kullanılır. Zamanlar mum kapanışlarıdır ve Türkiye saatiyle gösterilir. Hedefe mum içinde ne zaman ulaşıldığı OHLC verisinden bilinemez; hedef satışları da mum kapanış zamanıyla gösterilir. Komisyon düşülmemiştir. Mevcut motor, sıfır getirili işlemleri win sayar.</p>
             <div class="league-trade-scroll"><table class="league-trade-table"><thead><tr><th>No</th><th>Alım zamanı</th><th>Satım zamanı</th><th>Giriş / çıkış (USDT)</th><th>Süre</th><th>Çıkış nedeni</th><th>Getiri</th><th>Sonuç</th></tr></thead><tbody id="leagueTradeRows"></tbody></table></div>
             <div class="league-trade-pagination"><span id="leagueTradePageLabel" aria-live="polite"></span><div><button id="leagueTradePrev" type="button" onclick="changeLeagueTradePage(-1)">Önceki</button><button id="leagueTradeNext" type="button" onclick="changeLeagueTradePage(1)">Sonraki</button></div></div>
         </div>
