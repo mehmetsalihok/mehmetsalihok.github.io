@@ -102,7 +102,13 @@
 @media(max-width:640px){.league-dialog-panel{padding:16px}.league-dialog-heading h2{font-size:18px}.league-trade-pagination{flex-wrap:wrap}.league-trade-summary{gap:8px 16px}.league-trade-scroll{max-height:45dvh}}@media(prefers-reduced-motion:reduce){#leagueTradeDialog[open],#leagueTradeDialog[open]::backdrop,#leagueTradeDialog.is-closing,#leagueTradeDialog.is-closing::backdrop{animation:none!important}}
 </style>
 <link rel="stylesheet" href="header.css?v=1">
-</head>
+<style>
+.league-progress-track{height:8px;position:relative;border:1px solid rgba(148,163,184,.12);box-shadow:inset 0 1px 2px rgba(15,23,42,.06)}
+#progressBar{position:relative;border-radius:999px;background:linear-gradient(90deg,#2563eb,#3b82f6,#60a5fa);box-shadow:0 0 12px rgba(59,130,246,.18);overflow:hidden;transition:width 650ms cubic-bezier(.2,.7,.25,1);will-change:width}
+.league-progress-running #progressBar::after{content:'';position:absolute;inset:0;background:linear-gradient(105deg,transparent 20%,rgba(255,255,255,.55) 50%,transparent 80%);transform:translateX(-120%);animation:league-progress-sheen 1.6s linear infinite}
+@keyframes league-progress-sheen{to{transform:translateX(120%)}}
+@media(prefers-reduced-motion:reduce){#progressBar{transition:none;will-change:auto}.league-progress-running #progressBar::after{animation:none}}
+</style></head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
     <!-- 1️⃣ ORTAK ÜST KONSOL (Lig Kıyaslama Aktif) -->
@@ -114,12 +120,7 @@
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">PRO</span>
                 </a>
-                <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 dark:border-slate-800 pl-4 text-xs font-medium">
-                    <a href="index.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Terminal</a>
-                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm" aria-current="page">Lig Kıyaslama</button><a href="combination.html">Kombinasyon</a>
-                    <a href="index.html?openWizard=true" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Sihirbaz</a>
-                    <a href="settings.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Ayarlar</a>
-                </nav>
+                <nav class="kz-nav" aria-label="Ana menü"><a href="index.html">Terminal</a><a href="league.html" aria-current="page">Lig Kıyaslama</a><a href="index.html?openWizard=true">Sihirbaz</a><a href="combination.html">Kombinasyon</a><a href="settings.html">Ayarlar</a></nav>
             </div>
 
             <div class="flex items-center space-x-2 sm:space-x-4 text-xs shrink-0">
@@ -231,8 +232,8 @@
                         <span id="progressStatusText" class="text-blue-600 dark:text-blue-400 animate-pulse">Taranıyor...</span>
                         <span id="progressPctText" class="tabular-nums text-slate-500">0%</span>
                     </div>
-                    <div class="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
-                        <div id="progressBar" class="bg-blue-600 h-full transition-all duration-300 w-0"></div>
+                    <div class="league-progress-track w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden" role="progressbar" aria-label="Lig analizi ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div id="progressBar" class="bg-blue-600 h-full w-0"></div>
                     </div>
                 </div>
             </div>
@@ -497,11 +498,12 @@
             return rsiValues;
         }
 
-        async function fetchAllCandlesSince2026(symbol, interval) {
+        async function fetchAllCandlesSince2026(symbol, interval, onProgress = null) {
             const startTime = Date.UTC(Number(LEAGUE_STATE.analysisYear || localStorage.getItem('kuzgun_selected_year') || '2026'),0,1);
             const endTime = LEAGUE_STATE.analysisAsOf || Date.now();
             let allCandles = [];
             let currentStart = startTime;
+            const expectedCandles = Math.max(1, Math.ceil((endTime-startTime)/KuzgunStrategy.intervalMs(interval)));
 
             const endpoints = [
                 'https://data-api.binance.vision/api/v3/klines',
@@ -538,9 +540,11 @@
                 });
 
                 allCandles.push(...mapped);
+                if (onProgress) onProgress(Math.min(1, allCandles.length / expectedCandles));
                 if (batch.length < 1000) break;
                 currentStart = batch[batch.length - 1][0] + 1;
             }
+            if (onProgress) onProgress(1);
             return allCandles;
         }
 
@@ -553,7 +557,7 @@
             return KuzgunStrategy.optimize(candles,{interval,rsiLength,profitTarget,monthlyCap},{asOf});
         }
 
-        function evaluateCoinInWorker(candles, profitTarget, monthlyCap, interval, asOf) {
+        function evaluateCoinInWorker(candles, profitTarget, monthlyCap, interval, asOf, onProgress = null) {
             const code = `
                 const KuzgunStrategy = (${createKuzgunStrategy.toString()})();
                 ${getTurkeyDateComponents.toString()}
@@ -562,7 +566,10 @@
                 ${evaluateBestRsi.toString()}
                 self.onmessage = ({data}) => {
                     try {
-                        self.postMessage({rsi6: evaluateBestRsi(data.candles, 6, data.profitTarget, data.monthlyCap, data.interval, data.asOf), rsi7: evaluateBestRsi(data.candles, 7, data.profitTarget, data.monthlyCap, data.interval, data.asOf)});
+                        const rsi6 = evaluateBestRsi(data.candles, 6, data.profitTarget, data.monthlyCap, data.interval, data.asOf);
+                        self.postMessage({type:'phase',fraction:0.5});
+                        const rsi7 = evaluateBestRsi(data.candles, 7, data.profitTarget, data.monthlyCap, data.interval, data.asOf);
+                        self.postMessage({rsi6,rsi7});
                     } catch (error) { self.postMessage({error: error.message}); }
                 };
             `;
@@ -571,6 +578,7 @@
             try { worker = new Worker(url); } catch (e) { URL.revokeObjectURL(url); return Promise.reject(e); }
             return new Promise((resolve, reject) => {
                 worker.onmessage = ({data}) => {
+                    if (data.type === 'phase') { if (onProgress) onProgress(data.fraction); return; }
                     worker.terminate();
                     URL.revokeObjectURL(url);
                     if (data.error) reject(new Error(data.error)); else resolve(data);
@@ -601,6 +609,15 @@
             }catch(error){document.getElementById('leagueSavedStatus').textContent='Lig ayarları kaydedilemedi. Kombinasyonda lig modu için kayıt gerekli.';showToast('Lig adayları kaydedilemedi');}
         }
 
+        function updateLeagueProgress(value) {
+            const bar = document.getElementById('progressBar');
+            const percent = Math.max(0,Math.min(100,Number(value)||0));
+            bar.style.width = percent+'%';
+            document.getElementById('progressPctText').textContent = Math.round(percent)+'%';
+            const track = bar.parentElement;
+            track.setAttribute('aria-valuenow',String(Math.round(percent)));
+        }
+
         async function runLeagueBenchmark() {
             if (LEAGUE_STATE.isAnalyzing || !LEAGUE_STATE.coinPool.length) return;
             const pool = [...LEAGUE_STATE.coinPool];
@@ -626,7 +643,9 @@
             controls.forEach(control => control.disabled = true);
             btn.classList.add('opacity-50');
             pBox.classList.remove('hidden');
-            pBar.style.width = '0%'; pPct.textContent = '0%';
+            pBar.style.transition = 'none'; updateLeagueProgress(0);
+            void pBar.offsetWidth; pBar.style.transition = '';
+            pBox.classList.add('league-progress-running');
             document.getElementById('resultsContainer').innerHTML = '<div class="p-8 text-sm text-slate-500">Seçilen zaman dilimleri ayrı ayrı karşılaştırılıyor…</div>';
             try {
                 for (const coin of pool) {
@@ -636,18 +655,19 @@
                         pStatus.textContent = `Taranıyor: ${coin} / ${interval} (${completed+1}/${total})`;
                         await new Promise(resolve => setTimeout(resolve, 0));
                         try {
-                            const candles = await fetchAllCandlesSince2026(symbol, interval);
+                            const candles = await fetchAllCandlesSince2026(symbol, interval, fraction => updateLeagueProgress((completed + fraction * .72) / total * 100));
                             if (!candles || candles.length <= 30) throw new Error('Yetersiz mum verisi');
                             LEAGUE_STATE.candleCache[symbol + '_' + interval] = candles;
                             pStatus.textContent = `Hesaplanıyor: ${coin} / ${interval} (RSI 6 & 7)`;
-                            variants[interval] = await evaluateCoinInWorker(candles, profitTarget, targetCap, interval, LEAGUE_STATE.analysisAsOf);
+                            updateLeagueProgress((completed + .72) / total * 100);
+                            variants[interval] = await evaluateCoinInWorker(candles, profitTarget, targetCap, interval, LEAGUE_STATE.analysisAsOf, fraction => updateLeagueProgress((completed + .72 + fraction * .26) / total * 100));
                         } catch (error) {
                             failed.push(`${coin} / ${interval}`);
                             console.warn(`Hata [${symbol}/${interval}]:`,error.message);
                         }
                         completed++;
                         const progress = Math.round(completed/total*100);
-                        pBar.style.width = progress+'%'; pPct.textContent = progress+'%';
+                        updateLeagueProgress(completed/total*100);
                     }
                     if (Object.keys(variants).length) {
                         const item = {symbol,displaySymbol:coin,profitTarget,monthlyCap:targetCap,variants,isExpanded:false,analysisAsOf:LEAGUE_STATE.analysisAsOf,analysisYear:LEAGUE_STATE.analysisYear};
@@ -670,6 +690,7 @@
                 console.error(error); pStatus.textContent = 'Analiz tamamlanamadı; yeniden deneyebilirsin';
                 showToast('Analiz tamamlanamadı');
             } finally {
+                pBox.classList.remove('league-progress-running');
                 LEAGUE_STATE.isAnalyzing = false;
                 controls.forEach((control,index) => control.disabled = previousDisabled[index]);
                 btn.classList.remove('opacity-50');

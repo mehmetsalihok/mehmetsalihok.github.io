@@ -85,7 +85,7 @@ html.oled{--page:#000;--surface:#000;--line:#252525;--field:#0a0a0a}
 body{background:var(--page)!important;color:var(--ink);line-height:1.6}
 header{background:var(--surface)!important;border-color:var(--line)!important;position:relative!important}
 header>div{max-width:1220px!important;height:auto!important;min-height:64px;padding:12px 24px;flex-wrap:wrap;overflow:visible!important}
-.settings-main{width:100%;max-width:1200px;margin:40px auto 0;padding:0 24px 28px}
+.settings-main{width:100%;max-width:1480px;margin:40px auto 0;padding:0 24px 28px}
 .settings-shell{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 32px #0c1d3810}
 .settings-heading{padding:32px 36px 26px;display:flex;align-items:center;justify-content:space-between;gap:24px}
 .eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--muted);margin-bottom:8px}
@@ -96,8 +96,8 @@ header>div{max-width:1220px!important;height:auto!important;min-height:64px;padd
 .settings-tabs button{white-space:nowrap;padding:15px 0;border-bottom:2px solid transparent;font-size:12px;font-weight:600;color:var(--muted)}
 .settings-tabs button[aria-selected=true]{color:var(--accent);border-color:var(--accent)}
 .settings-tabs button:hover{color:var(--accent)}
-.settings-content{padding:32px 36px 36px;min-height:440px}
-.settings-section{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;max-width:900px;margin:0 auto}
+.settings-content{padding:32px 36px 36px;min-height:440px;overflow:hidden}.settings-tabs button{transition:color .2s ease,border-color .2s ease}
+.settings-section{background:transparent!important;border:0!important;box-shadow:none!important;padding:0!important;max-width:1280px;margin:0 auto}
 .settings-section[hidden]{display:none!important}
 .settings-section>div{margin-top:24px}
 .settings-section>div:first-child{margin-top:0;padding-bottom:22px;border-bottom:1px solid var(--line)!important}
@@ -140,12 +140,7 @@ header>div{max-width:1220px!important;height:auto!important;min-height:64px;padd
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">PRO</span>
                 </a>
-                <nav class="hidden md:flex items-center space-x-1 border-l border-slate-200 dark:border-slate-800 pl-4 text-xs font-medium">
-                    <a href="index.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Terminal</a>
-                    <a href="league.html" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Lig Kıyaslama</a><a href="combination.html">Kombinasyon</a>
-                    <a href="index.html?openWizard=true" class="px-2.5 py-1 rounded-md text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition">Sihirbaz</a>
-                    <button class="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400 font-semibold shadow-sm" aria-current="page">Ayarlar</button>
-                </nav>
+                <nav class="kz-nav" aria-label="Ana menü"><a href="index.html">Terminal</a><a href="league.html">Lig Kıyaslama</a><a href="index.html?openWizard=true">Sihirbaz</a><a href="combination.html">Kombinasyon</a><a href="settings.html" aria-current="page">Ayarlar</a></nav>
             </div>
 
             <div class="flex items-center space-x-4 text-xs shrink-0">
@@ -476,14 +471,28 @@ header>div{max-width:1220px!important;height:auto!important;min-height:64px;padd
             setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2200);
         }
 
+        let settingsPanelAnimation = null;
         function selectSettingsTab(id, focus = false) {
-            document.querySelectorAll('.settings-section').forEach(section => { section.hidden = section.id !== id; });
+            const sections = [...document.querySelectorAll('.settings-section')];
+            const target = sections.find(section => section.id === id);
+            if (!target) return;
+            const previous = sections.find(section => !section.hidden);
+            const direction = sections.indexOf(target) >= sections.indexOf(previous) ? 1 : -1;
+            if (settingsPanelAnimation) { settingsPanelAnimation.cancel(); settingsPanelAnimation = null; }
+            sections.forEach(section => { section.hidden = section !== target; });
             document.querySelectorAll('.settings-tabs button').forEach(button => {
                 const selected = button.getAttribute('aria-controls') === id;
                 button.setAttribute('aria-selected', String(selected));
                 button.tabIndex = selected ? 0 : -1;
                 if (selected) { button.scrollIntoView({block:'nearest',inline:'nearest'}); if (focus) button.focus(); }
             });
+            if (previous && previous !== target && typeof target.animate === 'function'
+                && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                settingsPanelAnimation = target.animate([
+                    {transform:`translateX(${direction * 32}px)`,opacity:0.15},
+                    {transform:'translateX(0)',opacity:1}
+                ],{duration:280,easing:'cubic-bezier(.22,1,.36,1)'});
+            }
         }
         function scrollToSection(id) { selectSettingsTab(id); }
         document.addEventListener('keydown', event => {
