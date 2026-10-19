@@ -56,25 +56,20 @@ function updateAnalysisPeriod(){
         if(!$('analysisStart').value)$('analysisStart').value=(Number(snapshot.year)-1)+'-01';
         if(!$('analysisEnd').value)$('analysisEnd').value=last;
     }
-    $('analysisPeriodHint').textContent=custom?'Mevcut ayarlar ve tek bir öneri seçilen dönemde simüle edilir. Başlangıç sermayesi terminalden alınır; gerçek işlemler ve bugünkü açık pozisyonlar içeri aktarılmaz. Sonuç kapanmış işlemlere dayanır; her ay ayrı ayar seçilmez.':'Terminalde seçili yılın mevcut hesap ve gerçek işlem kayıtlarıyla karşılaştırma yapılır.';
+    $('analysisPeriodHint').textContent=custom?'Seçilen dönemin son tamamlanmış ayları bağımsız teste ayrılır. Gerçek işlem kayıtları ve bugünkü açık pozisyonlar simülasyona girmez.':'Terminalde seçili yıl kullanılır. Son tamamlanmış aylar bağımsız teste ayrılır; mevcut eksik ay değerlendirilmez. Gerçek kayıtlar ayrı simülasyona taşınmaz.';
     updateLeagueStatus();
 }
 function updateLeagueStatus() {
-    if(!snapshot)return;
-    if($('analysisPeriod').value==='range'){
-        $('leagueRecordStatus').textContent=$('leagueOnly').checked?'Lig modu: seçili döneme ait, bitiş tarihinden sonra üretilmemiş kayıtlı AL/SAT çiftleri denenir. Eşikler değiştirilmez; eksik kayıt varsa arama durur.':'Serbest arama: seçili dönem için RSI, zaman dilimi ve AL/SAT eşikleri birlikte denenir.';return;
-    }
-    try {
-        const records=eligibleLeagueRecords(),missing=snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,records).length);
-        $('leagueRecordStatus').textContent=$('leagueOnly').checked?
-            (missing.length?'Lig modu için kayıt eksik/uyumsuz: '+missing.map(coin=>coin.displaySymbol||coin.symbol).join(', '):'Lig modu hazır: '+records.length+' kayıtlı aday. AL/SAT eşikleri sabit kalacak.'):
-            'Serbest arama: RSI, zaman dilimi ve AL/SAT eşikleri birlikte denenir. Lig modunu açarsan yalnızca kaydedilmiş lig adayları kullanılır.';
-    }catch(reason){$('leagueRecordStatus').textContent=reason.message}
+    $('leagueRecordStatus').textContent=$('leagueOnly').checked
+        ? 'Lig yöntemi: 15m/30m RSI 6–7 adayları yalnızca eğitim döneminde yeniden hesaplanır. Kayıtlı sonuçlar kullanılmaz.'
+        : 'Geniş arama, eğitim döneminde yapılır. Son test ayları aday seçimine girmez; test sonucuyla yeniden ayar aranmaz.';
 }
 function applyCoinRecommendation(index) {
     try {
         if(window.kuzgunWalkForwardRunning)throw new Error('İleri dönem testi sürerken ayar uygulanmaz; testin tamamlanmasını bekle.');
         if(!result?.recommendation)throw new Error('Uygulanacak öneri yok');
+        if(!result.validation?.passed)throw new Error('Bağımsız test ve dayanıklılık koşulları geçilmedi; aday uygulanamaz.');
+        if(result.recommendation.selection.filter(index=>index!==0).length>1)throw new Error('Bu aday birlikte doğrulandı. Kombinasyonu birlikte uygula düğmesini kullan.');
         if(!Number.isInteger(index)||!result.groups[index])throw new Error('Coin seçimi geçersiz');
         const group=result.groups[index],candidate=group.options[result.recommendation.selection[index]].settings;
         if(result.recommendation.selection[index]===0)return;
@@ -85,7 +80,7 @@ function applyCoinRecommendation(index) {
         const current=coins.find(coin=>coin.id===group.coin.id&&coin.symbol===group.coin.symbol);
         if(!current)throw new Error('Coin terminalde bulunamadı');
         const patch=candidate.off?{isActive:false}:{interval:candidate.interval,rsiLength:candidate.rsiLength,buyRsi:candidate.buyRsi,sellRsi:candidate.sellRsi,isActive:true};
-        if(!candidate.off&&(!['5m','15m','30m','1h','4h'].includes(patch.interval)||![6,7,group.coin.rsiLength].includes(patch.rsiLength)||
+        if(!candidate.off&&(!['5m','15m','30m','1h','4h'].includes(patch.interval)||![6,7,8,10,14,group.coin.rsiLength].includes(patch.rsiLength)||
             !Number.isFinite(patch.buyRsi)||!Number.isFinite(patch.sellRsi)||patch.buyRsi>=patch.sellRsi))throw new Error('Öneri ayarları geçersiz');
         const replacement=coins.map(coin=>coin.id===current.id?{...coin,...patch}:coin);
         if(localStorage.getItem('kuzgun_web_coins')!==beforeRaw)throw new Error('Terminal ayarları değişti; yeniden referans al');
@@ -95,6 +90,33 @@ function applyCoinRecommendation(index) {
         $('applyStatus').textContent=(group.coin.displaySymbol||group.coin.symbol)+' için önerilen ayarlar terminale kaydedildi. Diğer coinler ayrı uygulanır. Yeni analiz için terminalden yeni referans al.';
         $('startSearch').disabled=true;
     }catch(reason){$('applyStatus').textContent='Ayar uygulanmadı: '+reason.message}
+}
+
+function applyPortfolioRecommendation(){
+    try{
+        if(window.kuzgunWalkForwardRunning)throw new Error('İleri dönem testinin tamamlanmasını bekle.');
+        if(!result?.recommendation || !result.validation?.passed)throw new Error('Doğrulamayı geçen bir kombinasyon yok.');
+        if(appliedSettings.size)throw new Error('Ayarlar uygulandı; yeni analiz için terminalden yeni referans al.');
+        assertCurrentReference(true);
+        const before=localStorage.getItem('kuzgun_web_coins'),coins=JSON.parse(before||'[]'),patches=new Map();
+        result.groups.forEach((group,i)=>{
+            const option=result.recommendation.selection[i];if(option===0)return;
+            const candidate=group.options[option]?.settings;
+            if(!candidate)throw new Error('Öneri ayarları eksik.');
+            const current=coins.find(coin=>coin.id===group.coin.id&&coin.symbol===group.coin.symbol);
+            if(!current)throw new Error('Coin terminalde bulunamadı.');
+            if(!candidate.off && (!['5m','15m','30m','1h','4h'].includes(candidate.interval)||![6,7,8,10,14,group.coin.rsiLength].includes(candidate.rsiLength)||!Number.isFinite(candidate.buyRsi)||!Number.isFinite(candidate.sellRsi)||candidate.buyRsi>=candidate.sellRsi))throw new Error('Öneri ayarları geçersiz.');
+            patches.set(current.id,candidate.off?{isActive:false}:{interval:candidate.interval,rsiLength:candidate.rsiLength,buyRsi:candidate.buyRsi,sellRsi:candidate.sellRsi,isActive:true});
+        });
+        if(!patches.size)return;
+        const replacement=coins.map(coin=>patches.has(coin.id)?{...coin,...patches.get(coin.id)}:coin);
+        if(localStorage.getItem('kuzgun_web_coins')!==before)throw new Error('Terminal ayarları değişti; yeniden referans al.');
+        localStorage.setItem('kuzgun_web_coins',JSON.stringify(replacement));
+        patches.forEach((patch,id)=>appliedSettings.set(id,patch));
+        const month=selectedMonth;renderResult();showMonth(month);
+        $('applyStatus').textContent=patches.size+' coinin doğrulanan ayarları birlikte kaydedildi. Yeni analiz için terminalden yeni referans al.';
+        $('startSearch').disabled=true;
+    }catch(reason){$('applyStatus').textContent='Kombinasyon uygulanmadı: '+reason.message;}
 }
 
 function readSnapshot() {
@@ -131,24 +153,19 @@ async function initialize(){
 function start(){
     if(window.kuzgunWalkForwardRunning){error('Önce ileri dönem testini durdur veya tamamlanmasını bekle.');return}
     if(worker)return;error('');
-    const min=$('minTrades');if(!min.reportValidity())return;
+    const min=$('minTrades');if(![min,$('minTestTrades'),$('maxDrawdown')].every(input=>input.reportValidity()))return;
     let leagueRecords=[],range=null;
     try{
         assertCurrentReference();
         range=analysisRangeConfig();
-        if($('leagueOnly').checked){
-            leagueRecords=eligibleLeagueRecords(!!range);
-            const missing=range?[]:snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,leagueRecords).length);
-            if(missing.length)throw new Error('Lig kaydı eksik veya uyumsuz: '+missing.map(coin=>coin.displaySymbol||coin.symbol).join(', ')+'. Aynı yıl, hedef kâr ve aylık kilitle 15m/30m lig taraması yap; ardından terminalden yeni referans al.');
-        }
-        worker=new Worker(range?'combination-range.js?v=2-shared-strategy':'combination-worker.js?v=24-shared-strategy');
+        worker=new Worker('combination-research.js?v=1');
     }catch(reason){error(reason.message);return}
-    const config={...range,minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
+    const config={...range,searchScope:$('searchScope').value,testMonths:Number($('testMonths').value),minTestTrades:Number($('minTestTrades').value),maxDrawdown:Number($('maxDrawdown').value),minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
     result=null;$('applyStatus').textContent='';$('resultSection').hidden=true;$('progressBox').hidden=false;$('progressTitle').textContent='Terminal referansı doğrulanıyor';$('progressDetail').textContent='Aynı bakiye ve aynı slota kabul edilen işlem listesi bekleniyor.';setRunning(true);
     worker.onmessage=({data})=>{
         if(data.type==='progress'){$('progressTitle').textContent=data.message;$('progressDetail').textContent=data.detail}
         if(data.type==='reference'){
-            $('referenceStatus').textContent='Terminal referansı doğrulandı: bakiye ve kabul edilen işlemler eşleşiyor.';
+            $('referenceStatus').textContent='Terminal referansı doğrulandı. Aşağıdaki araştırma, gerçek işlem kayıtlarından ayrı bir simülasyondur.';
             $('referenceBalance').textContent=money(data.baseline.balance);
         }
         if(data.type==='range-reference'){
@@ -178,19 +195,38 @@ function showMonth(key){
     document.querySelectorAll('[data-month]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.month===key)));
     const next=result.recommendation||result.baseline;
     $('currentMetrics').innerHTML=metrics(result.baseline);$('suggestedMetrics').innerHTML=metrics(next);
-    $('viewLabel').textContent=key==='all'?(result.analysisRange?result.analysisRange.startMonth+' — '+result.analysisRange.endMonth+' · Seçilen dönemin kapanmış işlem simülasyonu':result.year+' · Yılbaşından terminal referans anına kadar'):monthTitle(key)+' · Kapanmış işlemler';
+    $('viewLabel').textContent=key==='all'?(result.analysisRange?result.analysisRange.startMonth+' — '+result.analysisRange.endMonth+' · Eğitim taraması; test dönemi hariç':result.year+' · Yılbaşından terminal referans anına kadar'):monthTitle(key)+' · Kapanmış işlemler';
     const delta=period(next).net-period(result.baseline).net;
     $('deltaLabel').textContent=key==='all'?'Toplam gerçekleşmiş net kazanç farkı':'Bu ayın net kazanç farkı';
     $('gainDelta').textContent=(delta>=0?'+':'')+money(delta);$('gainDelta').className=delta<0?'negative':'positive';
     $('slotDifference').textContent=`Tüm dönemde kaçan sinyal: ${result.baseline.skipped} → ${next.skipped}`;
 }
+function renderValidation(){
+    const panel=$('validationPanel'),v=result.validation;
+    panel.hidden=!v;if(!v)return;
+    const candidate=v.forward.candidate,baseline=v.forward.baseline;
+    const formatTime=value=>new Date(value).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const worst=Math.min(...v.forward.months.map(m=>m.rows[1].net));
+    const scenarioRow=(label,a,b)=>`<tr><td>${escapeText(label)}</td><td>${money(a.net)}</td><td class="${b.net>0?'positive':'negative'}">${money(b.net)}</td><td>%${b.maxDrawdown.toFixed(2)}</td><td>${b.trades}</td><td>${b.openPositions}</td><td>${b.longestHoldHours.toFixed(1)} saat</td></tr>`;
+    panel.innerHTML=`<div class="section-title"><div><h2>Bağımsız test ve dayanıklılık</h2><p>Eğitimde seçilen ayarlar test boyunca donduruldu; testten sonra yeni aday seçilmedi.</p></div><span class="tag">${result.research.scope==='broad'?'Geniş':'Standart'} arama</span></div>
+        <div class="validation-banner ${v.passed?'passed':''}"><strong class="${v.passed?'positive':'negative'}">${v.passed?'Kontroller geçti · Ayarlar uygulanabilir':'Kontroller geçilmedi · Uygulama kapalı'}</strong>${v.issues.length?`<ul>${v.issues.map(issue=>`<li>${escapeText(issue)}</li>`).join('')}</ul>`:''}<p class="small muted">Test: ${escapeText(formatTime(v.testStart))} — ${escapeText(formatTime(v.testEnd))} (bitiş hariç). Aday seçimi ${escapeText(formatTime(v.selectionCutoff))} öncesindeki mumlarla yapıldı.</p></div>
+        <div class="validation-metrics"><div><span>Bağımsız test · Aday net değişimi</span><strong class="${candidate.net>0?'positive':'negative'}">${money(candidate.net)}</strong><span>Referans ${money(baseline.net)} · Fark ${money(candidate.equity-baseline.equity)}</span></div><div><span>Adayın en büyük düşüşü</span><strong>%${candidate.maxDrawdown.toFixed(2)}</strong><span>Seçilen sınır %${v.config.maxDrawdown} · En kötü ay ${money(worst)}</span></div><div><span>Yakın AL/SAT eşikleri</span><strong>${v.neighbors.passRate===null?'Uygulanamaz':'%'+v.neighbors.passRate.toFixed(0)}</strong><span>${v.neighbors.tested}/${v.neighbors.available} komşu denendi · Geçme sınırı %70</span></div></div>
+        <div class="table-scroll"><table><thead><tr><th>Bağımsız test senaryosu</th><th>Referans net</th><th>Aday net</th><th>Aday düşüş</th><th>Kapanan işlem</th><th>Açık pozisyon</th><th>En uzun tutma</th></tr></thead><tbody>${scenarioRow('Normal maliyet / sinyal sonrası açılış',baseline,candidate)}${v.stress.map(s=>scenarioRow(s.label,s.baseline,s.candidate)).join('')}</tbody></table></div>
+        <p class="help-line">Test başlangıcında iki hesap da ${money(candidate.base)} ve sıfır pozisyonla başlar; test ayları arasında bakiye ve açık pozisyonlar taşınır. Net değişim, dönem sonu açık pozisyon değerini içerir. Düşüş, örneklenen mum fiyatlarında ölçülür; mum içi düşüş daha yüksek olabilir. Bu sonuçlar gerçek emir gerçekleşmesi veya gelecek getiri garantisi değildir.</p>
+        <details style="margin-top:16px"><summary>Test ayları ve komşu eşik sonuçları</summary><div class="table-scroll" style="margin-top:12px"><table><thead><tr><th>Test ayı</th><th>Referans net</th><th>Aday net</th><th>Aday açık pozisyon</th></tr></thead><tbody>${v.forward.months.map(m=>`<tr><td>${escapeText(m.monthKey)}</td><td>${money(m.rows[0].net)}</td><td>${money(m.rows[1].net)}</td><td>${m.rows[1].openPositions}</td></tr>`).join('')}</tbody></table></div><p class="help-line">Komşular yalnızca dayanıklılık kontrolüdür; aşağıdaki sonuçlara göre yeniden ayar seçilmedi.</p><div class="table-scroll"><table><thead><tr><th>Coin</th><th>AL / SAT</th><th>Net değişim</th><th>Düşüş</th><th>Sonuç</th></tr></thead><tbody>${v.neighbors.rows.map(n=>`<tr><td>${escapeText(result.groups.find(g=>g.coin.id===n.coinId)?.coin.displaySymbol||n.coinId)}</td><td>${n.buyRsi} / ${n.sellRsi}</td><td>${money(n.net)}</td><td>%${n.maxDrawdown.toFixed(2)}</td><td>${n.passed?'Geçti':'Geçmedi'}</td></tr>`).join('')}</tbody></table></div></details>
+        <p class="notice">${escapeText(v.note)}</p><h2 style="margin-top:24px">Eğitim dönemi karşılaştırması</h2><p class="help-line">Aşağıdaki geçmiş tarama tablosu ile yukarıdaki bağımsız test farklı dönemleri kapsar. Eğitim adayının ayrıca nakit ve slotlarla yeniden oynatılan net değişimi: ${money(v.training.candidate.net)}; referans ${money(v.training.baseline.net)}.</p>`;
+}
+
 function renderResult(){
     $('resultSection').hidden=false;
     $('analysisCoverage').hidden=!result.analysisRange;
-    if(result.analysisRange){const gaps=(result.coverage||[]).filter(row=>row.missing>0);$('analysisCoverage').textContent='Dönem simülasyonu: terminaldeki gerçek bakiye değildir. '+(gaps.length?gaps.map(row=>row.symbol+' / '+row.interval+': veri başlangıcı '+new Date(row.first).toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})+', '+row.missing+' eksik mum.').join(' '):'Seçilen aralıkta tüm coin ve zaman dilimlerinin mumları mevcut.')}
+    if(result.analysisRange){const gaps=(result.coverage||[]).filter(row=>row.missing>0);$('analysisCoverage').textContent='Eğitim taraması: terminaldeki gerçek bakiye değildir. Test ayları bu tabloya dahil değildir. '+(gaps.length?gaps.map(row=>row.symbol+' / '+row.interval+': veri başlangıcı '+new Date(row.first).toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul'})+', '+row.missing+' eksik mum.').join(' '):'Seçilen aralıkta tüm coin ve zaman dilimlerinin mumları mevcut.')}
     const recommended=result.recommendation,comparison=recommended||result.baseline;
-    $('suggestionLabel').textContent=recommended?'BULUNAN DAHA İYİ KOMBİNASYON':'MEVCUT DÜZEN KORUNDU';
-    $('resultStatus').textContent=recommended?'Toplam kazanç ve seçilen aylık denge koşulları sağlandı.':'Taranan adaylar içinde daha iyi ve koşullara uygun bir kombinasyon bulunamadı.';
+    const joint=!!recommended && recommended.selection.filter(index=>index!==0).length>1;
+    $('applyAllRecommendation').disabled=!recommended||!result.validation?.passed||appliedSettings.size>0||!!window.kuzgunWalkForwardRunning;
+    $('suggestionLabel').textContent=recommended?(result.validation?.passed?'DOĞRULAMAYI GEÇEN ADAY':'EĞİTİMDE BULUNAN ADAY · UYGULAMA KAPALI'):'MEVCUT DÜZEN KORUNDU';
+    $('resultStatus').textContent='Aşağıdaki tablo yalnızca eğitim taramasını gösterir. Bağımsız test ve dayanıklılık sonuçları üsttedir.';
+    renderValidation();
     $('keepMessage').hidden=!!recommended;
     $('keepMessage').textContent='Mevcut düzeni koru. Daha düşük kazançlı veya başarı/aylık denge koşullarını bozan bir ayar önerilmedi.';
     $('monthSelector').innerHTML='<button data-month="all" aria-pressed="true">Başlangıçtan beri</button>'+result.months.map(key=>`<button data-month="${key}" aria-pressed="false">${escapeText(monthTitle(key))}</button>`).join('');
@@ -202,11 +238,12 @@ function renderResult(){
         const old=group.options[0].settings,option=group.options[comparison.selection[index]].settings;
         const before=result.baseline.coins[group.coin.id],after=comparison.coins[group.coin.id];
         const action=old.off?(option.off?'Pasif kalsın':'Aktifleştir'):option.off?'Pasife al':comparison.selection[index]===0?'Koru':'Ayarı değiştir';
-        return `<tr><td class="coin-name">${escapeText(group.coin.displaySymbol||group.coin.symbol)}</td><td>${settingsLabel(old)}</td><td>${settingsLabel(option)}</td><td>${recommended&&comparison.selection[index]!==0?`<button type="button" data-apply-index="${index}" ${appliedSettings.has(group.coin.id)?'disabled':''}>${appliedSettings.has(group.coin.id)?'Uygulandı':action}</button>`:action}</td><td>%${before.winRate.toFixed(2)} → %${after.winRate.toFixed(2)}<small>${after.wins} win / ${after.trades-after.wins} lose · ${after.trades} işlem</small></td><td>${money(before.net)} / ${money(after.net)}</td></tr>`;
+        return `<tr><td class="coin-name">${escapeText(group.coin.displaySymbol||group.coin.symbol)}</td><td>${settingsLabel(old)}</td><td>${settingsLabel(option)}</td><td>${recommended&&comparison.selection[index]!==0?`<button type="button" data-apply-index="${index}" ${joint||appliedSettings.has(group.coin.id)||!result.validation?.passed?'disabled':''}>${appliedSettings.has(group.coin.id)?'Uygulandı':action}</button>`:action}</td><td>%${before.winRate.toFixed(2)} → %${after.winRate.toFixed(2)}<small>${after.wins} win / ${after.trades-after.wins} lose · ${after.trades} işlem</small></td><td>${money(before.net)} / ${money(after.net)}</td></tr>`;
     }).join('');
-    $('searchCoverage').textContent=`${result.tested}/${result.budget} portföy denemesi. ${result.config.leagueOnly?'Lig modu: kayıtlı AL/SAT eşikleri değiştirilmedi.':'Serbest mod: AL/SAT eşikleri dahil arama yapıldı.'} Sınırlı ve kademeli arama yapıldı; tüm olası kombinasyonların tarandığı iddia edilmez. Referans anı: ${new Date(result.asOf).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}.`;
+    $('searchCoverage').textContent=`${result.tested}/${result.budget} portföy denemesi. ${result.config.leagueOnly?'Lig yöntemi: adaylar yalnızca eğitimde yeniden üretildi.':'Serbest mod: AL/SAT eşikleri dahil kademeli arama ve çoklu coin denemeleri yapıldı.'} Sınırlı ve kademeli arama yapıldı; tüm olası kombinasyonların tarandığı iddia edilmez. Referans anı: ${new Date(result.asOf).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul'})}.`;
     showMonth('all');
 }
+$('applyAllRecommendation').addEventListener('click',applyPortfolioRecommendation);
 $('startSearch').addEventListener('click',start);
 $('stopSearch').addEventListener('click',()=>{stop();$('progressTitle').textContent='Analiz durduruldu';$('progressDetail').textContent='Terminal ayarları değiştirilmedi.'});
 $('resultSection').addEventListener('click',event=>{const apply=event.target.closest('[data-apply-index]');if(apply){applyCoinRecommendation(Number(apply.dataset.applyIndex));return}const button=event.target.closest('[data-month]');if(button&&result)showMonth(button.dataset.month)});
@@ -214,9 +251,9 @@ $('leagueOnly').addEventListener('change',updateLeagueStatus);
 for(const id of ['analysisPeriod','analysisStart','analysisEnd'])$(id).addEventListener('change',updateAnalysisPeriod);
 $('downloadResult').addEventListener('click',()=>{
     if(!result)return;
-    const payload={type:'kuzgun-combination-v2-review',applied:false,createdAt:new Date().toISOString(),result};
+    const payload={type:'kuzgun-combination-v3-review',applied:false,createdAt:new Date().toISOString(),result};
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));
-    const link=document.createElement('a');link.href=url;link.download='kuzgun-kombinasyon-v2-rapor.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+    const link=document.createElement('a');link.href=url;link.download='kuzgun-kombinasyon-v3-rapor.json';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 });
 window.addEventListener('beforeunload',()=>worker?.terminate());
 initialize();

@@ -381,7 +381,7 @@ function rebuildCoinMonthlyLedger(coin) {
 }
 function progress(message,detail=''){self.postMessage({type:'progress',message,detail})}
 function simulateTerminalTrades(coin,candles,settings,rsiValues=null) {
-    return KuzgunStrategy.simulate(candles,{...coin,...settings},{asOf:SNAP.asOf}).trades;
+    return KuzgunStrategy.simulate(candles,{...coin,...settings},{asOf:SNAP.asOf,prepared:!!rsiValues,rsiValues}).trades;
 }
 
 function ledgerCandidate(coin,candles,settings,rsiValues=null) {
@@ -556,7 +556,7 @@ async function optimize(snapshot,config) {
     }
     self.postMessage({type:'reference',baseline,asOf:snapshot.asOf});
     if(!snapshot.referenceArgs.isSlotConstraintEnabled)throw new Error('Terminalde slot çakışma filtresi kapalı. Slot uyumunu analiz etmek için bu filtreyi açıp referansı yeniden al.');
-    const budget=Math.max(200,Math.min(2500,Number(config.budget)||1000));
+    const budget=Math.max(200,Math.min(10000,Number(config.budget)||1000));
     let tested=0;const cache=new Map();let best=baseline;
     function evaluateTrial(selection){
         const key=selection.join(',');if(cache.has(key))return cache.get(key);
@@ -582,7 +582,9 @@ async function optimize(snapshot,config) {
         if(config.allowDisable)addOption(group,ledgerCandidate(coin,[],{off:true}));
         group.histories={};
         const lockedRecords=config.leagueOnly?matchingLeagueRecords(snapshot,coin,records):[];
-        const intervals=config.leagueOnly?[...new Set([coin.interval,...lockedRecords.map(row=>row.interval)])]:[...new Set([coin.interval,'15m','30m'])];
+        const searchIntervals=config.searchScope==='broad'?['5m','15m','30m','1h','4h']:['15m','30m'];
+        const searchLengths=config.searchScope==='broad'?[6,7,8,10,14]:[6,7];
+        const intervals=config.leagueOnly?[...new Set([coin.interval,...lockedRecords.map(row=>row.interval)])]:[...new Set([coin.interval,...searchIntervals])];
         for(const interval of intervals){
             if(interval===coin.interval && (coin.rawCandles||[]).length)group.histories[interval]=coin.rawCandles;
             else {
@@ -599,12 +601,12 @@ async function optimize(snapshot,config) {
             progress(`${i+1}/${groups.length} coin hazır`,`${group.options.length-1} lig adayı · AL/SAT eşikleri sabit`);
             continue;
         }
-        for(const interval of ['15m','30m'])for(const rsiLength of [6,7]) {
+        for(const interval of searchIntervals)for(const rsiLength of [...new Set([...searchLengths,coin.rsiLength])]) {
             progress(`${coin.displaySymbol||coin.symbol} / ${interval} / RSI ${rsiLength}`,'AL/SAT eşikleri ve farklı sinyal zamanları hazırlanıyor');
-            const candles=group.histories[interval].filter(c=>c.time+TF[interval]<=SNAP.asOf);
+            const candles=KuzgunStrategy.prepare(group.histories[interval],interval,SNAP.asOf);
             const rsiValues=calculateRSIHistory(candles.map(c=>c.close),rsiLength);
-            const buys=[...new Set([10,15,18,20,24,25,30,35,coin.buyRsi])].filter(value=>value>=8&&value<=50);
-            const sells=[...new Set([65,75,80,85,90,95,coin.sellRsi])].filter(value=>value>=55&&value<=98);
+            const buys=[...new Set([...(config.searchScope==='broad'?[8,14,20,26,32,38,44,50]:[10,15,18,20,24,25,30,35]),coin.buyRsi])].filter(value=>value>=8&&value<=50);
+            const sells=[...new Set([...(config.searchScope==='broad'?[55,65,75,85,95,98]:[65,75,80,85,90,95]),coin.sellRsi])].filter(value=>value>=55&&value<=98);
             // Bound retained candidates: high return, fast release and distinct entry timing.
             const profitPool=[],fastPool=[],timingPool=[];
             const retain=(pool,candidate,sort)=>{pool.push(candidate);pool.sort(sort);if(pool.length>5)pool.length=5};
@@ -659,6 +661,15 @@ async function optimize(snapshot,config) {
     changes.sort((a,b)=>b.score-a.score);
     for(let a=0;a<Math.min(14,changes.length)&&tested<budget*.9;a++)for(let b=a+1;b<Math.min(14,changes.length)&&tested<budget*.9;b++){
         if(changes[a].i===changes[b].i)continue;const selection=[...anchor];selection[changes[a].i]=changes[a].option;selection[changes[b].i]=changes[b].option;evaluateTrial(selection);
+    }
+    // Deterministic restarts explore simultaneous changes across several coins.
+    let randomState=20261019;
+    const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296};
+    const restartLimit=Math.min(1000,Math.floor(budget*.12));
+    for(let attempt=0;attempt<restartLimit&&tested<budget*.94;attempt++){
+        const parent=attempt%3===0?zero:best.selection;
+        const selection=parent.map((option,i)=>random()<.55?Math.floor(random()*groups[i].options.length):option);
+        evaluateTrial(selection);
     }
     // Refine AL/SAT levels around the jointly chosen portfolio, with real slot feedback.
     for(let i=0;!config.leagueOnly&&i<groups.length&&tested<budget;i++) {
