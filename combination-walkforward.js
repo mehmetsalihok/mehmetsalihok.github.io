@@ -1,5 +1,5 @@
 "use strict";
-importScripts("combination-worker.js?v=25-research");
+importScripts("combination-worker.js?v=26-classic");
 const wfDeliver=self.postMessage.bind(self);
 const monthNames=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 function getTurkeyDateComponents(timestamp){const iso=new Date(timestamp+10800000).toISOString();return {monthKey:iso.slice(0,7),day:Number(iso.slice(8,10))}}
@@ -70,14 +70,13 @@ function wfLeagueRecords(training,history){
     const records=[];
     for(const coin of training.coins)for(const interval of ['15m','30m'])for(const rsiLength of [6,7]){
         const candles=wfCut(history.get(wfKey(coin.symbol,interval))||[],interval,training.asOf).filter(bar=>bar.time>=training.trainingStart);
-        self.postMessage({type:'progress',message:coin.symbol+' / '+interval+' / RSI '+rsiLength+' · Eğitim lig taraması',detail:'Yalnızca eğitim kesimine kadar kapanmış mumlar kullanılıyor.'});
         const strategy=wfLeagueOptimize(candles,rsiLength,coin.profitTarget,coin.monthlyCap,interval,training.asOf);
         records.push({symbol:coin.symbol,year:training.year,startTime:training.trainingStart,endTime:training.asOf,
             profitTarget:coin.profitTarget,monthlyCap:coin.monthlyCap,interval,rsiLength,buyRsi:strategy.buyRsi,sellRsi:strategy.sellRsi});
     }
     return records;
 }
-function wfAccount(base){return {pendingEntries:new Map(),lastTime:0,base,cash:base,realized:base,fees:0,positions:new Map(),marks:{},monthlyPnl:{},closed:[],wins:0,losses:0,skipped:0,missingFills:0,peak:base,maxDrawdown:0}}
+function wfAccount(base){return {base,cash:base,realized:base,fees:0,positions:new Map(),marks:{},monthlyPnl:{},closed:[],wins:0,losses:0,skipped:0,missingFills:0,peak:base,maxDrawdown:0}}
 function wfEquity(account){let total=account.cash;for(const position of account.positions.values())total+=position.units*(account.marks[position.coinId]||position.entryPrice);return total}
 function wfLowerBound(candles,ms,time){let low=0,high=candles.length;while(low<high){const middle=(low+high)>>1;if(candles[middle].time+ms<time)low=middle+1;else high=middle}return low}
 function wfHeapPush(heap,event){heap.push(event);let index=heap.length-1;while(index>0){const parent=(index-1)>>1;if(heap[parent].time<=event.time)break;heap[index]=heap[parent];index=parent}heap[index]=event}
@@ -95,15 +94,14 @@ function wfExit(account,row,position,price,time,reason,rate){
         exitPrice:price,net,rawPnl,reason,settings:position.settings});
     account.positions.delete(position.coinId);
 }
-function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees,execution={}){
+function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees){
     const rows=accounts.map(account=>wfMonthRow(account,fold.monthKey));
     const heap=[];
     for(let stream=0;stream<streams.length;stream++){
         const series=streams[stream],index=wfLowerBound(series.candles,series.ms,fold.start);
         if(index<series.candles.length)wfHeapPush(heap,{stream,index,time:series.candles[index].time+series.ms});
     }
-    const rate=execution.feeRate ?? (fees ? 0.00075 : 0);
-    const slip=(execution.slippageBps||0)/10000,delay=execution.delayBars||0;
+    const rate=fees ? 0.00075 : 0;
     while(heap.length&&heap[0].time<fold.end){
         const time=heap[0].time,bucket=[];
         while(heap.length&&heap[0].time===time){
@@ -120,9 +118,9 @@ function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees,
                 const position=account.positions.get(event.series.coinId);
                 if(!position||position.settings.interval!==event.series.interval||event.bar.time<position.entryTime)continue;
                 const rsi=event.series.features[position.settings.rsiLength][event.index];
-                if(event.bar.high>=position.targetPrice)wfExit(account,row,position,position.targetPrice*(1-slip),time,'Kâr hedefi',rate);
+                if(event.bar.high>=position.targetPrice)wfExit(account,row,position,position.targetPrice,time,'Kâr hedefi',rate);
                 else if(rsi!==null&&rsi>=position.settings.sellRsi){
-                    if(event.executionPrice)wfExit(account,row,position,event.executionPrice*(1-slip),time,'RSI satışı · sonraki açılış',rate);
+                    if(event.executionPrice)wfExit(account,row,position,event.executionPrice,time,'RSI satışı · sonraki açılış',rate);
                     else{account.missingFills++;row.missingFills++}
                 }
             }
@@ -133,25 +131,17 @@ function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees,
                 const event=bucket.find(item=>item.series.coinId===coin.id&&item.series.interval===setting.interval);
                 if(!event||event.index<1)continue;
                 const values=event.series.features[setting.rsiLength],current=values[event.index],previous=values[event.index-1];
-                const pending=account.pendingEntries.get(coin.id);
-                if(pending){
-                    if(pending.interval!==setting.interval || time<pending.due)continue;
-                    account.pendingEntries.delete(coin.id);
-                }else{
-                    if(current===null||previous===null||!(previous<=setting.buyRsi&&current>setting.buyRsi))continue;
-                    if(delay>0){account.pendingEntries.set(coin.id,{due:time+delay*event.series.ms,interval:setting.interval});continue}
-                }
+                if(current===null||previous===null||!(previous<=setting.buyRsi&&current>setting.buyRsi))continue;
                 const total=account.monthlyPnl[fold.monthKey]?.[coin.id]||0;
                 if(coin.monthlyCap>0&&total+.001>=coin.monthlyCap){row.lockedSignals++;continue}
                 if(account.positions.size>=slots){account.skipped++;row.skipped++;continue}
                 if(!event.executionPrice){account.missingFills++;row.missingFills++;continue}
-                const entryPrice=event.executionPrice*(1+slip);
                 const budget=account.cash/(slots-account.positions.size);
                 if(!(budget>0))continue;
                 const fee=budget*rate;
                 account.cash=Math.max(0,account.cash-budget);account.fees+=fee;row.fees+=fee;row.entries++;
-                account.positions.set(coin.id,{coinId:coin.id,symbol:coin.symbol,entryTime:time,entryPrice,budget,
-                    units:(budget-fee)/entryPrice,targetPrice:entryPrice*(1+coin.profitTarget/100),settings:{...setting}});
+                account.positions.set(coin.id,{coinId:coin.id,symbol:coin.symbol,entryTime:time,entryPrice:event.executionPrice,budget,
+                    units:(budget-fee)/event.executionPrice,targetPrice:event.executionPrice*(1+coin.profitTarget/100),settings:{...setting}});
             }
             wfRisk(account,row);
         }
@@ -166,7 +156,7 @@ function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees,
     }
     for(const account of accounts)for(const [id,mark] of Object.entries(closingMarks))account.marks[id]=mark.price;
     for(let a=0;a<accounts.length;a++){
-        const account=accounts[a],row=rows[a];account.lastTime=fold.end;wfRisk(account,row);
+        const account=accounts[a],row=rows[a];wfRisk(account,row);
         row.endEquity=wfEquity(account);row.net=row.endEquity-row.openingEquity;row.realizedBalance=account.realized;
         row.openPositions=account.positions.size;row.cash=account.cash;row.winRate=row.trades?row.wins/row.trades*100:0;
         delete row.peak;
@@ -176,7 +166,6 @@ function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees,
 function wfSummary(account){const equity=wfEquity(account);return {base:account.base,equity,net:equity-account.base,realized:account.realized,
     unrealized:equity-account.realized,cash:account.cash,openPositions:account.positions.size,trades:account.wins+account.losses,
     wins:account.wins,losses:account.losses,winRate:account.wins+account.losses?account.wins/(account.wins+account.losses)*100:0,
-    longestHoldHours:[...account.positions.values()].reduce((longest,p)=>Math.max(longest,(account.lastTime-p.entryTime)/3600000),account.closed.reduce((longest,t)=>Math.max(longest,(t.exitTime-t.entryTime)/3600000),0)),
     fees:account.fees,skipped:account.skipped,missingFills:account.missingFills,maxDrawdown:account.maxDrawdown}}
 async function runWalkForward(source,config){
     if(!source?.coins?.length)throw new Error('Terminal referansı gerekli');
@@ -187,7 +176,7 @@ async function runWalkForward(source,config){
     SNAP={...source,historyStart,historyEnd};
     wfDeliver({type:'wf-progress',message:'Seçilen tarihlerin verileri hazırlanıyor',detail:'Önceki yıllar dahil indirilir; her eğitimde yalnızca kendi geçmiş penceresi kullanılır.'});
     const realFetch=fetchYear,coverage=[];
-    for(const coin of source.coins)for(const interval of [...new Set([coin.interval,...(config.searchScope==='broad'?['5m','15m','30m','1h','4h']:['15m','30m'])])]){
+    for(const coin of source.coins)for(const interval of [...new Set([coin.interval,'15m','30m'])]){
         const cached=coin.rawCandles||[],reuse=interval===coin.interval&&cached.length&&cached[0].time<=historyStart&&cached.at(-1).time+TF[interval]>=historyEnd;
         const data=reuse?cached:await realFetch(coin.symbol,interval);
         const candles=data.filter(bar=>bar.time>=historyStart&&bar.time+TF[interval]<=historyEnd).sort((a,b)=>a.time-b.time);
@@ -202,9 +191,9 @@ async function runWalkForward(source,config){
         history.set(wfKey(coin.symbol,interval),candles);
     }
     const streams=[];
-    for(const coin of source.coins)for(const interval of [...new Set([coin.interval,...(config.searchScope==='broad'?['5m','15m','30m','1h','4h']:['15m','30m'])])]){
+    for(const coin of source.coins)for(const interval of [...new Set([coin.interval,'15m','30m'])]){
         const candles=history.get(wfKey(coin.symbol,interval)),features={};
-        for(const length of [...new Set([6,7,8,10,14,coin.rsiLength])])features[length]=calculateRSIHistory(candles.map(bar=>bar.close),length);
+        for(const length of [...new Set([6,7,coin.rsiLength])])features[length]=calculateRSIHistory(candles.map(bar=>bar.close),length);
         streams.push({coinId:coin.id,interval,ms:TF[interval],candles,features});
     }
     fetchYear=async(symbol,interval)=>wfCut(history.get(wfKey(symbol,interval))||[],interval,SNAP.asOf).filter(bar=>bar.time>=SNAP.trainingStart);
@@ -217,7 +206,7 @@ async function runWalkForward(source,config){
     for(let index=0;index<folds.length;index++){
         const fold=folds[index],training=wfMakeTraining(source,history,fold.trainingEnd,seeds,fold.trainingStart);
         wfDeliver({type:'wf-progress',message:`${index+1}/${folds.length} · ${fold.monthKey} için eğitim`,detail:'Veri kesimi: '+new Date(fold.trainingEnd).toISOString()+' · Sonraki ay seçime katılmaz.'});
-        const trainingConfig={minTrades:config.minTrades,monthlyMode:config.monthlyMode,budget:config.budget,searchScope:config.searchScope,allowDisable:!!config.allowDisable,leagueOnly:!!config.leagueOnly};
+        const trainingConfig={minTrades:config.minTrades,monthlyMode:config.monthlyMode,budget:config.budget,allowDisable:!!config.allowDisable,leagueOnly:!!config.leagueOnly};
         if(config.leagueOnly){
             wfDeliver({type:'wf-progress',message:fold.monthKey+' · Lig adayları geçmiş verilerle yeniden üretiliyor',detail:'Kaydedilmiş tüm yıl lig sonuçları kullanılmaz.'});
             trainingConfig.leagueRecords=wfLeagueRecords(training,history);

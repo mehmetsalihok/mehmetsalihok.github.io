@@ -10,7 +10,7 @@
         get('wfStart').disabled=value;get('wfStop').hidden=!value;
         document.querySelectorAll('#wfControls input,#wfControls select,#wfLeague,#wfAllowDisable').forEach(element=>element.disabled=value);
         if(value){
-            lockedButtons=[...document.querySelectorAll('#startSearch,#applyAllRecommendation,[data-apply-index]')].map(button=>({button,disabled:button.disabled}));
+            lockedButtons=[...document.querySelectorAll('#startSearch,[data-apply-index]')].map(button=>({button,disabled:button.disabled}));
             lockedButtons.forEach(({button})=>button.disabled=true);
         }else{lockedButtons.forEach(({button,disabled})=>button.disabled=disabled);lockedButtons=[]}
     }
@@ -45,8 +45,8 @@
             const [endYear,endMonth]=last.split('-').map(Number);
             if(Date.UTC(endYear,endMonth,1,-3)>snapshot.asOf)throw new Error('Yalnızca referans tarihinde tamamlanmış test aylarını seçebilirsin.');
             const config={trainingStart:first,testStart:test,testEnd:last,trainingMode:get('wfTrainingMode').value,windowMonths:Number(get('wfWindowMonths').value),budget:Number(get('wfBudget').value),
-                searchScope:get('wfScope').value,minTrades:Number(get('wfMinTrades').value),monthlyMode:get('wfMonthly').value,leagueOnly:get('wfLeague').checked,allowDisable:get('wfAllowDisable').checked};
-            activeWorker=new Worker('combination-walkforward.js?v=4-research');
+                minTrades:Number(get('wfMinTrades').value),monthlyMode:get('wfMonthly').value,leagueOnly:get('wfLeague').checked,allowDisable:get('wfAllowDisable').checked};
+            activeWorker=new Worker('combination-walkforward.js?v=5-classic');
             partial=[];report=null;get('wfDownload').hidden=true;get('wfResults').hidden=true;
             get('wfProgress').hidden=false;get('wfProgressTitle').textContent='İleri dönem testi hazırlanıyor';
             get('wfProgressDetail').textContent='Veri ve eğitim hesabı ayrı işçide yürütülür; sayfayı açık tutabilirsin.';running(true);
