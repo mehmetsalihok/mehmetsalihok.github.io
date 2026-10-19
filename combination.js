@@ -141,7 +141,7 @@ function start(){
             const missing=range?[]:snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,leagueRecords).length);
             if(missing.length)throw new Error('Lig kaydı eksik veya uyumsuz: '+missing.map(coin=>coin.displaySymbol||coin.symbol).join(', ')+'. Aynı yıl, hedef kâr ve aylık kilitle 15m/30m lig taraması yap; ardından terminalden yeni referans al.');
         }
-        worker=new Worker(range?'combination-range.js?v=3-classic':'combination-worker.js?v=26-classic');
+        worker=new Worker(range?'combination-range.js?v=4-budget':'combination-worker.js?v=27-budget');
     }catch(reason){error(reason.message);return}
     const config={...range,minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
     result=null;$('applyStatus').textContent='';$('resultSection').hidden=true;$('progressBox').hidden=false;$('progressTitle').textContent='Terminal referansı doğrulanıyor';$('progressDetail').textContent='Aynı bakiye ve aynı slota kabul edilen işlem listesi bekleniyor.';setRunning(true);

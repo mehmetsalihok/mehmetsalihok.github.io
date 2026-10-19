@@ -556,7 +556,7 @@ async function optimize(snapshot,config) {
     }
     self.postMessage({type:'reference',baseline,asOf:snapshot.asOf});
     if(!snapshot.referenceArgs.isSlotConstraintEnabled)throw new Error('Terminalde slot çakışma filtresi kapalı. Slot uyumunu analiz etmek için bu filtreyi açıp referansı yeniden al.');
-    const budget=Math.max(200,Math.min(2500,Number(config.budget)||1000));
+    const budget=Math.max(200,Math.min(10000,Number(config.budget)||1000));
     let tested=0;const cache=new Map();let best=baseline;
     function evaluateTrial(selection){
         const key=selection.join(',');if(cache.has(key))return cache.get(key);
