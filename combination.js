@@ -56,7 +56,7 @@ function updateAnalysisPeriod(){
         if(!$('analysisStart').value)$('analysisStart').value=(Number(snapshot.year)-1)+'-01';
         if(!$('analysisEnd').value)$('analysisEnd').value=last;
     }
-    $('analysisPeriodHint').textContent=custom?'Seçilen dönemin son tamamlanmış ayları bağımsız teste ayrılır. Gerçek işlem kayıtları ve bugünkü açık pozisyonlar simülasyona girmez.':'Terminalde seçili yıl kullanılır. Son tamamlanmış aylar bağımsız teste ayrılır; mevcut eksik ay değerlendirilmez. Gerçek kayıtlar ayrı simülasyona taşınmaz.';
+    $('analysisPeriodHint').textContent='Önce geçmişte ayar aranır; sonra seçtiğin son aylarda değiştirilmeden denenir. Sonuç, arama bitince aşağıda görünür.';
     updateLeagueStatus();
 }
 function updateLeagueStatus() {
@@ -165,7 +165,7 @@ function start(){
     worker.onmessage=({data})=>{
         if(data.type==='progress'){$('progressTitle').textContent=data.message;$('progressDetail').textContent=data.detail}
         if(data.type==='reference'){
-            $('referenceStatus').textContent='Terminal referansı doğrulandı. Aşağıdaki araştırma, gerçek işlem kayıtlarından ayrı bir simülasyondur.';
+            $('referenceStatus').textContent='Terminal bilgileri alındı.';
             $('referenceBalance').textContent=money(data.baseline.balance);
         }
         if(data.type==='range-reference'){
@@ -204,11 +204,38 @@ function showMonth(key){
 function renderValidation(){
     const panel=$('validationPanel'),v=result.validation;
     panel.hidden=!v;if(!v)return;
+    const candidate=v.forward.candidate,baseline=v.forward.baseline,hasCandidate=!!result.recommendation;
+    const month=value=>new Intl.DateTimeFormat('tr-TR',{year:'numeric',month:'long',timeZone:'Europe/Istanbul'}).format(new Date(value));
+    const better=candidate.net>0&&candidate.equity+.005>=baseline.equity;
+    const fall=candidate.maxDrawdown<=v.config.maxDrawdown;
+    const other=v.stress.every(s=>s.candidate.net>0&&s.candidate.trades>=v.config.minTestTrades&&s.candidate.maxDrawdown<=v.config.maxDrawdown&&!s.candidate.missingFills)
+        &&(!v.neighbors.tested||v.neighbors.passRate>=70);
+    let explanation=v.passed?'Yeni ayarlar, aynı parayla yapılan sonraki dönem denemesini ve ek kontrolleri geçti. Uygulamak için aşağıdaki düğmeyi kullanabilirsin.'
+        :!hasCandidate?'Bu taramada koşulları sağlayan daha iyi bir ayar bulunamadı. Terminaldeki ayarlar değiştirilmedi.'
+        :candidate.net<=0?'Yeni ayarlar, sonraki aylardaki denemede zarar verdi. Bu yüzden uygulama açılmadı.'
+        :!better?'Yeni ayarlar, sonraki aylarda mevcut ayarların gerisinde kaldı. Bu yüzden uygulama açılmadı.'
+        :'Yeni ayarlar ek kontrollerin tamamını geçemedi. Bu yüzden uygulama açılmadı.';
+    if(hasCandidate&&v.training.candidate.equity<=v.training.baseline.equity+.005)explanation+=' İlk dönemde görünen iyileşme de ikinci hesaplamada doğrulanamadı.';
+    const delta=candidate.equity-baseline.equity;
+    const check=(label,passed)=>`<li><span>${label}</span><b class="${passed?'positive':'negative'}">${passed?'Geçti':'Geçmedi'}</b></li>`;
+    panel.innerHTML=`<div class="simple-verdict ${v.passed?'passed':''}"><h2 class="${v.passed?'positive':'negative'}">${v.passed?'Yeni ayarlar kontrolü geçti':!hasCandidate?'Daha iyi bir ayar bulunamadı':'Yeni ayarlar kontrolü geçemedi'}</h2><p>${escapeText(explanation)}</p></div>
+        <p class="simple-period"><strong>${escapeText(month(v.testStart))} — ${escapeText(month(v.testEnd-1))}</strong> · İki deneme de ${money(candidate.base)} ile başladı.</p>
+        <div class="simple-compare"><div class="simple-card"><span>Mevcut ayarların bu testteki sonucu</span><strong class="${baseline.net>=0?'positive':'negative'}">${baseline.net>=0?'+':''}${money(baseline.net)}</strong><small>${baseline.net>=0?'Kazanç':'Zarar'} · Test sonunda ${money(baseline.equity)}</small><p>Terminalde kullandığın ayarlarla yapılan ayrı deneme.</p></div>
+        <div class="simple-card"><span>Yeni ayarların aynı testteki sonucu</span><strong class="${candidate.net>=0?'positive':'negative'}">${hasCandidate?(candidate.net>=0?'+':'')+money(candidate.net):'—'}</strong><small>${hasCandidate?(candidate.net>=0?'Kazanç':'Zarar')+' · Test sonunda '+money(candidate.equity):'Karşılaştırılacak yeni bir aday yok.'}</small><p>Önceki aylarda bulunan ayarlar, bu aylarda değiştirilmeden denendi.</p></div></div>
+        <p class="simple-difference ${hasCandidate?(delta>=0?'positive':'negative'):''}">${hasCandidate?'Mevcut ayarlara göre '+money(Math.abs(delta))+' '+(delta>=0?'daha fazla':'daha az')+' net sonuç.':'Bu taramada uygulanacak yeni ayar yok.'}</p>
+        ${hasCandidate?`<ul class="simple-checks">${check('Sonraki aylarda daha iyi sonuç verdi mi?',better)}${check('Belirlediğin düşüş sınırında kaldı mı?',fall)}${check('Ek masraf, gecikme ve küçük ayar değişikliklerini geçti mi?',other)}</ul>`:''}
+        <p class="simple-footnote">Bunlar geçmiş fiyatlarla yapılan deneme sonuçlarıdır; gerçek hesap hareketi değildir. Sonuçlar açık pozisyonların dönem sonu değerini içerir. Bu deneme, terminal bakiyesinden ayrı gösterilir.</p>
+        <details class="advanced-box"><summary>Neden geçti veya geçemedi? Ayrıntıları göster</summary>${validationDetailsMarkup()}</details>`;
+}
+
+function validationDetailsMarkup(){
+    const v=result.validation;
+    if(!v)return '';
     const candidate=v.forward.candidate,baseline=v.forward.baseline;
     const formatTime=value=>new Date(value).toLocaleString('tr-TR',{timeZone:'Europe/Istanbul',year:'numeric',month:'short',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     const worst=Math.min(...v.forward.months.map(m=>m.rows[1].net));
     const scenarioRow=(label,a,b)=>`<tr><td>${escapeText(label)}</td><td>${money(a.net)}</td><td class="${b.net>0?'positive':'negative'}">${money(b.net)}</td><td>%${b.maxDrawdown.toFixed(2)}</td><td>${b.trades}</td><td>${b.openPositions}</td><td>${b.longestHoldHours.toFixed(1)} saat</td></tr>`;
-    panel.innerHTML=`<div class="section-title"><div><h2>Bağımsız test ve dayanıklılık</h2><p>Eğitimde seçilen ayarlar test boyunca donduruldu; testten sonra yeni aday seçilmedi.</p></div><span class="tag">${result.research.scope==='broad'?'Geniş':'Standart'} arama</span></div>
+    return `<div class="section-title"><div><h2>Bağımsız test ve dayanıklılık</h2><p>Eğitimde seçilen ayarlar test boyunca donduruldu; testten sonra yeni aday seçilmedi.</p></div><span class="tag">${result.research.scope==='broad'?'Geniş':'Standart'} arama</span></div>
         <div class="validation-banner ${v.passed?'passed':''}"><strong class="${v.passed?'positive':'negative'}">${v.passed?'Kontroller geçti · Ayarlar uygulanabilir':'Kontroller geçilmedi · Uygulama kapalı'}</strong>${v.issues.length?`<ul>${v.issues.map(issue=>`<li>${escapeText(issue)}</li>`).join('')}</ul>`:''}<p class="small muted">Test: ${escapeText(formatTime(v.testStart))} — ${escapeText(formatTime(v.testEnd))} (bitiş hariç). Aday seçimi ${escapeText(formatTime(v.selectionCutoff))} öncesindeki mumlarla yapıldı.</p></div>
         <div class="validation-metrics"><div><span>Bağımsız test · Aday net değişimi</span><strong class="${candidate.net>0?'positive':'negative'}">${money(candidate.net)}</strong><span>Referans ${money(baseline.net)} · Fark ${money(candidate.equity-baseline.equity)}</span></div><div><span>Adayın en büyük düşüşü</span><strong>%${candidate.maxDrawdown.toFixed(2)}</strong><span>Seçilen sınır %${v.config.maxDrawdown} · En kötü ay ${money(worst)}</span></div><div><span>Yakın AL/SAT eşikleri</span><strong>${v.neighbors.passRate===null?'Uygulanamaz':'%'+v.neighbors.passRate.toFixed(0)}</strong><span>${v.neighbors.tested}/${v.neighbors.available} komşu denendi · Geçme sınırı %70</span></div></div>
         <div class="table-scroll"><table><thead><tr><th>Bağımsız test senaryosu</th><th>Referans net</th><th>Aday net</th><th>Aday düşüş</th><th>Kapanan işlem</th><th>Açık pozisyon</th><th>En uzun tutma</th></tr></thead><tbody>${scenarioRow('Normal maliyet / sinyal sonrası açılış',baseline,candidate)}${v.stress.map(s=>scenarioRow(s.label,s.baseline,s.candidate)).join('')}</tbody></table></div>
@@ -224,6 +251,7 @@ function renderResult(){
     const recommended=result.recommendation,comparison=recommended||result.baseline;
     const joint=!!recommended && recommended.selection.filter(index=>index!==0).length>1;
     $('applyAllRecommendation').disabled=!recommended||!result.validation?.passed||appliedSettings.size>0||!!window.kuzgunWalkForwardRunning;
+    $('applyAllRecommendation').hidden=!recommended||!result.validation?.passed;
     $('suggestionLabel').textContent=recommended?(result.validation?.passed?'DOĞRULAMAYI GEÇEN ADAY':'EĞİTİMDE BULUNAN ADAY · UYGULAMA KAPALI'):'MEVCUT DÜZEN KORUNDU';
     $('resultStatus').textContent='Aşağıdaki tablo yalnızca eğitim taramasını gösterir. Bağımsız test ve dayanıklılık sonuçları üsttedir.';
     renderValidation();
