@@ -1466,10 +1466,25 @@ function nextHistoryPage() {
 
 let monthlyLimitFocus = null;
 
+function getMonthlyLimitMonthKey() {
+    const current = getTurkeyMonthKey();
+    const month = KZ_STATE.selectedTimeframe === 'selectMonth'
+        ? Number(KZ_STATE.selectedTimeframeMonth) : Number(current.slice(5));
+    return `${KZ_STATE.selectedYear}-${String(month).padStart(2, '0')}`;
+}
+
+function getMonthlyLimitMonthLabel() {
+    return new Date(`${getMonthlyLimitMonthKey()}-01T12:00:00+03:00`)
+        .toLocaleDateString('tr-TR', {timeZone:'Europe/Istanbul', month:'long', year:'numeric'});
+}
+
 function getMonthlyLimitRows() {
-    const month = getTurkeyMonthKey();
+    const month = getMonthlyLimitMonthKey();
     const transactions = getTransactionHistoryTrades();
     const liveIds = new Set((KZ_STATE.closedTrades || []).map(trade => trade.id));
+    const slotEnabled = localStorage.getItem('kuzgun_slot_constraint_enabled') !== 'false';
+    const startSeconds = Number(localStorage.getItem('kuzgun_portfolio_start_date')) || 0;
+    const startMs = startSeconds > 0 ? startSeconds * 1000 : Date.UTC(Number(KZ_STATE.selectedYear), 0, 1);
     return KZ_STATE.coins.map(coin => {
         const matches = t => (t.coinId === coin.id || t.symbol === coin.symbol)
             && (t.exitMonth || getTurkeyMonthKey(t.exitTime)) === month;
@@ -1480,17 +1495,25 @@ function getMonthlyLimitRows() {
         const progress = Number(rawMonth?.pnl || 0);
         const cap = Number(coin.monthlyCap || 0);
         const target = Number(coin.profitTarget || 0);
-        const locked = isCoinMonthlyLocked(coin);
+        const locked = Boolean(rawMonth?.isLocked);
         const remainingPnl = locked ? 0 : Math.max(0, cap - progress);
         const remaining = locked ? 0 : cap > 0 && target > 0 ? Math.max(0, Math.ceil((remainingPnl - 0.001) / target)) : null;
         const executed = (KZ_STATE.executedGlobalTrades || []).filter(matches);
+        // Count closed ledger records against the same portfolio/slot decisions.
+        // A start-date exclusion is not a rejection caused by occupied slots.
+        const ledgerTrades = rawMonth?.tradesList || [];
+        const taken = ledgerTrades.filter(trade => executed.some(record => isSameTradeSignal(trade, record))).length;
+        const skipped = slotEnabled ? ledgerTrades.filter(trade => Number(trade.exitTime) >= startMs
+            && !KZ_STATE.acceptedTradeIds.has(trade.id)).length : 0;
+        const count = ledgerTrades.length;
+        const excluded = Math.max(0, count - taken - skipped);
         const isLive = trade => liveIds.has(trade.id) || trade.source === 'automatic' || trade.source === 'manual';
         const liveGainUsd = executed.filter(isLive).reduce((sum, trade) => sum + Number(trade.netGainUSD || 0), 0);
         const pastGainUsd = executed.filter(trade => !isLive(trade)).reduce((sum, trade) => sum + Number(trade.netGainUSD || 0), 0);
         const netGainUsd = liveGainUsd + pastGainUsd;
         const base = Number(KZ_STATE.portfolioBaseUsd || 0);
         const portfolioContribution = base > 0 ? netGainUsd / base * 100 : null;
-        return {coin,live,past,count:rawMonth?.trades || 0,remaining,remainingPnl,cap,locked,
+        return {coin,live,past,count,taken,skipped,excluded,remaining,remainingPnl,cap,locked,
             netGainUsd,liveGainUsd,pastGainUsd,portfolioContribution,active:coin.isActive !== false};
     });
 }
@@ -1498,10 +1521,13 @@ function getMonthlyLimitRows() {
 function monthlyLimitTotals(rows) {
     return rows.filter(row => row.active).reduce((total, row) => {
         total.count += row.count;
+        total.taken += row.taken;
+        total.skipped += row.skipped;
+        total.excluded += row.excluded;
         total.remaining += row.remaining || 0;
         if (row.remaining === null) total.unknown++;
         return total;
-    }, {count:0,remaining:0,unknown:0});
+    }, {count:0,taken:0,skipped:0,excluded:0,remaining:0,unknown:0});
 }
 
 function updateMonthlyLimitSummary() {
@@ -1509,9 +1535,14 @@ function updateMonthlyLimitSummary() {
     if (!button) return;
     const rows = getMonthlyLimitRows();
     const totals = monthlyLimitTotals(rows);
-    const month = new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',month:'long'});
-    button.querySelector('[data-limit-month]').textContent = `Bu ay · ${month}`;
+    const month = getMonthlyLimitMonthLabel();
+    button.querySelector('[data-limit-month]').textContent = month;
     button.querySelector('[data-limit-count]').textContent = totals.count;
+    button.querySelector('[data-limit-taken]').textContent = totals.taken;
+    button.querySelector('[data-limit-skipped]').textContent = totals.skipped;
+    const excluded = button.querySelector('[data-limit-excluded]');
+    excluded.hidden = totals.excluded === 0;
+    excluded.textContent = `Tarih dışında: ${totals.excluded}`;
     button.querySelector('[data-limit-remaining]').textContent = `≈ ${totals.remaining}${totals.unknown ? ' + belirsiz' : ''}`;
     const modal = document.getElementById('monthlyLimitModal');
     if (modal && !modal.classList.contains('hidden')) renderMonthlyLimitModal(rows);
@@ -1537,9 +1568,9 @@ function closeMonthlyLimitModal() {
 
 function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
     const totals = monthlyLimitTotals(rows);
-    const month = new Date().toLocaleDateString('tr-TR',{timeZone:'Europe/Istanbul',month:'long',year:'numeric'});
+    const month = getMonthlyLimitMonthLabel();
     document.getElementById('monthlyLimitTitle').textContent = `${month} · İşlem limitleri`;
-    document.getElementById('monthlyLimitTotals').textContent = `Aktif coinler: ${totals.count} gerçekleşen · ≈ ${totals.remaining} kalan${totals.unknown ? ' · '+totals.unknown+' coin için hedef tanımsız' : ''}`;
+    document.getElementById('monthlyLimitTotals').textContent = `Aktif coinler: ${totals.count} kapanış · ${totals.taken} işleme alınan · ${totals.skipped} slot dışı${totals.excluded ? ' · '+totals.excluded+' tarih dışında' : ''} · ≈ ${totals.remaining} kalan${totals.unknown ? ' · '+totals.unknown+' coin için hedef tanımsız' : ''}`;
     const base = Number(KZ_STATE.portfolioBaseUsd || 0);
     const contributionText = usd => base > 0 ? `${usd >= 0 ? '+' : '-'}%${Math.abs(usd / base * 100).toFixed(2)}` : '—';
     const active = rows.filter(row => row.active);
@@ -1562,7 +1593,7 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
         const tr = document.createElement('tr');
         tr.className = 'border-b border-slate-100 dark:border-slate-800 '+(row.locked ? 'text-rose-600 dark:text-rose-400 ' : '')+(row.active ? '' : 'opacity-50');
         const cells = [String(row.coin.displaySymbol || row.coin.symbol).replace('USDT',''),
-            `${row.count}`,
+            `${row.count} / ${row.taken} / ${row.skipped}`,
             row.remaining === null ? '—' : `≈ ${row.remaining}`,
             `%${row.remainingPnl.toFixed(2)} / %${row.cap.toFixed(1)}`,
             row.portfolioContribution === null ? '—' : `${row.portfolioContribution >= 0 ? '+' : '-'}%${Math.abs(row.portfolioContribution).toFixed(2)}`,
@@ -1571,7 +1602,8 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
             const td = document.createElement('td');
             td.className = 'py-1.5 px-1 text-[10px] tabular-nums '+(index === 0 ? 'font-bold' : 'text-right');
             if (index === 4 && !row.locked && row.portfolioContribution !== null) td.className += row.portfolioContribution >= 0 ? ' text-emerald-600 dark:text-emerald-400 font-semibold' : ' text-rose-600 dark:text-rose-400 font-semibold';
-            if (index === 4) td.title = `Bu ay komisyon sonrası portföy katkısı: ${row.netGainUsd.toFixed(2)} USDT. Başlangıç sermayesine göre yüzde.`;
+            if (index === 1) td.title = `Toplam kapanış / işleme alınan / slot dışı.${row.excluded ? ' Tarih dışında: '+row.excluded+'.' : ''}`;
+            if (index === 4) td.title = `${month} komisyon sonrası portföy katkısı: ${row.netGainUsd.toFixed(2)} USDT. Başlangıç sermayesine göre yüzde.`;
             td.textContent = value;
             tr.append(td);
         });
@@ -1579,7 +1611,7 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
     });
     if (!visible.length) {
         const tr = document.createElement('tr'), td = document.createElement('td');
-        td.colSpan = 7;td.className = 'py-8 text-center text-xs text-slate-400';td.textContent = 'Henüz coin eklenmedi.';tr.append(td);container.append(tr);
+        td.colSpan = 6;td.className = 'py-8 text-center text-xs text-slate-400';td.textContent = 'Henüz coin eklenmedi.';tr.append(td);container.append(tr);
     }
 
 }
@@ -3615,6 +3647,7 @@ function changePortfolioTimeframe(tf) {
 
     document.querySelectorAll('#timeframeButtonGroup button').forEach(btn => {
         btn.className = (btn.dataset.tf === tf) ? activeClass : inactiveClass;
+        btn.setAttribute('aria-pressed', String(btn.dataset.tf === tf));
     });
 
     const subMonthBox = document.getElementById('subMonthPills');
@@ -3638,7 +3671,7 @@ function renderSubMonthPills() {
         const mNum = idx + 1;
         const isSelected = KZ_STATE.selectedTimeframeMonth === mNum;
         return `
-            <button onclick="selectTimeframeMonth(${mNum})" 
+            <button type="button" onclick="selectTimeframeMonth(${mNum})" aria-pressed="${isSelected}"
                 class="px-2.5 py-1 rounded-lg text-xs font-bold shrink-0 transition cursor-pointer ${isSelected ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200'}">
                 ${name}
             </button>
