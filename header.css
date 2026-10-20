@@ -54,3 +54,69 @@ html.dark header.kz-header nav>a:hover,html.dark header.kz-header nav>button:hov
 html.oled header.kz-header nav>[aria-current=page]{background:#171717!important}
 header.kz-header :is(a,button,select):focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
 html{scroll-padding-top:72px}
+
+/* One stationary shell across all pages; only navigation/content scrolls. */
+:root{--kz-header-height:57px;--kz-header-inset:20px}
+html{scrollbar-gutter:stable;scroll-padding-top:calc(var(--kz-header-height) + 16px)}
+body{padding-top:var(--kz-header-height)!important}
+header.kz-header{position:fixed!important;inset:0 0 auto!important;height:var(--kz-header-height)!important;min-height:var(--kz-header-height)!important;max-height:var(--kz-header-height)!important}
+header.kz-header>div{
+ max-width:none!important;padding:0 var(--kz-header-inset)!important;
+ overflow:visible!important;justify-content:flex-start!important;
+}
+header.kz-header>div>div:first-child{
+ flex:0 0 auto!important;min-width:0!important;gap:16px!important;
+}
+header.kz-header .kz-brand{width:112px!important;min-width:112px!important}
+header.kz-header nav{
+ flex:0 1 auto!important;min-width:0!important;overflow-x:auto!important;overflow-y:hidden!important;
+ scrollbar-width:thin;scroll-behavior:smooth;overscroll-behavior-x:contain;
+}
+header.kz-header nav>a,header.kz-header nav>button{font-weight:600!important;cursor:pointer}
+header.kz-header nav>:nth-child(1){width:76px}
+header.kz-header nav>:nth-child(2){width:110px}
+header.kz-header nav>:nth-child(3){width:76px}
+header.kz-header nav>:nth-child(4){width:108px}
+header.kz-header nav>:nth-child(5){width:76px}
+header.kz-header>div>div:nth-child(2){
+ flex:1 1 0!important;min-width:0!important;justify-content:flex-end;
+ overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;
+}
+/* Keep wide portfolio controls reachable without moving the page menu. */
+header.kz-header>div>div:nth-child(2)>*{flex-shrink:0}
+header.kz-header>div>div:nth-child(2){justify-content:safe flex-end}
+@media(max-width:1100px){
+ :root{--kz-header-height:105px;--kz-header-inset:16px}
+ header.kz-header>div{
+  height:104px!important;min-height:104px!important;max-height:104px!important;
+  flex-wrap:wrap!important;align-content:flex-start;gap:0!important;
+ }
+ header.kz-header>div>div:first-child{flex:0 0 100%!important;width:100%;height:56px}
+ header.kz-header>div>div:nth-child(2){
+  flex:0 0 100%!important;width:100%;height:48px;justify-content:flex-start!important;
+  border-top:1px solid #e2e8f0;gap:16px!important;
+ }
+ html.dark header.kz-header>div>div:nth-child(2){border-top-color:#1e293b}
+ header.kz-header>div>div:first-child>nav{flex:1 1 auto!important}
+}
+@media(max-width:480px){
+ :root{--kz-header-inset:12px}
+ header.kz-header>div>div:first-child{gap:10px!important}
+ header.kz-header .kz-brand{width:106px!important;min-width:106px!important}
+ header.kz-header nav{padding-left:10px!important}
+}
+
+/* Native multi-page transitions preserve normal URLs, history and scripts. */
+@view-transition{navigation:auto}
+header.kz-header{view-transition-name:kz-header}
+::view-transition-group(kz-header){animation:none}
+::view-transition-old(kz-header){display:none}
+::view-transition-new(kz-header){animation:none;mix-blend-mode:normal}
+::view-transition-old(root){animation:kz-slide-out .2s ease both}
+::view-transition-new(root){animation:kz-slide-in .24s ease both}
+@keyframes kz-slide-out{to{opacity:0;transform:translateX(-20px)}}
+@keyframes kz-slide-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){
+ header.kz-header nav{scroll-behavior:auto}
+ ::view-transition-group(*),::view-transition-old(*),::view-transition-new(*){animation:none!important}
+}

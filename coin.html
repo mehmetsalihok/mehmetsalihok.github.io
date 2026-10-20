@@ -53,7 +53,8 @@
             border-color: #222222 !important;
         }
     </style>
-<link rel="stylesheet" href="header.css?v=1">
+<link rel="stylesheet" href="header.css?v=2-stable">
+<script src="header.js?v=2-stable" defer></script>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
@@ -66,14 +67,15 @@
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 uppercase">ODAK</span>
                 </a><nav class="kz-nav" aria-label="Ana menü"><a href="index.html">Terminal</a><a href="league.html">Lig Kıyaslama</a><a href="index.html?openWizard=true">Sihirbaz</a><a href="combination.html">Kombinasyon</a><a href="settings.html">Ayarlar</a></nav>
+
+            </div>
+
+            <div class="flex items-center space-x-3 text-xs">
                 <span class="h-4 w-px bg-slate-200 dark:bg-slate-800"></span>
                 <div class="flex items-center space-x-2">
                     <span id="headerCoinSymbol" class="font-extrabold text-sm text-slate-900 dark:text-white">---</span>
                     <span id="headerCoinTf" class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800">--</span>
                 </div>
-            </div>
-
-            <div class="flex items-center space-x-3 text-xs">
                 <!-- Canlı WebSocket Durumu -->
                 <div class="flex items-center space-x-1.5 px-2 py-1 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700">
                     <span id="wsDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
