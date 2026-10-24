@@ -115,16 +115,45 @@
             from { transform: translateY(16px) scale(.97); }
             to { transform: translateY(0) scale(1); }
         }
-        #monthTradesModal.flex {
+        #monthTradesModal.flex, #monthlyLimitModal.flex {
             animation: monthTradesBackdropIn .22s ease-out backwards;
         }
-        #monthTradesModal.flex > div {
+        #monthTradesModal.flex > div, #monthlyLimitModal.flex > section {
             animation: monthTradesPanelIn .28s cubic-bezier(.22, 1, .36, 1) backwards;
         }
         @media (prefers-reduced-motion: reduce) {
             #monthTradesModal.flex,
-            #monthTradesModal.flex > div { animation: none; }
+            #monthTradesModal.flex > div,
+            #monthlyLimitModal.flex,
+            #monthlyLimitModal.flex > section { animation: none; }
         }
+        #monthlyLimitModal{--limit-line:#e2e8f0;--limit-field:#f8fafc;--limit-muted:#64748b}
+        .dark #monthlyLimitModal{--limit-line:#293548;--limit-field:#172437;--limit-muted:#a1afc2}
+        .oled #monthlyLimitModal{--limit-line:#252525;--limit-field:#0b0b0b}
+        #monthlyLimitModal>section{max-height:90dvh;overflow-y:auto;padding:22px}
+        .limit-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+        .limit-card{padding:12px 14px;border:1px solid var(--limit-line);border-radius:10px;background:var(--limit-field)}
+        .limit-card span{display:block;font-size:11px;color:var(--limit-muted)}
+        .limit-card strong{display:block;font-size:24px;line-height:1.3;font-weight:750;font-variant-numeric:tabular-nums;margin:3px 0}
+        .limit-card small{display:block;font-size:10px;color:var(--limit-muted)}
+        .limit-taken{color:#059669}.limit-skipped{color:#b45309}
+        .dark .limit-taken{color:#34d399}.dark .limit-skipped{color:#fbbf24}
+        .limit-table-scroll{overflow-x:auto;border:1px solid var(--limit-line);border-radius:10px}
+        .limit-table{width:100%;min-width:720px;font-size:11px;border-collapse:collapse;font-variant-numeric:tabular-nums;text-align:right}
+        .limit-table th{font-size:10px;font-weight:600;color:var(--limit-muted);background:var(--limit-field);white-space:nowrap}
+        .limit-table th,.limit-table td{padding:11px 10px;border-bottom:1px solid var(--limit-line)}
+        .limit-table th:first-child,.limit-table td:first-child{text-align:left}
+        .limit-table tbody tr:last-child td{border-bottom:0}
+        .limit-table small{display:block;font-size:9px;color:var(--limit-muted);margin-top:2px;white-space:nowrap}
+        .limit-status{display:inline-block;padding:3px 7px;border-radius:5px;font-size:9px;white-space:nowrap;background:var(--limit-field);color:var(--limit-muted)}
+        .limit-status-locked{background:#eef2ff;color:#4f46e5}.dark .limit-status-locked{background:#312e8150;color:#a5b4fc}
+        .limit-net-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 14px;border-radius:10px;background:var(--limit-field)}
+        #monthlyLimitAllGain{font-size:18px;font-weight:750;white-space:nowrap;font-variant-numeric:tabular-nums}
+        .limit-help{font-size:11px;color:var(--limit-muted)}
+        .limit-help summary{cursor:pointer;width:fit-content;font-weight:600}
+        .limit-help p{line-height:1.8;margin-top:8px}
+        #monthlyLimitModal :is(button,summary,[tabindex]):focus-visible{outline:2px solid #3b82f6;outline-offset:3px}
+        @media(max-width:639px){#monthlyLimitModal>section{padding:16px}.limit-cards{gap:6px}.limit-card{padding:10px 8px}.limit-card strong{font-size:21px}.limit-card small{font-size:9px}.limit-net-summary{flex-wrap:wrap}}
     </style>
 <style>
 
@@ -744,16 +773,22 @@
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=8"></script>
     <script src="strategyEngine.js?v=1"></script>
-    <script src="app.js?v=69-selected-month-summary"></script>
+    <script src="app.js?v=70-coin-breakdown"></script>
     <div id="monthlyLimitModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3" onclick="if(event.target===this) closeMonthlyLimitModal()">
         <section role="dialog" aria-modal="true" aria-labelledby="monthlyLimitTitle" aria-describedby="monthlyLimitExplanation" class="w-full max-w-4xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-2xl p-4 space-y-3">
             <div class="flex items-center justify-between gap-2"><h2 id="monthlyLimitTitle" class="text-sm font-bold">İşlem limitleri</h2><button id="monthlyLimitClose" type="button" onclick="closeMonthlyLimitModal()" aria-label="Pencereyi kapat" class="px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">✕</button></div>
-            <p id="monthlyLimitTotals" class="text-xs font-semibold text-blue-600 dark:text-blue-400"></p>
-            <p id="monthlyLimitExplanation" class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400">Aylık işlemler: aynı sinyalin tekilleştirilmiş kapanışları; slota alınmayanlar aylık coin limitine dahildir. Kayıtlı bekleme kapanışları ayrı tutulur. Limit, ortak listedeki brüt kâr üzerinden hesaplanır. Önceden kaydedilmiş limit sonrası işlemler silinmez. Kalan işlem, aylık kalan kâr / işlem başına hedef kâr hesabıyla tahmin edilir; zarar ve RSI çıkışlarıyla değişebilir. Toplama yalnızca aktif coinler dahildir. İşleme alınan, portföy hesabına giren kapanışları; slot dışı, kapasite doluluğundan alınmayanları gösterir. Tarih dışında kalanlar slot dışına dahil edilmez. Sayılar kapanış ayına göre hesaplanır. Portföy katkısı, seçili aydaki komisyon sonrası kârın başlangıç sermayesine oranıdır; açık pozisyon ve bekleme kârları hariçtir.</p>
-            <table class="w-full table-fixed"><thead class="text-[9px] text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700"><tr><th class="w-[12%] pb-2 text-left">Coin</th><th class="w-[30%] pb-2 text-right">Toplam / Alınan / Slot dışı</th><th class="w-[12%] pb-2 text-right">Kalan işlem</th><th class="w-[20%] pb-2 text-right">Kalan kâr / Limit</th><th class="w-[15%] pb-2 text-right">Toplam katkı</th><th class="w-[11%] pb-2 text-right">Durum</th></tr></thead><tbody id="monthlyLimitRows"></tbody></table>
-            <div class="grid grid-cols-1 gap-2 border-t border-slate-200 dark:border-slate-700 pt-3">
-                <div class="rounded-xl bg-blue-50 dark:bg-blue-950/30 p-2 space-y-1"><p class="text-[10px] text-blue-600 dark:text-blue-400">Genel toplam</p><p id="monthlyLimitAllTotal" class="text-[11px] font-bold tabular-nums"></p><p id="monthlyLimitAllGain"></p></div>
+            <p id="monthlyLimitExplanation" class="text-[11px] text-slate-500 dark:text-slate-400">Seçilen ayda kapanan işlemler ve portföye alınma durumları.</p>
+            <div class="limit-cards">
+                <div class="limit-card"><span>Toplam kapanış</span><strong id="monthlyLimitCount">0</strong><small>Seçili aydaki tüm kapanışlar</small></div>
+                <div class="limit-card"><span>İşleme alınan</span><strong id="monthlyLimitTaken" class="limit-taken">0</strong><small>Portföy hesabına dahil</small></div>
+                <div class="limit-card"><span>Slot dışı</span><strong id="monthlyLimitSkipped" class="limit-skipped">0</strong><small>Slot dolu olduğu için alınmadı</small></div>
             </div>
+            <p id="monthlyLimitTotals" class="text-[10px] text-slate-500 dark:text-slate-400"></p>
+            <div class="limit-table-scroll" tabindex="0" role="region" aria-label="Coin bazında işlem dökümü; dar ekranda yatay kaydırılabilir">
+                <table class="limit-table"><thead><tr><th scope="col">Coin</th><th scope="col">Toplam</th><th scope="col">Alınan</th><th scope="col">Slot dışı</th><th scope="col">Kalan işlem</th><th scope="col">Aylık limit</th><th scope="col">Net katkı</th><th scope="col">Durum</th></tr></thead><tbody id="monthlyLimitRows"></tbody></table>
+            </div>
+            <div class="limit-net-summary"><div><p class="text-[10px] text-slate-500 dark:text-slate-400">Portföye net katkı · aktif coinler</p><p id="monthlyLimitAllTotal" class="text-[11px] font-semibold mt-1"></p></div><p id="monthlyLimitAllGain"></p></div>
+            <details class="limit-help"><summary>Sayılar ve limitler nasıl hesaplanıyor?</summary><p>Toplam, seçili ayda kapanan tekilleştirilmiş işlemleri gösterir. Alınan işlemler portföy hesabına dahildir; slot dışı işlemler kapasite doluluğundan alınmamıştır. Sermaye başlangıç tarihinden önceki kapanışlar ayrıca belirtilir. Geçmiş işlemler simülasyon içerebilir; bu sayılar yalnızca canlı emir sayısı değildir. Bekleme kapanışları ve açık pozisyonlar bu tabloya dahil değildir.</p><p>Aylık limit, slota alınmayanlar dahil ortak işlem listesinin brüt kârına göre hesaplanır. Kalan işlem sayısı, kalan brüt kârın işlem hedefiyle karşılaştırılmasından elde edilen bir tahmindir. Net katkı, portföye alınan işlemlerin komisyon sonrası kazancının başlangıç sermayesine oranıdır. Üstteki özet ve net kazanç yalnızca aktif coinleri kapsar; pasif coinler tabloda işaretlenir.</p></details>
         </section>
     </div>
 

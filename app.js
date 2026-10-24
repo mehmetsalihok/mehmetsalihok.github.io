@@ -1569,51 +1569,67 @@ function closeMonthlyLimitModal() {
 function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
     const totals = monthlyLimitTotals(rows);
     const month = getMonthlyLimitMonthLabel();
-    document.getElementById('monthlyLimitTitle').textContent = `${month} · İşlem limitleri`;
-    document.getElementById('monthlyLimitTotals').textContent = `Aktif coinler: ${totals.count} kapanış · ${totals.taken} işleme alınan · ${totals.skipped} slot dışı${totals.excluded ? ' · '+totals.excluded+' tarih dışında' : ''} · ≈ ${totals.remaining} kalan${totals.unknown ? ' · '+totals.unknown+' coin için hedef tanımsız' : ''}`;
+    const number = value => Number(value).toLocaleString('tr-TR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    const signedPercent = value => `${value >= 0 ? '+' : '−'}%${number(Math.abs(value))}`;
+    document.getElementById('monthlyLimitTitle').textContent = `${month} · Coin dökümü`;
+    document.getElementById('monthlyLimitCount').textContent = totals.count;
+    document.getElementById('monthlyLimitTaken').textContent = totals.taken;
+    document.getElementById('monthlyLimitSkipped').textContent = totals.skipped;
+    document.getElementById('monthlyLimitTotals').textContent = `Aktif coinler · Tahmini kalan işlem: ≈ ${totals.remaining}${totals.unknown ? ' · '+totals.unknown+' coinde tahmin hesaplanamıyor' : ''}${totals.excluded ? ' · Başlangıç tarihi dışında: '+totals.excluded+' kapanış' : ''}`;
     const base = Number(KZ_STATE.portfolioBaseUsd || 0);
-    const contributionText = usd => base > 0 ? `${usd >= 0 ? '+' : '-'}%${Math.abs(usd / base * 100).toFixed(2)}` : '—';
-    const active = rows.filter(row => row.active);
-    const liveCount = active.reduce((sum,row) => sum + row.live,0);
-    const pastCount = active.reduce((sum,row) => sum + row.past,0);
-    const liveGain = active.reduce((sum,row) => sum + row.liveGainUsd,0);
-    const pastGain = active.reduce((sum,row) => sum + row.pastGainUsd,0);
-    for (const [kind,count,gain] of [['All',totals.count,liveGain+pastGain]]) {
-        const label = document.getElementById('monthlyLimit'+kind+'Total');
-        label.textContent = `${count} işlem · ${contributionText(gain)}`;
-        const amount = document.getElementById('monthlyLimit'+kind+'Gain');
-        amount.textContent = `${gain >= 0 ? '+' : '-'}${Math.abs(gain).toFixed(2)} USDT net`;
-        amount.className = 'text-[10px] tabular-nums '+(gain >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400');
-    }
+    const gain = rows.filter(row => row.active).reduce((sum,row) => sum + row.netGainUsd, 0);
+    document.getElementById('monthlyLimitAllTotal').textContent = `${totals.taken} alınan işlem · ${base > 0 ? signedPercent(gain / base * 100) : 'Başlangıç sermayesi tanımsız'}`;
+    const amount = document.getElementById('monthlyLimitAllGain');
+    amount.textContent = `${gain >= 0 ? '+' : '−'}${number(Math.abs(gain))} USDT`;
+    amount.className = gain >= 0 ? 'limit-taken' : 'text-rose-600 dark:text-rose-400';
     const container = document.getElementById('monthlyLimitRows');
-    // Build with textContent to keep coin names out of HTML interpolation.
     container.replaceChildren();
-    const visible = rows;
-    visible.forEach(row => {
+    rows.forEach(row => {
         const tr = document.createElement('tr');
-        tr.className = 'border-b border-slate-100 dark:border-slate-800 '+(row.locked ? 'text-rose-600 dark:text-rose-400 ' : '')+(row.active ? '' : 'opacity-50');
+        if (!row.active) tr.className = 'opacity-50';
         const cells = [String(row.coin.displaySymbol || row.coin.symbol).replace('USDT',''),
-            `${row.count} / ${row.taken} / ${row.skipped}`,
+            row.count, row.taken, row.skipped,
             row.remaining === null ? '—' : `≈ ${row.remaining}`,
-            `%${row.remainingPnl.toFixed(2)} / %${row.cap.toFixed(1)}`,
-            row.portfolioContribution === null ? '—' : `${row.portfolioContribution >= 0 ? '+' : '-'}%${Math.abs(row.portfolioContribution).toFixed(2)}`,
-            !row.active ? 'Pasif' : row.locked ? 'Kilitli' : 'Aktif'];
-        cells.forEach((value, index) => {
+            row.cap > 0 ? `%${number(row.remainingPnl)} kalan` : 'Limitsiz',
+            row.portfolioContribution === null ? '—' : signedPercent(row.portfolioContribution),
+            !row.active ? 'Pasif' : row.locked ? 'Limit doldu' : 'Devam'];
+        cells.forEach((value,index) => {
             const td = document.createElement('td');
-            td.className = 'py-1.5 px-1 text-[10px] tabular-nums '+(index === 0 ? 'font-bold' : 'text-right');
-            if (index === 4 && !row.locked && row.portfolioContribution !== null) td.className += row.portfolioContribution >= 0 ? ' text-emerald-600 dark:text-emerald-400 font-semibold' : ' text-rose-600 dark:text-rose-400 font-semibold';
-            if (index === 1) td.title = `Toplam kapanış / işleme alınan / slot dışı.${row.excluded ? ' Tarih dışında: '+row.excluded+'.' : ''}`;
-            if (index === 4) td.title = `${month} komisyon sonrası portföy katkısı: ${row.netGainUsd.toFixed(2)} USDT. Başlangıç sermayesine göre yüzde.`;
-            td.textContent = value;
+            td.textContent = String(value);
+            if (index === 0) td.className = 'font-bold';
+            if (index === 1 && row.excluded) {
+                const note = document.createElement('small');
+                note.textContent = `${row.excluded} tarih dışında`;
+                td.append(note);
+            }
+            if (index === 2) td.className = 'limit-taken font-semibold';
+            if (index === 3 && row.skipped > 0) td.className = 'limit-skipped';
+            if (index === 5 && row.cap > 0) {
+                const limit = document.createElement('small');
+                limit.textContent = `Limit %${number(row.cap)}`;
+                td.append(limit);
+            }
+            if (index === 6) {
+                td.className = row.portfolioContribution === null ? '' : row.portfolioContribution >= 0 ? 'limit-taken font-semibold' : 'text-rose-600 dark:text-rose-400 font-semibold';
+                td.title = `${month}: ${number(row.netGainUsd)} USDT net. Başlangıç sermayesine göre katkı.`;
+            }
+            if (index === 7) {
+                const badge = document.createElement('span');
+                badge.className = 'limit-status' + (row.active && row.locked ? ' limit-status-locked' : '');
+                badge.textContent = String(value);
+                td.replaceChildren(badge);
+            }
             tr.append(td);
         });
         container.append(tr);
     });
-    if (!visible.length) {
+    if (!rows.length) {
         const tr = document.createElement('tr'), td = document.createElement('td');
-        td.colSpan = 6;td.className = 'py-8 text-center text-xs text-slate-400';td.textContent = 'Henüz coin eklenmedi.';tr.append(td);container.append(tr);
+        td.colSpan = 8;
+        td.className = 'text-center text-slate-400';
+        td.textContent = 'Henüz coin eklenmedi.';
+        tr.append(td);container.append(tr);
     }
-
 }
 
 function coinCardStatus(coin) {
@@ -3902,7 +3918,7 @@ async function startEngine() {
 document.addEventListener('keydown', (e) => {
     const limits = document.getElementById('monthlyLimitModal');
     if (e.key === 'Tab' && limits && !limits.classList.contains('hidden')) {
-        const buttons = [...limits.querySelectorAll('button:not([disabled])')];
+        const buttons = [...limits.querySelectorAll('button:not([disabled]), summary, [tabindex="0"]')];
         const first = buttons[0], last = buttons[buttons.length - 1];
         if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
         else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
