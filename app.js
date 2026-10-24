@@ -1297,8 +1297,10 @@ function setHistoryTab(tab) {
     renderHistoryTrades();
 }
 
+let historyPageAnimation = null;
 function renderHistoryTrades() {
     if (!elHistoryContainer) return;
+    if (historyPageAnimation) { historyPageAnimation.cancel(); historyPageAnimation = null; }
     
     const tab = KZ_STATE.historyTab === 'pending' ? 'pending' : 'transactions';
     const note = document.getElementById('pendingHistoryNote');
@@ -1321,11 +1323,15 @@ function renderHistoryTrades() {
 
     KZ_STATE.historyPage = Math.min(KZ_STATE.historyPage, totalPages - 1);
     const currentPage = KZ_STATE.historyPage;
+    elHistoryContainer.classList.toggle('history-empty', totalTradesCount === 0);
+    const pageLabel = document.getElementById('historyPageLabel');
+    if (pageLabel) pageLabel.textContent = totalTradesCount
+        ? `${currentPage * pageSize + 1}–${Math.min((currentPage + 1) * pageSize, totalTradesCount)} / ${totalTradesCount} işlem · Sayfa ${currentPage + 1}/${totalPages}` : '';
 
     if (elHistoryPaginationDots) {
         if (totalPages > 1) {
             elHistoryPaginationDots.innerHTML = Array.from({ length: totalPages }).map((_, idx) => `
-                <button onclick="setHistoryPage(${idx})" class="w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${idx === currentPage ? 'bg-blue-600 w-3' : 'bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'}" title="Sayfa ${idx + 1}"></button>
+                <button type="button" onclick="setHistoryPage(${idx})" aria-label="İşlem sayfası ${idx + 1}" ${idx === currentPage ? 'aria-current="page"' : ''} class="w-2 h-2 rounded-full transition-all duration-200 cursor-pointer ${idx === currentPage ? 'bg-blue-600 w-3' : 'bg-slate-300 dark:bg-slate-700 hover:bg-slate-400'}" title="Sayfa ${idx + 1}"></button>
             `).join('');
         } else {
             elHistoryPaginationDots.innerHTML = '';
@@ -1337,7 +1343,7 @@ function renderHistoryTrades() {
 
     if (totalTradesCount === 0) {
         elHistoryContainer.innerHTML = `
-            <div class="py-16 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50/70 dark:bg-slate-800/40 border border-dashed border-slate-200/80 dark:border-slate-800 rounded-xl">
+            <div class="py-7 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50/70 dark:bg-slate-800/40 border border-dashed border-slate-200/80 dark:border-slate-800 rounded-xl">
                 <p class="font-medium text-slate-600 dark:text-slate-300">Henüz tamamlanan işlem kaydı yok.</p>
             </div>
         `;
@@ -1353,7 +1359,7 @@ function renderHistoryTrades() {
         const pnlValue = t.effectivePnl !== undefined ? t.effectivePnl : t.pnlPercent;
 
         return `
-            <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 space-y-1 text-xs transition hover:border-slate-200 dark:hover:border-slate-700">
+            <div class="history-trade p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/80 space-y-1 text-xs transition hover:border-slate-200 dark:hover:border-slate-700">
                 <div class="flex items-start justify-between gap-2">
                     <div class="min-w-0 flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
                         <span class="w-2 h-2 rounded-full ${timeColor.dotClass} shrink-0 shadow-sm"></span>
@@ -1364,13 +1370,13 @@ function renderHistoryTrades() {
                         ${t.source === 'pending' || t.source === 'pending-simulation' ? '<span class="text-[9px] text-slate-400">Portföye dahil değil</span>' : ''}
                         <span class="font-semibold text-[10px] leading-tight text-slate-700 dark:text-slate-200 break-words">${t.editedAt ? 'Gerçek Satış' : t.reason}</span>
                     </div>
-                    <span class="font-black tabular-nums text-xs px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${pnlValue.toFixed(2)}%</span>
+                    <span class="history-return font-black tabular-nums text-xs px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap ${isWin ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400'}">${isWin ? '+' : ''}${pnlValue.toFixed(2)}%</span>
                 </div>
-                <div class="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
+                <div class="history-prices flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-[10px] font-mono text-slate-500 dark:text-slate-400 tabular-nums">
                     <span class="break-all">${formatCryptoPrice(t.entryPrice)} → ${formatCryptoPrice(t.exitPrice)}</span>
                     <span class="font-bold ${timeColor.textClass}">• ${formatTimeAgo(t.exitTime)}</span>
                 </div>
-                <div class="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
+                <div class="history-dates flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5">
                     <span class="text-[9px] font-mono text-slate-400 dark:text-slate-500 tabular-nums">Giriş: ${formatShortDate(t.entryTime)} • Çıkış: ${formatShortDate(t.exitTime)}</span>
                     ${KZ_STATE.closedTrades.some(real => real.id === t.id) ? `<button type="button" onclick="openClosedTradeEditor('${t.id}')" class="text-[10px] font-bold text-blue-600 dark:text-blue-400 hover:underline whitespace-nowrap" title="Gerçek giriş veya satış fiyatını düzelt">✎ Düzenle</button>` : ''}
                 </div>
@@ -1476,25 +1482,58 @@ function saveClosedTradeEdit(event) {
 }
 
 function setHistoryPage(pageIdx) {
-    KZ_STATE.historyPage = pageIdx;
+    const records = KZ_STATE.historyTab === 'pending' ? getPendingHistoryTrades() : getTransactionHistoryTrades();
+    const maxPage = Math.max(0, Math.ceil(Math.min((records || []).length, 50) / 5) - 1);
+    const requested = Number(pageIdx);
+    if (!Number.isFinite(requested)) return;
+    const oldPage = KZ_STATE.historyPage;
+    const nextPage = Math.max(0, Math.min(maxPage, Math.trunc(requested)));
+    if (nextPage === oldPage) return;
+    KZ_STATE.historyPage = nextPage;
     renderHistoryTrades();
+    if (elHistoryContainer && typeof elHistoryContainer.animate === 'function'
+        && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const direction = nextPage > oldPage ? 1 : -1;
+        historyPageAnimation = elHistoryContainer.animate([
+            {transform:`translateX(${direction * 28}px)`,opacity:0},
+            {transform:'translateX(0)',opacity:1}
+        ], {duration:220,easing:'cubic-bezier(.22,1,.36,1)'});
+    }
 }
 
 function prevHistoryPage() {
-    if (KZ_STATE.historyPage > 0) {
-        KZ_STATE.historyPage--;
-        renderHistoryTrades();
-    }
+    setHistoryPage(KZ_STATE.historyPage - 1);
 }
 
 function nextHistoryPage() {
-    const records = KZ_STATE.historyTab === 'pending' ? getPendingHistoryTrades() : getTransactionHistoryTrades();
-    const totalTrades = (records || []).slice(0, 50).length;
-    const totalPages = Math.max(1, Math.ceil(totalTrades / 5));
-    if (KZ_STATE.historyPage < totalPages - 1) {
-        KZ_STATE.historyPage++;
-        renderHistoryTrades();
-    }
+    setHistoryPage(KZ_STATE.historyPage + 1);
+}
+
+let historyNavigationReady = false;
+function setupHistoryNavigation() {
+    if (!elHistoryContainer || historyNavigationReady) return;
+    historyNavigationReady = true;
+    let touch = null;
+    elHistoryContainer.addEventListener('touchstart', event => {
+        touch = null;
+        if (event.touches.length !== 1 || event.target.closest('button,a,input,select')) return;
+        const point = event.touches[0];
+        touch = {x:point.clientX,y:point.clientY,time:Date.now()};
+    }, {passive:true});
+    elHistoryContainer.addEventListener('touchend', event => {
+        const start = touch; touch = null;
+        if (!start || event.changedTouches.length !== 1 || Date.now() - start.time > 650) return;
+        const point = event.changedTouches[0];
+        const dx = point.clientX - start.x, dy = point.clientY - start.y;
+        if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        if (dx < 0) nextHistoryPage(); else prevHistoryPage();
+    }, {passive:true});
+    elHistoryContainer.addEventListener('touchcancel', () => {touch = null;}, {passive:true});
+    const pager = document.getElementById('historyPaginationControls');
+    if (pager) pager.addEventListener('keydown', event => {
+        if (event.key === 'ArrowRight') { event.preventDefault(); nextHistoryPage(); }
+        if (event.key === 'ArrowLeft') { event.preventDefault(); prevHistoryPage(); }
+    });
 }
 
 let monthlyLimitFocus = null;
@@ -3946,6 +3985,7 @@ if (kuzgunSyncChannel) kuzgunSyncChannel.addEventListener('message', () => syncM
 // Başlatıcı
 async function startEngine() {
     loadStorage();
+    setupHistoryNavigation();
     startHealthMonitor();
 
     KZ_STATE.coins.forEach(c => renderSingleCard(c));

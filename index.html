@@ -154,6 +154,23 @@
         .limit-help p{line-height:1.8;margin-top:8px}
         #monthlyLimitModal :is(button,summary,[tabindex]):focus-visible{outline:2px solid #3b82f6;outline-offset:3px}
         @media(max-width:639px){#monthlyLimitModal>section{padding:16px}.limit-cards{gap:6px}.limit-card{padding:10px 8px}.limit-card strong{font-size:21px}.limit-card small{font-size:9px}.limit-net-summary{flex-wrap:wrap}}
+
+        /* Compact history; preserve all trade fields and five records per page. */
+        #recentHistoryPanel{padding:12px;overflow:hidden}
+        #recentHistoryPanel> * + *{margin-top:8px}
+        #recentHistoryPanel>div:first-child{padding-bottom:8px}
+        #historyTradesContainer{display:flex;flex-direction:column;gap:5px;min-height:330px;touch-action:pan-y pinch-zoom}
+        #historyTradesContainer.history-empty{min-height:0}
+        #historyTradesContainer>*{margin-top:0}
+        #historyTradesContainer .history-trade{padding:7px 8px;border-radius:8px;line-height:1.35}
+        #historyTradesContainer .history-trade>* + *{margin-top:3px}
+        #historyTradesContainer .history-trade>div:first-child{gap:6px;align-items:center}
+        #historyTradesContainer .history-return{padding:3px 6px;border-radius:5px;font-size:11px;line-height:1.2}
+        #historyTradesContainer .history-prices{font-size:9px;line-height:1.4}
+        #historyTradesContainer .history-dates{font-size:9px;line-height:1.4}
+        #historyPaginationControls{min-height:22px}
+        #historyPaginationControls>button{width:26px;height:22px;border-radius:5px}
+        #recentHistoryPanel :is(button,[tabindex]):focus-visible{outline:2px solid #3b82f6;outline-offset:2px}
     </style>
 <style>
 
@@ -436,7 +453,7 @@
                 </div>
 
                 <!-- 🎯 SWIFT ACTIVEPOSITIONHEADERVIEW UYARLI: SON İŞLEMLER (50 İşlem, 5'erli Sayfalama) -->
-                <div class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3 transition-colors">
+                <div id="recentHistoryPanel" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 shadow-sm space-y-3 transition-colors">
                     <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2.5">
                         <div class="flex items-center space-x-2">
                             <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -458,14 +475,15 @@
                     </div>
                     <p id="pendingHistoryNote" class="hidden text-[9px] leading-relaxed text-slate-500 dark:text-slate-400">Site çalışırken kaydedilen ve geçmiş mumlardan hesaplanan bekleme kapanışları birlikte gösterilir. Slot boşalmadan hedefe ulaşanlar listelenir; geçmiş hesaplamalarda saatler mum kapanışına göredir. Portföye dahil değildir.</p>
                     <!-- Swift Tarzı Sayfa Gösterge Noktaları & Sayfalama Kontrolleri -->
-                    <div id="historyPaginationControls" class="flex items-center justify-between px-1 text-[11px]">
-                        <button onclick="prevHistoryPage()" id="btnPrevHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">‹</button>
+                    <div id="historyPaginationControls" tabindex="0" role="group" aria-label="İşlem sayfaları; sağ ve sol oklarla geçiş" class="flex items-center justify-between px-1 text-[11px]">
+                        <button onclick="prevHistoryPage()" id="btnPrevHistory" aria-label="Önceki işlem sayfası" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">‹</button>
                         <div id="historyPaginationDots" class="flex items-center space-x-1.5"></div>
-                        <button onclick="nextHistoryPage()" id="btnNextHistory" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">›</button>
+                        <button onclick="nextHistoryPage()" id="btnNextHistory" aria-label="Sonraki işlem sayfası" class="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 font-bold transition disabled:opacity-30 disabled:hover:text-slate-400">›</button>
                     </div>
 
                     <!-- 5'li İşlem Listesi -->
-                    <div class="space-y-2 min-h-[290px]" id="historyTradesContainer"></div>
+                    <div class="space-y-2" id="historyTradesContainer" aria-label="Son tamamlanan işlemler"></div>
+                    <p id="historyPageLabel" class="text-[9px] text-center text-slate-400" aria-live="polite"></p>
                 </div>
             </aside>
         </div>
@@ -773,7 +791,7 @@
     <!-- MOTOR MODÜLLERİ -->
     <script src="portfolioEngine.js?v=8"></script>
     <script src="strategyEngine.js?v=1"></script>
-    <script src="app.js?v=72-safe-health-startup"></script>
+    <script src="app.js?v=73-compact-history"></script>
     <div id="monthlyLimitModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm p-3" onclick="if(event.target===this) closeMonthlyLimitModal()">
         <section role="dialog" aria-modal="true" aria-labelledby="monthlyLimitTitle" aria-describedby="monthlyLimitExplanation" class="w-full max-w-4xl rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 shadow-2xl p-4 space-y-3">
             <div class="flex items-center justify-between gap-2"><h2 id="monthlyLimitTitle" class="text-sm font-bold">İşlem limitleri</h2><button id="monthlyLimitClose" type="button" onclick="closeMonthlyLimitModal()" aria-label="Pencereyi kapat" class="px-2 py-1 rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800">✕</button></div>
