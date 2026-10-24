@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KUZGUN — Coin Karşılaştırma Ligi (RSI 6 vs 7)</title>
+    <title>KUZGUN — Laboratuvar</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -112,7 +112,7 @@
 </style></head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
-    <!-- 1️⃣ ORTAK ÜST KONSOL (Lig Kıyaslama Aktif) -->
+    <!-- 1️⃣ ORTAK ÜST KONSOL (Laboratuvar Aktif) -->
     <header class="kz-header border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="league-shell w-full mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
             
@@ -121,7 +121,7 @@
                     <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
                     
                 </a>
-                <nav class="kz-nav" aria-label="Ana menü"><a href="index.html">Terminal</a><a href="league.html" aria-current="page">Lig Kıyaslama</a><a href="index.html?openWizard=true">Sihirbaz</a><a href="combination.html">Kombinasyon</a><a href="settings.html">Ayarlar</a></nav>
+                <nav class="kz-nav" aria-label="Ana menü"><a href="index.html">Terminal</a><a href="league.html" aria-current="page">Laboratuvar</a><a href="index.html?openWizard=true">Sihirbaz</a><a href="combination.html">Kombinasyon</a><a href="settings.html">Ayarlar</a></nav>
             </div>
 
             <div class="flex items-center space-x-2 sm:space-x-4 text-xs shrink-0">
@@ -147,7 +147,7 @@
 
     <main class="league-shell w-full mx-auto px-4 sm:px-6 py-4 lg:py-6 space-y-4 flex-1">
         <section class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-800">
-            <div><h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Lig Kıyaslama</h2><p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">RSI 6 ve RSI 7 stratejilerini aynı verilerle karşılaştır.</p></div>
+            <div><h2 class="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Laboratuvar</h2><p class="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Bir veya birden fazla coin için seçtiğin dönemde RSI stratejilerini test et.</p></div>
             <span id="leaguePeriodLabel" class="shrink-0 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-[11px] font-semibold tabular-nums text-slate-600 dark:text-slate-300">2026 → Bugün</span>
         </section>
         <div class="grid lg:grid-cols-[335px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)] items-start gap-4 lg:gap-6">
@@ -157,17 +157,17 @@
                 <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
                     <div class="flex items-center space-x-2">
                         <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">COİN HAVUZU</span>
-                        <span id="poolCountBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">10</span>
+                        <span id="poolCountBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400">0</span>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 text-xs">
                         <button onclick="importTerminalCoins()" class="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition font-semibold" title="Terminalde kayıtlı coinleri havuza ekle">Terminalden al</button>
                         <span class="text-slate-300 dark:text-slate-700">•</span>
-                        <button onclick="resetPool()" class="text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition font-medium">Varsayılan Liste</button>
+                        <button onclick="resetPool()" class="text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition font-medium">Örnek listeyi ekle</button>
                         <span class="text-slate-300 dark:text-slate-700">•</span>
                         <button onclick="clearPool()" class="text-slate-500 hover:text-rose-600 dark:hover:text-rose-400 transition font-medium">Temizle</button>
                     </div>
                 </div>
-                <div id="coinChipsContainer" class="flex flex-wrap gap-1.5 p-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/60 min-h-[44px]"></div>
+                <div id="coinChipsContainer" class="flex flex-wrap items-center gap-1.5" aria-label="Seçilen coinler"></div>
             </div>
 
             <div class="flex gap-2">
@@ -185,6 +185,15 @@
                 <div id="quickSuggestionsContainer" class="flex flex-wrap gap-1.5"></div>
             </div>
 
+            <div class="space-y-2 border-t border-slate-100 dark:border-slate-800 pt-3">
+                <label for="labYear" class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Analiz dönemi</label>
+                <select id="labYear" onchange="updateLabPeriod()" class="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs" aria-label="Analiz yılı"></select>
+                <div class="grid grid-cols-2 gap-2">
+                    <label class="text-[10px] text-slate-500 dark:text-slate-400">Başlangıç ayı<select id="labStartMonth" onchange="updateLabPeriod()" class="block w-full mt-1 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-100"></select></label>
+                    <label class="text-[10px] text-slate-500 dark:text-slate-400">Bitiş ayı<select id="labEndMonth" onchange="updateLabPeriod()" class="block w-full mt-1 px-2 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-800 dark:text-slate-100"></select></label>
+                </div>
+                <p id="labPeriodHint" class="text-[11px] text-slate-500 dark:text-slate-400" aria-live="polite">Tek ay için başlangıç ve bitiş ayını aynı seç.</p>
+            </div>
             <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-3">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">ZAMAN DİLİMLERİ</label>
@@ -224,25 +233,25 @@
 
                 <button id="btnRunLeague" onclick="runLeagueBenchmark()" class="league-action w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition flex items-center justify-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    <span>RSI 6 ve RSI 7'yi karşılaştır</span>
+                    <span>Analizi başlat</span>
                 </button>
 
-                <p id="leagueSavedStatus" class="text-[11px] text-slate-500 dark:text-slate-400" aria-live="polite">Tamamlanan lig taramasının ayarları kombinasyon için otomatik kaydedilir.</p>
+                <p id="leagueSavedStatus" class="text-[11px] text-slate-500 dark:text-slate-400" aria-live="polite">Tamamlanan laboratuvar analizinin ayarları kombinasyon için otomatik kaydedilir.</p>
                 <div id="progressBox" class="hidden space-y-1.5">
                     <div class="flex justify-between text-[11px] font-bold">
                         <span id="progressStatusText" class="text-blue-600 dark:text-blue-400 animate-pulse">Taranıyor...</span>
                         <span id="progressPctText" class="tabular-nums text-slate-500">0%</span>
                     </div>
-                    <div class="league-progress-track w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden" role="progressbar" aria-label="Lig analizi ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                    <div class="league-progress-track w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2 overflow-hidden" role="progressbar" aria-label="Laboratuvar analizi ilerlemesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
                         <div id="progressBar" class="bg-blue-600 h-full w-0"></div>
                     </div>
                 </div>
             </div>
         </aside>
 
-        <section class="min-w-0 space-y-4" aria-label="Lig sonuçları">
+        <section class="min-w-0 space-y-4" aria-label="Laboratuvar sonuçları">
             <div class="grid grid-cols-2 xl:grid-cols-4 gap-3" id="leagueSummary">
-                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Karşılaştırılan</div><div id="summaryAnalyzed" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">coin</div></div>
+                <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">İncelenen</div><div id="summaryAnalyzed" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">coin</div></div>
                 <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">En yüksek getiri</div><div id="summaryProfit" class="mt-1 text-xl font-extrabold tabular-nums text-emerald-600 dark:text-emerald-400">—</div><div id="summaryProfitCoin" class="text-[10px] text-slate-400">analiz bekleniyor</div></div>
                 <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Toplam simülasyon</div><div id="summaryTrades" class="mt-1 text-xl font-extrabold tabular-nums text-slate-900 dark:text-white">—</div><div class="text-[10px] text-slate-400">tüm dilimler ve iki RSI stratejisi</div></div>
                 <div class="league-stat rounded-xl border border-slate-200 dark:border-slate-800 p-3"><div class="text-[10px] uppercase tracking-wider font-bold text-slate-500">Lider</div><div id="summaryLeader" class="mt-1 text-xl font-extrabold text-blue-600 dark:text-blue-400">—</div><div class="text-[10px] text-slate-400">lig puanına göre</div></div>
@@ -252,10 +261,10 @@
                     <div><div class="text-[10px] uppercase tracking-wider font-bold text-blue-600 dark:text-blue-400">SONUÇLAR</div><h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Lig sıralaması <span id="resultCount" class="text-xs font-semibold text-slate-400"></span></h3></div>
                     <div class="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
                         <label class="sr-only" for="resultSearch">Sonuçlarda coin ara</label><input id="resultSearch" type="search" placeholder="Coin ara..." oninput="renderLeagueResults()" class="w-full sm:w-44 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-900 dark:text-white">
-                        <label class="sr-only" for="resultSort">Sonuç sıralaması</label><select id="resultSort" onchange="renderLeagueResults()" class="w-full sm:w-48 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"><option value="score">Lig puanı (en iyi seçenek)</option><option value="profit">Net getiri</option><option value="trades">İşlem sayısı</option><option value="winrate">Kazanma oranı</option><option value="name">Coin adı</option></select>
+                        <label class="sr-only" for="resultSort">Sonuç sıralaması</label><select id="resultSort" onchange="renderLeagueResults()" class="w-full sm:w-48 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-900 dark:text-white"><option value="score">Analiz puanı (en iyi seçenek)</option><option value="profit">Net getiri</option><option value="trades">İşlem sayısı</option><option value="winrate">Kazanma oranı</option><option value="name">Coin adı</option></select>
                     </div>
                 </div>
-                <p class="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Lig puanı, coinin en yüksek puanlı seçeneğine göre hesaplanır. Getiri, işlem sayısı ve kazanma sıralaması kartta seçili stratejiye göre değişir. Sonuçlar geçmiş mum verileriyle hesaplanan simülasyonlardır. Terminale eklemeden önce RSI ve hedef ayarlarını kontrol et.</p>
+                <p class="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Analiz puanı, coinin en yüksek puanlı seçeneğine göre hesaplanır. Getiri, işlem sayısı ve kazanma sıralaması kartta seçili stratejiye göre değişir. Sonuçlar geçmiş mum verileriyle hesaplanan simülasyonlardır. Terminale eklemeden önce RSI ve hedef ayarlarını kontrol et.</p>
             </div>
             <div id="resultsContainer" class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start" aria-live="polite"><div class="2xl:col-span-2 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50 p-10 text-center"><div class="text-3xl mb-3">◈</div><h4 class="font-bold text-slate-800 dark:text-slate-100">Analiz için hazır</h4><p class="mt-1 text-xs text-slate-500">Sol panelden coinleri ve zaman dilimini seç, ardından karşılaştırmayı başlat.</p></div></div>
         </section>
@@ -267,10 +276,10 @@
         <span id="toastMsg">Strateji karta eklendi!</span>
     </div>
 
-    <script src="strategyEngine.js?v=1"></script>
+    <script src="strategyEngine.js?v=2-period"></script>
     <script>
         const LEAGUE_STATE = {
-            coinPool: ["SYN", "ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH"],
+            coinPool: [],
             suggestedCoins: ["INJ", "TIA", "APT", "RENDER", "OP", "ARB", "PEPE", "SHIB", "FET", "RUNE", "SEI", "DOT", "ADA", "BNB"],
             selectedIntervals: ["15m"],
             profitTarget: 0.6,
@@ -281,6 +290,55 @@
         };
 
         const monthNames = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+
+        function getLabPeriod(year, firstMonth, lastMonth, now = Date.now()) {
+            year = Number(year); firstMonth = Number(firstMonth); lastMonth = Number(lastMonth);
+            if (!Number.isInteger(year) || year < 2017 || year > 2100 || !Number.isInteger(firstMonth) || !Number.isInteger(lastMonth)
+                || firstMonth < 1 || lastMonth > 12 || firstMonth > lastMonth) throw new Error('Başlangıç ayı, bitiş ayından sonra olamaz.');
+            const fullYear = firstMonth === 1 && lastMonth === 12;
+            // Preserve the existing full-year benchmark; custom months use Turkey boundaries.
+            const offset = fullYear ? 0 : 3 * 3600000;
+            const startTime = Date.UTC(year, firstMonth - 1, 1) - offset;
+            const endTime = Math.min(now, Date.UTC(year, lastMonth, 1) - offset);
+            if (startTime >= endTime) throw new Error('Seçilen dönem henüz başlamadı. Geçmiş bir dönem seç.');
+            const months = firstMonth === lastMonth ? monthNames[firstMonth-1] : `${monthNames[firstMonth-1]} – ${monthNames[lastMonth-1]}`;
+            return {year:String(year),startTime,endTime,fullYear,label:`${months} ${year}${endTime === now ? ' · Bugüne kadar' : ''}`};
+        }
+
+        function readLabPeriod() {
+            return getLabPeriod(document.getElementById('labYear').value,
+                document.getElementById('labStartMonth').value, document.getElementById('labEndMonth').value);
+        }
+
+        function updateLabPeriod() {
+            const hint = document.getElementById('labPeriodHint');
+            const button = document.getElementById('btnRunLeague');
+            try {
+                const period = readLabPeriod();
+                hint.textContent = LEAGUE_STATE.results.length ? `${period.label} seçildi. Sonuçları güncellemek için analizi yeniden başlat.`
+                    : 'Tek ay için aynı ayı; üç ay için örneğin Ocak–Mart seç.';
+                if (!LEAGUE_STATE.results.length) document.getElementById('leaguePeriodLabel').textContent = period.label;
+                button.disabled = LEAGUE_STATE.isAnalyzing;
+            } catch (error) { hint.textContent = error.message; button.disabled = true; }
+        }
+
+        function initLabPeriod() {
+            const saved = Number(localStorage.getItem('kuzgun_selected_year')) || new Date().getFullYear();
+            const newest = Math.max(saved, new Date().getFullYear());
+            const year = document.getElementById('labYear');
+            year.replaceChildren();
+            for (let value = newest; value >= 2017; value--) {
+                const option = document.createElement('option'); option.value = String(value); option.textContent = String(value); year.append(option);
+            }
+            year.value = String(saved);
+            for (const id of ['labStartMonth','labEndMonth']) {
+                const select = document.getElementById(id); select.replaceChildren();
+                monthNames.forEach((name,index) => {const option = document.createElement('option');option.value=String(index+1);option.textContent=name;select.append(option);});
+            }
+            document.getElementById('labStartMonth').value = '1';
+            document.getElementById('labEndMonth').value = '12';
+            updateLabPeriod();
+        }
 
         function getMonthlyCap() {
             return Math.round(LEAGUE_STATE.profitTarget * LEAGUE_STATE.capMultiplier * 10) / 10;
@@ -348,7 +406,7 @@
             document.getElementById('poolCountBadge').textContent = LEAGUE_STATE.coinPool.length;
             
             if (LEAGUE_STATE.coinPool.length === 0) {
-                container.innerHTML = `<span class="text-xs text-slate-400 p-1">Havuz boş. Aşağıdan coin ekleyin.</span>`;
+                container.innerHTML = `<span class="text-[11px] text-slate-400">Henüz coin seçilmedi. Aşağıdaki alandan ekleyebilirsin.</span>`;
             } else {
                 container.innerHTML = LEAGUE_STATE.coinPool.map(coin => `
                     <span class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-xs font-bold text-slate-800 dark:text-slate-100 shadow-sm">
@@ -402,7 +460,7 @@
         }
 
         function resetPool() {
-            LEAGUE_STATE.coinPool = ["SYN", "ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH"];
+            LEAGUE_STATE.coinPool = [...new Set([...LEAGUE_STATE.coinPool, "SYN", "ASTER", "SUI", "SOL", "AVAX", "NEAR", "DOGE", "LINK", "BTC", "ETH"])];
             renderPool();
         }
 
@@ -500,8 +558,10 @@
         }
 
         async function fetchAllCandlesSince2026(symbol, interval, onProgress = null) {
-            const startTime = Date.UTC(Number(LEAGUE_STATE.analysisYear || localStorage.getItem('kuzgun_selected_year') || '2026'),0,1);
-            const endTime = LEAGUE_STATE.analysisAsOf || Date.now();
+            const rangeStart = LEAGUE_STATE.analysisStart;
+            const warmup = LEAGUE_STATE.analysisFullYear ? 0 : 200 * KuzgunStrategy.intervalMs(interval);
+            const startTime = rangeStart - warmup;
+            const endTime = LEAGUE_STATE.analysisAsOf;
             let allCandles = [];
             let currentStart = startTime;
             const expectedCandles = Math.max(1, Math.ceil((endTime-startTime)/KuzgunStrategy.intervalMs(interval)));
@@ -549,16 +609,16 @@
             return allCandles;
         }
 
-        function simulateSingleConfig(candles, rsiLength, buyRsi, sellRsi, profitTarget, monthlyCap, interval, asOf) {
+        function simulateSingleConfig(candles, rsiLength, buyRsi, sellRsi, profitTarget, monthlyCap, interval, asOf, startTime) {
             const settings = {interval,rsiLength,buyRsi,sellRsi,profitTarget,monthlyCap};
-            return KuzgunStrategy.leagueResult(KuzgunStrategy.simulate(candles,settings,{asOf}),settings);
+            return KuzgunStrategy.leagueResult(KuzgunStrategy.simulate(candles,settings,{asOf,startTime,endTime:asOf}),settings);
         }
 
-        function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap, interval, asOf) {
-            return KuzgunStrategy.optimize(candles,{interval,rsiLength,profitTarget,monthlyCap},{asOf});
+        function evaluateBestRsi(candles, rsiLength, profitTarget, monthlyCap, interval, asOf, startTime) {
+            return KuzgunStrategy.optimize(candles,{interval,rsiLength,profitTarget,monthlyCap},{asOf,startTime,endTime:asOf});
         }
 
-        function evaluateCoinInWorker(candles, profitTarget, monthlyCap, interval, asOf, onProgress = null) {
+        function evaluateCoinInWorker(candles, profitTarget, monthlyCap, interval, asOf, startTime, onProgress = null) {
             const code = `
                 const KuzgunStrategy = (${createKuzgunStrategy.toString()})();
                 ${getTurkeyDateComponents.toString()}
@@ -567,9 +627,9 @@
                 ${evaluateBestRsi.toString()}
                 self.onmessage = ({data}) => {
                     try {
-                        const rsi6 = evaluateBestRsi(data.candles, 6, data.profitTarget, data.monthlyCap, data.interval, data.asOf);
+                        const rsi6 = evaluateBestRsi(data.candles, 6, data.profitTarget, data.monthlyCap, data.interval, data.asOf, data.startTime);
                         self.postMessage({type:'phase',fraction:0.5});
-                        const rsi7 = evaluateBestRsi(data.candles, 7, data.profitTarget, data.monthlyCap, data.interval, data.asOf);
+                        const rsi7 = evaluateBestRsi(data.candles, 7, data.profitTarget, data.monthlyCap, data.interval, data.asOf, data.startTime);
                         self.postMessage({rsi6,rsi7});
                     } catch (error) { self.postMessage({error: error.message}); }
                 };
@@ -585,7 +645,7 @@
                     if (data.error) reject(new Error(data.error)); else resolve(data);
                 };
                 worker.onerror = e => { worker.terminate(); URL.revokeObjectURL(url); reject(new Error(e.message || 'RSI hesaplama hatası')); };
-                worker.postMessage({candles, profitTarget, monthlyCap, interval, asOf});
+                worker.postMessage({candles, profitTarget, monthlyCap, interval, asOf, startTime});
             });
         }
 
@@ -597,17 +657,17 @@
                 const map=new Map(records.filter(row=>row&&row.key).map(row=>[row.key,row]));
                 for(const item of LEAGUE_STATE.results)for(const [interval,variant] of Object.entries(item.variants))for(const length of [6,7]) {
                     const strategy=variant['rsi'+length];if(!strategy)continue;
-                    const record={symbol:item.symbol,year:item.analysisYear||'2026',startTime:Date.UTC(Number(item.analysisYear||2026),0,1),endTime:item.analysisAsOf,
+                    const record={symbol:item.symbol,year:item.analysisYear||'2026',startTime:item.analysisStart,endTime:item.analysisAsOf,
                         savedAt:Date.now(),profitTarget:item.profitTarget,monthlyCap:item.monthlyCap,
                         interval,rsiLength:length,buyRsi:strategy.buyRsi,sellRsi:strategy.sellRsi,
                         winRate:strategy.winRateDouble,totalTrades:strategy.totalTrades};
-                    record.key=[record.symbol,record.year,record.profitTarget,record.monthlyCap,interval,length].join('|');
+                    record.key=[record.symbol,record.year,record.profitTarget,record.monthlyCap,interval,length,record.startTime,record.endTime].join('|');
                     map.set(record.key,record);
                 }
                 const sorted=[...map.values()].sort((a,b)=>b.savedAt-a.savedAt).slice(0,2000);
                 localStorage.setItem(key,JSON.stringify({schema:'kuzgun-league-candidates-v2',savedAt:Date.now(),records:sorted}));
-                document.getElementById('leagueSavedStatus').textContent='Lig ayarları kombinasyon için kaydedildi. Taradığın zaman dilimleri ve hedef/kilit değerleriyle kullanılır.';
-            }catch(error){document.getElementById('leagueSavedStatus').textContent='Lig ayarları kaydedilemedi. Kombinasyonda lig modu için kayıt gerekli.';showToast('Lig adayları kaydedilemedi');}
+                document.getElementById('leagueSavedStatus').textContent='Analiz ayarları seçili dönem bilgisiyle kaydedildi. Kombinasyonda yalnızca uyumlu dönemlerde kullanılır.';
+            }catch(error){document.getElementById('leagueSavedStatus').textContent='Laboratuvar ayarları kaydedilemedi. Kombinasyonda laboratuvar modu için kayıt gerekli.';showToast('Laboratuvar adayları kaydedilemedi');}
         }
 
         function updateLeagueProgress(value) {
@@ -620,7 +680,9 @@
         }
 
         async function runLeagueBenchmark() {
-            if (LEAGUE_STATE.isAnalyzing || !LEAGUE_STATE.coinPool.length) return;
+            if (LEAGUE_STATE.isAnalyzing) return;
+            if (!LEAGUE_STATE.coinPool.length) { showToast('Analiz için en az bir coin ekle.'); return; }
+            let period; try { period = readLabPeriod(); } catch (error) { showToast(error.message); return; }
             const pool = [...LEAGUE_STATE.coinPool];
             const intervals = [...LEAGUE_STATE.selectedIntervals];
             const profitTarget = LEAGUE_STATE.profitTarget;
@@ -629,9 +691,11 @@
             const failed = [];
             let completed = 0;
             LEAGUE_STATE.isAnalyzing = true;
-            LEAGUE_STATE.analysisYear = localStorage.getItem('kuzgun_selected_year') || '2026';
-            LEAGUE_STATE.analysisAsOf = Math.min(Date.now(),Date.UTC(Number(LEAGUE_STATE.analysisYear)+1,0,1));
-            document.getElementById('leaguePeriodLabel').textContent = LEAGUE_STATE.analysisYear+' → '+(Number(LEAGUE_STATE.analysisYear)===new Date().getFullYear()?'Bugün':'Yıl sonu');
+            LEAGUE_STATE.analysisYear = period.year;
+            LEAGUE_STATE.analysisStart = period.startTime;
+            LEAGUE_STATE.analysisAsOf = period.endTime;
+            LEAGUE_STATE.analysisFullYear = period.fullYear;
+            document.getElementById('leaguePeriodLabel').textContent = period.label;
             LEAGUE_STATE.results = [];
             LEAGUE_STATE.candleCache = {};
             const btn = document.getElementById('btnRunLeague');
@@ -639,7 +703,7 @@
             const pBar = document.getElementById('progressBar');
             const pStatus = document.getElementById('progressStatusText');
             const pPct = document.getElementById('progressPctText');
-            const controls = [...document.querySelectorAll('main aside button, main aside input')];
+            const controls = [...document.querySelectorAll('main aside button, main aside input, main aside select')];
             const previousDisabled = controls.map(control => control.disabled);
             controls.forEach(control => control.disabled = true);
             btn.classList.add('opacity-50');
@@ -661,7 +725,7 @@
                             LEAGUE_STATE.candleCache[symbol + '_' + interval] = candles;
                             pStatus.textContent = `Hesaplanıyor: ${coin} / ${interval} (RSI 6 & 7)`;
                             updateLeagueProgress((completed + .72) / total * 100);
-                            variants[interval] = await evaluateCoinInWorker(candles, profitTarget, targetCap, interval, LEAGUE_STATE.analysisAsOf, fraction => updateLeagueProgress((completed + .72 + fraction * .26) / total * 100));
+                            variants[interval] = await evaluateCoinInWorker(candles, profitTarget, targetCap, interval, LEAGUE_STATE.analysisAsOf, LEAGUE_STATE.analysisStart, fraction => updateLeagueProgress((completed + .72 + fraction * .26) / total * 100));
                         } catch (error) {
                             failed.push(`${coin} / ${interval}`);
                             console.warn(`Hata [${symbol}/${interval}]:`,error.message);
@@ -671,7 +735,7 @@
                         updateLeagueProgress(completed/total*100);
                     }
                     if (Object.keys(variants).length) {
-                        const item = {symbol,displaySymbol:coin,profitTarget,monthlyCap:targetCap,variants,isExpanded:false,analysisAsOf:LEAGUE_STATE.analysisAsOf,analysisYear:LEAGUE_STATE.analysisYear};
+                        const item = {symbol,displaySymbol:coin,profitTarget,monthlyCap:targetCap,variants,isExpanded:false,analysisAsOf:LEAGUE_STATE.analysisAsOf,analysisYear:LEAGUE_STATE.analysisYear,analysisStart:LEAGUE_STATE.analysisStart};
                         refreshResultScore(item);
                         item.interval = item.bestOption.interval;
                         item.activeTab = item.bestOption.rsi;
@@ -854,7 +918,7 @@
             const newBuy = Math.min(50, Math.max(8, active.buyRsi + deltaBuy));
             const newSell = Math.min(98, Math.max(55, active.sellRsi + deltaSell));
 
-            const updated = simulateSingleConfig(candles, active.rsiLength, newBuy, newSell, item.profitTarget, item.monthlyCap, item.interval, item.analysisAsOf);
+            const updated = simulateSingleConfig(candles, active.rsiLength, newBuy, newSell, item.profitTarget, item.monthlyCap, item.interval, item.analysisAsOf, item.analysisStart);
             if (item.activeTab === 6) item.rsi6 = updated; else item.rsi7 = updated;
             item.variants[item.interval]['rsi'+item.activeTab] = updated;
             persistLeagueCandidates();
@@ -972,8 +1036,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             renderPool();
             updateIntervalSelection();
-            const year=localStorage.getItem('kuzgun_selected_year')||'2026';
-            document.getElementById('leaguePeriodLabel').textContent=year+' → '+(Number(year)===new Date().getFullYear()?'Bugün':'Yıl sonu');
+            initLabPeriod();
             const currentTheme = localStorage.getItem('kuzgun_theme') || (document.documentElement.classList.contains('dark') ? (document.documentElement.classList.contains('oled') ? 'oled' : 'dark') : 'light');
             updateThemeIcons(currentTheme);
         });

@@ -46,6 +46,8 @@ function createKuzgunStrategy() {
         let position=null,totalTrades=0,winCount=0,netPnl=0,totalHoldMs=0;
         for (let i=period+1;i<bars.length;i++) {
             const c=bars[i],time=c.time+ms,key=monthKey(time),current=rsi[i],previous=rsi[i-1];
+            // Pre-range candles seed RSI only; they must never open positions.
+            if (time < (options.startTime ?? -Infinity) || time >= (options.endTime ?? Infinity)) continue;
             if (current==null || previous==null) continue;
             if (!position) {
                 const result=month(key);
@@ -78,7 +80,10 @@ function createKuzgunStrategy() {
             const count=nowKey.startsWith(year+'-')?Number(nowKey.slice(5)):12;
             for(let m=1;m<=count;m++)month(`${year}-${String(m).padStart(2,'0')}`);
         }
-        const monthly=[...months.values()].filter(m=>!options.year || m.monthKey.startsWith(String(options.year)+'-')).sort((a,b)=>b.monthKey.localeCompare(a.monthKey));
+        const monthly=[...months.values()].filter(m=>!options.year || m.monthKey.startsWith(String(options.year)+'-'))
+            .filter(m=>options.startTime == null || m.monthKey >= monthKey(options.startTime))
+            .filter(m=>options.endTime == null || m.monthKey <= monthKey(options.endTime-1))
+            .sort((a,b)=>b.monthKey.localeCompare(a.monthKey));
         monthly.forEach(m=>m.tradesList.sort((a,b)=>b.exitTime-a.exitTime));
         return {trades,months:monthly,totalTrades,winCount,lossCount:totalTrades-winCount,netPnl,
             winRateDouble:totalTrades?winCount/totalTrades*100:0,averageHoldMs:totalTrades?totalHoldMs/totalTrades:0,openPosition:position};
