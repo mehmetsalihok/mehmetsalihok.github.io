@@ -340,27 +340,48 @@ function saveHealthPulse(status, problems) {
     } catch (e) {}
 }
 
+// Render health without waiting for history downloads or notifications.
+let healthIndicatorAt = 0;
+function refreshHealthIndicator() {
+    const now = Date.now();
+    healthIndicatorAt = now;
+    KZ_HEALTH.online = navigator.onLine;
+    const hasActiveCoins = KZ_STATE.coins.some(c => c.isActive !== false);
+    const gracePassed = now - KZ_HEALTH.startedAt > 90000;
+    const staleLimitMs = (parseInt(localStorage.getItem('kuzgun_health_stale_seconds'), 10) || 120) * 1000;
+    const wsFailed = hasActiveCoins && gracePassed && !KZ_HEALTH.wsConnected && now - KZ_HEALTH.wsDisconnectedAt > 90000;
+    const priceStale = hasActiveCoins && gracePassed && (!KZ_HEALTH.lastPriceAt || now - KZ_HEALTH.lastPriceAt > staleLimitMs);
+    const problems = [];
+    if (!KZ_HEALTH.online) problems.push('İnternet bağlantısı kesik');
+    if (wsFailed) problems.push('Binance WebSocket bağlı değil');
+    if (priceStale) problems.push('Canlı fiyat akışı gecikmiş');
+    let status = problems.length ? 'error' : !hasActiveCoins ? 'disabled'
+        : (!KZ_HEALTH.wsConnected || !KZ_HEALTH.lastPriceAt ? 'warning' : 'healthy');
+    let label = !KZ_HEALTH.online ? 'ÇEVRİMDIŞI' : !hasActiveCoins ? 'COİN YOK'
+        : wsFailed ? 'WS KESİK' : priceStale ? 'AKIŞ GECİKTİ'
+        : KZ_HEALTH.wsConnected ? (KZ_HEALTH.lastPriceAt ? 'SAĞLIKLI' : 'VERİ BEKLENİYOR')
+        : KZ_HEALTH.lastPriceAt ? 'YENİDEN BAĞLANIYOR' : 'BAĞLANIYOR';
+    if (!isHealthMonitorEnabled()) { status = 'disabled'; label = 'KAPALI'; }
+    const detail = !isHealthMonitorEnabled() ? 'Sistem sağlık kontrolü ayarlardan kapalı.'
+        : problems.join(' • ') || (!hasActiveCoins ? 'Aktif takip edilen coin yok.'
+            : `WebSocket: ${KZ_HEALTH.wsConnected ? 'bağlı' : 'bağlanıyor'} • Son fiyat: ${healthAgeText(KZ_HEALTH.lastPriceAt)}`);
+    updateHealthIndicator(status, label, detail);
+    return {now, status, problems, wsFailed, priceStale};
+}
+
+let healthCheckPending = false;
 async function runHealthCheck() {
     if (!isHealthMonitorEnabled()) {
         updateHealthIndicator('disabled', 'KAPALI', 'Sistem sağlık kontrolü ayarlardan kapalı.');
         return;
     }
 
-    KZ_HEALTH.online = navigator.onLine;
-    const now = Date.now();
-    const gracePassed = now - KZ_HEALTH.startedAt > 90000;
-    const staleLimitMs = (parseInt(localStorage.getItem('kuzgun_health_stale_seconds'), 10) || 120) * 1000;
-    const hasActiveCoins = KZ_STATE.coins.some(c => c.isActive !== false);
-    const wsFailed = gracePassed && !KZ_HEALTH.wsConnected && now - KZ_HEALTH.wsDisconnectedAt > 90000;
-    const priceStale = gracePassed && hasActiveCoins && (!KZ_HEALTH.lastPriceAt || now - KZ_HEALTH.lastPriceAt > staleLimitMs);
-    const problems = [];
-    if (!KZ_HEALTH.online) problems.push('İnternet bağlantısı kesik');
-    if (wsFailed) problems.push('Binance WebSocket bağlı değil');
-    if (priceStale) problems.push('Canlı fiyat akışı gecikmiş');
-    const status = problems.length ? 'error' : (!KZ_HEALTH.wsConnected || !KZ_HEALTH.lastPriceAt ? 'warning' : 'healthy');
-    updateHealthIndicator(status, status === 'healthy' ? 'SAĞLIKLI' : status === 'error' ? 'SORUN' : 'BAĞLANIYOR', problems.join(' • ') || `Son fiyat: ${healthAgeText(KZ_HEALTH.lastPriceAt)}`);
+    const {now, status, problems, wsFailed, priceStale} = refreshHealthIndicator();
     saveHealthPulse(status, problems);
 
+    if (healthCheckPending) return;
+    healthCheckPending = true;
+    try {
     const checks = [
         ['offline', !KZ_HEALTH.online, buildHealthEventMessage('İnternet bağlantısı kesildi'), buildHealthEventMessage('İnternet bağlantısı düzeldi', true)],
         ['websocket', wsFailed, buildHealthEventMessage('Binance bağlantısı kesildi'), buildHealthEventMessage('Binance bağlantısı yeniden kuruldu', true)],
@@ -384,18 +405,23 @@ async function runHealthCheck() {
             localStorage.setItem('kuzgun_health_last_telegram', String(now));
         }
     }
+    } finally { healthCheckPending = false; }
 }
 
-async function startHealthMonitor() {
-    if (!isHealthMonitorEnabled()) return runHealthCheck();
+let healthMonitorTimer = null;
+function startHealthMonitor() {
+    refreshHealthIndicator();
+    if (healthMonitorTimer !== null) return;
+    const check = () => { runHealthCheck().catch(error => console.warn('Sağlık kontrolü tamamlanamadı', error)); };
+    healthMonitorTimer = setInterval(check, 15000);
+    check();
+    if (!isHealthMonitorEnabled()) return;
     if (localStorage.getItem('kuzgun_health_startup_notification') !== 'false' && !KZ_HEALTH.startupSent) {
         KZ_HEALTH.startupSent = true;
-        if (await sendTelegramAlert(buildHealthTelegramMessage('Terminal başlatıldı'), {channel: 'system'})) {
-            localStorage.setItem('kuzgun_health_last_telegram', String(Date.now()));
-        }
+        sendTelegramAlert(buildHealthTelegramMessage('Terminal başlatıldı'), {channel: 'system'})
+            .then(sent => { if (sent) localStorage.setItem('kuzgun_health_last_telegram', String(Date.now())); })
+            .catch(error => console.warn('Başlangıç bildirimi tamamlanamadı', error));
     }
-    await runHealthCheck();
-    setInterval(runHealthCheck, 15000);
 }
 
 async function changeYearFromHeader(year) {
@@ -2714,6 +2740,8 @@ function updateLivePortfolioQuick() {
 
     const totalUsd = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) + unrealizedPnlUsd;
     const totalTry = totalUsd * KZ_STATE.usdtTryRate;
+    updateHeaderReturns({realizedBalance: KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd,
+        compoundedBalance: totalUsd});
 
     if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(totalUsd);
     if (elPortfolioTry) elPortfolioTry.textContent = `≈ ${fmtTry(totalTry)}`;
@@ -2904,6 +2932,9 @@ function initBinanceWebSocket() {
         } catch(e) {}
     }
 
+    KZ_HEALTH.wsConnected = false;
+    if (!KZ_HEALTH.wsDisconnectedAt) KZ_HEALTH.wsDisconnectedAt = Date.now();
+    refreshHealthIndicator();
     if (!KZ_STATE.coins || KZ_STATE.coins.length === 0) return;
 
     const streamSet = new Set();
@@ -2930,6 +2961,7 @@ function initBinanceWebSocket() {
                 elWsStatusText.className = 'text-emerald-600 dark:text-emerald-400 font-semibold text-[9px]';
                 elWsStatusText.textContent = 'WS';
             }
+            refreshHealthIndicator();
         };
 
         binanceWs.onmessage = (event) => {
@@ -2971,6 +3003,7 @@ function initBinanceWebSocket() {
                     processLivePriceUpdate(coin, coin.lastTradeStreamTime > Number(d.E) ? coin.price : liveClose, parseFloat(d.h), parseFloat(d.l));
                 }
             } catch (e) {}
+            finally { if (Date.now() - healthIndicatorAt >= 1000) refreshHealthIndicator(); }
         };
 
         binanceWs.onclose = () => {
@@ -2981,11 +3014,13 @@ function initBinanceWebSocket() {
                 elWsStatusText.className = 'text-amber-600 dark:text-amber-400 font-semibold text-[9px]';
                 elWsStatusText.textContent = 'WS..';
             }
+            refreshHealthIndicator();
             setTimeout(initBinanceWebSocket, 3500);
         };
         binanceWs.onerror = () => {
             KZ_HEALTH.wsConnected = false;
             if (!KZ_HEALTH.wsDisconnectedAt) KZ_HEALTH.wsDisconnectedAt = Date.now();
+            refreshHealthIndicator();
         };
     } catch (e) {
         KZ_HEALTH.wsConnected = false;
@@ -3577,10 +3612,31 @@ function recalculateFullPortfolio() {
     }
 }
 
+function updateHeaderReturns(engineResult) {
+    const base = Number(KZ_STATE.portfolioBaseUsd);
+    const net = Number(engineResult.realizedBalance) - base;
+    const percent = base > 0 ? (Number(engineResult.compoundedBalance) - base) / base * 100 : NaN;
+    const usd = document.getElementById('netGainUsd');
+    const pct = document.getElementById('netGainPercent');
+    const color = value => !Number.isFinite(value) ? 'text-slate-400'
+        : value >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
+    if (usd) {
+        usd.textContent = Number.isFinite(net) ? `${net >= 0 ? '+' : ''}${fmtUsd(net)}` : '—';
+        usd.className = `font-bold tabular-nums text-xs ${color(net)}`;
+        usd.title = 'Kapanan işlemlerin komisyon sonrası toplam kazancı. Açık pozisyon kârı dahil değil.';
+    }
+    if (pct) {
+        pct.textContent = Number.isFinite(percent) ? `${percent >= 0 ? '+' : '-'}%${Math.abs(percent).toFixed(2)}` : '—';
+        pct.className = `text-[10px] font-semibold tabular-nums ${color(percent)}`;
+        pct.title = 'Başlangıç sermayesine göre toplam portföy getirisi; açık pozisyonların anlık kâr/zararı dahil. Seçili dönem filtresinden bağımsızdır.';
+    }
+}
+
 function renderPortfolioShowcaseUI(engineResult, tfStats) {
     const totalUsd = engineResult.compoundedBalance;
     const totalTry = totalUsd * KZ_STATE.usdtTryRate;
     const gainTry = tfStats.usdtGain * KZ_STATE.usdtTryRate;
+    updateHeaderReturns(engineResult);
 
     if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(totalUsd);
     if (elPortfolioTry) elPortfolioTry.textContent = `≈ ${fmtTry(totalTry)}`;
@@ -3883,6 +3939,7 @@ if (kuzgunSyncChannel) kuzgunSyncChannel.addEventListener('message', () => syncM
 // Başlatıcı
 async function startEngine() {
     loadStorage();
+    startHealthMonitor();
 
     KZ_STATE.coins.forEach(c => renderSingleCard(c));
     renderActivePositionsList();
@@ -3900,7 +3957,6 @@ async function startEngine() {
     initBinanceWebSocket();
     fetchBinanceSpotSymbols();
     setupSymbolLiveValidation();
-    setTimeout(startHealthMonitor, 3000);
 
     setInterval(refreshPositionExtremaHistory, 60000);
     setInterval(fetchMarketRate, 10000);
