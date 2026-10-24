@@ -370,6 +370,13 @@ function refreshHealthIndicator() {
 }
 
 let healthCheckPending = false;
+async function sendHealthNotification(message) {
+    // Notifications are optional: missing or failing senders must not stop boot.
+    if (typeof sendTelegramAlert !== 'function') return false;
+    try { return Boolean(await sendTelegramAlert(message, {channel:'system'})); }
+    catch (error) { console.warn('Sağlık bildirimi gönderilemedi', error); return false; }
+}
+
 async function runHealthCheck() {
     if (!isHealthMonitorEnabled()) {
         updateHealthIndicator('disabled', 'KAPALI', 'Sistem sağlık kontrolü ayarlardan kapalı.');
@@ -390,10 +397,10 @@ async function runHealthCheck() {
     for (const [key, failed, failMessage, recoveryMessage] of checks) {
         if (failed && !KZ_HEALTH.alerts[key]) {
             KZ_HEALTH.alerts[key] = true;
-            await sendTelegramAlert(failMessage, {channel: 'system'});
+            await sendHealthNotification(failMessage);
         } else if (!failed && KZ_HEALTH.alerts[key]) {
             KZ_HEALTH.alerts[key] = false;
-            await sendTelegramAlert(recoveryMessage, {channel: 'system'});
+            await sendHealthNotification(recoveryMessage);
         }
     }
 
@@ -401,7 +408,7 @@ async function runHealthCheck() {
     const intervalMinutes = Number.isFinite(heartbeatMinutes) ? heartbeatMinutes : 60;
     const lastHeartbeat = parseInt(localStorage.getItem('kuzgun_health_last_telegram'), 10) || 0;
     if (intervalMinutes > 0 && now - lastHeartbeat >= intervalMinutes * 60000) {
-        if (await sendTelegramAlert(buildHealthTelegramMessage(status === 'healthy' ? 'Sistem çalışıyor' : status === 'error' ? 'Sistemde sorun var' : 'Sistem bağlantısı bekleniyor'), {channel: 'system'})) {
+        if (await sendHealthNotification(buildHealthTelegramMessage(status === 'healthy' ? 'Sistem çalışıyor' : status === 'error' ? 'Sistemde sorun var' : 'Sistem bağlantısı bekleniyor'))) {
             localStorage.setItem('kuzgun_health_last_telegram', String(now));
         }
     }
@@ -418,7 +425,7 @@ function startHealthMonitor() {
     if (!isHealthMonitorEnabled()) return;
     if (localStorage.getItem('kuzgun_health_startup_notification') !== 'false' && !KZ_HEALTH.startupSent) {
         KZ_HEALTH.startupSent = true;
-        sendTelegramAlert(buildHealthTelegramMessage('Terminal başlatıldı'), {channel: 'system'})
+        sendHealthNotification(buildHealthTelegramMessage('Terminal başlatıldı'))
             .then(sent => { if (sent) localStorage.setItem('kuzgun_health_last_telegram', String(Date.now())); })
             .catch(error => console.warn('Başlangıç bildirimi tamamlanamadı', error));
     }
