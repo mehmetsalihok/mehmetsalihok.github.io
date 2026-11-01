@@ -40,6 +40,63 @@ const CandleCache = {
     }
 };
 
+// Telegram channels share transport; each channel uses its own saved bot.
+let telegramToastTimer = null;
+function showToast(message) {
+    let toast = document.getElementById('telegramStatusToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'telegramStatusToast';
+        toast.setAttribute('role', 'status');
+        toast.style.cssText = 'position:fixed;bottom:24px;right:24px;max-width:360px;z-index:10000;padding:12px 16px;border-radius:12px;background:#0f172a;color:#fff;font:500 12px/1.5 sans-serif;box-shadow:0 8px 24px #0003';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.hidden = false;
+    clearTimeout(telegramToastTimer);
+    telegramToastTimer = setTimeout(() => { toast.hidden = true; }, 5000);
+}
+
+function telegramFailureMessage(result = {}) {
+    const detail = String(result.description || '').toLowerCase();
+    if (result.error_code === 401 || result.error_code === 404) return 'Bot tokeni geçersiz; BotFather tokenini kontrol et';
+    if (detail.includes('chat not found')) return 'Chat ID bulunamadı; Chat ID’ni kontrol et ve botta Başlat’a bas';
+    if (detail.includes('blocked')) return 'Bot engellenmiş; engeli kaldırıp botta Başlat’a bas';
+    if (result.error_code === 429) return 'Telegram gönderim sınırına ulaşıldı; biraz sonra yeniden dene';
+    return 'Telegram mesajı gönderilemedi; token, Chat ID ve botta Başlat durumunu kontrol et';
+}
+
+async function sendTelegramAlert(message, options = {}) {
+    const channel = options.channel || 'buy';
+    if (!['buy', 'pending', 'system', 'sell'].includes(channel)) return false;
+    const prefix = 'kuzgun_' + channel + '_telegram_';
+    if (localStorage.getItem(prefix + 'enabled') !== 'true') return false;
+    const preference = channel === 'buy' ? 'kuzgun_buy_notification_enabled'
+        : channel === 'sell' ? 'kuzgun_sell_notification_enabled' : null;
+    if (!options.isTest && preference && localStorage.getItem(preference) === 'false') return false;
+    const token = (localStorage.getItem(prefix + 'token') || '').trim();
+    const chatId = (localStorage.getItem(channel === 'buy' ? 'kuzgun_telegram_chat_id' : prefix + 'chat_id') || '').trim();
+    const label = {buy:'Alım', pending:'Bekleme', system:'Sistem', sell:'Satım'}[channel];
+    if (!/^\d+:[A-Za-z0-9_-]+$/.test(token) || !/^(?:-?\d+|@[A-Za-z0-9_]+)$/.test(chatId)) {
+        showToast(label + ': bot tokeni ve Chat ID ayarlarını kontrol et');
+        return false;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method:'POST', headers:{'Content-Type':'application/json'}, signal:controller.signal,
+            body:JSON.stringify({chat_id:chatId, text:String(message)})
+        });
+        const result = await response.json();
+        if (!response.ok || !result.ok) { showToast(label + ': ' + telegramFailureMessage(result)); return false; }
+        return true;
+    } catch (error) {
+        showToast(label + ': ' + (error.name === 'AbortError' ? 'Telegram isteği zaman aşımına uğradı' : 'Telegram bağlantısı kurulamadı'));
+        return false;
+    } finally { clearTimeout(timer); }
+}
+
 const KZ_STATE = {
     portfolioBaseUsd: 1000.00,
     selectedYear: localStorage.getItem('kuzgun_selected_year') || '2026',
@@ -424,9 +481,8 @@ function startHealthMonitor() {
     check();
     if (!isHealthMonitorEnabled()) return;
     if (localStorage.getItem('kuzgun_health_startup_notification') !== 'false' && !KZ_HEALTH.startupSent) {
-        KZ_HEALTH.startupSent = true;
         sendHealthNotification(buildHealthTelegramMessage('Terminal başlatıldı'))
-            .then(sent => { if (sent) localStorage.setItem('kuzgun_health_last_telegram', String(Date.now())); })
+            .then(sent => { if (sent) { KZ_HEALTH.startupSent = true; localStorage.setItem('kuzgun_health_last_telegram', String(Date.now())); } })
             .catch(error => console.warn('Başlangıç bildirimi tamamlanamadı', error));
     }
 }
@@ -3966,8 +4022,9 @@ async function sendBuyTelegramTestFromQuery() {
         time: Date.now(),
         mode: 'Örnek'
     };
-    const sent = await sendTelegramAlert(buildBuySignalTelegramMessage(signal, true));
-    showToast(sent ? 'Örnek alım mesajı Telegram’a gönderildi' : 'Telegram mesajı gönderilemedi; Chat ID ve botu kontrol et');
+    const sent = await sendTelegramAlert(buildBuySignalTelegramMessage(signal, true), {isTest:true});
+    if (sent) showToast('Örnek alım mesajı Telegram’a gönderildi');
+    else if (localStorage.getItem('kuzgun_buy_telegram_enabled') !== 'true') showToast('Ayarlardan alım botunu etkinleştir');
 }
 
 window.addEventListener('resize', () => {
