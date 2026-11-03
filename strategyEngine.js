@@ -35,16 +35,6 @@ function createKuzgunStrategy() {
         }
         return [...unique.values()].sort((a,b)=>a.time-b.time);
     }
-    function entrySignal(previous,current,settings) {
-        return previous!=null&&current!=null&&previous<=Number(settings.buyRsi)&&current>Number(settings.buyRsi);
-    }
-    function exitSignal(position,bar,rsi,settings) {
-        const target=position.targetPrice ?? position.entryPrice*(1+Number(settings.profitTarget)/100);
-        if(bar.time<position.entryTime)return null;
-        if(Number(settings.profitTarget)>0&&bar.high>=target)return {price:target,target:true};
-        if(rsi!=null&&rsi>=Number(settings.sellRsi))return {price:Number(bar.close),target:false};
-        return null;
-    }
     function simulate(candles, settings, options={}) {
         const ms=intervalMs(settings.interval);
         const bars=options.prepared?candles:prepare(candles,settings.interval,options.asOf ?? Date.now());
@@ -62,13 +52,12 @@ function createKuzgunStrategy() {
             if (!position) {
                 const result=month(key);
                 if (cap>0 && result.pnl+0.001>=cap) continue;
-                if (entrySignal(previous,current,settings)) position={entryPrice:Number(c.close),entryTime:time};
+                if (previous<=buy && current>buy) position={entryPrice:Number(c.close),entryTime:time};
             } else {
                 const target=position.entryPrice*(1+targetPct/100);
-                const fill=exitSignal(position,c,current,settings);
-                if (!fill) continue;
-                const hit=fill.target;
-                const exitPrice=fill.price;
+                const hit=targetPct>0 && c.high>=target;
+                if (!hit && current<sell) continue;
+                const exitPrice=hit?target:Number(c.close);
                 const pnl=hit?targetPct:(exitPrice-position.entryPrice)/position.entryPrice*100;
                 const result=month(key);
                 result.trades++;result.pnl+=pnl;result.isLocked=cap>0 && result.pnl+0.001>=cap;
@@ -96,9 +85,7 @@ function createKuzgunStrategy() {
             .filter(m=>options.endTime == null || m.monthKey <= monthKey(options.endTime-1))
             .sort((a,b)=>b.monthKey.localeCompare(a.monthKey));
         monthly.forEach(m=>m.tradesList.sort((a,b)=>b.exitTime-a.exitTime));
-        const lastPrice=bars.at(-1)?.close;
-        const openPnl=position&&lastPrice>0?(lastPrice/position.entryPrice-1)*100:0;
-        return {openPnl,markedNetPnl:netPnl+openPnl,trades,months:monthly,totalTrades,winCount,lossCount:totalTrades-winCount,netPnl,
+        return {trades,months:monthly,totalTrades,winCount,lossCount:totalTrades-winCount,netPnl,
             winRateDouble:totalTrades?winCount/totalTrades*100:0,averageHoldMs:totalTrades?totalHoldMs/totalTrades:0,openPosition:position};
     }
     function leagueResult(result,settings) {
@@ -124,12 +111,12 @@ function createKuzgunStrategy() {
         let best=null;
         for(let buy=10;buy<=35;buy++)for(let sell=65;sell<=92;sell++) {
             const result=simulate(bars,{...settings,buyRsi:buy,sellRsi:sell},{...opts,includeTrades:false});
-            const score=result.markedNetPnl*Math.pow(result.winRateDouble/100,1.5);
+            const score=result.netPnl*Math.pow(result.winRateDouble/100,1.5);
             if(result.totalTrades && (!best || score>best.score))best={buyRsi:buy,sellRsi:sell,score};
         }
         const chosen={...settings,buyRsi:best?best.buyRsi:25,sellRsi:best?best.sellRsi:75};
         return leagueResult(simulate(bars,chosen,opts),chosen);
     }
-    return {version:3,entrySignal,exitSignal,monthKey,intervalMs,rsiHistory,prepare,simulate,leagueResult,optimize};
+    return {version:1,monthKey,intervalMs,rsiHistory,prepare,simulate,leagueResult,optimize};
 }
 globalThis.KuzgunStrategy = createKuzgunStrategy();

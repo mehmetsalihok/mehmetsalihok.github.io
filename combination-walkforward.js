@@ -1,5 +1,5 @@
 "use strict";
-importScripts("combination-worker.js?v=3-replay");
+importScripts("combination-worker.js?v=26-classic");
 const wfDeliver=self.postMessage.bind(self);
 const monthNames=["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
 function getTurkeyDateComponents(timestamp){const iso=new Date(timestamp+10800000).toISOString();return {monthKey:iso.slice(0,7),day:Number(iso.slice(8,10))}}
@@ -55,15 +55,15 @@ function wfMakeTraining(source,history,cutoff,seedSettings,start=wfMonthStart(Nu
             interval,rsiLength:seed.off?6:seed.rsiLength,buyRsi:seed.off?25:seed.buyRsi,sellRsi:seed.off?75:seed.sellRsi,
             isActive:!seed.off,rawCandles,price};
     });
-    const training={schema:'kuzgun-combination-v2',engineVersion:KuzgunReplay.version,trainingStart:start,asOf:cutoff,year:source.year,coins,closedTrades:[],pendingClosedTrades:[],
+    const training={schema:'kuzgun-combination-v2',trainingStart:start,asOf:cutoff,year:source.year,coins,closedTrades:[],pendingClosedTrades:[],
         referenceArgs:{baseBalance:source.referenceArgs.baseBalance,maxSlots:source.referenceArgs.maxSlots,trades:[],activePositions:[],
             coins:coins.filter(coin=>coin.isActive!==false).map(coin=>({id:coin.id,symbol:coin.symbol,price:coin.price})),
             isSlotConstraintEnabled:true,isFeeDeductionEnabled:source.referenceArgs.isFeeDeductionEnabled,
             startDateTimestamp:start/1000,selectedYear:source.year}};
     const groups=referenceGroups(training),trades=assembleTrades(groups,groups.map(()=>0));
     training.referenceArgs.trades=trades;
-    const engine=PortfolioEngine.calculateCompoundedBalance({...training.referenceArgs,coins:training.coins,asOf:training.asOf,keepCurve:false});
-    training.expected={realizedBalance:engine.realizedBalance,compoundedBalance:engine.compoundedBalance,unrealizedPnlUSD:engine.unrealizedPnlUSD};
+    const engine=PortfolioEngine.calculateCompoundedBalance(training.referenceArgs);
+    training.expected={realizedBalance:engine.realizedBalance,compoundedBalance:engine.compoundedBalance,unrealizedPnlUSD:0};
     return training;
 }
 function wfLeagueRecords(training,history){
@@ -76,28 +76,97 @@ function wfLeagueRecords(training,history){
     }
     return records;
 }
-function wfAccount(base){return KuzgunReplay.account(base)}
-function wfEquity(account){return KuzgunReplay.equity(account)}
-function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees,execution={}) {
-    return accounts.map((state,index)=>{
-        const selected=coins.map((c,i)=>({...c,...settingsByAccount[index][i],isActive:!settingsByAccount[index][i].off}));
-        const before=KuzgunReplay.summarize(state),opening=before.compoundedBalance,carriedIn=before.openPositions.length;
-        const active=new Set(selected.filter(c=>c.isActive).map(c=>c.id+'|'+c.interval));
-        for(const p of state.positions.values())active.add(p.coinId+'|'+p.settings.interval);
-        const result=KuzgunReplay.run({state,coins:selected,streams:streams.filter(s=>active.has(s.coinId+'|'+s.interval)),
-            baseBalance:state.base,startTime:fold.start,endTime:fold.end,maxSlots:slots,isFeeDeductionEnabled:fees,...execution});
-        const m=result.months[fold.monthKey]||{};
-        return {...m,carriedIn,openingEquity:opening,endEquity:result.compoundedBalance,net:result.compoundedBalance-opening,
-            realizedBalance:result.realizedBalance,openPositions:result.openPositions.length,cash:result.cash,
-            trades:result.trades-before.trades,wins:result.wins-before.wins,losses:result.losses-before.losses,
-            fees:result.totalFeesUSD-before.totalFeesUSD,skipped:result.skipped-before.skipped,missingFills:0,
-            maxDrawdown:result.maxDrawdown,winRate:result.trades>before.trades?100*(result.wins-before.wins)/(result.trades-before.trades):0};
-    });
+function wfAccount(base){return {base,cash:base,realized:base,fees:0,positions:new Map(),marks:{},monthlyPnl:{},closed:[],wins:0,losses:0,skipped:0,missingFills:0,peak:base,maxDrawdown:0}}
+function wfEquity(account){let total=account.cash;for(const position of account.positions.values())total+=position.units*(account.marks[position.coinId]||position.entryPrice);return total}
+function wfLowerBound(candles,ms,time){let low=0,high=candles.length;while(low<high){const middle=(low+high)>>1;if(candles[middle].time+ms<time)low=middle+1;else high=middle}return low}
+function wfHeapPush(heap,event){heap.push(event);let index=heap.length-1;while(index>0){const parent=(index-1)>>1;if(heap[parent].time<=event.time)break;heap[index]=heap[parent];index=parent}heap[index]=event}
+function wfHeapPop(heap){const first=heap[0],last=heap.pop();if(heap.length){let index=0;while(index*2+1<heap.length){let child=index*2+1;if(child+1<heap.length&&heap[child+1].time<heap[child].time)child++;if(heap[child].time>=last.time)break;heap[index]=heap[child];index=child}heap[index]=last}return first}
+function wfMonthRow(account,key){return {monthKey:key,openingEquity:wfEquity(account),carriedIn:account.positions.size,entries:0,trades:0,wins:0,losses:0,fees:0,realizedNet:0,skipped:0,lockedSignals:0,missingFills:0,peak:wfEquity(account),maxDrawdown:0}}
+function wfRisk(account,row){const equity=wfEquity(account);account.peak=Math.max(account.peak,equity);row.peak=Math.max(row.peak,equity);if(account.peak>0)account.maxDrawdown=Math.max(account.maxDrawdown,(account.peak-equity)/account.peak*100);if(row.peak>0)row.maxDrawdown=Math.max(row.maxDrawdown,(row.peak-equity)/row.peak*100)}
+function wfExit(account,row,position,price,time,reason,rate){
+    const gross=position.units*price,fee=gross*rate,proceeds=gross-fee,net=proceeds-position.budget;
+    const rawPnl=(price-position.entryPrice)/position.entryPrice*100;
+    account.cash+=proceeds;account.realized+=net;account.fees+=fee;row.fees+=fee;row.realizedNet+=net;row.trades++;
+    if(rawPnl>=0){account.wins++;row.wins++}else{account.losses++;row.losses++}
+    const month=getTurkeyMonthKey(time),ledger=account.monthlyPnl[month]||(account.monthlyPnl[month]={});
+    ledger[position.coinId]=(ledger[position.coinId]||0)+rawPnl;
+    account.closed.push({coinId:position.coinId,symbol:position.symbol,entryTime:position.entryTime,exitTime:time,entryPrice:position.entryPrice,
+        exitPrice:price,net,rawPnl,reason,settings:position.settings});
+    account.positions.delete(position.coinId);
 }
-function wfSummary(account){const r=KuzgunReplay.summarize(account);return {base:r.base,equity:r.compoundedBalance,
-    net:r.compoundedBalance-r.base,realized:r.realizedBalance,unrealized:r.unrealizedPnlUSD,cash:r.cash,
-    openPositions:r.openPositions.length,trades:r.trades,wins:r.wins,losses:r.losses,winRate:r.winRate,
-    fees:r.totalFeesUSD,skipped:r.skipped,missingFills:0,maxDrawdown:r.maxDrawdown};}
+function wfReplayMonth(accounts,settingsByAccount,streams,coins,fold,slots,fees){
+    const rows=accounts.map(account=>wfMonthRow(account,fold.monthKey));
+    const heap=[];
+    for(let stream=0;stream<streams.length;stream++){
+        const series=streams[stream],index=wfLowerBound(series.candles,series.ms,fold.start);
+        if(index<series.candles.length)wfHeapPush(heap,{stream,index,time:series.candles[index].time+series.ms});
+    }
+    const rate=fees ? 0.00075 : 0;
+    while(heap.length&&heap[0].time<fold.end){
+        const time=heap[0].time,bucket=[];
+        while(heap.length&&heap[0].time===time){
+            const event=wfHeapPop(heap),series=streams[event.stream],bar=series.candles[event.index];
+            const next=series.candles[event.index+1],executionPrice=next&&next.time===time?next.open:null;
+            bucket.push({...event,series,bar,executionPrice});
+            if(event.index+1<series.candles.length)wfHeapPush(heap,{stream:event.stream,index:event.index+1,time:next.time+series.ms});
+        }
+        for(const account of accounts)for(const event of bucket)account.marks[event.series.coinId]=event.executionPrice||event.bar.close;
+        // Old positions exit under their original timeframe and thresholds, including across month boundaries.
+        for(let a=0;a<accounts.length;a++){
+            const account=accounts[a],row=rows[a];
+            for(const event of bucket){
+                const position=account.positions.get(event.series.coinId);
+                if(!position||position.settings.interval!==event.series.interval||event.bar.time<position.entryTime)continue;
+                const rsi=event.series.features[position.settings.rsiLength][event.index];
+                if(event.bar.high>=position.targetPrice)wfExit(account,row,position,position.targetPrice,time,'Kâr hedefi',rate);
+                else if(rsi!==null&&rsi>=position.settings.sellRsi){
+                    if(event.executionPrice)wfExit(account,row,position,event.executionPrice,time,'RSI satışı · sonraki açılış',rate);
+                    else{account.missingFills++;row.missingFills++}
+                }
+            }
+            // New entries use fixed terminal coin order for simultaneous signals.
+            for(let i=0;i<coins.length;i++){
+                const coin=coins[i],setting=settingsByAccount[a][i];
+                if(setting.off||account.positions.has(coin.id))continue;
+                const event=bucket.find(item=>item.series.coinId===coin.id&&item.series.interval===setting.interval);
+                if(!event||event.index<1)continue;
+                const values=event.series.features[setting.rsiLength],current=values[event.index],previous=values[event.index-1];
+                if(current===null||previous===null||!(previous<=setting.buyRsi&&current>setting.buyRsi))continue;
+                const total=account.monthlyPnl[fold.monthKey]?.[coin.id]||0;
+                if(coin.monthlyCap>0&&total+.001>=coin.monthlyCap){row.lockedSignals++;continue}
+                if(account.positions.size>=slots){account.skipped++;row.skipped++;continue}
+                if(!event.executionPrice){account.missingFills++;row.missingFills++;continue}
+                const budget=account.cash/(slots-account.positions.size);
+                if(!(budget>0))continue;
+                const fee=budget*rate;
+                account.cash=Math.max(0,account.cash-budget);account.fees+=fee;row.fees+=fee;row.entries++;
+                account.positions.set(coin.id,{coinId:coin.id,symbol:coin.symbol,entryTime:time,entryPrice:event.executionPrice,budget,
+                    units:(budget-fee)/event.executionPrice,targetPrice:event.executionPrice*(1+coin.profitTarget/100),settings:{...setting}});
+            }
+            wfRisk(account,row);
+        }
+    }
+    // Mark each coin with its newest available close, preferring finer bars on ties.
+    const closingMarks={};
+    for(const series of streams){
+        const next=wfLowerBound(series.candles,series.ms,fold.end+1),bar=series.candles[next-1];
+        if(!bar||bar.time+series.ms>fold.end)continue;
+        const time=bar.time+series.ms,old=closingMarks[series.coinId];
+        if(!old||time>old.time||(time===old.time&&series.ms<old.ms))closingMarks[series.coinId]={time,ms:series.ms,price:bar.close};
+    }
+    for(const account of accounts)for(const [id,mark] of Object.entries(closingMarks))account.marks[id]=mark.price;
+    for(let a=0;a<accounts.length;a++){
+        const account=accounts[a],row=rows[a];wfRisk(account,row);
+        row.endEquity=wfEquity(account);row.net=row.endEquity-row.openingEquity;row.realizedBalance=account.realized;
+        row.openPositions=account.positions.size;row.cash=account.cash;row.winRate=row.trades?row.wins/row.trades*100:0;
+        delete row.peak;
+    }
+    return rows;
+}
+function wfSummary(account){const equity=wfEquity(account);return {base:account.base,equity,net:equity-account.base,realized:account.realized,
+    unrealized:equity-account.realized,cash:account.cash,openPositions:account.positions.size,trades:account.wins+account.losses,
+    wins:account.wins,losses:account.losses,winRate:account.wins+account.losses?account.wins/(account.wins+account.losses)*100:0,
+    fees:account.fees,skipped:account.skipped,missingFills:account.missingFills,maxDrawdown:account.maxDrawdown}}
 async function runWalkForward(source,config){
     if(!source?.coins?.length)throw new Error('Terminal referansı gerekli');
     if(!Number.isInteger(config.minTrades)||config.minTrades<1||config.minTrades>1000||!['strict','balanced'].includes(config.monthlyMode))throw new Error('Test arama koşulları geçersiz');

@@ -266,7 +266,7 @@
                 </div>
                 <p class="mt-3 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">Analiz puanı, coinin en yüksek puanlı seçeneğine göre hesaplanır. Getiri, işlem sayısı ve kazanma sıralaması kartta seçili stratejiye göre değişir. Sonuçlar geçmiş mum verileriyle hesaplanan simülasyonlardır. Terminale eklemeden önce RSI ve hedef ayarlarını kontrol et.</p>
             </div>
-            <p class="text-xs text-slate-500 mb-3">Tek coin analizi: diğer coinlerin slotları bu sayfada uygulanmaz. Toplam getiride açık pozisyonun kâr/zararı da vardır; kazanma oranı yalnız kapanmış işlemlere aittir. Portföy karşılaştırması için Kombinasyon’u kullan.</p><div id="resultsContainer" class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start" aria-live="polite"><div class="2xl:col-span-2 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50 p-10 text-center"><div class="text-3xl mb-3">◈</div><h4 class="font-bold text-slate-800 dark:text-slate-100">Analiz için hazır</h4><p class="mt-1 text-xs text-slate-500">Sol panelden coinleri ve zaman dilimini seç, ardından karşılaştırmayı başlat.</p></div></div>
+            <div id="resultsContainer" class="grid grid-cols-1 2xl:grid-cols-2 gap-4 items-start" aria-live="polite"><div class="2xl:col-span-2 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white/70 dark:bg-slate-900/50 p-10 text-center"><div class="text-3xl mb-3">◈</div><h4 class="font-bold text-slate-800 dark:text-slate-100">Analiz için hazır</h4><p class="mt-1 text-xs text-slate-500">Sol panelden coinleri ve zaman dilimini seç, ardından karşılaştırmayı başlat.</p></div></div>
         </section>
         </div>
     </main>
@@ -276,7 +276,7 @@
         <span id="toastMsg">Strateji karta eklendi!</span>
     </div>
 
-    <script src="strategyEngine.js?v=3-replay"></script>
+    <script src="strategyEngine.js?v=2-period"></script>
     <script>
         const LEAGUE_STATE = {
             coinPool: [],
@@ -482,7 +482,7 @@
             updateIntervalSelection();
         }
         function strategyScore(strategy) {
-            return Math.floor(strategy.winRateDouble * 0.5 + Math.min(strategy.markedNetPnl, 50.0) * 0.3);
+            return Math.floor(strategy.winRateDouble * 0.5 + Math.min(strategy.netPnl, 50.0) * 0.3);
         }
         function refreshResultScore(item) {
             const options = Object.entries(item.variants).flatMap(([interval, variant]) => [6,7].map(rsi => ({interval,rsi,score:strategyScore(variant['rsi'+rsi])})));
@@ -503,7 +503,7 @@
             return `<div class="strategy-comparison" aria-label="Zaman dilimi ve RSI karşılaştırması"><div class="comparison-heading"><span>Strateji seçimi</span><span>Mevcut lig puanına göre en iyi: ${item.bestOption.interval} / RSI ${item.bestOption.rsi}</span></div><div class="strategy-options">${Object.entries(item.variants).map(([interval,variant]) => [6,7].map(rsi => {
                 const strategy = variant['rsi'+rsi];
                 const selected = item.interval === interval && item.activeTab === rsi;
-                return `<button type="button" class="strategy-option" aria-pressed="${selected}" onclick="selectResultStrategy('${item.symbol}','${interval}',${rsi})"><strong>${interval} / RSI ${rsi}</strong><span class="${strategy.markedNetPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${strategy.markedNetPnl>=0?'+':''}${strategy.markedNetPnl.toFixed(1)}% getiri</span><small>Kazanma ${strategy.winRate} · ${strategy.totalTrades} kapanmış işlem · ${strategy.winCount} win / ${strategy.lossCount} lose</small><small>Açık pozisyon: ${strategy.openPosition?strategy.openPnl.toFixed(2)+'%':'Yok'} · Puan ${strategyScore(strategy)}</small></button>`;
+                return `<button type="button" class="strategy-option" aria-pressed="${selected}" onclick="selectResultStrategy('${item.symbol}','${interval}',${rsi})"><strong>${interval} / RSI ${rsi}</strong><span class="${strategy.netPnl < 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}">${strategy.netPnl>=0?'+':''}${strategy.netPnl.toFixed(1)}% getiri</span><small>Kazanma ${strategy.winRate} · ${strategy.totalTrades} işlem · ${strategy.winCount} win / ${strategy.lossCount} lose</small><small>Puan ${strategyScore(strategy)}</small></button>`;
             }).join('')).join('')}</div><p>Seçili: ${item.interval} / RSI ${item.activeTab}. Ekle düğmesi bu stratejiyi aktarır.</p></div>`;
         }
 
@@ -767,7 +767,7 @@
             const all = LEAGUE_STATE.results;
             document.getElementById('summaryAnalyzed').textContent = all.length || '—';
             document.getElementById('summaryLeader').textContent = all[0] ? `${all[0].displaySymbol} / ${all[0].bestOption.interval}` : '—';
-            const best = all.flatMap(r => Object.entries(r.variants).flatMap(([interval,v]) => [6,7].map(rsi => ({coin: r.displaySymbol + ' / ' + interval + ' / RSI ' + rsi, value:v['rsi'+rsi].markedNetPnl})))).sort((a,b) => b.value - a.value)[0];
+            const best = all.flatMap(r => Object.entries(r.variants).flatMap(([interval,v]) => [6,7].map(rsi => ({coin: r.displaySymbol + ' / ' + interval + ' / RSI ' + rsi, value:v['rsi'+rsi].netPnl})))).sort((a,b) => b.value - a.value)[0];
             document.getElementById('summaryProfit').textContent = best ? `${best.value >= 0 ? '+' : ''}${best.value.toFixed(1)}%` : '—';
             document.getElementById('summaryProfitCoin').textContent = best ? best.coin : 'analiz bekleniyor';
             document.getElementById('summaryTrades').textContent = all.length ? all.reduce((sum,r) => sum + Object.values(r.variants).reduce((count,v) => count + v.rsi6.totalTrades + v.rsi7.totalTrades,0), 0).toLocaleString('tr-TR') : '—';
@@ -775,7 +775,7 @@
             const sort = document.getElementById('resultSort').value;
             const visible = all.filter(r => r.displaySymbol.includes(search));
             const selected = r => r.activeTab === 6 ? r.rsi6 : r.rsi7;
-            visible.sort((a,b) => sort === 'name' ? a.displaySymbol.localeCompare(b.displaySymbol) : sort === 'profit' ? selected(b).markedNetPnl - selected(a).markedNetPnl : sort === 'trades' ? selected(b).totalTrades - selected(a).totalTrades : sort === 'winrate' ? selected(b).winRateDouble - selected(a).winRateDouble : b.score - a.score);
+            visible.sort((a,b) => sort === 'name' ? a.displaySymbol.localeCompare(b.displaySymbol) : sort === 'profit' ? selected(b).netPnl - selected(a).netPnl : sort === 'trades' ? selected(b).totalTrades - selected(a).totalTrades : sort === 'winrate' ? selected(b).winRateDouble - selected(a).winRateDouble : b.score - a.score);
             document.getElementById('resultCount').textContent = all.length ? `(${visible.length}/${all.length})` : '';
             if (LEAGUE_STATE.results.length === 0) {
                 container.innerHTML = `<div class="2xl:col-span-2 p-10 text-center rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-500 text-sm">Sonuç bulunamadı. Coin kodlarını ve bağlantını kontrol edip yeniden dene.</div>`;
@@ -840,8 +840,8 @@
                                     <span class="block mt-1 text-[10px]"><span class="text-emerald-600 dark:text-emerald-400">${active.winCount} win</span> / <span class="text-rose-600 dark:text-rose-400">${active.lossCount} lose</span></span>
                                 </div>
                                 <div>
-                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">BRÜT + AÇIK K/Z</span>
-                                    <span class="font-extrabold text-xs tabular-nums ${active.markedNetPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${active.markedNetPnl >= 0 ? '+' : ''}${active.markedNetPnl.toFixed(1)}%</span>
+                                    <span class="block text-[8px] font-bold text-slate-400 uppercase">NET KÂR</span>
+                                    <span class="font-extrabold text-xs tabular-nums ${active.netPnl >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${active.netPnl >= 0 ? '+' : ''}${active.netPnl.toFixed(1)}%</span>
                                 </div>
                             </div>
                         </div>

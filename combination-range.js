@@ -1,5 +1,5 @@
 'use strict';
-importScripts('combination-worker.js?v=3-replay');
+importScripts('combination-worker.js?v=27-budget');
 const rangeDeliver=self.postMessage.bind(self);
 function analysisMonth(value){
     if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(value||''))throw new Error('Geçerli bir başlangıç ve bitiş ayı seç.');
@@ -39,15 +39,15 @@ async function prepareRangeSnapshot(source,config){
         history.set(coin.symbol+'|'+interval,candles);
     }
     const coins=source.coins.map(coin=>({...coin,rawCandles:history.get(coin.symbol+'|'+coin.interval),price:history.get(coin.symbol+'|'+coin.interval).at(-1).close}));
-    const snapshot={schema:source.schema,engineVersion:KuzgunReplay.version,year:source.year,asOf:bounds.end,trainingStart:bounds.start,coins,
+    const snapshot={schema:source.schema,year:source.year,asOf:bounds.end,trainingStart:bounds.start,coins,
         closedTrades:[],pendingClosedTrades:[],referenceArgs:{baseBalance:source.referenceArgs.baseBalance,maxSlots:source.referenceArgs.maxSlots,
             trades:[],activePositions:[],coins:coins.filter(coin=>coin.isActive!==false).map(coin=>({id:coin.id,symbol:coin.symbol,price:coin.price})),
             isSlotConstraintEnabled:source.referenceArgs.isSlotConstraintEnabled,isFeeDeductionEnabled:source.referenceArgs.isFeeDeductionEnabled,
             startDateTimestamp:bounds.start/1000,selectedYear:source.year}};
     const groups=referenceGroups(snapshot);
     snapshot.referenceArgs.trades=assembleTrades(groups,groups.map(()=>0));
-    const baseline=PortfolioEngine.calculateCompoundedBalance({...snapshot.referenceArgs,coins:snapshot.coins,asOf:snapshot.asOf,keepCurve:false});
-    snapshot.expected={realizedBalance:baseline.realizedBalance,compoundedBalance:baseline.compoundedBalance,unrealizedPnlUSD:baseline.unrealizedPnlUSD};
+    const baseline=PortfolioEngine.calculateCompoundedBalance(snapshot.referenceArgs);
+    snapshot.expected={realizedBalance:baseline.realizedBalance,compoundedBalance:baseline.compoundedBalance,unrealizedPnlUSD:0};
     return {snapshot,history,coverage,bounds};
 }
 async function runRangeAnalysis(source,config){

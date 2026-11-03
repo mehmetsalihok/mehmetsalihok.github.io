@@ -1,10 +1,251 @@
 "use strict";
-importScripts("strategyEngine.js?v=3-replay", "replayEngine.js?v=3-replay", "portfolioEngine.js?v=3-replay");
+importScripts("strategyEngine.js?v=1");
 let SNAP=null;
 let KZ_STATE={coins:[],closedTrades:[],activePositions:[],pendingClosedTrades:[],selectedYear:'2026'};
 function getTurkeyMonthKey(timestamp=SNAP?.asOf||Date.now()) {return new Date(Number(timestamp)+10800000).toISOString().slice(0,7)}
 function formatTradeDuration(entryTime,exitTime) {const minutes=Math.max(0,Math.floor((exitTime-entryTime)/60000));return Math.floor(minutes/60)+'sa '+minutes%60+'dk'}
 const TF={'5m':300000,'15m':900000,'30m':1800000,'1h':3600000,'4h':14400000};
+// KUZGUN PRO — HIGH PERFORMANCE PORTFOLIO & TIMEFRAME ENGINE
+const PortfolioEngine = {
+    // 1. ⚡️ ALTIN STANDART SLOT ÇAKIŞMA KALKANI (0.1 Milisaniyede Tamamlanır)
+    filterTradesBySlotCapacity(rawTrades, maxSlots, activePositions = []) {
+        if (!maxSlots || maxSlots <= 0 || !rawTrades || rawTrades.length === 0) return rawTrades;
+
+        // Aynı anda başlayan gerçek işlemler, simüle işlemlerden önce değerlendirilir.
+        // Açık pozisyonları gerçek giriş anında başlayan slot olayları olarak ekle.
+        // Böylece girişten önce kapanan geçmiş işlemler etkilenmez.
+        const openEvents = activePositions.filter(pos => Number(pos.entryTime) > 0)
+            .map(pos => ({entryTime: Number(pos.entryTime), exitTime: Infinity,
+                source: 'automatic', isOpenSlotEvent: true}));
+        const sorted = [...rawTrades, ...openEvents].sort((a, b) => a.entryTime - b.entryTime ||
+            (b.source === 'manual' || b.source === 'automatic') - (a.source === 'manual' || a.source === 'automatic'));
+        const slotsCount = Math.max(1, maxSlots);
+        const occupied = [];
+
+        const acceptedTrades = [];
+
+        for (let i = 0; i < sorted.length; i++) {
+            const trade = sorted[i];
+            const entry = trade.entryTime;
+            const exit = Math.max(trade.exitTime, trade.entryTime + 60000);
+            const isReal = trade.source === 'manual' || trade.source === 'automatic';
+
+            for (let s = occupied.length - 1; s >= 0; s--) {
+                if (occupied[s].exit <= entry) occupied.splice(s, 1);
+            }
+
+            if (occupied.length >= slotsCount && isReal) {
+                // Geçmişte gerçekten açılmış işlem, çakışan bir simülasyon
+                // yüzünden kayıttan veya portföy hesabından silinemez.
+                const simulatedIndex = occupied.findIndex(item => !item.isReal);
+                if (simulatedIndex !== -1) {
+                    occupied[simulatedIndex].accepted.active = false;
+                    occupied.splice(simulatedIndex, 1);
+                }
+            }
+
+            if (isReal || occupied.length < slotsCount) {
+                const accepted = { trade, active: true };
+                if (!trade.isOpenSlotEvent) acceptedTrades.push(accepted);
+                occupied.push({ exit, isReal, accepted });
+            }
+        }
+
+        // En güncel işlem en üstte olacak şekilde sırala
+        return acceptedTrades.filter(item => item.active).map(item => item.trade)
+            .sort((a, b) => b.exitTime - a.exitTime);
+    },
+
+    // 2. BİLEŞİK BAKİYE & KOMİSYON MOTORU
+    calculateCompoundedBalance({
+        baseBalance = 1000.0,
+        maxSlots = 2,
+        trades = [],
+        activePositions = [],
+        coins = [],
+        isSlotConstraintEnabled = true,
+        isFeeDeductionEnabled = true,
+        startDateTimestamp = 0,
+        selectedYear = '2026'
+    }) {
+        const processedTrades = isSlotConstraintEnabled 
+            ? this.filterTradesBySlotCapacity(trades, maxSlots, activePositions)
+            : [...trades].sort((a, b) => a.exitTime - b.exitTime);
+
+        // Slota kabul edilen işlemlerin ID kümesi
+        const acceptedTradeIds = new Set(processedTrades.map(t => t.id));
+
+        const yearInt = parseInt(selectedYear, 10) || 2026;
+        const defaultYearStartSec = new Date(Date.UTC(yearInt, 0, 1, 0, 0, 0)).getTime() / 1000;
+        const effectiveStartSec = startDateTimestamp > 0 ? startDateTimestamp : defaultYearStartSec;
+
+        const validTrades = processedTrades
+            .filter(t => (t.exitTime / 1000) >= effectiveStartSec)
+            .sort((a, b) => a.exitTime - b.exitTime);
+
+        let runningBalance = baseBalance;
+        const slotsCount = Math.max(1, maxSlots);
+        let totalFeesAccumulated = 0;
+        const executedTrades = [];
+
+        // Coin bazlı slota giren reel istatistikler
+        const coinRealStats = {};
+
+        for (const trade of validTrades) {
+            const slotBudget = runningBalance / slotsCount;
+
+            const buyFee = isFeeDeductionEnabled ? (slotBudget * 0.00075) : 0.0;
+            const exitValue = slotBudget * (1.0 + (trade.pnlPercent / 100.0));
+            const sellFee = isFeeDeductionEnabled ? (exitValue * 0.00075) : 0.0;
+            const totalFee = buyFee + sellFee;
+            totalFeesAccumulated += totalFee;
+
+            const rawGainUSD = slotBudget * (trade.pnlPercent / 100.0);
+            const netGainUSD = rawGainUSD - totalFee;
+            runningBalance += netGainUSD;
+
+            const effectivePnl = slotBudget > 0 ? (netGainUSD / slotBudget) * 100.0 : trade.pnlPercent;
+
+            executedTrades.push({
+                ...trade,
+                positionSizeUSD: slotBudget,
+                netGainUSD: netGainUSD,
+                effectivePnl: effectivePnl,
+                feeUSD: totalFee
+            });
+
+            if (!coinRealStats[trade.coinId]) {
+                coinRealStats[trade.coinId] = { totalTrades: 0, totalPnl: 0, monthly: {} };
+            }
+            coinRealStats[trade.coinId].totalTrades++;
+            coinRealStats[trade.coinId].totalPnl += trade.pnlPercent;
+
+            const mKey = trade.monthKey || new Date(trade.exitTime).toISOString().slice(0, 7);
+            if (!coinRealStats[trade.coinId].monthly[mKey]) {
+                coinRealStats[trade.coinId].monthly[mKey] = { trades: 0, pnl: 0 };
+            }
+            coinRealStats[trade.coinId].monthly[mKey].trades++;
+            coinRealStats[trade.coinId].monthly[mKey].pnl += trade.pnlPercent;
+        }
+
+        let unrealizedPnlUSD = 0;
+        const currentSlotBudget = runningBalance / slotsCount;
+
+        activePositions.forEach(pos => {
+            const coin = coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
+            const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
+            const pnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
+            const positionBudget = Number(pos.allocatedUsd) > 0 ? Number(pos.allocatedUsd) : currentSlotBudget;
+            unrealizedPnlUSD += positionBudget * (pnlPercent / 100.0);
+        });
+
+        const totalCompoundedBalance = runningBalance + unrealizedPnlUSD;
+
+        return {
+            compoundedBalance: totalCompoundedBalance,
+            realizedBalance: runningBalance,
+            unrealizedPnlUSD: unrealizedPnlUSD,
+            totalFeesUSD: totalFeesAccumulated,
+            executedTrades: executedTrades.sort((a, b) => b.exitTime - a.exitTime),
+            acceptedTradeIds: acceptedTradeIds,
+            coinRealStats: coinRealStats
+        };
+    },
+
+    // 3. DİNAMİK ZAMAN DİLİMİ İSTATİSTİKLERİ
+    calculateTimeframeStats({
+        executedTrades = [],
+        timeframe = 'sinceStart',
+        selectedMonthIndex = new Date().getMonth() + 1,
+        selectedYear = '2026',
+        startDateTimestamp = 0,
+        customStartDate = null,
+        customEndDate = null,
+        initialBalance = 1000.0,
+        unrealizedPnlUSD = 0
+    }) {
+        if (!initialBalance || initialBalance <= 0) {
+            return { usdtGain: 0, realizedUsdtGain: 0, includeUnrealized: false, directTradePnlSum: 0, netTradePnlSum: 0, initialPnlPercentage: 0, totalFeesUSD: 0, tradesCount: 0 };
+        }
+
+        const now = new Date();
+        let startMs = 0;
+        let endMs = now.getTime();
+
+        const getStartOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0).getTime();
+
+        switch (timeframe) {
+            case 'sinceStart': {
+                const yearInt = parseInt(selectedYear, 10) || 2026;
+                const defaultYearStartMs = new Date(Date.UTC(yearInt, 0, 1, 0, 0, 0)).getTime();
+                startMs = startDateTimestamp > 0 ? (startDateTimestamp * 1000) : defaultYearStartMs;
+                break;
+            }
+            case 'today':
+                startMs = getStartOfDay(now);
+                break;
+            case 'week': {
+                const day = now.getDay();
+                const diff = (day === 0 ? -6 : 1) - day;
+                const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff, 0, 0, 0);
+                startMs = startOfWeek.getTime();
+                break;
+            }
+            case 'month':
+                startMs = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0).getTime();
+                break;
+            case 'selectMonth': {
+                const yearInt = parseInt(selectedYear, 10) || 2026;
+                const mIdx = parseInt(selectedMonthIndex, 10) - 1;
+                startMs = new Date(yearInt, mIdx, 1, 0, 0, 0).getTime();
+                endMs = new Date(yearInt, mIdx + 1, 0, 23, 59, 59, 999).getTime();
+                break;
+            }
+            case 'custom':
+                if (customStartDate && customEndDate) {
+                    startMs = new Date(customStartDate).setHours(0, 0, 0, 0);
+                    endMs = new Date(customEndDate).setHours(23, 59, 59, 999);
+                } else {
+                    startMs = getStartOfDay(now);
+                }
+                break;
+            default:
+                startMs = startDateTimestamp > 0 ? (startDateTimestamp * 1000) : getStartOfDay(now);
+        }
+
+        const filtered = executedTrades.filter(t => t.exitTime >= startMs && t.exitTime <= endMs);
+
+        let usdtGain = 0;
+        let directTradePnlSum = 0;
+        let netTradePnlSum = 0;
+        let totalFeesUSD = 0;
+
+        for (const t of filtered) {
+            usdtGain += (t.netGainUSD !== undefined) ? t.netGainUSD : (t.positionSizeUSD * (t.pnlPercent / 100));
+            directTradePnlSum += t.pnlPercent;
+            netTradePnlSum += (t.effectivePnl !== undefined) ? t.effectivePnl : t.pnlPercent;
+            totalFeesUSD += (t.feeUSD || 0);
+        }
+
+        const realizedUsdtGain = usdtGain;
+        const includeUnrealized = now.getTime() >= startMs && now.getTime() <= endMs;
+        if (includeUnrealized) usdtGain += Number(unrealizedPnlUSD || 0);
+
+        const initialPnlPercentage = (usdtGain / initialBalance) * 100.0;
+
+        return {
+            usdtGain,
+            realizedUsdtGain,
+            includeUnrealized,
+            directTradePnlSum,
+            netTradePnlSum,
+            initialPnlPercentage,
+            totalFeesUSD,
+            tradesCount: filtered.length
+        };
+    }
+};
+
 function calculateRSIHistory(prices, period = 14) {
     const rsiValues = new Array(prices.length).fill(null);
     if (prices.length <= period) return rsiValues;
@@ -140,20 +381,21 @@ function rebuildCoinMonthlyLedger(coin) {
 }
 function progress(message,detail=''){self.postMessage({type:'progress',message,detail})}
 function simulateTerminalTrades(coin,candles,settings,rsiValues=null) {
-    return KuzgunStrategy.simulate(candles,{...coin,...settings},{asOf:SNAP.asOf,startTime:SNAP.trainingStart??(SNAP.referenceArgs.startDateTimestamp*1000||Date.UTC(Number(SNAP.year),0,1,-3)),rsiValues}).trades;
+    return KuzgunStrategy.simulate(candles,{...coin,...settings},{asOf:SNAP.asOf}).trades;
 }
 
 function ledgerCandidate(coin,candles,settings,rsiValues=null) {
     if(settings.off)return {settings:{off:true},trades:[],count:0,winRate:0,standalone:0,signature:''};
-    const simulation=KuzgunStrategy.simulate(candles,{...coin,...settings},{asOf:SNAP.asOf,
-        startTime:SNAP.trainingStart??(SNAP.referenceArgs.startDateTimestamp*1000||Date.UTC(Number(SNAP.year),0,1,-3)),rsiValues});
-    const trades=simulation.trades;
+    const virtual={...coin,...settings,rawCandles:undefined,strategyTrades:simulateTerminalTrades(coin,candles,settings,rsiValues)};
+    const ledger=rebuildCoinMonthlyLedger(virtual);
+    // Real records are immutable and enter the portfolio once, outside the candidate pool.
+    const trades=ledger.flatMap(month=>month.tradesList).filter(trade=>!trade.isReal);
     const start=SNAP.referenceArgs.startDateTimestamp>0?SNAP.referenceArgs.startDateTimestamp*1000:Date.UTC(Number(SNAP.year)||2026,0,1);
     const measured=trades.filter(trade=>trade.exitTime>=start);
     const wins=measured.filter(trade=>trade.pnlPercent>=0).length;
-    return {candles,features:rsiValues?{[settings.rsiLength]:rsiValues}:null,settings:{interval:settings.interval,rsiLength:settings.rsiLength,buyRsi:settings.buyRsi,sellRsi:settings.sellRsi},trades,
+    return {settings:{interval:settings.interval,rsiLength:settings.rsiLength,buyRsi:settings.buyRsi,sellRsi:settings.sellRsi},trades,
         count:measured.length,winRate:measured.length?wins/measured.length*100:0,
-        standalone:measured.reduce((sum,trade)=>sum+trade.pnlPercent,0)+simulation.openPnl,
+        standalone:measured.reduce((sum,trade)=>sum+trade.pnlPercent,0),
         averageHold:measured.length?measured.reduce((sum,trade)=>sum+trade.exitTime-trade.entryTime,0)/measured.length:Infinity,
         signature:measured.slice(0,16).map(trade=>trade.entryTime+'_'+trade.exitTime).join(',')};
 }
@@ -174,28 +416,41 @@ function assembleTrades(groups,selection) {
     }
     return list;
 }
-function replaySelection(groups,selection) {
-    const coins=groups.map((g,i)=>({...g.coin,...g.options[selection[i]].settings,
-        isActive:g.coin.isActive!==false&&!g.options[selection[i]].settings.off,
-        rawCandles:g.options[selection[i]].candles||g.coin.rawCandles||[]}));
-    const streams=coins.filter(c=>c.isActive).map(c=>{
-        const index=coins.indexOf(c),candidate=groups[index].options[selection[index]];
-        return KuzgunReplay.stream(c,c.rawCandles,candidate.features||undefined);
-    });
-    return PortfolioEngine.calculateCompoundedBalance({...SNAP.referenceArgs,coins,streams,
-        asOf:SNAP.asOf,startTime:SNAP.trainingStart??undefined,keepCurve:false});
-}
 function evaluate(groups,selection,detailed=false) {
-    const replay=replaySelection(groups,selection),coins={};
-    for(const g of groups)coins[g.coin.id]={trades:0,wins:0,net:0,winRate:0};
-    for(const t of replay.executedTrades){const c=coins[t.coinId];if(c){c.trades++;c.wins+=Number(t.pnlPercent>=0);c.net+=t.netGainUSD;}}
-    for(const c of Object.values(coins))c.winRate=c.trades?100*c.wins/c.trades:0;
-    const summary={selection:[...selection],realized:replay.realizedBalance,balance:replay.compoundedBalance,
-        unrealized:replay.unrealizedPnlUSD,fees:replay.totalFeesUSD,trades:replay.trades,wins:replay.wins,
-        losses:replay.losses,winRate:replay.winRate,months:replay.months,coins,skipped:replay.skipped,skippedPnl:0,
-        openPositions:replay.openPositions.map(p=>({symbol:p.symbol,entryTime:p.entryTime,entryPrice:p.entryPrice,
-            currentPrice:p.currentPrice,pnlPercent:p.livePnlPercent,net:p.livePnlUsd})),engineVersion:replay.engineVersion};
-    if(detailed)summary.acceptedIds=[...replay.acceptedTradeIds].sort();
+    const raw=assembleTrades(groups,selection);
+    const args=SNAP.referenceArgs;
+    const accepted=args.isSlotConstraintEnabled?PortfolioEngine.filterTradesBySlotCapacity(raw,args.maxSlots,args.activePositions):raw;
+    const effectiveStart=args.startDateTimestamp>0?args.startDateTimestamp:Date.UTC(Number(args.selectedYear)||2026,0,1)/1000;
+    const valid=accepted.filter(trade=>trade.exitTime/1000>=effectiveStart).sort((a,b)=>a.exitTime-b.exitTime);
+    const monthStats={};
+    const coins={};for(const group of groups)coins[group.coin.id]={trades:0,wins:0,net:0};
+    let balance=args.baseBalance,fees=0,wins=0;
+    for(const trade of valid) {
+        const budget=balance/Math.max(1,args.maxSlots),pct=trade.pnlPercent;
+        const buyFee=args.isFeeDeductionEnabled?budget*.00075:0;
+        const value=budget*(1+pct/100),sellFee=args.isFeeDeductionEnabled?value*.00075:0;
+        const fee=buyFee+sellFee,net=budget*(pct/100)-fee;
+        balance+=net;fees+=fee;if(pct>=0)wins++;
+        const key=getTurkeyMonthKey(trade.exitTime);
+        const row=monthStats[key]||(monthStats[key]={net:0,fees:0,gross:0,netPercent:0,trades:0,wins:0});
+        row.net+=net;row.fees+=fee;row.gross+=pct;row.netPercent+=budget>0?net/budget*100:pct;row.trades++;if(pct>=0)row.wins++;
+        if(coins[trade.coinId]){coins[trade.coinId].trades++;coins[trade.coinId].net+=net;if(pct>=0)coins[trade.coinId].wins++}
+    }
+    const admitted=new Set(accepted.map(trade=>trade.id));
+    let skipped=0,skippedPnl=0;
+    for(const trade of raw)if(!admitted.has(trade.id)&&trade.exitTime/1000>=effectiveStart){skipped++;skippedPnl+=trade.pnlPercent}
+    for(const row of Object.values(coins))row.winRate=row.trades?row.wins/row.trades*100:0;
+    // Existing open positions and their marks are fixed in both historical alternatives.
+    let unrealized=0;
+    for(const position of args.activePositions){
+        const coin=args.coins.find(c=>c.id===position.coinId||c.symbol===position.symbol);
+        const price=coin&&coin.price>0?coin.price:position.entryPrice;
+        const amount=Number(position.allocatedUsd)>0?Number(position.allocatedUsd):balance/Math.max(1,args.maxSlots);
+        unrealized+=amount*(price-position.entryPrice)/position.entryPrice;
+    }
+    const summary={selection:[...selection],realized:balance,balance:balance+unrealized,unrealized,fees,trades:valid.length,wins,losses:valid.length-wins,
+        winRate:valid.length?wins/valid.length*100:0,months:monthStats,coins,skipped,skippedPnl};
+    if(detailed)summary.acceptedIds=accepted.map(trade=>trade.id).sort();
     return summary;
 }
 function referenceGroups(snapshot) {
@@ -211,9 +466,8 @@ function referenceGroups(snapshot) {
 function verifyReference(snapshot) {
     const groups=referenceGroups(snapshot);
     const baseline=evaluate(groups,groups.map(()=>0),true);
-    const reference=PortfolioEngine.calculateCompoundedBalance({...snapshot.referenceArgs,coins:snapshot.coins,asOf:snapshot.asOf,startTime:snapshot.trainingStart??undefined,keepCurve:false});
+    const reference=PortfolioEngine.calculateCompoundedBalance(snapshot.referenceArgs);
     const expected=snapshot.expected;
-    if(snapshot.engineVersion!==KuzgunReplay.version)throw new Error('Eski hesaplama referansı. Terminali yenileyip Kombinasyon bağlantısından yeni referans al.');
     const expectedIds=[...reference.acceptedTradeIds].sort();
     const sourceMatches=Math.abs(reference.realizedBalance-expected.realizedBalance)<.005&&Math.abs(reference.compoundedBalance-expected.compoundedBalance)<.005;
     const generatedMatches=Math.abs(baseline.realized-reference.realizedBalance)<.005&&Math.abs(baseline.balance-reference.compoundedBalance)<.005&&JSON.stringify(baseline.acceptedIds)===JSON.stringify(expectedIds);
@@ -233,7 +487,7 @@ function monthKeys() {
 }
 function guard(summary,baseline,groups,config) {
     const issues=[];
-    if(!Number.isFinite(summary.balance)||summary.balance<=baseline.balance+.005)issues.push('Toplam net kazanç artmadı');
+    if(!Number.isFinite(summary.balance)||summary.realized<=baseline.realized+.005||summary.balance<=baseline.balance+.005)issues.push('Toplam net kazanç artmadı');
     if(summary.winRate+1e-9<baseline.winRate)issues.push('Portföy kazanma oranı azaldı');
     for(let i=0;i<groups.length;i++) {
         const candidate=groups[i].options[summary.selection[i]],before=baseline.coins[groups[i].coin.id],after=summary.coins[groups[i].coin.id];
@@ -253,7 +507,7 @@ function guard(summary,baseline,groups,config) {
     return [...new Set(issues)];
 }
 async function fetchYear(symbol,interval) {
-    const start=SNAP.historyStart??Date.UTC(Number(SNAP.year),0,1,-3),end=SNAP.historyEnd??Math.min(SNAP.asOf,Date.UTC(Number(SNAP.year)+1,0,1));
+    const start=SNAP.historyStart??Date.UTC(Number(SNAP.year),0,1),end=SNAP.historyEnd??Math.min(SNAP.asOf,Date.UTC(Number(SNAP.year)+1,0,1));
     const endpoints=['https://data-api.binance.vision/api/v3/klines','https://api.binance.com/api/v3/klines'];
     let cursor=start;const candles=[];
     while(cursor<end){
@@ -277,8 +531,6 @@ async function fetchYear(symbol,interval) {
         cursor=next;progress(symbol+' / '+interval,`${candles.length.toLocaleString('tr-TR')} mum alındı`);
         if(batch.length<1000)break;
     }
-    if(candles.some((bar,i)=>i>0&&bar.time-candles[i-1].time!==TF[interval]))throw new Error(symbol+' / '+interval+': mum geçmişinde boşluk var');
-    if(candles.length&&candles.at(-1).time+TF[interval]<Math.floor(end/TF[interval])*TF[interval])throw new Error(symbol+' / '+interval+': son kapanmış mum eksik');
     return candles;
 }
 function candidateKey(candidate){const s=candidate.settings;return s.off?'off':[s.interval,s.rsiLength,s.buyRsi,s.sellRsi].join('_')}
@@ -311,13 +563,13 @@ async function optimize(snapshot,config) {
         if(tested>=budget)return null;
         const value=evaluate(groups,selection);tested++;
         value.issues=guard(value,baseline,groups,config);
-        const improvement=value.balance-baseline.balance;
+        const improvement=value.realized-baseline.realized;
         const monthDeficit=monthKeys().reduce((sum,key)=>sum+Math.max(0,(baseline.months[key]?.net||0)-(value.months[key]?.net||0)),0);
         value.searchScore=improvement-monthDeficit*(config.monthlyMode==='strict'?3:1.5)-Math.max(0,baseline.winRate-value.winRate)*snapshot.referenceArgs.baseBalance*.02;
         const compact={selection:value.selection,balance:value.balance,realized:value.realized,searchScore:value.searchScore,issues:value.issues};
         cache.set(key,compact);
-        if(!value.issues.length&&value.balance>best.balance+.005)best=value;
-        if(tested%20===0)progress('Ortak slotlar karşılaştırılıyor',`${tested}/${budget} portföy denemesi · bulunan net artış ${(best.balance-baseline.balance).toFixed(2)} USDT`);
+        if(!value.issues.length&&value.realized>best.realized+.005)best=value;
+        if(tested%20===0)progress('Ortak slotlar karşılaştırılıyor',`${tested}/${budget} portföy denemesi · bulunan net artış ${(best.realized-baseline.realized).toFixed(2)} USDT`);
         return compact;
     }
     // Baseline is always retained, even if no alternative passes all guardrails.
@@ -423,7 +675,7 @@ async function optimize(snapshot,config) {
         }
     }
     cache.clear();
-    const improved=best.balance>baseline.balance+.005&&guard(best,baseline,groups,config).length===0;
+    const improved=best.realized>baseline.realized+.005&&guard(best,baseline,groups,config).length===0;
     const recommendation=improved?evaluate(groups,best.selection,true):null;
     for(const group of groups)delete group.histories;
     // Session is released after reporting; only compact review data goes to the main page.

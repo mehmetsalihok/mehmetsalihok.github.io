@@ -1,5 +1,5 @@
 'use strict';
-importScripts('combination-walkforward.js?v=3-replay');
+importScripts('combination-walkforward.js?v=4-research');
 const researchDeliver=self.postMessage.bind(self);
 function researchBounds(source,config){
     const n=Number(config.testMonths);
