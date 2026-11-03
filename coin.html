@@ -236,7 +236,7 @@
         </div>
     </main>
 
-    <script src="strategyEngine.js?v=1"></script>
+    <script src="strategyEngine.js?v=3-replay"></script>
     <script>
         // 🎯 TEKLİ COİN MOTORU & İNDEXEDDB ENTEGRASYONU
         let targetSymbol = new URLSearchParams(window.location.search).get('symbol') || 'ASTERUSDT';
@@ -323,10 +323,10 @@
 
             // Aylık Tablo Dökümü
             const sortedMonths = Object.entries(monthlyMap).sort((a, b) => b[0].localeCompare(a[0]));
-            const totalPnl = sortedMonths.reduce((sum, m) => sum + m[1].pnl, 0);
+            const totalPnl = result.markedNetPnl;
             const totalTrades = sortedMonths.reduce((sum, m) => sum + m[1].trades, 0);
 
-            document.getElementById('totalStatsSummary').textContent = `Toplam ${totalTrades} İşlem • %${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}`;
+            document.getElementById('totalStatsSummary').textContent = `Tek coin · ${totalTrades} kapanmış işlem · Açık ${result.openPosition?result.openPnl.toFixed(2)+'%':'yok'} • %${totalPnl >= 0 ? '+' : ''}${totalPnl.toFixed(2)}`;
 
             document.getElementById('tabContentMonthly').innerHTML = sortedMonths.map(([k, m]) => `
                 <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs">

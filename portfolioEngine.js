@@ -50,99 +50,10 @@ const PortfolioEngine = {
     },
 
     // 2. BİLEŞİK BAKİYE & KOMİSYON MOTORU
-    calculateCompoundedBalance({
-        baseBalance = 1000.0,
-        maxSlots = 2,
-        trades = [],
-        activePositions = [],
-        coins = [],
-        isSlotConstraintEnabled = true,
-        isFeeDeductionEnabled = true,
-        startDateTimestamp = 0,
-        selectedYear = '2026'
-    }) {
-        const processedTrades = isSlotConstraintEnabled 
-            ? this.filterTradesBySlotCapacity(trades, maxSlots, activePositions)
-            : [...trades].sort((a, b) => a.exitTime - b.exitTime);
-
-        // Slota kabul edilen işlemlerin ID kümesi
-        const acceptedTradeIds = new Set(processedTrades.map(t => t.id));
-
-        const yearInt = parseInt(selectedYear, 10) || 2026;
-        const defaultYearStartSec = new Date(Date.UTC(yearInt, 0, 1, 0, 0, 0)).getTime() / 1000;
-        const effectiveStartSec = startDateTimestamp > 0 ? startDateTimestamp : defaultYearStartSec;
-
-        const validTrades = processedTrades
-            .filter(t => (t.exitTime / 1000) >= effectiveStartSec)
-            .sort((a, b) => a.exitTime - b.exitTime);
-
-        let runningBalance = baseBalance;
-        const slotsCount = Math.max(1, maxSlots);
-        let totalFeesAccumulated = 0;
-        const executedTrades = [];
-
-        // Coin bazlı slota giren reel istatistikler
-        const coinRealStats = {};
-
-        for (const trade of validTrades) {
-            const slotBudget = runningBalance / slotsCount;
-
-            const buyFee = isFeeDeductionEnabled ? (slotBudget * 0.00075) : 0.0;
-            const exitValue = slotBudget * (1.0 + (trade.pnlPercent / 100.0));
-            const sellFee = isFeeDeductionEnabled ? (exitValue * 0.00075) : 0.0;
-            const totalFee = buyFee + sellFee;
-            totalFeesAccumulated += totalFee;
-
-            const rawGainUSD = slotBudget * (trade.pnlPercent / 100.0);
-            const netGainUSD = rawGainUSD - totalFee;
-            runningBalance += netGainUSD;
-
-            const effectivePnl = slotBudget > 0 ? (netGainUSD / slotBudget) * 100.0 : trade.pnlPercent;
-
-            executedTrades.push({
-                ...trade,
-                positionSizeUSD: slotBudget,
-                netGainUSD: netGainUSD,
-                effectivePnl: effectivePnl,
-                feeUSD: totalFee
-            });
-
-            if (!coinRealStats[trade.coinId]) {
-                coinRealStats[trade.coinId] = { totalTrades: 0, totalPnl: 0, monthly: {} };
-            }
-            coinRealStats[trade.coinId].totalTrades++;
-            coinRealStats[trade.coinId].totalPnl += trade.pnlPercent;
-
-            const mKey = trade.monthKey || new Date(trade.exitTime).toISOString().slice(0, 7);
-            if (!coinRealStats[trade.coinId].monthly[mKey]) {
-                coinRealStats[trade.coinId].monthly[mKey] = { trades: 0, pnl: 0 };
-            }
-            coinRealStats[trade.coinId].monthly[mKey].trades++;
-            coinRealStats[trade.coinId].monthly[mKey].pnl += trade.pnlPercent;
-        }
-
-        let unrealizedPnlUSD = 0;
-        const currentSlotBudget = runningBalance / slotsCount;
-
-        activePositions.forEach(pos => {
-            const coin = coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
-            const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
-            const pnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
-            const positionBudget = Number(pos.allocatedUsd) > 0 ? Number(pos.allocatedUsd) : currentSlotBudget;
-            unrealizedPnlUSD += positionBudget * (pnlPercent / 100.0);
-        });
-
-        const totalCompoundedBalance = runningBalance + unrealizedPnlUSD;
-
-        return {
-            compoundedBalance: totalCompoundedBalance,
-            realizedBalance: runningBalance,
-            unrealizedPnlUSD: unrealizedPnlUSD,
-            totalFeesUSD: totalFeesAccumulated,
-            executedTrades: executedTrades.sort((a, b) => b.exitTime - a.exitTime),
-            acceptedTradeIds: acceptedTradeIds,
-            coinRealStats: coinRealStats
-        };
+    calculateCompoundedBalance(options = {}) {
+        const year=Number(options.selectedYear)||new Date().getFullYear();
+        const start=options.startTime ?? (Number(options.startDateTimestamp)>0?Number(options.startDateTimestamp)*1000:Date.UTC(year,0,1,-3));
+        return KuzgunReplay.run({...options,startTime:start,keepCurve:options.keepCurve!==false});
     },
 
     // 3. DİNAMİK ZAMAN DİLİMİ İSTATİSTİKLERİ
@@ -155,7 +66,9 @@ const PortfolioEngine = {
         customStartDate = null,
         customEndDate = null,
         initialBalance = 1000.0,
-        unrealizedPnlUSD = 0
+        unrealizedPnlUSD = 0,
+        equityCurve = null,
+        currentEquity = null
     }) {
         if (!initialBalance || initialBalance <= 0) {
             return { usdtGain: 0, realizedUsdtGain: 0, includeUnrealized: false, directTradePnlSum: 0, netTradePnlSum: 0, initialPnlPercentage: 0, totalFeesUSD: 0, tradesCount: 0 };
@@ -221,6 +134,15 @@ const PortfolioEngine = {
         }
 
         const realizedUsdtGain = usdtGain;
+        if(equityCurve?.length) {
+            const valueAt=time=>{let lo=0,hi=equityCurve.length;while(lo<hi){const mid=(lo+hi)>>>1;if(equityCurve[mid].time<=time)lo=mid+1;else hi=mid;}return equityCurve[Math.max(0,lo-1)];};
+            const opening=valueAt(startMs-1),ending=valueAt(endMs);
+            const current=now.getTime()>=startMs&&now.getTime()<=endMs;
+            const endValue=current&&Number.isFinite(currentEquity)?currentEquity:ending.equity;
+            const net=endValue-opening.equity;
+            return {usdtGain:net,realizedUsdtGain,includeUnrealized:current,directTradePnlSum,netTradePnlSum,
+                initialPnlPercentage:net/initialBalance*100,totalFeesUSD:ending.fees-opening.fees,tradesCount:filtered.length};
+        }
         const includeUnrealized = now.getTime() >= startMs && now.getTime() <= endMs;
         if (includeUnrealized) usdtGain += Number(unrealizedPnlUSD || 0);
 

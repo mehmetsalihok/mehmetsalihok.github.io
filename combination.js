@@ -21,10 +21,7 @@ function assertCurrentReference(forApply=false) {
        String(localStorage.getItem('kuzgun_selected_year')||'2026')!==snapshot.year||
        (Number(localStorage.getItem('kuzgun_portfolio_start_date'))||0)!==Number(args.startDateTimestamp))
        throw new Error('Terminal ayarları referans alındıktan sonra değişmiş. Terminaldeki Kombinasyon bağlantısından yeni referans al.');
-    if(recordKey(JSON.parse(localStorage.getItem('kuzgun_closed_trades')||'[]'))!==recordKey(snapshot.closedTrades)||
-       recordKey(JSON.parse(localStorage.getItem('kuzgun_active_pos')||'[]'))!==recordKey(args.activePositions)||
-       recordKey(JSON.parse(localStorage.getItem('kuzgun_pending_closed_trades')||'[]'))!==recordKey(snapshot.pendingClosedTrades))
-       throw new Error('Terminal işlem kayıtları değişmiş. Karşılaştırmadan önce terminalden yeni referans al.');
+    if(snapshot.engineVersion!=='replay-v3')throw new Error('Eski motor referansı. Terminali yenileyip Kombinasyon bağlantısından yeniden aç.');
     if(!snapshot.coins.length)throw new Error('Terminalde karşılaştırılacak coin yok.');
 }
 function matchingLeagueRecords(snapshot,coin,records) {
@@ -56,7 +53,7 @@ function updateAnalysisPeriod(){
         if(!$('analysisStart').value)$('analysisStart').value=(Number(snapshot.year)-1)+'-01';
         if(!$('analysisEnd').value)$('analysisEnd').value=last;
     }
-    $('analysisPeriodHint').textContent=custom?'Mevcut ayarlar ve tek bir öneri seçilen dönemde simüle edilir. Başlangıç sermayesi terminalden alınır; gerçek işlemler ve bugünkü açık pozisyonlar içeri aktarılmaz. Sonuç kapanmış işlemlere dayanır; her ay ayrı ayar seçilmez.':'Terminalde seçili yılın mevcut hesap ve gerçek işlem kayıtlarıyla karşılaştırma yapılır.';
+    $('analysisPeriodHint').textContent=custom?'Mevcut ayarlar ve tek bir öneri seçilen dönemde simüle edilir. Başlangıç sermayesi terminalden alınır; gerçek işlemler ve bugünkü açık pozisyonlar içeri aktarılmaz. Sonuç açık pozisyonların değerini de içerir; her ay ayrı ayar seçilmez.':'Terminalde seçili yılın mumları zaman sırasıyla oynatılır; açık pozisyonlar, nakit ve bekleme sırası hesaba katılır. Yerel canlı kayıtlar hesaba karıştırılmaz.';
     updateLeagueStatus();
 }
 function updateLeagueStatus() {
@@ -141,7 +138,7 @@ function start(){
             const missing=range?[]:snapshot.coins.filter(coin=>!matchingLeagueRecords(snapshot,coin,leagueRecords).length);
             if(missing.length)throw new Error('Lig kaydı eksik veya uyumsuz: '+missing.map(coin=>coin.displaySymbol||coin.symbol).join(', ')+'. Aynı yıl, hedef kâr ve aylık kilitle 15m/30m lig taraması yap; ardından terminalden yeni referans al.');
         }
-        worker=new Worker(range?'combination-range.js?v=4-budget':'combination-worker.js?v=27-budget');
+        worker=new Worker(range?'combination-range.js?v=3-replay':'combination-worker.js?v=3-replay');
     }catch(reason){error(reason.message);return}
     const config={...range,minTrades:Number(min.value),monthlyMode:$('monthlyMode').value,budget:Number($('searchBudget').value),allowDisable:$('allowDisable').checked,leagueOnly:$('leagueOnly').checked,leagueRecords};
     result=null;$('applyStatus').textContent='';$('resultSection').hidden=true;$('progressBox').hidden=false;$('progressTitle').textContent='Terminal referansı doğrulanıyor';$('progressDetail').textContent='Aynı bakiye ve aynı slota kabul edilen işlem listesi bekleniyor.';setRunning(true);
@@ -163,14 +160,14 @@ function start(){
 }
 function settingsLabel(settings){return settings.off?'Pasif':`${escapeText(settings.interval)} / RSI ${settings.rsiLength}<small>AL ${settings.buyRsi} / SAT ${settings.sellRsi}</small>`}
 function period(summary){
-    if(selectedMonth==='all')return {...summary,net:summary.realized-result.base,gross:Object.values(summary.months).reduce((sum,row)=>sum+row.gross,0),netPercent:Object.values(summary.months).reduce((sum,row)=>sum+row.netPercent,0)};
+    if(selectedMonth==='all')return {...summary,net:summary.balance-result.base,gross:Object.values(summary.months).reduce((sum,row)=>sum+row.gross,0),netPercent:Object.values(summary.months).reduce((sum,row)=>sum+row.netPercent,0)};
     const row=summary.months[selectedMonth]||{net:0,fees:0,gross:0,netPercent:0,trades:0,wins:0};
-    const balance=result.base+Object.entries(summary.months).filter(([key])=>key<=selectedMonth).reduce((sum,[,month])=>sum+month.net,0);
+    const balance=summary.months[selectedMonth]?.closingEquity??(result.base+Object.entries(summary.months).filter(([key])=>key<=selectedMonth).reduce((sum,[,month])=>sum+month.net,0));
     return {...row,balance,realized:balance,unrealized:0,winRate:row.trades?row.wins/row.trades*100:0,losses:row.trades-row.wins};
 }
 function metrics(summary){
     const view=period(summary),capital=100*view.net/result.base;
-    return `<div class="metric"><span>${selectedMonth==='all'?(result.analysisRange?'Dönem sonu gerçekleşmiş bakiye':'Toplam portföy bakiyesi'):'Ay sonu gerçekleşmiş bakiye'}</span><strong>${money(view.balance)}</strong><small>Net kazanç: <b class="${view.net<0?'negative':'positive'}">${view.net>=0?'+':''}${money(view.net)}</b> · Sermayeye ${pct(capital)}</small>${selectedMonth==='all'?`<small>${result.analysisRange?'Kapanmış işlemler; dönem sonu açık pozisyon değeri dahil değil.':`Gerçekleşmiş bakiye ${money(view.realized)} · Sabit açık pozisyon getirisi ${money(view.unrealized)}`}</small>`:''}</div><div class="metric"><span>Kazanma oranı</span><strong>%${view.winRate.toFixed(2)}</strong><small>${view.wins} win / ${view.losses} lose · ${view.trades} işlem</small></div><div class="metric"><span>Brüt / net işlem getirisi</span><strong>${pct(view.gross)}</strong><small>Net ${pct(view.netPercent)}</small></div><div class="metric"><span>Komisyon</span><strong>${money(view.fees)}</strong><small>Analizdeki tercih uygulandı</small></div>`;
+    return `<div class="metric"><span>${selectedMonth==='all'?(result.analysisRange?'Dönem sonu portföy değeri':'Toplam portföy bakiyesi'):'Ay sonu portföy değeri'}</span><strong>${money(view.balance)}</strong><small>Net kazanç: <b class="${view.net<0?'negative':'positive'}">${view.net>=0?'+':''}${money(view.net)}</b> · Sermayeye ${pct(capital)}</small>${selectedMonth==='all'?`<small>${`Gerçekleşmiş bakiye ${money(view.realized)} · Açık kâr/zarar ${money(view.unrealized)} · ${summary.openPositions?.length||0} açık pozisyon`}</small>`:''}</div><div class="metric"><span>Kapanmış işlem başarısı</span><strong>%${view.winRate.toFixed(2)}</strong><small>${view.wins} win / ${view.losses} lose · ${view.trades} işlem</small></div><div class="metric"><span>Brüt / net işlem getirisi</span><strong>${pct(view.gross)}</strong><small>Net ${pct(view.netPercent)}</small></div><div class="metric"><span>Komisyon</span><strong>${money(view.fees)}</strong><small>Analizdeki tercih uygulandı</small></div>`;
 }
 function monthTitle(key){return new Intl.DateTimeFormat('tr-TR',{year:'numeric',month:'long',timeZone:'Europe/Istanbul'}).format(new Date(key+'-15T12:00:00Z'))}
 function showMonth(key){
@@ -178,9 +175,9 @@ function showMonth(key){
     document.querySelectorAll('[data-month]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.month===key)));
     const next=result.recommendation||result.baseline;
     $('currentMetrics').innerHTML=metrics(result.baseline);$('suggestedMetrics').innerHTML=metrics(next);
-    $('viewLabel').textContent=key==='all'?(result.analysisRange?result.analysisRange.startMonth+' — '+result.analysisRange.endMonth+' · Seçilen dönemin kapanmış işlem simülasyonu':result.year+' · Yılbaşından terminal referans anına kadar'):monthTitle(key)+' · Kapanmış işlemler';
+    $('viewLabel').textContent=key==='all'?(result.analysisRange?result.analysisRange.startMonth+' — '+result.analysisRange.endMonth+' · Seçilen dönemin açık pozisyonlar dahil simülasyonu':result.year+' · Yılbaşından terminal referans anına kadar'):monthTitle(key)+' · Açık kâr/zarar dahil';
     const delta=period(next).net-period(result.baseline).net;
-    $('deltaLabel').textContent=key==='all'?'Toplam gerçekleşmiş net kazanç farkı':'Bu ayın net kazanç farkı';
+    $('deltaLabel').textContent=key==='all'?'Toplam portföy değeri farkı':'Bu ayın net kazanç farkı';
     $('gainDelta').textContent=(delta>=0?'+':'')+money(delta);$('gainDelta').className=delta<0?'negative':'positive';
     $('slotDifference').textContent=`Tüm dönemde kaçan sinyal: ${result.baseline.skipped} → ${next.skipped}`;
 }
