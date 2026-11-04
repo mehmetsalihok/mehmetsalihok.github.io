@@ -18,7 +18,7 @@ const PortfolioEngine = {
             if(closedTrades.some(t=>matches(c,t)&&(sameSignal(open,t)||(entryTime<Number(t.exitTime)&&Number(t.entryTime)<=entryTime))))return [];
             if(pendingClosedTrades.some(t=>matches(c,t)&&sameSignal(open,t)))return [];
             const month=new Date(entryTime+10800000).toISOString().slice(0,7);
-            const before=(c.monthlyLedger||[]).filter(m=>m.monthKey===month).flatMap(m=>m.tradesList||[])
+            const before=(c.monthlyLedger||[]).filter(m=>m.monthKey===month).flatMap(m=>[...(m.tradesList||[]),...(m.pendingTradesList||[])])
                 .filter(t=>Number(t.exitTime)<=entryTime).reduce((n,t)=>n+Number(t.pnlPercent??t.pnl??0),0);
             if(Number(c.monthlyCap)>0&&before+.001>=Number(c.monthlyCap))return [];
             return [{id:`sim_open_${c.id}_${entryTime}`,coinId:c.id,symbol:c.symbol,entryTime,entryPrice,
@@ -346,7 +346,15 @@ function rebuildCoinMonthlyLedger(coin) {
             duration: formatTradeDuration(t.entryTime, t.exitTime),
             monthKey: getTurkeyMonthKey(t.exitTime)}));
     const open = (KZ_STATE.activePositions || []).filter(t => coinMatchesTrade(coin, t));
-    const waiting = (KZ_STATE.pendingClosedTrades || []).filter(t => coinMatchesTrade(coin, t));
+    // Waiting targets consume the coin's monthly allowance, never portfolio money.
+    // A recorded execution of the same signal always takes priority.
+    const waiting = (KZ_STATE.pendingClosedTrades || []).filter(t => coinMatchesTrade(coin, t))
+        .filter(t=>![...recorded,...open].some(r=>isSameTradeSignal(t,r)))
+        .filter((t,i,all)=>all.findIndex(r=>isSameTradeSignal(t,r))===i)
+        .map(t=>{const target=Number(t.profitTarget??coin.profitTarget);
+            const pnl=target>0?target:Number(t.pnlPercent||0);
+            return {...t,isReal:true,isPendingOnly:true,pnl,pnlPercent:pnl,
+                monthKey:getTurkeyMonthKey(t.exitTime)};});
     const occupied = [...recorded, ...open.map(t => ({...t, exitTime: Infinity}))];
     const raw = coin.strategyTrades || (coin.simMonthlyStats || []).flatMap(m => m.tradesList || []).filter(t => !t.isReal);
     const simulated = raw.filter(t => !t.source && Number(t.exitTime) > 0)
@@ -361,7 +369,7 @@ function rebuildCoinMonthlyLedger(coin) {
     const names = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
     const month = key => {
         if (!months.has(key)) months.set(key, {monthKey:key,name:names[Number(key.slice(5))-1],
-            trades:0,pnl:0,isLocked:false,tradesList:[],afterLimitCount:0});
+            trades:0,pnl:0,isLocked:false,tradesList:[],pendingTradesList:[],pendingTrades:0,pendingPnl:0,afterLimitCount:0});
         return months.get(key);
     };
     // Aylar boş olsa bile karttaki mevcut yıl tablosunda yerini korur.
@@ -370,7 +378,7 @@ function rebuildCoinMonthlyLedger(coin) {
     for (let i=1; i<=maxMonth; i++) month(`${year}-${String(i).padStart(2,'0')}`);
     const events=[];
     const seen = new Set();
-    for (const trade of [...recorded, ...simulated]) {
+    for (const trade of [...recorded, ...simulated, ...waiting]) {
         if (Number.isFinite(SNAP.trainingStart)?(trade.entryTime<SNAP.trainingStart||trade.exitTime>SNAP.asOf):!trade.monthKey.startsWith(year + '-')) continue;
         const key = trade.id || `${trade.coinId}_${trade.entryTime}_${trade.exitTime}`;
         if (seen.has(key)) continue;
@@ -394,8 +402,14 @@ function rebuildCoinMonthlyLedger(coin) {
             admitted.add(trade);
         } else if (admitted.has(trade)) {
             const result=month(trade.monthKey);
-            result.tradesList.push(trade);
-            result.trades++;
+            if(trade.isPendingOnly) {
+                result.pendingTradesList.push(trade);
+                result.pendingTrades++;
+                result.pendingPnl+=trade.pnl;
+            } else {
+                result.tradesList.push(trade);
+                result.trades++;
+            }
             result.pnl+=trade.pnl;
             if (trade.afterMonthlyLimit) result.afterLimitCount++;
         }

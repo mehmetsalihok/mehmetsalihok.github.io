@@ -11,7 +11,7 @@ const PortfolioEngine = {
             if(closedTrades.some(t=>matches(c,t)&&(sameSignal(open,t)||(entryTime<Number(t.exitTime)&&Number(t.entryTime)<=entryTime))))return [];
             if(pendingClosedTrades.some(t=>matches(c,t)&&sameSignal(open,t)))return [];
             const month=new Date(entryTime+10800000).toISOString().slice(0,7);
-            const before=(c.monthlyLedger||[]).filter(m=>m.monthKey===month).flatMap(m=>m.tradesList||[])
+            const before=(c.monthlyLedger||[]).filter(m=>m.monthKey===month).flatMap(m=>[...(m.tradesList||[]),...(m.pendingTradesList||[])])
                 .filter(t=>Number(t.exitTime)<=entryTime).reduce((n,t)=>n+Number(t.pnlPercent??t.pnl??0),0);
             if(Number(c.monthlyCap)>0&&before+.001>=Number(c.monthlyCap))return [];
             return [{id:`sim_open_${c.id}_${entryTime}`,coinId:c.id,symbol:c.symbol,entryTime,entryPrice,
