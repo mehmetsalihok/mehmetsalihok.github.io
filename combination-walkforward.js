@@ -55,15 +55,16 @@ function wfMakeTraining(source,history,cutoff,seedSettings,start=wfMonthStart(Nu
             interval,rsiLength:seed.off?6:seed.rsiLength,buyRsi:seed.off?25:seed.buyRsi,sellRsi:seed.off?75:seed.sellRsi,
             isActive:!seed.off,rawCandles,price};
     });
-    const training={schema:'kuzgun-combination-v2',trainingStart:start,asOf:cutoff,year:source.year,coins,closedTrades:[],pendingClosedTrades:[],
+    const training={schema:'kuzgun-combination-v2',openSlotAccountingVersion:1,trainingStart:start,asOf:cutoff,year:source.year,coins,closedTrades:[],pendingClosedTrades:[],
         referenceArgs:{baseBalance:source.referenceArgs.baseBalance,maxSlots:source.referenceArgs.maxSlots,trades:[],activePositions:[],
             coins:coins.filter(coin=>coin.isActive!==false).map(coin=>({id:coin.id,symbol:coin.symbol,price:coin.price})),
             isSlotConstraintEnabled:true,isFeeDeductionEnabled:source.referenceArgs.isFeeDeductionEnabled,
             startDateTimestamp:start/1000,selectedYear:source.year}};
     const groups=referenceGroups(training),trades=assembleTrades(groups,groups.map(()=>0));
     training.referenceArgs.trades=trades;
+    training.referenceArgs.simulatedOpenPositions=groups.flatMap(g=>g.options[0].openPosition?[g.options[0].openPosition]:[]);
     const engine=PortfolioEngine.calculateCompoundedBalance(training.referenceArgs);
-    training.expected={realizedBalance:engine.realizedBalance,compoundedBalance:engine.compoundedBalance,unrealizedPnlUSD:0};
+    training.expected={realizedBalance:engine.realizedBalance,compoundedBalance:engine.compoundedBalance,unrealizedPnlUSD:engine.unrealizedPnlUSD};
     return training;
 }
 function wfLeagueRecords(training,history){

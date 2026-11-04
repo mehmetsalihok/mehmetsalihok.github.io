@@ -2840,6 +2840,12 @@ function updateLivePortfolioQuick() {
         unrealizedPnlUsd += currentSlotBudget * (pnlPercent / 100.0);
     });
 
+    for(const pos of KZ_STATE.simulatedOpenPositions||[]) {
+        const coin=KZ_STATE.coins.find(c=>c.id===pos.coinId||c.symbol===pos.symbol);
+        const mark=Number(coin?.price)>0?Number(coin.price):pos.entryPrice;
+        unrealizedPnlUsd+=pos.allocatedUsd*(mark-pos.entryPrice)/pos.entryPrice;
+    }
+
     const totalUsd = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) + unrealizedPnlUsd;
     const totalTry = totalUsd * KZ_STATE.usdtTryRate;
     updateHeaderReturns({realizedBalance: KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd,
@@ -3651,6 +3657,7 @@ function recalculateFullPortfolio() {
             maxSlots: KZ_STATE.maxSlots,
             trades: allRawTrades,
             activePositions: KZ_STATE.activePositions,
+            simulatedOpenPositions: PortfolioEngine.getSimulatedOpenPositions(KZ_STATE.coins,KZ_STATE.closedTrades,KZ_STATE.activePositions,KZ_STATE.pendingClosedTrades),
             coins: KZ_STATE.coins.filter(c => c.isActive !== false),
             isSlotConstraintEnabled: isSlotConstraint,
             isFeeDeductionEnabled: isFeeDeduction,
@@ -3659,7 +3666,7 @@ function recalculateFullPortfolio() {
         };
 
         const slotAccepted = isSlotConstraint
-            ? PortfolioEngine.filterTradesBySlotCapacity(allRawTrades, KZ_STATE.maxSlots, KZ_STATE.activePositions)
+            ? PortfolioEngine.filterTradesBySlotCapacity([...allRawTrades,...engineArgs.simulatedOpenPositions], KZ_STATE.maxSlots, KZ_STATE.activePositions)
             : allRawTrades;
         KZ_STATE.simulatedPendingClosedTrades = buildPendingHistorySimulation(allRawTrades, slotAccepted, startTs, isSlotConstraint);
         let engineResult = PortfolioEngine.calculateCompoundedBalance(engineArgs);
@@ -3683,6 +3690,7 @@ function recalculateFullPortfolio() {
             renderActivePositionsList();
         }
 
+        KZ_STATE.simulatedOpenPositions = engineResult.simulatedOpenPositions;
         KZ_STATE.acceptedTradeIds = engineResult.acceptedTradeIds;
         KZ_STATE.coinRealStats = engineResult.coinRealStats;
         KZ_STATE.cachedRealizedBalance = engineResult.realizedBalance;
@@ -4137,13 +4145,13 @@ async function saveCombinationTerminalReference() {
     }));
     const referenceArgs = {
         baseBalance:KZ_STATE.portfolioBaseUsd,maxSlots:KZ_STATE.maxSlots,trades:allRawTrades,
-        activePositions:KZ_STATE.activePositions,coins:coins.filter(coin=>coin.isActive!==false).map(coin=>({id:coin.id,symbol:coin.symbol,price:coin.price})),
+        activePositions:KZ_STATE.activePositions,simulatedOpenPositions:PortfolioEngine.getSimulatedOpenPositions(KZ_STATE.coins,KZ_STATE.closedTrades,KZ_STATE.activePositions,KZ_STATE.pendingClosedTrades),coins:coins.filter(coin=>coin.isActive!==false).map(coin=>({id:coin.id,symbol:coin.symbol,price:coin.price})),
         isSlotConstraintEnabled:localStorage.getItem('kuzgun_slot_constraint_enabled')!=='false',
         isFeeDeductionEnabled:localStorage.getItem('kuzgun_fee_deduction_enabled')!=='false',
         startDateTimestamp,selectedYear:year
     };
     const result = PortfolioEngine.calculateCompoundedBalance(referenceArgs);
-    const snapshot = JSON.parse(JSON.stringify({schema:'kuzgun-combination-v2',asOf,year,
+    const snapshot = JSON.parse(JSON.stringify({schema:'kuzgun-combination-v2',openSlotAccountingVersion:1,asOf,year,
         coins,referenceArgs,closedTrades:KZ_STATE.closedTrades||[],pendingClosedTrades:KZ_STATE.pendingClosedTrades||[],
         expected:{realizedBalance:result.realizedBalance,compoundedBalance:result.compoundedBalance,
             unrealizedPnlUSD:result.unrealizedPnlUSD,totalFeesUSD:result.totalFeesUSD,

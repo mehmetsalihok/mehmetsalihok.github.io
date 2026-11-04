@@ -1,5 +1,24 @@
 // KUZGUN PRO — HIGH PERFORMANCE PORTFOLIO & TIMEFRAME ENGINE
 const PortfolioEngine = {
+    // Only unfinished strategy positions enter this bridge. No live position is created.
+    getSimulatedOpenPositions(coins, closedTrades = [], activePositions = [], pendingClosedTrades = []) {
+        const matches=(c,t)=>t.coinId===c.id||(t.symbol&&t.symbol===c.symbol);
+        const sameSignal=(a,b)=>Math.floor(Number(a.originSignalTime||a.entryTime||a.time)/60000)===Math.floor(Number(b.originSignalTime||b.entryTime||b.time)/60000);
+        return coins.filter(c=>c.isActive!==false&&c.strategyOpenPosition).flatMap(c=>{
+            const open=c.strategyOpenPosition,entryTime=Number(open.entryTime),entryPrice=Number(open.entryPrice);
+            if(!(entryTime>0)||!(entryPrice>0))return [];
+            if(activePositions.some(t=>matches(c,t)))return [];
+            if(closedTrades.some(t=>matches(c,t)&&(sameSignal(open,t)||(entryTime<Number(t.exitTime)&&Number(t.entryTime)<=entryTime))))return [];
+            if(pendingClosedTrades.some(t=>matches(c,t)&&sameSignal(open,t)))return [];
+            const month=new Date(entryTime+10800000).toISOString().slice(0,7);
+            const before=(c.monthlyLedger||[]).filter(m=>m.monthKey===month).flatMap(m=>m.tradesList||[])
+                .filter(t=>Number(t.exitTime)<=entryTime).reduce((n,t)=>n+Number(t.pnlPercent??t.pnl??0),0);
+            if(Number(c.monthlyCap)>0&&before+.001>=Number(c.monthlyCap))return [];
+            return [{id:`sim_open_${c.id}_${entryTime}`,coinId:c.id,symbol:c.symbol,entryTime,entryPrice,
+                exitTime:Infinity,isSimulatedOpen:true,originSignalTime:entryTime}];
+        });
+    },
+
     // 1. ⚡️ ALTIN STANDART SLOT ÇAKIŞMA KALKANI (0.1 Milisaniyede Tamamlanır)
     filterTradesBySlotCapacity(rawTrades, maxSlots, activePositions = []) {
         if (!maxSlots || maxSlots <= 0 || !rawTrades || rawTrades.length === 0) return rawTrades;
@@ -20,7 +39,7 @@ const PortfolioEngine = {
         for (let i = 0; i < sorted.length; i++) {
             const trade = sorted[i];
             const entry = trade.entryTime;
-            const exit = Math.max(trade.exitTime, trade.entryTime + 60000);
+            const exit = trade.isSimulatedOpen ? Infinity : Math.max(trade.exitTime, trade.entryTime + 60000);
             const isReal = trade.source === 'manual' || trade.source === 'automatic';
 
             for (let s = occupied.length - 1; s >= 0; s--) {
@@ -55,15 +74,19 @@ const PortfolioEngine = {
         maxSlots = 2,
         trades = [],
         activePositions = [],
+        simulatedOpenPositions = [],
         coins = [],
         isSlotConstraintEnabled = true,
         isFeeDeductionEnabled = true,
         startDateTimestamp = 0,
         selectedYear = '2026'
     }) {
-        const processedTrades = isSlotConstraintEnabled 
-            ? this.filterTradesBySlotCapacity(trades, maxSlots, activePositions)
-            : [...trades].sort((a, b) => a.exitTime - b.exitTime);
+        const withOpen = [...trades, ...simulatedOpenPositions];
+        const selectedEvents = isSlotConstraintEnabled 
+            ? this.filterTradesBySlotCapacity(withOpen, maxSlots, activePositions)
+            : withOpen;
+        const admittedOpenPositions=selectedEvents.filter(t=>t.isSimulatedOpen);
+        const processedTrades=selectedEvents.filter(t=>!t.isSimulatedOpen);
 
         // Slota kabul edilen işlemlerin ID kümesi
         const acceptedTradeIds = new Set(processedTrades.map(t => t.id));
@@ -132,9 +155,19 @@ const PortfolioEngine = {
             unrealizedPnlUSD += positionBudget * (pnlPercent / 100.0);
         });
 
+        // Use the balance available at the entry, not gains from later exits.
+        const valuedOpenPositions=admittedOpenPositions.map(pos=>{
+            const atEntry=baseBalance+executedTrades.filter(t=>t.exitTime<=pos.entryTime).reduce((n,t)=>n+t.netGainUSD,0);
+            const allocatedUsd=atEntry/slotsCount;
+            const coin=coins.find(c=>c.id===pos.coinId||c.symbol===pos.symbol);
+            const mark=Number(coin?.price)>0?Number(coin.price):pos.entryPrice;
+            unrealizedPnlUSD+=allocatedUsd*(mark-pos.entryPrice)/pos.entryPrice;
+            return {...pos,allocatedUsd};
+        });
         const totalCompoundedBalance = runningBalance + unrealizedPnlUSD;
 
         return {
+            simulatedOpenPositions: valuedOpenPositions,
             compoundedBalance: totalCompoundedBalance,
             realizedBalance: runningBalance,
             unrealizedPnlUSD: unrealizedPnlUSD,

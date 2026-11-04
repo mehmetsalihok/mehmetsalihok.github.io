@@ -39,15 +39,16 @@ async function prepareRangeSnapshot(source,config){
         history.set(coin.symbol+'|'+interval,candles);
     }
     const coins=source.coins.map(coin=>({...coin,rawCandles:history.get(coin.symbol+'|'+coin.interval),price:history.get(coin.symbol+'|'+coin.interval).at(-1).close}));
-    const snapshot={schema:source.schema,year:source.year,asOf:bounds.end,trainingStart:bounds.start,coins,
+    const snapshot={schema:source.schema,openSlotAccountingVersion:1,year:source.year,asOf:bounds.end,trainingStart:bounds.start,coins,
         closedTrades:[],pendingClosedTrades:[],referenceArgs:{baseBalance:source.referenceArgs.baseBalance,maxSlots:source.referenceArgs.maxSlots,
             trades:[],activePositions:[],coins:coins.filter(coin=>coin.isActive!==false).map(coin=>({id:coin.id,symbol:coin.symbol,price:coin.price})),
             isSlotConstraintEnabled:source.referenceArgs.isSlotConstraintEnabled,isFeeDeductionEnabled:source.referenceArgs.isFeeDeductionEnabled,
             startDateTimestamp:bounds.start/1000,selectedYear:source.year}};
     const groups=referenceGroups(snapshot);
     snapshot.referenceArgs.trades=assembleTrades(groups,groups.map(()=>0));
+    snapshot.referenceArgs.simulatedOpenPositions=groups.flatMap(g=>g.options[0].openPosition?[g.options[0].openPosition]:[]);
     const baseline=PortfolioEngine.calculateCompoundedBalance(snapshot.referenceArgs);
-    snapshot.expected={realizedBalance:baseline.realizedBalance,compoundedBalance:baseline.compoundedBalance,unrealizedPnlUSD:0};
+    snapshot.expected={realizedBalance:baseline.realizedBalance,compoundedBalance:baseline.compoundedBalance,unrealizedPnlUSD:baseline.unrealizedPnlUSD};
     return {snapshot,history,coverage,bounds};
 }
 async function runRangeAnalysis(source,config){
