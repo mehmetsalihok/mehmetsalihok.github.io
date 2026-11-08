@@ -106,6 +106,7 @@ const KZ_STATE = {
     coins: [],
     validSymbols: new Set(),
     activePositions: [],
+    simulatedOpenPositions: [],
     pendingSignals: [],
     pendingClosedTrades: [],
     historyTab: 'transactions',
@@ -1776,7 +1777,8 @@ function renderMonthlyLimitModal(rows = getMonthlyLimitRows()) {
 
 function coinCardStatus(coin) {
     if (coin.isActive === false) return {label: 'PASİF', color: 'bg-slate-800 text-slate-400'};
-    if (KZ_STATE.activePositions.some(p => p.coinId === coin.id || p.symbol === coin.symbol)) return {label: '● POZİSYONDA', color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'};
+    if (KZ_STATE.activePositions.some(p => coinMatchesTrade(coin, p))) return {label: '● POZİSYONDA', color: 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400'};
+    if (KZ_STATE.simulatedOpenPositions.some(p => coinMatchesTrade(coin, p))) return {label: '● SİMÜLASYON AÇIK', color: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'};
     if (KZ_STATE.pendingSignals.some(p => p.coinId === coin.id || p.symbol === coin.symbol)) return {label: '◷ BEKLEMEDE', color: 'bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-400'};
     if (isCoinMonthlyLocked(coin)) return {label: '🔒 KİLİTLİ', color: 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400'};
     return {label: 'BOŞTA', color: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'};
@@ -1841,11 +1843,16 @@ function updateCoinRsiScale(coin) {
     if (scale) scale.innerHTML = coinRsiScaleHtml(coin);
 }
 
+function coinHasOpenPosition(coin) {
+    return KZ_STATE.activePositions.some(p => coinMatchesTrade(coin, p))
+        || KZ_STATE.simulatedOpenPositions.some(p => coinMatchesTrade(coin, p));
+}
+
 function renderSingleCard(coin) {
     if (!elCardsGrid) return;
     let cardEl = document.getElementById(`card-${coin.id}`);
     const isActive = coin.isActive !== false;
-    const isPos = (KZ_STATE.activePositions || []).some(p => p.coinId === coin.id || p.symbol === coin.symbol);
+    const isPos = coinHasOpenPosition(coin);
     const isLocked = isCoinMonthlyLocked(coin);
 
     if (KZ_STATE.activeFilter === 'position' && !isPos) {
@@ -2293,20 +2300,35 @@ function trackPositionExtrema(coin, price) {
     if (changed) savePositions();
 }
 
+function getOpenPositionMark(pos, coin) {
+    const currentPrice = coin && coin.isActive !== false && coin.price > 0 ? coin.price : pos.entryPrice;
+    const pnl = (currentPrice - pos.entryPrice) / pos.entryPrice * 100;
+    const budget = pos.isSimulatedOpen || Number(pos.allocatedUsd) > 0
+        ? Number(pos.allocatedUsd)
+        : KZ_STATE.cachedRealizedBalance / Math.max(1, KZ_STATE.maxSlots);
+    return {currentPrice, pnl, pnlUsd: budget * pnl / 100};
+}
+
 function renderActivePositionsList() {
     refreshPositionExtremaHistory();
     if (!elActivePositionsCountBadge || !elActivePositionsList) return;
-    elActivePositionsCountBadge.textContent = `${KZ_STATE.activePositions.length} / ${KZ_STATE.maxSlots} Slot`;
-    if (KZ_STATE.activePositions.length === 0) {
+    elActivePositionsCountBadge.textContent = `${KZ_STATE.activePositions.length} / ${KZ_STATE.maxSlots} Canlı Slot`;
+    const openPositions = [...KZ_STATE.activePositions, ...KZ_STATE.simulatedOpenPositions];
+    if (openPositions.length === 0) {
         elActivePositionsList.innerHTML = `<div class="py-5 px-3 text-center bg-slate-50/70 dark:bg-slate-800/40 border border-dashed border-slate-200/80 dark:border-slate-800 rounded-lg"><p class="font-semibold text-slate-700 dark:text-slate-300 text-xs">Açık pozisyon yok</p></div>`;
         return;
     }
 
-    elActivePositionsList.innerHTML = KZ_STATE.activePositions.map(pos => {
+    elActivePositionsList.innerHTML = openPositions.map(pos => {
         const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
-        const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
-        const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
-        const pnlUsd = pos.allocatedUsd * (pnl / 100);
+        const {currentPrice, pnl, pnlUsd} = getOpenPositionMark(pos, coin);
+        const isSimulated = pos.isSimulatedOpen;
+        const profitTarget = Number(isSimulated ? coin?.profitTarget : pos.profitTarget) || 0;
+        const targetPrice = isSimulated ? pos.entryPrice * (1 + profitTarget / 100) : pos.targetPrice;
+        const sourceBadge = isSimulated
+            ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800" title="Geçmiş mumlardan hesaplanan strateji pozisyonu">SİMÜLASYON</span>'
+            : pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : '';
+        const editButton = isSimulated ? '' : `<button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="ml-1 px-1 rounded text-blue-600 dark:text-blue-400 hover:underline" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">Düzenle</button>`;
         const state = positionPriceState(currentPrice, pos.entryPrice);
         const stateLabel = { profit: 'KÂRDA', loss: 'ZARARDA', entry: 'GİRİŞ FİYATINDA' }[state];
         const entryDate = formatShortDate(pos.entryTime || Date.now());
@@ -2314,7 +2336,7 @@ function renderActivePositionsList() {
         return `
             <div id="active-pos-card-${pos.id}" data-state="${state}" class="position-card border-2 rounded-xl p-3 space-y-2.5 shadow-sm">
                 <div class="flex flex-wrap items-center justify-between gap-1.5">
-                    <span class="font-extrabold text-sm text-slate-900 dark:text-white">${pos.displaySymbol} ${tradeCodeBadge(pos)}${pos.isManual ? ' <span class="text-[9px] px-1.5 py-0.5 rounded bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-800" title="Manuel oluşturulan pozisyon">✍ MANUEL</span>' : ''}</span>
+                    <span class="font-extrabold text-sm text-slate-900 dark:text-white">${pos.displaySymbol || coin?.displaySymbol || pos.symbol} ${tradeCodeBadge(pos)}${sourceBadge}</span>
                     <span id="active-pos-state-${pos.id}" class="position-state-badge text-[10px] font-black px-2 py-0.5 rounded-md">${stateLabel}</span>
                 </div>
                 <div class="flex flex-wrap items-end justify-between gap-x-3 gap-y-1 border-b border-slate-200/70 dark:border-slate-700/70 pb-2">
@@ -2328,34 +2350,32 @@ function renderActivePositionsList() {
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-[10px]">
-                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Giriş fiyatı</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatPositionPrice(pos.entryPrice, pos.entryPrice, pos.targetPrice)}</span><button type="button" onclick="editPositionEntryPrice('${pos.id}')" class="ml-1 px-1 rounded text-blue-600 dark:text-blue-400 hover:underline" title="Giriş fiyatını düzenle" aria-label="Giriş fiyatını düzenle">Düzenle</button></div>
-                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Hedef çıkış · %${pos.profitTarget.toFixed(1)}</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatTargetPrice(pos.targetPrice, pos.entryPrice)}</span></div>
+                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Giriş fiyatı</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${formatPositionPrice(pos.entryPrice, pos.entryPrice, targetPrice)}</span>${editButton}</div>
+                    <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">Hedef çıkış${profitTarget > 0 ? ` · %${profitTarget.toFixed(1)}` : ''}</span><span class="font-bold text-xs text-slate-900 dark:text-white tabular-nums break-all">${profitTarget > 0 ? formatTargetPrice(targetPrice, pos.entryPrice) : '—'}</span></div>
                     <div><span class="block text-slate-500 dark:text-slate-400">Pozisyon bütçesi</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${fmtUsd(pos.allocatedUsd)}</span></div>
                     <div><span class="block text-slate-500 dark:text-slate-400">Giriş zamanı</span><span class="font-semibold text-slate-800 dark:text-slate-200 tabular-nums">${entryDate}</span></div>
                 </div>
-                <div class="border-t border-slate-200/70 dark:border-slate-700/60 pt-2 space-y-1">
+                ${isSimulated ? '' : `<div class="border-t border-slate-200/70 dark:border-slate-700/60 pt-2 space-y-1">
                     <div class="grid grid-cols-2 gap-2 text-[10px]">
                         <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">İzlenen en düşük</span><span id="active-pos-low-${pos.id}" class="font-bold text-rose-600 dark:text-rose-400 tabular-nums break-words">${positionExtremeText(pos, pos.lowestObservedPrice)}</span></div>
                         <div class="min-w-0"><span class="block text-slate-500 dark:text-slate-400">İzlenen en yüksek</span><span id="active-pos-high-${pos.id}" class="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums break-words">${positionExtremeText(pos, pos.highestObservedPrice)}</span></div>
                     </div>
                     <div id="active-pos-extrema-since-${pos.id}" class="text-[9px] text-slate-400 dark:text-slate-500" title="Girişten sonraki tamamlanmış dakikalar geçmiş veriden, güncel dakika canlı akıştan izlenir. Giriş dakikası giriş saatinden sonraki işlemlerle hesaplanır.">${positionExtremaCoverageText(pos)}</div>
                 </div>
-                <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition cursor-pointer">Pozisyonu Kapat</button>
+                <button onclick="closePosition('${pos.id}')" class="w-full py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition cursor-pointer">Pozisyonu Kapat</button>`}
             </div>`;
     }).join('');
 }
 
 function updateActivePositionsLive() {
-    (KZ_STATE.activePositions || []).forEach(pos => {
+    for (const pos of [...KZ_STATE.activePositions, ...KZ_STATE.simulatedOpenPositions]) {
         const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
-        const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
-        const pnl = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100;
-        const pnlUsd = pos.allocatedUsd * (pnl / 100);
+        const {currentPrice, pnl, pnlUsd} = getOpenPositionMark(pos, coin);
         const state = positionPriceState(currentPrice, pos.entryPrice);
 
         pos.livePnlPercent = pnl;
         pos.livePnlUsd = pnlUsd;
-        updatePositionExtremaDisplay(pos);
+        if (!pos.isSimulatedOpen) updatePositionExtremaDisplay(pos);
 
         const pnlEl = document.getElementById(`active-pos-pnl-${pos.id}`);
         const priceEl = document.getElementById(`active-pos-price-${pos.id}`);
@@ -2367,7 +2387,7 @@ function updateActivePositionsLive() {
             pnlEl.textContent = formatPositionPnl(pnlUsd, pnl);
         }
         if (priceEl) priceEl.textContent = formatCryptoPrice(currentPrice);
-    });
+    }
 }
 
 function editPositionEntryPrice(positionId) {
@@ -2392,7 +2412,6 @@ function editPositionEntryPrice(positionId) {
     pos.livePnlUsd = Number(pos.allocatedUsd || 0) * (pos.livePnlPercent / 100);
 
     savePositions();
-    renderActivePositionsList();
     recalculateFullPortfolio();
 }
 
@@ -2494,7 +2513,6 @@ function submitManualPosition(event) {
     savePending();
     savePositions();
     closeManualPositionModal();
-    renderActivePositionsList();
     renderPendingSignalsList();
     recalculateFullPortfolio();
 }
@@ -2846,25 +2864,14 @@ async function confirmAndAddCoinFromWizard() {
 // ⚡️ ANLIK CANLI BAKİYE GÜNCELLEYİCİ
 function updateLivePortfolioQuick() {
     let unrealizedPnlUsd = 0;
-    const currentSlotBudget = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) / Math.max(1, KZ_STATE.maxSlots);
-
-    (KZ_STATE.activePositions || []).forEach(pos => {
+    for (const pos of [...KZ_STATE.activePositions, ...KZ_STATE.simulatedOpenPositions]) {
         const coin = KZ_STATE.coins.find(c => c.id === pos.coinId || c.symbol === pos.symbol);
-        if (coin && coin.isActive === false) return;
-        const currentPrice = coin && coin.price > 0 ? coin.price : pos.entryPrice;
-        const pnlPercent = ((currentPrice - pos.entryPrice) / pos.entryPrice) * 100.0;
-        unrealizedPnlUsd += currentSlotBudget * (pnlPercent / 100.0);
-    });
-
-    for(const pos of KZ_STATE.simulatedOpenPositions||[]) {
-        const coin=KZ_STATE.coins.find(c=>c.id===pos.coinId||c.symbol===pos.symbol);
-        const mark=Number(coin?.price)>0?Number(coin.price):pos.entryPrice;
-        unrealizedPnlUsd+=pos.allocatedUsd*(mark-pos.entryPrice)/pos.entryPrice;
+        unrealizedPnlUsd += getOpenPositionMark(pos, coin).pnlUsd;
     }
 
-    const totalUsd = (KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd) + unrealizedPnlUsd;
+    const totalUsd = KZ_STATE.cachedRealizedBalance + unrealizedPnlUsd;
     const totalTry = totalUsd * KZ_STATE.usdtTryRate;
-    updateHeaderReturns({realizedBalance: KZ_STATE.cachedRealizedBalance || KZ_STATE.portfolioBaseUsd,
+    updateHeaderReturns({realizedBalance: KZ_STATE.cachedRealizedBalance,
         compoundedBalance: totalUsd});
 
     if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(totalUsd);
@@ -2875,24 +2882,8 @@ function updateLivePortfolioQuick() {
     if (elDashUsd) elDashUsd.textContent = fmtUsd(totalUsd);
     if (elDashTry) elDashTry.textContent = `≈ ${fmtTry(totalTry)} TRY`;
 
-    const lastStats = KZ_STATE.lastTimeframeStats;
-    if (lastStats) {
-        const liveGainUsd = Number(lastStats.realizedUsdtGain || 0) + (lastStats.includeUnrealized ? unrealizedPnlUsd : 0);
-        const liveGainTry = liveGainUsd * KZ_STATE.usdtTryRate;
-        const liveCapitalPnl = KZ_STATE.portfolioBaseUsd > 0 ? (liveGainUsd / KZ_STATE.portfolioBaseUsd) * 100 : 0;
-        const elTfUsd = document.getElementById('dashTfUsdGain');
-        const elTfTry = document.getElementById('dashTfTryGain');
-        const elTfCapital = document.getElementById('dashTfCapitalPnl');
-
-        if (elTfUsd) {
-            elTfUsd.textContent = `${liveGainUsd >= 0 ? '+' : ''}${fmtUsd(liveGainUsd)}`;
-            elTfUsd.className = `text-lg font-black tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-        }
-        if (elTfTry) {
-            elTfTry.textContent = `(${liveGainUsd >= 0 ? '+' : ''}${fmtTry(liveGainTry)})`;
-            elTfTry.className = `text-[11px] font-bold tabular-nums ${liveGainUsd >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
-        }
-        if (elTfCapital) elTfCapital.textContent = `Ana Paraya: ${liveCapitalPnl >= 0 ? '+' : ''}${liveCapitalPnl.toFixed(2)}%`;
+    if (KZ_STATE.lastTimeframeStats) {
+        renderPortfolioTimeframeAmounts(KZ_STATE.lastTimeframeStats, unrealizedPnlUsd);
     }
 }
 
@@ -3455,7 +3446,6 @@ function openPosition(coin, customPrice = null, customTime = null, signalCode = 
     KZ_STATE.pendingSignals = KZ_STATE.pendingSignals.filter(p => p.coinId !== coin.id && p.symbol !== coin.symbol);
     savePending();
     savePositions();
-    renderActivePositionsList();
     renderPendingSignalsList();
     recalculateFullPortfolio();
     return true;
@@ -3515,7 +3505,6 @@ function closePosition(positionId, reason = 'Manuel Kapatıldı') {
         }
     }
 
-    renderActivePositionsList();
     renderPendingSignalsList();
     recalculateFullPortfolio();
 }
@@ -3703,7 +3692,6 @@ function recalculateFullPortfolio() {
             });
             savePositions();
             engineResult = PortfolioEngine.calculateCompoundedBalance(engineArgs);
-            renderActivePositionsList();
         }
 
         KZ_STATE.simulatedOpenPositions = engineResult.simulatedOpenPositions;
@@ -3720,17 +3708,25 @@ function recalculateFullPortfolio() {
             startDateTimestamp: startTs,
             customStartDate: KZ_STATE.customStartDate,
             customEndDate: KZ_STATE.customEndDate,
-            initialBalance: KZ_STATE.portfolioBaseUsd,
-            unrealizedPnlUSD: engineResult.unrealizedPnlUSD
+            initialBalance: KZ_STATE.portfolioBaseUsd
         });
 
         KZ_STATE.lastTimeframeStats = tfStats;
 
         renderPortfolioShowcaseUI(engineResult, tfStats);
+        renderActivePositionsList();
         renderHistoryTrades();
         updateMonthlyLimitSummary();
 
-        KZ_STATE.coins.forEach(coin => updateCardTablesOnly(coin));
+        KZ_STATE.coins.forEach(coin => {
+            if (KZ_STATE.activeFilter === 'position') {
+                const card = document.getElementById(`card-${coin.id}`);
+                const isOpen = coinHasOpenPosition(coin);
+                if (card) card.style.display = isOpen ? 'flex' : 'none';
+                else if (isOpen) renderSingleCard(coin);
+            }
+            updateCardTablesOnly(coin);
+        });
         if (monthTradesModal && !monthTradesModal.classList.contains('hidden') && KZ_STATE.activeMonthModal.coinId) {
             const selectedCoin = KZ_STATE.coins.find(c=>c.id===KZ_STATE.activeMonthModal.coinId);
             if (selectedCoin) renderModalTabsAndContent(selectedCoin, KZ_STATE.activeMonthModal.monthKey);
@@ -3758,11 +3754,34 @@ function updateHeaderReturns(engineResult) {
     }
 }
 
+function renderPortfolioTimeframeAmounts(tfStats, unrealizedPnlUsd) {
+    const gainTry = tfStats.usdtGain * KZ_STATE.usdtTryRate;
+    const elTfUsd = document.getElementById('dashTfUsdGain');
+    const elTfTry = document.getElementById('dashTfTryGain');
+    const elOpenPnl = document.getElementById('dashOpenPnl');
+
+    if (elTfUsd) {
+        elTfUsd.textContent = `${tfStats.usdtGain >= 0 ? '+' : ''}${fmtUsd(tfStats.usdtGain)}`;
+        elTfUsd.className = `text-lg font-black tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+    }
+
+    if (elTfTry) {
+        elTfTry.textContent = `(${tfStats.usdtGain >= 0 ? '+' : ''}${fmtTry(gainTry)})`;
+        elTfTry.className = `text-[11px] font-bold tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
+    }
+
+    if (elOpenPnl) {
+        const hasOpenPositions = KZ_STATE.activePositions.length > 0 || KZ_STATE.simulatedOpenPositions.length > 0;
+        elOpenPnl.hidden = !tfStats.includeUnrealized || !hasOpenPositions;
+        elOpenPnl.textContent = elOpenPnl.hidden ? '' : `Açık pozisyon K/Z · girişten beri ${unrealizedPnlUsd >= 0 ? '+' : '-'}${fmtUsd(Math.abs(unrealizedPnlUsd))}`;
+    }
+}
+
 function renderPortfolioShowcaseUI(engineResult, tfStats) {
     const totalUsd = engineResult.compoundedBalance;
     const totalTry = totalUsd * KZ_STATE.usdtTryRate;
-    const gainTry = tfStats.usdtGain * KZ_STATE.usdtTryRate;
     updateHeaderReturns(engineResult);
+    renderPortfolioTimeframeAmounts(tfStats, engineResult.unrealizedPnlUSD);
 
     if (elPortfolioUsd) elPortfolioUsd.textContent = fmtUsd(totalUsd);
     if (elPortfolioTry) elPortfolioTry.textContent = `≈ ${fmtTry(totalTry)}`;
@@ -3776,22 +3795,10 @@ function renderPortfolioShowcaseUI(engineResult, tfStats) {
     if (elDashTry) elDashTry.textContent = `≈ ${fmtTry(totalTry)} TRY`;
     if (elDashSlotBadge) elDashSlotBadge.textContent = `${KZ_STATE.activePositions.length}/${KZ_STATE.maxSlots} SLOT`;
 
-    const elTfUsd = document.getElementById('dashTfUsdGain');
-    const elTfTry = document.getElementById('dashTfTryGain');
     const elTfDirect = document.getElementById('dashTfDirectPnl');
     const elTfNet = document.getElementById('dashTfNetPnl');
     const elTfCapital = document.getElementById('dashTfCapitalPnl');
     const elTfFees = document.getElementById('dashTfFeesBadge');
-
-    if (elTfUsd) {
-        elTfUsd.textContent = `${tfStats.usdtGain >= 0 ? '+' : ''}${fmtUsd(tfStats.usdtGain)}`;
-        elTfUsd.className = `text-lg font-black tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
-    }
-
-    if (elTfTry) {
-        elTfTry.textContent = `(${tfStats.usdtGain >= 0 ? '+' : ''}${fmtTry(gainTry)})`;
-        elTfTry.className = `text-[11px] font-bold tabular-nums ${tfStats.usdtGain >= 0 ? 'text-emerald-600/80 dark:text-emerald-400/80' : 'text-rose-600/80 dark:text-rose-400/80'}`;
-    }
 
     if (elTfDirect) {
         elTfDirect.textContent = `Brüt Getiri: ${tfStats.directTradePnlSum >= 0 ? '+' : ''}${tfStats.directTradePnlSum.toFixed(2)}%`;
@@ -3990,19 +3997,20 @@ async function syncMainAppFromStorage(event) {
             if(reconnect)initBinanceWebSocket();
             if(loads.length)await Promise.all(loads);
             KZ_STATE.coins.forEach(c=>renderSingleCard(c));
-            if(recalculate){recalculateFullPortfolio();renderActivePositionsList();renderPendingSignalsList();}
+            if(recalculate){recalculateFullPortfolio();renderPendingSignalsList();}
         }catch(error){console.warn('Harici coin ayarı eşitlenemedi:',error.message);}
     }
 
     if (!key || key === 'kuzgun_active_pos') {
         try { KZ_STATE.activePositions = JSON.parse(localStorage.getItem('kuzgun_active_pos')) || []; } catch (e) {}
-        renderActivePositionsList();
         KZ_STATE.coins.forEach(c => renderSingleCard(c));
     }
 
     if (!key || key === 'kuzgun_closed_trades' || key === 'kuzgun_base_usd') {
         try { KZ_STATE.closedTrades = JSON.parse(localStorage.getItem('kuzgun_closed_trades')) || []; } catch (e) {}
         renderHistoryTrades();
+        recalculateFullPortfolio();
+    } else if (key === 'kuzgun_active_pos') {
         recalculateFullPortfolio();
     }
 }
