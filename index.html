@@ -212,8 +212,8 @@
 @media(max-width:1050px){#compactPortfolioPanel{grid-template-columns:minmax(0,1fr)}#compactPortfolioPanel #monthlyLimitSummary{justify-self:start}#compactPortfolioPanel>div:first-child,#compactPortfolioPanel>details{grid-column:1}}
 @media(max-width:639px){#compactPortfolioPanel{padding:12px!important;gap:8px}#compactPortfolioPanel>div:first-child{gap:8px!important}#compactPortfolioPanel #dashCompoundedUsd{font-size:23px}#compactPortfolioPanel #monthlyLimitSummary{width:100%;justify-content:flex-start}#compactPortfolioPanel>details[open]{gap:5px}#compactPortfolioPanel>details>div{width:100%}}
 </style>
-<link rel="stylesheet" href="header.css?v=2-stable">
-<script src="header.js?v=2-stable" defer></script>
+<link rel="stylesheet" href="header.css?v=3-sidebar">
+<script src="header.js?v=3-sidebar" defer></script>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
 
@@ -328,7 +328,11 @@
     </header>
 
     <!-- 2️⃣ ANA ÇALIŞMA ALANI -->
-    <main class="flex-1 max-w-[1780px] w-full mx-auto px-5 py-5 space-y-4">
+    <main class="kz-terminal-main flex-1 max-w-[1780px] w-full mx-auto px-5 py-5 space-y-4">
+        <div class="kz-page-heading">
+            <div><h2>Terminal</h2><p>Sinyalleri ve pozisyonlarını tek yerden takip et.</p></div>
+            <span class="kz-market-label">Binance Spot</span>
+        </div>
 
         <!-- BİLEŞİK PORTFÖY: ÖZET ÖNDE, AYRINTILAR İSTEĞE BAĞLI -->
         <section id="compactPortfolioPanel" class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl px-4 py-3 shadow-sm space-y-2.5 transition-colors">
@@ -397,11 +401,11 @@
         </section>
 
         <!-- KARTLAR VE SAĞ KONSOL GRİDİ -->
-        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5">
+        <div class="kz-terminal-layout grid grid-cols-1 xl:grid-cols-12 gap-5">
             
             <!-- SOL ALAN: COIN KARTLARI -->
-            <section class="xl:col-span-9 space-y-3.5">
-                <div class="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-xl shadow-sm transition-colors">
+            <section class="kz-terminal-coins xl:col-span-9 space-y-3.5">
+                <div class="kz-coin-toolbar flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-3 rounded-xl shadow-sm transition-colors">
                     <div class="flex items-center space-x-2">
                         <span class="text-xs font-semibold text-slate-400 dark:text-slate-500 mr-1">Görünüm:</span>
                         <button onclick="filterCards('all')" id="btnFilterAll" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-blue-600 text-white shadow-sm">Tümü</button>
@@ -421,7 +425,7 @@
             </section>
 
             <!-- SAĞ KONSOL: SWIFT EŞDEĞERİ YENİ SON İŞLEMLER PANELİ -->
-            <aside class="xl:col-span-3 space-y-3.5">
+            <aside class="kz-terminal-activity xl:col-span-3 space-y-3.5" aria-label="İşlem akışı">
                 <div id="livePositionsPanel" class="bg-white dark:bg-slate-900 border-2 border-blue-300 dark:border-blue-800 rounded-2xl p-4 shadow-lg shadow-blue-900/10 dark:shadow-blue-950/30 space-y-3 transition-colors">
                     <div class="flex items-center justify-between border-b border-blue-100 dark:border-blue-900 pb-2.5">
                         <div class="flex items-center space-x-2">
@@ -518,7 +522,7 @@
                     <span id="buySignalCountdown" class="min-w-[34px] text-right font-mono text-sm font-black">30 sn</span>
                 </div>
                 <div class="flex items-center gap-3 pr-20">
-                    <span class="w-11 h-11 rounded-xl bg-white/20 border border-white/25 flex items-center justify-center text-2xl animate-pulse">🔔</span>
+                    <span class="w-11 h-11 rounded-xl bg-white/20 border border-white/25 flex items-center justify-center text-2xl animate-pulse"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg></span>
                     <div><div class="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-100">Yeni teyitli sinyal</div><h3 class="text-lg font-black tracking-tight">ALIM SİNYALİ</h3></div>
                 </div>
             </div>
@@ -570,7 +574,7 @@
             
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 shrink-0">
                 <div class="flex items-center space-x-2.5">
-                    <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">📅</span>
+                    <span class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 11h18M8 15h2M14 15h2"/></svg></span>
                     <div>
                         <div class="flex items-center space-x-2">
                             <h3 id="modalCoinTitle" class="font-extrabold text-sm text-slate-900 dark:text-white">ASTERUSDT</h3>
@@ -638,7 +642,7 @@
         <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 transition-colors">
             <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
                 <div class="flex items-center space-x-2">
-                    <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs">⚙️</div>
+                    <div class="w-7 h-7 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xs"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.6 3-.5 2a7 7 0 0 0-1.7 1l-2-.6-2.3 4 1.5 1.5a7 7 0 0 0 0 2.2l-1.5 1.5 2.3 4 2-.6a7 7 0 0 0 1.7 1l.5 2h4.8l.5-2a7 7 0 0 0 1.7-1l2 .6 2.3-4-1.5-1.5a7 7 0 0 0 0-2.2l1.5-1.5-2.3-4-2 .6a7 7 0 0 0-1.7-1l-.5-2z"/><circle cx="12" cy="12" r="3"/></svg></div>
                     <div>
                         <h3 class="font-bold text-sm text-slate-900 dark:text-white">Coin & Strateji Optimizatörü</h3>
                         <p class="text-[11px] text-slate-500 dark:text-slate-400">Seçilen yılın tüm mumları taranarak en kârlı AL/SAT değerleri saptanır.</p>
