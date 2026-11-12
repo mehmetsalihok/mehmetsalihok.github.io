@@ -124,14 +124,18 @@ header.kz-header{view-transition-name:kz-header}
 /* KUZGUN workspace presentation. Engine data and controls keep their existing IDs. */
 :root{
  --kz-side-width:232px;--kz-top-height:64px;
- --kz-page:#f6f6f7;--kz-surface:#fff;--kz-field:#f7f7f8;
- --kz-ink:#27272a;--kz-muted:#808086;--kz-line:#e8e8eb;--kz-hover:#f2f2f4;
- --kz-selection:#efeff1;--kz-accent:#27272a;
+ --kz-page:#fff;--kz-surface:#fff;--kz-field:#f4f5f8;
+ --kz-sidebar:#f4f4f6;--kz-panel-frame:#eff0f4;--kz-nav-active:#fff;
+ --kz-ink:#242832;--kz-muted:#686f7e;--kz-line:#e1e4eb;--kz-hover:#e9ecf3;
+ --kz-selection:#edf0f6;--kz-accent:#262b36;
+ --kz-panel-shadow:0 1px 3px #26344c12;
 }
 html.dark{
  --kz-page:#111113;--kz-surface:#19191c;--kz-field:#202023;
+ --kz-sidebar:var(--kz-surface);--kz-panel-frame:var(--kz-field);--kz-nav-active:var(--kz-selection);
  --kz-ink:#ededf0;--kz-muted:#96969e;--kz-line:#2b2b30;--kz-hover:#242429;
  --kz-selection:#2b2b31;--kz-accent:#ededf0;
+ --kz-panel-shadow:0 1px 3px #0003;
 }
 html.oled{--kz-page:#000;--kz-surface:#060606;--kz-field:#111;--kz-line:#252525;--kz-hover:#171717;--kz-selection:#1e1e1e}
 html.kz-sidebar-ready{scrollbar-gutter:auto;scroll-padding-top:calc(var(--kz-top-height) + 20px)}
@@ -147,7 +151,7 @@ html.kz-sidebar-ready :is(button,a,input,select,summary):focus-visible{outline:2
 .kz-sidebar{
  box-sizing:border-box;position:fixed;inset:0 auto 0 0;width:var(--kz-side-width);z-index:45;
  display:flex;flex-direction:column;gap:0;padding:0 12px 14px;border-right:1px solid var(--kz-line);
- background:var(--kz-surface);color:var(--kz-ink);overflow-y:auto;overflow-x:hidden;
+ background:var(--kz-sidebar);color:var(--kz-ink);overflow-y:auto;overflow-x:hidden;
 }
 .kz-sidebar-top{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:var(--kz-top-height);padding:0 5px;border-bottom:1px solid var(--kz-line);margin:0 -1px 22px}
 .kz-sidebar a{text-decoration:none;color:inherit}
@@ -162,12 +166,15 @@ html.kz-sidebar-ready :is(button,a,input,select,summary):focus-visible{outline:2
 .kz-sidebar .kz-nav{display:flex;flex-direction:column;gap:5px;margin:0;padding:0;border:0;overflow:visible;flex-wrap:nowrap}
 .kz-sidebar :is(.kz-nav>a,.kz-nav>button,.kz-sidebar-setting,.kz-sidebar-appearance){
  display:flex;align-items:center;justify-content:flex-start;gap:11px;position:relative;
- box-sizing:border-box;min-height:38px;width:100%;padding:9px 10px;margin:0;border:0;border-radius:6px;
+ box-sizing:border-box;min-height:38px;width:100%;padding:8px 10px;margin:0;border:1px solid transparent;border-radius:9px;
  font-size:12px;line-height:20px;font-weight:450;letter-spacing:-.015em;font-family:inherit;
  color:var(--kz-muted);background:transparent;white-space:nowrap;text-align:left;cursor:pointer;
 }
 .kz-sidebar :is(.kz-nav>a,.kz-nav>button,.kz-sidebar-setting,.kz-sidebar-appearance):hover{background:var(--kz-hover);color:var(--kz-ink)}
-.kz-sidebar :is(.kz-nav>[aria-current=page],.kz-sidebar-setting[aria-current=page]){background:var(--kz-selection);color:var(--kz-ink);font-weight:550;box-shadow:none}
+.kz-sidebar :is(.kz-nav>[aria-current=page],.kz-sidebar-setting[aria-current=page]){
+ background:var(--kz-nav-active);border-color:var(--kz-line);color:var(--kz-ink);
+ font-weight:550;box-shadow:var(--kz-panel-shadow);
+}
 .kz-nav-active-mark{width:4px;height:4px;background:currentColor;border-radius:50%;margin-left:auto}
 .kz-sidebar-footer{display:flex;flex-direction:column;gap:5px;margin-top:auto;padding-top:40px}
 .kz-theme-original{display:none!important}
@@ -212,49 +219,60 @@ html.kz-sidebar-ready body>main{box-sizing:border-box;width:100%;max-width:1840p
 html.kz-sidebar-ready .kz-page-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 24px!important}
 .kz-page-heading h2{font-size:24px;font-weight:550;letter-spacing:-.045em;line-height:1.25;margin:0}
 .kz-page-heading p{margin:7px 0 0;font-size:12px;font-weight:400;color:var(--kz-muted)}
-.kz-market-label{font-size:10px;color:var(--kz-muted);border:1px solid var(--kz-line);background:var(--kz-surface);padding:5px 9px;border-radius:5px;white-space:nowrap}
+.kz-market-label{font-size:10px;color:var(--kz-muted);border:1px solid var(--kz-line);background:var(--kz-surface);padding:5px 9px;border-radius:999px;white-space:nowrap}
 html.kz-sidebar-ready .kz-terminal-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
 html.kz-sidebar-ready :is(.kz-terminal-coins,.kz-terminal-activity){grid-column:auto;min-width:0}
 html.kz-sidebar-ready .kz-terminal-activity{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
 html.kz-sidebar-ready .kz-terminal-activity>*{margin:0}
 html.kz-sidebar-ready #cardsGrid{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
-html.kz-sidebar-ready :is(#cardsGrid>div,.kz-terminal-activity>div,.kz-coin-toolbar,#compactPortfolioPanel){border:1px solid var(--kz-line)!important;background:var(--kz-surface)!important;border-radius:10px!important;box-shadow:none!important}
-html.kz-sidebar-ready #cardsGrid>div{padding:18px!important}
-html.kz-sidebar-ready #cardsGrid>div:hover{border-color:#cfcfd3!important}
-html.dark.kz-sidebar-ready #cardsGrid>div:hover{border-color:#47474e!important}
+html.kz-sidebar-ready :is(#cardsGrid>div,.kz-terminal-activity>div,#compactPortfolioPanel,.settings-shell,.workspace,.league-panel){
+ border:4px solid var(--kz-panel-frame)!important;
+ background:var(--kz-surface)!important;border-radius:16px!important;
+ box-shadow:0 0 0 1px var(--kz-line),var(--kz-panel-shadow)!important;
+}
+html.kz-sidebar-ready #cardsGrid>div{--kz-panel-padding:18px;padding:var(--kz-panel-padding)!important}
+html.kz-sidebar-ready #cardsGrid>div:hover{box-shadow:0 0 0 1px var(--kz-muted),var(--kz-panel-shadow)!important}
+html.kz-sidebar-ready :is(#cardsGrid>div,.kz-terminal-activity>div)>div:first-child{
+ margin:calc(-1 * var(--kz-panel-padding)) calc(-1 * var(--kz-panel-padding)) 0;
+ padding:8px var(--kz-panel-padding);border-radius:11px 11px 0 0;
+ background:var(--kz-panel-frame);border-bottom:1px solid var(--kz-line)!important;
+}
 html.kz-sidebar-ready #cardsGrid :is(.font-black,.font-extrabold,.font-bold){font-weight:550}
 html.kz-sidebar-ready #cardsGrid [id^=price-]{font-size:25px;font-weight:550;letter-spacing:-.045em}
 html.kz-sidebar-ready #cardsGrid [id^=status-badge-]{font-size:9px!important;line-height:1.5;font-weight:500;filter:grayscale(1);background:var(--kz-field);color:var(--kz-muted)}
-html.kz-sidebar-ready #cardsGrid [id^=coin-overview-]>div:nth-child(2){background:var(--kz-field)!important;border-color:var(--kz-line)!important;border-radius:6px;padding:9px 10px}
+html.kz-sidebar-ready #cardsGrid [id^=coin-overview-]>div:nth-child(2){background:var(--kz-field)!important;border-color:var(--kz-line)!important;border-radius:10px;padding:9px 10px}
 html.kz-sidebar-ready #cardsGrid [id^=coin-overview-]>div:nth-child(2)>div:first-child{font-size:10px}
 html.kz-sidebar-ready #cardsGrid [id^=rsi-scale-]{padding-top:6px}
 html.kz-sidebar-ready .kz-coin-toolbar{padding:10px 12px!important;gap:10px;background:transparent!important;border:0!important;border-radius:0!important}
 html.kz-sidebar-ready .kz-coin-toolbar>div{gap:5px}
 html.kz-sidebar-ready .kz-coin-toolbar>div>span:first-child{display:none}
-html.kz-sidebar-ready .kz-coin-toolbar button{min-height:30px;font-size:11px;font-weight:500!important;border-radius:5px!important}
+html.kz-sidebar-ready .kz-coin-toolbar button{min-height:30px;font-size:11px;font-weight:500!important;border-radius:8px!important}
 html.kz-sidebar-ready .kz-coin-toolbar button[onclick='openAddCoinModal()']{min-height:32px;padding:7px 11px}
 html.kz-sidebar-ready #compactPortfolioPanel{padding:20px 22px!important;gap:12px 20px}
 html.kz-sidebar-ready #compactPortfolioPanel>div:first-child{padding-bottom:17px;border-color:var(--kz-line)}
 html.kz-sidebar-ready #compactPortfolioPanel #dashCompoundedUsd{font-size:32px;line-height:1.3;font-weight:550;letter-spacing:-.05em}
 html.kz-sidebar-ready #compactPortfolioPanel #dashTfUsdGain{font-size:20px;font-weight:550;letter-spacing:-.035em}
-html.kz-sidebar-ready #compactPortfolioPanel :is(#timeframeButtonGroup,#subMonthPills) button{height:28px;min-height:28px;padding:0 9px;font-size:10px;font-weight:500;border-radius:5px;background:transparent;color:var(--kz-muted)}
-html.kz-sidebar-ready #compactPortfolioPanel :is(#timeframeButtonGroup,#subMonthPills) button[aria-pressed=true],html.kz-sidebar-ready #timeframeButtonGroup button.bg-blue-600{background:var(--kz-selection)!important;color:var(--kz-ink)!important}
-html.kz-sidebar-ready #compactPortfolioPanel #monthlyLimitSummary{background:var(--kz-field);border-color:var(--kz-line);font-weight:400}
+html.kz-sidebar-ready #compactPortfolioPanel :is(#timeframeButtonGroup,#subMonthPills) button{
+ height:28px;min-height:28px;padding:0 9px;font-size:10px;font-weight:500;
+ border:1px solid var(--kz-line)!important;border-radius:999px;background:var(--kz-surface)!important;color:var(--kz-muted);
+}
+html.kz-sidebar-ready #compactPortfolioPanel :is(#timeframeButtonGroup,#subMonthPills) button:hover{background:var(--kz-field)!important}
+html.kz-sidebar-ready #compactPortfolioPanel :is(#timeframeButtonGroup,#subMonthPills) button[aria-pressed=true],html.kz-sidebar-ready #compactPortfolioPanel #timeframeButtonGroup button.bg-blue-600{background:var(--kz-selection)!important;color:var(--kz-ink)!important}
+html.kz-sidebar-ready #compactPortfolioPanel #monthlyLimitSummary{background:var(--kz-field);border-color:var(--kz-line);border-radius:10px;font-weight:400}
 html.kz-sidebar-ready #compactPortfolioPanel .limit-summary-heading>[data-limit-month]{color:var(--kz-ink);font-weight:500}
 html.kz-sidebar-ready #compactPortfolioPanel>details{border-color:var(--kz-line)}
 html.kz-sidebar-ready #compactPortfolioPanel>details summary{font-weight:450;color:var(--kz-muted)}
-html.kz-sidebar-ready .kz-terminal-activity>div{padding:16px!important}
+html.kz-sidebar-ready .kz-terminal-activity>div{--kz-panel-padding:14px;padding:var(--kz-panel-padding)!important}
 html.kz-sidebar-ready .kz-terminal-activity h2{font-size:12px;font-weight:550}
-html.kz-sidebar-ready .kz-terminal-activity>div>div:first-child{border-color:var(--kz-line)!important}
 html.kz-sidebar-ready .kz-terminal-activity .animate-ping{display:none}
 html.kz-sidebar-ready #livePositionsPanel>div:first-child>div:first-child>span{width:6px;height:6px}
 html.kz-sidebar-ready #activePositionsCountBadge{font-size:9px;font-weight:500;border:0;background:var(--kz-field);color:var(--kz-muted);padding:4px 6px}
 html.kz-sidebar-ready #livePositionsPanel button[onclick='openManualPositionModal()']{width:23px;height:23px;font-size:16px;min-height:23px;border-radius:5px;box-shadow:none}
-html.kz-sidebar-ready .position-card{border-width:1px!important;border-radius:8px!important;box-shadow:none!important}
+html.kz-sidebar-ready .position-card{border-width:1px!important;border-radius:10px!important;box-shadow:none!important}
+html.kz-sidebar-ready:not(.dark) .position-card{background:var(--kz-field)!important;border-color:var(--kz-line)!important}
 html.kz-sidebar-ready #recentHistoryPanel #historyTradesContainer{min-height:0}
-html.kz-sidebar-ready #historyTradesContainer .history-trade{background:var(--kz-field)!important;border-color:var(--kz-line)!important;border-radius:6px}
+html.kz-sidebar-ready #historyTradesContainer .history-trade{background:var(--kz-field)!important;border-color:var(--kz-line)!important;border-radius:9px}
 html.kz-sidebar-ready #historyPaginationControls>button{color:var(--kz-muted)}
-html.kz-sidebar-ready :is(.settings-shell,.workspace,.league-panel){border-color:var(--kz-line);border-radius:10px;box-shadow:none}
 html.kz-sidebar-ready :is(.settings-main,.workspace,.league-shell){--page:var(--kz-page);--surface:var(--kz-surface);--field:var(--kz-field);--ink:var(--kz-ink);--muted:var(--kz-muted);--line:var(--kz-line);--blue:var(--kz-ink)}
 html.kz-sidebar-ready .settings-tabs{scrollbar-width:thin}
 html.kz-sidebar-ready .settings-tabs [aria-selected=true]{color:var(--kz-ink);border-color:var(--kz-ink)}
