@@ -11,17 +11,19 @@
     <script>
         (() => {
             let theme;
-            let collapsed = false;
+            let width = 232;
             try {
                 theme = localStorage.getItem('kuzgun_theme');
-                collapsed = localStorage.getItem('kuzgun_sidebar_collapsed') === 'true';
+                const savedWidth = Number(localStorage.getItem('kuzgun_sidebar_width'));
+                if (savedWidth >= 72 && savedWidth <= 320) width = Math.round(savedWidth);
+                else if (localStorage.getItem('kuzgun_sidebar_collapsed') === 'true') width = 72;
             } catch (_) {}
             const root = document.documentElement;
             const dark = theme === 'dark' || theme === 'oled'
                 || (!theme && matchMedia('(prefers-color-scheme: dark)').matches);
             root.classList.toggle('dark', dark);
             root.classList.toggle('oled', theme === 'oled');
-            root.classList.toggle('kz-sidebar-collapsed', collapsed);
+            root.style.setProperty('--kz-sidebar-width', width + 'px');
         })();
     </script>
     <title>KUZGUN Terminal — Sistem & Motor Ayarları</title>
@@ -136,8 +138,8 @@ header>div{max-width:1220px!important;height:auto!important;min-height:64px;padd
 @media(max-width:700px){.settings-main{margin-top:18px;padding:0 12px 20px}.settings-heading{padding:24px 20px;display:block}.settings-heading h1{font-size:24px}.save-note{display:block;margin-top:12px}.settings-tabs{padding:0 20px;gap:22px}.settings-content{padding:24px 20px}.settings-summary{padding:20px;gap:18px}.settings-section .grid-cols-5{grid-template-columns:repeat(2,minmax(0,1fr))}.settings-section .flex{flex-wrap:wrap}.settings-section label.relative{margin-left:auto}.settings-section .flex:has(>label.relative){flex-wrap:nowrap}.settings-section input{min-width:0}.settings-section div:has(> #inputBalance),.settings-section div:has(> #inputTelegramChatId){flex-wrap:wrap}header>div{padding:12px 16px}header nav{display:flex!important;flex-wrap:wrap}header>div>div:first-child{flex-wrap:wrap;gap:12px}header nav{border-left:0!important;padding-left:0!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
 </style>
-<link rel="stylesheet" href="header.css?v=5-static-layout">
-<script src="header.js?v=4-controls" defer></script>
+<link rel="stylesheet" href="header.css?v=6-resizable-menu">
+<script src="header.js?v=5-resizable-menu" defer></script>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased flex flex-col transition-colors duration-200">
 
@@ -168,6 +170,7 @@ header>div{max-width:1220px!important;height:auto!important;min-height:64px;padd
             </div>
         </div>
     </aside>
+    <div class="kz-sidebar-resize" role="separator" tabindex="0" aria-label="Sol menü genişliği" aria-controls="kzSidebar" aria-orientation="vertical" aria-valuemin="72" aria-valuemax="320" aria-valuenow="232" title="Menü genişliğini ayarlamak için sürükle"></div>
     <button type="button" class="kz-sidebar-backdrop" tabindex="-1" aria-label="Menüyü kapat"></button>
     <header class="kz-header border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">

@@ -125,7 +125,7 @@ header.kz-header{view-transition-name:kz-header}
 
 /* KUZGUN workspace presentation. Engine data and controls keep their existing IDs. */
 :root{
- --kz-side-width:232px;--kz-top-height:64px;
+ --kz-side-width:var(--kz-sidebar-width,232px);--kz-top-height:64px;
  --kz-page:#fff;--kz-surface:#fff;--kz-field:#f4f5f8;
  --kz-sidebar:#f4f4f6;--kz-panel-frame:#eff0f4;--kz-nav-active:#fff;
  --kz-ink:#242832;--kz-muted:#686f7e;--kz-line:#e1e4eb;--kz-hover:#e9ecf3;
@@ -155,8 +155,9 @@ html.kz-sidebar-ready :is(button,a,input,select,summary):focus-visible{outline:2
  box-sizing:border-box;position:fixed;inset:0 auto 0 0;width:var(--kz-side-width);z-index:45;
  display:flex;flex-direction:column;gap:0;padding:0 12px 14px;border-right:1px solid var(--kz-line);
  background:var(--kz-sidebar);color:var(--kz-ink);overflow-y:auto;overflow-x:hidden;
+ container:kz-sidebar / inline-size;
 }
-.kz-sidebar-top{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:var(--kz-top-height);padding:0 5px;border-bottom:1px solid var(--kz-line);margin:0 -1px 22px}
+.kz-sidebar-top{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:var(--kz-top-height);padding:0 5px;border-bottom:1px solid var(--kz-line);margin:0 -1px 22px;flex-shrink:0}
 .kz-sidebar a{text-decoration:none;color:inherit}
 .kz-sidebar .kz-sidebar-brand{display:inline-flex;align-items:center;gap:9px;white-space:nowrap;min-width:0;padding:0}
 .kz-brand-mark{width:27px;height:27px;min-width:27px;background:var(--kz-ink);color:var(--kz-surface);border-radius:7px;display:grid;place-items:center}
@@ -186,11 +187,12 @@ html.kz-sidebar-ready :is(button,a,input,select,summary):focus-visible{outline:2
 html.dark .kz-theme-light{display:none}
 html.dark:not(.oled) .kz-theme-dark{display:inline}
 html.oled .kz-theme-oled{display:inline}
-.kz-workspace-note{display:flex;align-items:center;gap:9px;margin-top:16px;border-top:1px solid var(--kz-line);padding:17px 6px 2px;white-space:nowrap}
+.kz-workspace-note{display:flex;align-items:center;gap:9px;min-height:52px;margin-top:16px;border-top:1px solid var(--kz-line);padding:17px 6px 2px;white-space:nowrap}
 .kz-workspace-initial{width:29px;height:29px;min-width:29px;border:1px solid var(--kz-line);border-radius:50%;background:var(--kz-field);display:grid;place-items:center;font-size:11px;font-weight:600}
 .kz-workspace-note strong{display:block;font-size:10px;font-weight:500;line-height:1.6;color:var(--kz-ink)}
 .kz-workspace-note .kz-nav-text>span{display:block;font-size:10px;color:var(--kz-muted)}
 .kz-sidebar-backdrop{display:none}
+.kz-sidebar-resize{display:none}
 html.kz-sidebar-ready header.kz-header{
  inset:0 0 auto var(--kz-side-width)!important;width:auto!important;height:var(--kz-top-height)!important;
  min-height:var(--kz-top-height)!important;max-height:var(--kz-top-height)!important;
@@ -298,12 +300,29 @@ html.dark.kz-sidebar-ready body :is([class~='dark:bg-slate-900'],[class~='dark:b
 html.kz-sidebar-ready main svg{color:var(--kz-muted)!important}
 html.kz-sidebar-ready body :is([class~='bg-blue-600'],[class~='bg-blue-500'],button.primary) svg{color:inherit!important}
 html.kz-sidebar-ready [id^='themeIcon']{color:var(--kz-muted)!important}
-html.kz-sidebar-collapsed{--kz-side-width:72px}
-html.kz-sidebar-collapsed .kz-sidebar{padding-left:10px;padding-right:10px}
-html.kz-sidebar-collapsed .kz-sidebar-top{flex-direction:column;justify-content:center;gap:12px;min-height:108px;padding:16px 0;margin-bottom:16px}
-html.kz-sidebar-collapsed :is(.kz-sidebar .kz-nav-text,.kz-brand-name,.kz-nav-caption,.kz-theme-value,.kz-nav-active-mark){display:none}
-html.kz-sidebar-collapsed .kz-sidebar :is(.kz-nav>a,.kz-nav>button,.kz-sidebar-setting,.kz-sidebar-appearance){justify-content:center;padding:10px;width:100%;gap:0}
-html.kz-sidebar-collapsed .kz-workspace-note{justify-content:center;padding-left:0;padding-right:0}
+.kz-sidebar :is(.kz-nav-text,.kz-brand-name){min-width:0;overflow:hidden;text-overflow:ellipsis}
+.kz-nav-active-mark,.kz-theme-value{flex-shrink:0}
+@media(min-width:900px){
+ .kz-sidebar-toggle{touch-action:none}
+ .kz-sidebar-resize{
+  display:block;position:fixed;inset:0 auto 0 calc(var(--kz-side-width) - 3px);
+  width:10px;z-index:46;cursor:col-resize;touch-action:none;
+ }
+ .kz-sidebar-resize::after{
+  content:"";position:absolute;inset:calc(50% - 15px) auto auto 2px;
+  width:3px;height:30px;border-radius:4px;background:var(--kz-line);
+ }
+ .kz-sidebar-resize:is(:hover,:focus-visible)::after,
+ html.kz-sidebar-resizing .kz-sidebar-resize::after{background:var(--kz-muted)}
+ .kz-sidebar-resize:focus-visible{outline:2px solid var(--kz-muted);outline-offset:-2px}
+ html.kz-sidebar-resizing,html.kz-sidebar-resizing *{cursor:col-resize!important;user-select:none!important}
+ @container kz-sidebar (width < 135px){
+  .kz-sidebar-top{gap:1px;margin-right:-9px;padding-right:0}
+  .kz-sidebar-toggle{width:22px}
+  .kz-sidebar :is(.kz-nav-text,.kz-brand-name,.kz-theme-value,.kz-nav-active-mark){display:none}
+  .kz-nav-caption{visibility:hidden}
+ }
+}
 @media(min-width:1100px){html.kz-sidebar-ready #cardsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(min-width:1280px){
  html.kz-sidebar-ready .kz-terminal-layout{grid-template-columns:minmax(0,1fr) 290px}
@@ -330,11 +349,7 @@ html.kz-sidebar-collapsed .kz-workspace-note{justify-content:center;padding-left
  html.kz-sidebar-ready header.kz-header .kz-breadcrumb-parent,html.kz-sidebar-ready header.kz-header .kz-breadcrumb>.kz-icon{display:none}
  .kz-mobile-toggle{display:inline-flex}
  html.kz-sidebar-ready .kz-sidebar{width:232px;transform:translateX(-100%);transition:transform .2s ease;z-index:61;visibility:hidden;box-shadow:8px 0 32px #0000000d;view-transition-name:none}
- html.kz-sidebar-ready .kz-sidebar-top{flex-direction:row;min-height:64px;padding:0 5px;gap:6px;margin-bottom:22px}
- html.kz-sidebar-ready .kz-sidebar .kz-nav-text,html.kz-sidebar-ready .kz-sidebar .kz-brand-name,html.kz-sidebar-ready .kz-sidebar .kz-nav-caption{display:block}
- html.kz-sidebar-ready .kz-sidebar .kz-theme-value{display:inline}
- html.kz-sidebar-ready .kz-sidebar :is(.kz-nav>a,.kz-nav>button,.kz-sidebar-setting,.kz-sidebar-appearance){justify-content:flex-start;padding:9px 10px;gap:11px}
- html.kz-sidebar-ready .kz-workspace-note{justify-content:flex-start;padding-left:6px;padding-right:6px}
+ html.kz-sidebar-ready .kz-sidebar-top{min-height:64px}
  html.kz-menu-open{overflow:hidden}
  html.kz-menu-open .kz-sidebar{transform:none;visibility:visible}
  html.kz-menu-open .kz-sidebar-backdrop{display:block;position:fixed;inset:0;width:100%;height:100dvh;background:#12121555;z-index:60;border:0;padding:0;border-radius:0;cursor:default;backdrop-filter:blur(2px)}

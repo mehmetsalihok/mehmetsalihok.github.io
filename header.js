@@ -8,10 +8,86 @@
     if (!sidebar || !header) return;
     const main = document.querySelector('body > main');
     const collapse = sidebar.querySelector('.kz-sidebar-toggle');
+    const resize = document.querySelector('.kz-sidebar-resize');
     const mobileToggle = header.querySelector('.kz-mobile-toggle');
     const backdrop = document.querySelector('.kz-sidebar-backdrop');
     const mobile = matchMedia('(max-width: 899px)');
-    const preferenceKey = 'kuzgun_sidebar_collapsed';
+    const widthKey = 'kuzgun_sidebar_width';
+    const expandedWidthKey = 'kuzgun_sidebar_expanded_width';
+    const minimumWidth = Number(resize.getAttribute('aria-valuemin'));
+    const maximumWidth = Number(resize.getAttribute('aria-valuemax'));
+    const defaultWidth = Number(resize.getAttribute('aria-valuenow'));
+    let width = parseInt(root.style.getPropertyValue('--kz-sidebar-width'), 10) || defaultWidth;
+    let expandedWidth = defaultWidth;
+    let drag = null;
+    let ignorePointerClick = false;
+
+    function readExpandedWidth() {
+        try {
+            const savedWidth = Number(localStorage.getItem(expandedWidthKey));
+            if (savedWidth > minimumWidth && savedWidth <= maximumWidth) expandedWidth = savedWidth;
+        } catch (_) {}
+    }
+
+    function setWidth(value) {
+        width = Math.min(maximumWidth, Math.max(minimumWidth, Math.round(value)));
+        root.style.setProperty('--kz-sidebar-width', width + 'px');
+        resize.setAttribute('aria-valuenow', String(width));
+        const collapsed = width === minimumWidth;
+        const label = mobile.matches ? 'Menüyü kapat' : collapsed ? 'Menüyü genişlet' : 'Menüyü daralt';
+        collapse.setAttribute('aria-label', label);
+        collapse.title = label;
+        collapse.setAttribute('aria-expanded', String(mobile.matches || !collapsed));
+    }
+
+    function saveWidth() {
+        if (width > minimumWidth) expandedWidth = width;
+        try {
+            localStorage.setItem(widthKey, String(width));
+            localStorage.setItem(expandedWidthKey, String(expandedWidth));
+        } catch (_) {}
+    }
+
+    function finishDrag(cancelled) {
+        const activeDrag = drag;
+        drag = null;
+        if (!activeDrag || !activeDrag.moved) return;
+        root.classList.remove('kz-sidebar-resizing');
+        if (cancelled) setWidth(activeDrag.width);
+        else saveWidth();
+        ignorePointerClick = activeDrag.control === collapse;
+    }
+
+    for (const control of [resize, collapse]) {
+        control.addEventListener('pointerdown', event => {
+            if (mobile.matches || event.button !== 0 || drag) return;
+            ignorePointerClick = false;
+            drag = {control, id: event.pointerId, start: event.clientX, width, moved: false};
+            control.setPointerCapture(event.pointerId);
+        });
+        control.addEventListener('pointermove', event => {
+            if (drag?.id !== event.pointerId) return;
+            const distance = event.clientX - drag.start;
+            if (!drag.moved && Math.abs(distance) < 5) return;
+            drag.moved = true;
+            root.classList.add('kz-sidebar-resizing');
+            setWidth(drag.width + distance);
+        });
+        control.addEventListener('pointerup', event => {
+            if (drag?.id === event.pointerId) finishDrag(false);
+        });
+        control.addEventListener('lostpointercapture', event => {
+            if (drag?.id === event.pointerId) finishDrag(true);
+        });
+    }
+
+    resize.addEventListener('keydown', event => {
+        const widths = {ArrowLeft: width - 12, ArrowRight: width + 12, Home: minimumWidth, End: maximumWidth};
+        if (!Object.hasOwn(widths, event.key)) return;
+        event.preventDefault();
+        setWidth(widths[event.key]);
+        saveWidth();
+    });
 
     function setMobileOpen(open, restoreFocus = true) {
         root.classList.toggle('kz-menu-open', open);
@@ -24,22 +100,22 @@
     }
 
     function syncLayout() {
+        finishDrag(true);
         setMobileOpen(false, false);
-        const collapsed = root.classList.contains('kz-sidebar-collapsed');
-        const label = mobile.matches ? 'Menüyü kapat' : collapsed ? 'Menüyü genişlet' : 'Menüyü daralt';
-        collapse.setAttribute('aria-label', label);
-        collapse.title = label;
-        collapse.setAttribute('aria-expanded', String(mobile.matches || !collapsed));
+        setWidth(width);
     }
 
-    collapse.addEventListener('click', () => {
+    collapse.addEventListener('click', event => {
+        if (ignorePointerClick && event.detail > 0) {
+            ignorePointerClick = false;
+            return;
+        }
         if (mobile.matches) {
             setMobileOpen(false);
             return;
         }
-        const collapsed = root.classList.toggle('kz-sidebar-collapsed');
-        try { localStorage.setItem(preferenceKey, String(collapsed)); } catch (_) {}
-        syncLayout();
+        setWidth(width === minimumWidth ? expandedWidth : minimumWidth);
+        saveWidth();
     });
     mobileToggle.addEventListener('click', () => setMobileOpen(true));
     backdrop.addEventListener('click', () => setMobileOpen(false));
@@ -74,6 +150,16 @@
     });
 
     mobile.addEventListener('change', syncLayout);
-    window.addEventListener('pageshow', syncLayout);
+    window.addEventListener('pageshow', event => {
+        if (event.persisted) {
+            try {
+                const savedWidth = Number(localStorage.getItem(widthKey));
+                if (savedWidth >= minimumWidth && savedWidth <= maximumWidth) width = savedWidth;
+            } catch (_) {}
+            readExpandedWidth();
+        }
+        syncLayout();
+    });
+    readExpandedWidth();
     syncLayout();
 })();
