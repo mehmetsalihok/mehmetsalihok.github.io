@@ -108,10 +108,12 @@ header.kz-header>div>div:nth-child(2){justify-content:safe flex-end}
 
 /* Native multi-page transitions preserve normal URLs, history and scripts. */
 @view-transition{navigation:auto}
+html.kz-sidebar-ready::view-transition{background:var(--kz-page)}
 header.kz-header{view-transition-name:kz-header}
-::view-transition-group(kz-header){animation:none}
-::view-transition-old(kz-header){display:none}
-::view-transition-new(kz-header){animation:none;mix-blend-mode:normal}
+.kz-sidebar{view-transition-name:kz-sidebar}
+::view-transition-group(kz-header),::view-transition-group(kz-sidebar){animation:none}
+::view-transition-old(kz-header),::view-transition-old(kz-sidebar){display:none}
+::view-transition-new(kz-header),::view-transition-new(kz-sidebar){animation:none;mix-blend-mode:normal}
 ::view-transition-old(root){animation:kz-slide-out .2s ease both}
 ::view-transition-new(root){animation:kz-slide-in .24s ease both}
 @keyframes kz-slide-out{to{opacity:0;transform:translateX(-20px)}}
@@ -142,6 +144,7 @@ html.kz-sidebar-ready{scrollbar-gutter:auto;scroll-padding-top:calc(var(--kz-top
 html.kz-sidebar-ready body{
  padding:var(--kz-top-height) 0 0 var(--kz-side-width)!important;
  margin:0;min-height:100dvh;background:var(--kz-page)!important;color:var(--kz-ink)!important;
+ transition:none;
  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
  font-size:13px;line-height:1.55;letter-spacing:-.015em;
 }
@@ -192,7 +195,7 @@ html.kz-sidebar-ready header.kz-header{
  inset:0 0 auto var(--kz-side-width)!important;width:auto!important;height:var(--kz-top-height)!important;
  min-height:var(--kz-top-height)!important;max-height:var(--kz-top-height)!important;
  background:var(--kz-surface)!important;border-color:var(--kz-line)!important;
- backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;color:var(--kz-ink);view-transition-name:kz-header;
+ backdrop-filter:none;-webkit-backdrop-filter:none;box-shadow:none;color:var(--kz-ink);view-transition-name:kz-header;transition:none;
 }
 html.kz-sidebar-ready header.kz-header>div{
  height:100%!important;min-height:0!important;max-height:none!important;padding:0 28px!important;
@@ -326,7 +329,7 @@ html.kz-sidebar-collapsed .kz-workspace-note{justify-content:center;padding-left
  html.kz-sidebar-ready header.kz-header>div>.kz-header-context{gap:10px!important}
  html.kz-sidebar-ready header.kz-header .kz-breadcrumb-parent,html.kz-sidebar-ready header.kz-header .kz-breadcrumb>.kz-icon{display:none}
  .kz-mobile-toggle{display:inline-flex}
- html.kz-sidebar-ready .kz-sidebar{width:232px;transform:translateX(-100%);transition:transform .2s ease;z-index:61;visibility:hidden;box-shadow:8px 0 32px #0000000d}
+ html.kz-sidebar-ready .kz-sidebar{width:232px;transform:translateX(-100%);transition:transform .2s ease;z-index:61;visibility:hidden;box-shadow:8px 0 32px #0000000d;view-transition-name:none}
  html.kz-sidebar-ready .kz-sidebar-top{flex-direction:row;min-height:64px;padding:0 5px;gap:6px;margin-bottom:22px}
  html.kz-sidebar-ready .kz-sidebar .kz-nav-text,html.kz-sidebar-ready .kz-sidebar .kz-brand-name,html.kz-sidebar-ready .kz-sidebar .kz-nav-caption{display:block}
  html.kz-sidebar-ready .kz-sidebar .kz-theme-value{display:inline}

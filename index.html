@@ -1,8 +1,29 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" class="kz-sidebar-ready">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        html.kz-sidebar-ready { background: var(--kz-page, #fff); color-scheme: light; }
+        html.kz-sidebar-ready.dark { background: var(--kz-page, #111113); color-scheme: dark; }
+        html.kz-sidebar-ready.oled { background: var(--kz-page, #000); }
+    </style>
+    <script>
+        (() => {
+            let theme;
+            let collapsed = false;
+            try {
+                theme = localStorage.getItem('kuzgun_theme');
+                collapsed = localStorage.getItem('kuzgun_sidebar_collapsed') === 'true';
+            } catch (_) {}
+            const root = document.documentElement;
+            const dark = theme === 'dark' || theme === 'oled'
+                || (!theme && matchMedia('(prefers-color-scheme: dark)').matches);
+            root.classList.toggle('dark', dark);
+            root.classList.toggle('oled', theme === 'oled');
+            root.classList.toggle('kz-sidebar-collapsed', collapsed);
+        })();
+    </script>
     <title>KUZGUN Terminal — Dynamic Cloud Engine</title>
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,18 +41,6 @@
                     }
                 }
             }
-        }
-    </script>
-    <!-- Parlama Önleyici 3 Aşamalı Tema Başlatıcı -->
-    <script>
-        const savedTheme = localStorage.getItem('kuzgun_theme');
-        if (savedTheme === 'oled') {
-            document.documentElement.classList.add('dark', 'oled');
-        } else if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('oled');
-        } else {
-            document.documentElement.classList.remove('dark', 'oled');
         }
     </script>
     <style>
@@ -212,24 +221,53 @@
 @media(max-width:1050px){#compactPortfolioPanel{grid-template-columns:minmax(0,1fr)}#compactPortfolioPanel #monthlyLimitSummary{justify-self:start}#compactPortfolioPanel>div:first-child,#compactPortfolioPanel>details{grid-column:1}}
 @media(max-width:639px){#compactPortfolioPanel{padding:12px!important;gap:8px}#compactPortfolioPanel>div:first-child{gap:8px!important}#compactPortfolioPanel #dashCompoundedUsd{font-size:23px}#compactPortfolioPanel #monthlyLimitSummary{width:100%;justify-content:flex-start}#compactPortfolioPanel>details[open]{gap:5px}#compactPortfolioPanel>details>div{width:100%}}
 </style>
-<link rel="stylesheet" href="header.css?v=4-blue-gray">
-<script src="header.js?v=3-sidebar" defer></script>
+<link rel="stylesheet" href="header.css?v=5-static-layout">
+<script src="header.js?v=4-controls" defer></script>
 </head>
 <body class="bg-slate-100/70 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen font-sans antialiased selection:bg-blue-600 selection:text-white flex flex-col transition-colors duration-200">
 
     <!-- 1️⃣ ORTAK ÜST KONSOL -->
+    <aside id="kzSidebar" class="kz-sidebar" aria-label="Çalışma alanı menüsü">
+        <div class="kz-sidebar-top">
+            <a href="index.html" class="kz-sidebar-brand" aria-label="KUZGUN Terminal"><span class="kz-brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 5v14M17 5 9 13M11 11l6 8"/></svg></span><span class="kz-brand-name">KUZGUN</span></a>
+            <button type="button" class="kz-shell-button kz-sidebar-toggle" aria-controls="kzSidebar" aria-expanded="true" aria-label="Menüyü daralt" title="Menüyü daralt"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+        </div>
+        <p class="kz-nav-caption">Çalışma alanı</p>
+        <nav class="kz-nav" aria-label="Ana menü">
+            <a href="index.html" aria-current="page" title="Terminal" aria-label="Terminal"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1.5"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1.5"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1.5"/><rect x="14" y="14" width="6.5" height="6.5" rx="1.5"/></svg><span class="kz-nav-text">Terminal</span><span class="kz-nav-active-mark" aria-hidden="true"></span></a>
+            <a href="league.html" title="Laboratuvar" aria-label="Laboratuvar"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6M10 3v6l-5.8 9.2A1.8 1.8 0 0 0 5.7 21h12.6a1.8 1.8 0 0 0 1.5-2.8L14 9V3M7.5 14h9"/></svg><span class="kz-nav-text">Laboratuvar</span></a>
+            <button type="button" onclick="openAddCoinModal()" title="Sihirbaz" aria-label="Sihirbaz"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 20 10-10 3 3L7 23M12 12l3 3M6 3v4M4 5h4M18 2v4M16 4h4M20 17v4M18 19h4"/></svg><span class="kz-nav-text">Sihirbaz</span></button>
+            <a href="combination.html" title="Kombinasyon" aria-label="Kombinasyon"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="11" height="11" rx="2"/><rect x="9.5" y="9.5" width="11" height="11" rx="2"/></svg><span class="kz-nav-text">Kombinasyon</span></a>
+        </nav>
+        <div class="kz-sidebar-footer">
+            <a href="settings.html" class="kz-sidebar-setting" title="Ayarlar" aria-label="Ayarlar"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.6 3-.5 2a7 7 0 0 0-1.7 1l-2-.6-2.3 4 1.5 1.5a7 7 0 0 0 0 2.2l-1.5 1.5 2.3 4 2-.6a7 7 0 0 0 1.7 1l.5 2h4.8l.5-2a7 7 0 0 0 1.7-1l2 .6 2.3-4-1.5-1.5a7 7 0 0 0 0-2.2l1.5-1.5-2.3-4-2 .6a7 7 0 0 0-1.7-1l-.5-2z"/><circle cx="12" cy="12" r="3"/></svg><span class="kz-nav-text">Ayarlar</span></a>
+            <button type="button" class="kz-sidebar-appearance" onclick="cycleTheme()" aria-label="Görünümü değiştir. Açık, koyu ve OLED.">
+                <svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                <span class="kz-nav-text">Görünüm</span>
+                <span class="kz-theme-value"><span class="kz-theme-light">Açık</span><span class="kz-theme-dark">Koyu</span><span class="kz-theme-oled">OLED</span></span>
+                <span class="kz-theme-original"><svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                    <svg id="themeIconDark" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                    </svg>
+                    <span id="themeBadgeOled" class="hidden text-[10px] font-black px-1.5 py-0.5 rounded bg-black text-white border border-neutral-700 uppercase tracking-wider">OLED</span></span>
+            </button>
+            <div class="kz-workspace-note">
+                <span class="kz-workspace-initial" aria-hidden="true">K</span>
+                <div class="kz-nav-text"><strong>Kişisel çalışma alanı</strong><span>Binance Spot</span></div>
+            </div>
+        </div>
+    </aside>
+    <button type="button" class="kz-sidebar-backdrop" tabindex="-1" aria-label="Menüyü kapat"></button>
     <header class="kz-header border-b border-slate-200/80 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur sticky top-0 z-40 transition-colors">
         <div class="max-w-[1780px] mx-auto px-5 h-14 flex items-center justify-between gap-4 overflow-x-auto">
-            
-            <div class="flex items-center space-x-4 shrink-0">
-                <a href="index.html" class="kz-brand flex items-center space-x-1.5 hover:opacity-85 transition">
-                    <h1 class="font-black text-base tracking-tight text-slate-900 dark:text-white leading-none">KUZGUN</h1>
-                    
-                </a>
-                <nav class="kz-nav" aria-label="Ana menü"><a href="index.html" aria-current="page">Terminal</a><a href="league.html">Laboratuvar</a><button type="button" onclick="openAddCoinModal()">Sihirbaz</button><a href="combination.html">Kombinasyon</a><a href="settings.html">Ayarlar</a></nav>
+            <div class="kz-header-context">
+                <button type="button" class="kz-shell-button kz-mobile-toggle" aria-controls="kzSidebar" aria-expanded="false" aria-label="Menüyü aç" title="Menüyü aç"><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+                <div class="kz-breadcrumb"><span class="kz-breadcrumb-parent">Çalışma alanı</span><svg class="kz-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg><span>Terminal</span></div>
             </div>
 
-            <div class="flex items-center space-x-4 text-xs shrink-0">
+            <div class="kz-header-toolbar flex items-center space-x-4 text-xs shrink-0">
                 <!-- PORTFÖY -->
                 <div class="flex flex-col justify-center text-left leading-tight">
                     <span class="text-slate-400 dark:text-slate-500 font-medium text-[9px] tracking-wider uppercase">PORTFÖY</span>
@@ -312,17 +350,6 @@
                 </div>
 
                 <span class="h-6 w-px bg-slate-200 dark:bg-slate-800"></span>
-
-                <!-- 🌓 3 Aşamalı Tema Değiştirici Buton -->
-                <button onclick="cycleTheme()" class="px-2 py-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800 transition shrink-0 flex items-center space-x-1.5" title="Tema: Açık / Koyu / OLED">
-                    <svg id="themeIconLight" class="w-4 h-4 text-amber-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                    </svg>
-                    <svg id="themeIconDark" class="w-4 h-4 text-blue-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                    </svg>
-                    <span id="themeBadgeOled" class="hidden text-[10px] font-black px-1.5 py-0.5 rounded bg-black text-white border border-neutral-700 uppercase tracking-wider">OLED</span>
-                </button>
             </div>
         </div>
     </header>
